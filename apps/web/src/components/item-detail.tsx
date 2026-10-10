@@ -93,12 +93,16 @@ export function ItemDetail({
   indexes,
   item,
   variant,
+  onOpenItem,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
   item: Item;
   variant: 'drawer' | 'page';
+  /** Opens another item of this board by number. A host that keeps the open
+   *  item in its own state, not in the URL's `t`, passes its own. */
+  onOpenItem?: (itemNumber: number) => void;
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
@@ -125,19 +129,21 @@ export function ItemDetail({
     ? indexes.fieldByKey.get('description')
     : undefined;
 
-  const openItem = (itemNumber: number) => {
-    if (variant === 'page') {
-      void navigate({
-        to: '/p/$projectKey/t/$number',
-        params: { projectKey, number: String(itemNumber) },
-      });
-    } else {
-      void navigate({
-        to: '.',
-        search: (previous: Record<string, unknown>) => ({ ...previous, t: itemNumber }),
-      });
-    }
-  };
+  const openItem =
+    onOpenItem ??
+    ((itemNumber: number) => {
+      if (variant === 'page') {
+        void navigate({
+          to: '/p/$projectKey/t/$number',
+          params: { projectKey, number: String(itemNumber) },
+        });
+      } else {
+        void navigate({
+          to: '.',
+          search: (previous: Record<string, unknown>) => ({ ...previous, t: itemNumber }),
+        });
+      }
+    });
 
   const saveMutationOptions = {
     onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }),

@@ -152,7 +152,7 @@ function makeBoard(): Board {
   };
 }
 
-async function renderDrawer() {
+async function renderDrawer(onOpenItem?: (itemNumber: number) => void) {
   const board = makeBoard();
   const indexes = indexBoard(board);
   const item = indexes.itemByNumber.get(128);
@@ -173,6 +173,7 @@ async function renderDrawer() {
         indexes={indexes}
         item={item}
         onClose={onClose}
+        onOpenItem={onOpenItem}
       />
     ),
   });
@@ -237,6 +238,15 @@ test('maximizing fills the viewport and restores', async () => {
   expect(panel.style.getPropertyValue('--panel-w')).toBe('calc(100vw - 3rem)');
   await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
   expect(panel.style.getPropertyValue('--panel-w')).toBe('min(620px, 100vw - 3rem)');
+});
+
+// /all keeps the open item in state, so a drawer there opens other items
+// through its host rather than the URL's `t`, which /all never reads.
+test('a subtask row opens through the host when it supplies onOpenItem', async () => {
+  const onOpenItem = vi.fn();
+  await renderDrawer(onOpenItem);
+  await userEvent.click(screen.getByText('Repro harness for virtualizer offsets'));
+  expect(onOpenItem).toHaveBeenCalledWith(129);
 });
 
 test('escape closes the drawer', async () => {
