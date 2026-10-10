@@ -62,6 +62,25 @@ it('captures an HttpError (expected client error) at level warning, with its sta
   await app.close();
 });
 
+// drizzle wraps a postgres unique violation in a DrizzleQueryError whose
+// `.cause` holds the code and detail; it answers 409, naming the clashing key.
+it('answers a unique-key clash with 409 and the key that is taken', async () => {
+  const signals = fakeSignalsClient();
+  const app = buildApp({ db: testDb, signals });
+  app.get('/__test/duplicate', async () => {
+    throw Object.assign(new Error('Failed query: insert into ...'), {
+      cause: { code: '23505', detail: 'Key (scheme_id, key)=(1, status) already exists.' },
+    });
+  });
+
+  const res = await app.inject({ method: 'GET', url: '/__test/duplicate' });
+  expect(res.statusCode).toBe(409);
+  expect(res.json()).toEqual({ error: 'key "status" is already taken' });
+  expect(signals.captureError).toHaveBeenCalledWith(expect.any(HttpError), expect.objectContaining({ level: 'warning' }));
+
+  await app.close();
+});
+
 // ~19 throw sites interpolate a concrete identifier (item id, field key,
 // provider name, ...) into the HttpError message. Fingerprinting on the
 // message would explode into one Signals issue per identifier; fingerprinting

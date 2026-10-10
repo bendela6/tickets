@@ -10,7 +10,7 @@ import { createClaudeProvider } from './agent/providers/claude-provider';
 import { registerAgentRoutes } from './agent/routes';
 import { registerAgentSocket } from './agent/socket';
 import { createLocalWorktreeManager, type WorktreeManager } from './agent/worktree';
-import { HttpError } from './errors';
+import { HttpError, uniqueViolation } from './errors';
 import { registerActivityRoutes } from './routes/activity.routes';
 import { registerAttachmentsRoutes } from './routes/attachments.routes';
 import { registerBoardRoutes } from './routes/board.routes';
@@ -129,7 +129,8 @@ export function buildApp(context: {
       });
     })();
 
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((thrown, request, reply) => {
+    const error = uniqueViolation(thrown) ?? thrown;
     if (error instanceof HttpError) {
       // Expected client errors (4xx) — still worth visibility as a warning-level
       // Signal (a spike of 404s/409s is a real product signal), just not at
