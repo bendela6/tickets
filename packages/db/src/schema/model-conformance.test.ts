@@ -16,7 +16,7 @@ import { loadModel, topLevelGroup, type EerEntity } from './model';
 //
 // Enum types are NOT listed here — they are resolved dynamically by
 // qualifiedModelType() below, because a bare enum name is ambiguous
-// (terminal.session_status and agent.session_status both spell "session_status")
+// (two schemas may each declare a same-named enum)
 // and this static map has no per-row schema to disambiguate with.
 const TYPE_MAP: Record<string, string> = {
   serial: 'serial',
@@ -25,9 +25,6 @@ const TYPE_MAP: Record<string, string> = {
   bigint: 'bigint',
   text: 'text',
   numeric: 'numeric',
-  // agent.sessions.cost_usd is the only precision-carrying numeric; drizzle
-  // prints the parameters, so the parameterised spelling is its own key.
-  'numeric(10, 4)': 'numeric(10, 4)',
   boolean: 'boolean',
   jsonb: 'jsonb',
   uuid: 'uuid',
@@ -39,8 +36,8 @@ const TYPE_MAP: Record<string, string> = {
 };
 
 // model.enums grouped by bare name — a bare name can have more than one entry
-// (terminal.session_status vs agent.session_status), which is exactly why a
-// column's enum type can't be resolved by name alone.
+// (one per schema declaring it), which is exactly why a column's enum type
+// can't be resolved by name alone.
 function groupEnumsByName(enums: ReturnType<typeof loadModel>['enums']) {
   const byName = new Map<string, typeof enums>();
   for (const e of enums) byName.set(e.name, [...(byName.get(e.name) ?? []), e]);
@@ -83,10 +80,10 @@ const normalizeExpression = (s: string): string =>
 // Nothing is exempt. Every table and every enum is compared in both
 // directions: the model is the SSOT and drizzle must match it exactly.
 //
-// Identity on both sides is the SCHEMA-QUALIFIED name (`terminal.sessions`,
-// bare `items` for public) — the model's own convention, see qualifiedName().
-// A bare name would silently collapse terminal.sessions and agent.sessions
-// into one map entry and stop comparing one of them altogether.
+// Identity on both sides is the SCHEMA-QUALIFIED name (`records.items`, a
+// bare name only for public) — the model's own convention, see
+// qualifiedName(). A bare name would silently collapse two schemas'
+// same-named tables into one map entry and stop comparing one of them.
 describe('drizzle ⇔ items-platform.json', () => {
   const model = loadModel();
   const graph = describeSchema();
@@ -148,8 +145,8 @@ describe('drizzle ⇔ items-platform.json', () => {
       .map((c) => `${c.columns[0]} -> ${c.refTable}.${c.refColumns[0]}`)
       .sort();
     // The model spells refTable with the same qualified identity as an entity
-    // id, so an fk pointing at terminal.sessions can't pass as one pointing at
-    // agent.sessions.
+    // id, so an fk pointing at one schema's table can't pass as one pointing
+    // at another's same-named table.
     const drizzleFks = table.columns
       .filter((c) => c.fk)
       .map((c) => `${c.name} -> ${qualifiedName(c.fk!.schema, c.fk!.table)}.${c.fk!.column}`)
@@ -208,10 +205,9 @@ describe('drizzle ⇔ items-platform.json', () => {
   });
 
   it('enums match — name, schema and values, in both directions', () => {
-    // Qualified, because `session_status` is TWO different enums:
-    // terminal.session_status and agent.session_status carry different values
-    // and neither may drift into the other's schema. This only pins that both
-    // enums EXIST with the right schema/values — it says nothing about which
+    // Qualified, because two schemas may each declare a same-named enum with
+    // different values, and neither may drift into the other's schema. This
+    // only pins that each enum EXISTS with the right schema/values — it says nothing about which
     // columns bind to which enum. That's covered separately by the "types and
     // nullability match" test above, which qualifies each column's enum type
     // via qualifiedModelType()/enumIdentity() before comparing.

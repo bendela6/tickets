@@ -13,8 +13,8 @@ import { hueToken } from './hue-token';
  * second source of truth for edge derivation, and the two would drift.
  *
  * Identity is the QUALIFIED name throughout (`schema.table`, bare in public):
- * `terminal.sessions` and `agent.sessions` share a bare name, so a bare key
- * would collapse two independent subsystems into one card.
+ * two schemas may each declare a same-named table, so a bare key would collapse
+ * them into one card.
  */
 export function schemaGraphToModel(graph: SchemaGraph): LoadResult {
   const entities = graph.tables.map((t) => {
@@ -61,8 +61,8 @@ export function schemaGraphToModel(graph: SchemaGraph): LoadResult {
 
   // Identity here must match how describe-schema.ts stamps an enum COLUMN's
   // type: qualifiedName(enumSchema, enumName), not the enum's bare name. Two
-  // same-named enums in different schemas (terminal.session_status vs
-  // agent.session_status) print the same bare string, so a bare `name` here
+  // same-named enums in different schemas (a.status vs b.status) print the
+  // same bare string, so a bare `name` here
   // would make loadModel's unknown-type check (which matches a column's type
   // against this very set) either collide the two enums or — as it did before
   // this fix — never match a qualified column type at all, false-positiving

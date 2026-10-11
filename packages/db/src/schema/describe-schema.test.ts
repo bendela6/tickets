@@ -29,20 +29,15 @@ describe('describeSchema', () => {
   });
 
   it('reports the REFERENCED table\'s schema, not the referencing table\'s', () => {
-    // terminal.sessions.workdir_id crosses into `core`. Without the referenced
-    // side's own schema, an fk to `sessions` could not be told apart from an
-    // fk to the other subsystem's `sessions`.
-    const ts = graph.tables.find((t) => t.schema === 'terminal' && t.name === 'sessions')!;
-    expect(ts.columns.find((c) => c.name === 'workdir_id')!.fk).toEqual({
-      schema: 'core', table: 'workdirs', column: 'id',
+    // records.items.created_by crosses into `core`, item_values.option_id into
+    // `structure`: the fk carries the referenced side's own schema.
+    const items = graph.tables.find((t) => t.schema === 'records' && t.name === 'items')!;
+    expect(items.columns.find((c) => c.name === 'created_by')!.fk).toEqual({
+      schema: 'core', table: 'users', column: 'id',
     });
-    const out = graph.tables.find((t) => t.schema === 'terminal' && t.name === 'output')!;
-    expect(out.columns.find((c) => c.name === 'session_id')!.fk).toEqual({
-      schema: 'terminal', table: 'sessions', column: 'id',
-    });
-    const am = graph.tables.find((t) => t.schema === 'agent' && t.name === 'messages')!;
-    expect(am.columns.find((c) => c.name === 'session_id')!.fk).toEqual({
-      schema: 'agent', table: 'sessions', column: 'id',
+    const values = graph.tables.find((t) => t.schema === 'records' && t.name === 'item_values')!;
+    expect(values.columns.find((c) => c.name === 'option_id')!.fk).toEqual({
+      schema: 'structure', table: 'options', column: 'id',
     });
   });
 
@@ -69,55 +64,13 @@ describe('describeSchema', () => {
     expect(records.tables).toContain('records.comment_reactions');
   });
 
-  it('group table lists include schema-derived tables, not just hand-listed ones', () => {
-    // The ERD renderer iterates GroupMeta.tables to lay out cards — if this
-    // list only reflected SCHEMA_GROUPS' raw `tables` array, workdirs and
-    // every terminal.*/agent.* table (never hand-listed) would silently stop
-    // being rendered.
-    const core = graph.groups.find((g) => g.key === 'core')!;
-    expect(core.tables).toContain('core.workdirs');
-    const terminal = graph.groups.find((g) => g.key === 'terminal')!;
-    expect(terminal.tables).toContain('terminal.output');
-    const agent = graph.groups.find((g) => g.key === 'agent')!;
-    expect(agent.tables).toContain('agent.agents');
-    expect(agent.tables).toContain('agent.messages');
-    expect(agent.tables).toContain('agent.permission_requests');
-  });
-
-  it('the two subsystems are separate groups, not one AI bucket', () => {
-    // The split's whole point: terminal and agent are independent subsystems,
-    // and workdirs is core — not an AI concept. One group each, and the
-    // same-named `sessions` table lands in exactly one of them.
-    const terminal = graph.groups.find((g) => g.key === 'terminal')!;
-    const agent = graph.groups.find((g) => g.key === 'agent')!;
-    expect(terminal.tables).toContain('terminal.sessions');
-    expect(agent.tables).toContain('agent.sessions');
-    expect(terminal.tables).not.toContain('agent.sessions');
-    expect(agent.tables).not.toContain('terminal.sessions');
-    expect(graph.groups.map((g) => g.label)).not.toContain('AI sessions');
-  });
-
-  it('names tables in a group qualified, so the two `sessions` stay distinct', () => {
-    // The ERD renderer resolves every one of these names against graph.tables.
-    // A bare "sessions" appearing in two groups would resolve to the same
-    // table twice — one subsystem drawn double, the other not at all.
+  it('names tables in a group qualified', () => {
+    // The ERD renderer resolves every one of these names against graph.tables;
+    // a bare name shared by two schemas would resolve to one table twice.
     const named = graph.groups.flatMap((g) => g.tables);
-    expect(named).not.toContain('sessions');
+    expect(named.every((name) => name.includes('.'))).toBe(true);
     expect(new Set(named).size).toBe(named.length);
-    // items moved into `records` in Plan 2 — qualified like every other
-    // namespaced table now.
     expect(named).toContain('records.items');
-  });
-
-  it('gives each same-named table its own ordering slot', () => {
-    // The `order` map is keyed by qualified name; a bare key would hand
-    // terminal.sessions and agent.sessions ONE shared slot, the second
-    // overwriting the first's position and leaving the two sorting as equals.
-    const slots = graph.tables
-      .filter((t) => t.name === 'sessions')
-      .map((t) => graph.tables.indexOf(t));
-    expect(slots).toHaveLength(2);
-    expect(slots[0]).not.toBe(slots[1]);
   });
 });
 
@@ -132,15 +85,15 @@ describe('resolveGroupKey', () => {
 
 describe('resolveGroupKey — schema-derived membership', () => {
   it('resolves a schema-owned table with no `tables` entry at all', () => {
-    // workdirs lives in schema `core` and is not listed under any group's
-    // `tables` array — it only resolves because the `core` group claims
-    // `schemas: ['core']`. This is what stops SCHEMA_GROUPS and the real
-    // schema from drifting apart for terminal/agent/core tables. The two
-    // `sessions` show it doing real work: same bare name, different schema,
-    // different group.
-    expect(resolveGroupKey('workdirs', SCHEMA_GROUPS, 'core')).toBe('core');
-    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'terminal')).toBe('terminal');
-    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'agent')).toBe('agent');
+    // A group claiming `schemas: [...]` owns every table in that schema it
+    // doesn't hand-list, so the same bare name resolves by its schema.
+    const groups: SchemaGroup[] = [
+      ...SCHEMA_GROUPS,
+      { key: 'lg', label: 'Logs', color: 'green', tables: [], schemas: ['logs'] },
+      { key: 'au', label: 'Audit', color: 'cyan', tables: [], schemas: ['audit'] },
+    ];
+    expect(resolveGroupKey('entries', groups, 'logs')).toBe('lg');
+    expect(resolveGroupKey('entries', groups, 'audit')).toBe('au');
   });
   it('throws when a schema is owned by no group', () => {
     expect(() => resolveGroupKey('x', SCHEMA_GROUPS, 'nope')).toThrow(/no group/i);
@@ -183,19 +136,9 @@ describe('schemaOf', () => {
 
 describe('describeSchema schemas', () => {
   it('carries a schema field on every table', () => {
-    // Task 3 moved `workdirs` into `core`. Task 4 moved terminal's `sessions`
-    // and `output` into `terminal`. Task 5 moved agent.{sessions,messages,
-    // permission_requests,agents} into `agent`. Plan 2 moved the 22
-    // items-platform tables into core/structure/records/history — nothing is
-    // left in public. `sessions` is a bare name shared by BOTH
-    // terminal.sessions and agent.sessions, so it can't key a name->schema
-    // map any more; it's asserted separately below.
+    // Plan 2 moved the items-platform tables into core/structure/records/
+    // history — nothing is left in public.
     const SCHEMA_BY_TABLE: Record<string, string> = {
-      workdirs: 'core',
-      output: 'terminal',
-      messages: 'agent',
-      permission_requests: 'agent',
-      agents: 'agent',
       users: 'core',
       projects: 'core',
       schemes: 'structure',
@@ -223,21 +166,15 @@ describe('describeSchema schemas', () => {
     const graph = describeSchema();
     for (const table of graph.tables) {
       expect(table).toHaveProperty('schema');
-      if (table.name === 'sessions') continue;
       expect(table.schema).toBe(SCHEMA_BY_TABLE[table.name] ?? null);
     }
-    const sessionSchemas = graph.tables
-      .filter((t) => t.name === 'sessions')
-      .map((t) => t.schema)
-      .sort();
-    expect(sessionSchemas).toEqual(['agent', 'terminal']);
   });
 });
 
 describe('findGroupKey', () => {
   const groups: SchemaGroup[] = [
     { key: 'ws', label: 'Workspace', color: 'blue', tables: ['users'] },
-    { key: 'core', label: 'Workdirs', color: 'green', tables: [], schemas: ['core'] },
+    { key: 'core', label: 'Core', color: 'green', tables: [], schemas: ['core'] },
   ];
 
   it('resolves a hand-listed table regardless of its schema', () => {
@@ -245,7 +182,7 @@ describe('findGroupKey', () => {
   });
 
   it('falls back to schema ownership when no table is listed', () => {
-    expect(findGroupKey('workdirs', groups, 'core')).toBe('core');
+    expect(findGroupKey('projects', groups, 'core')).toBe('core');
   });
 
   it('returns null instead of throwing for an unknown table', () => {

@@ -17,7 +17,6 @@ import { DetailFields } from './detail-fields';
 import { DetailLinks } from './detail-links';
 import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
-import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
   'inline-flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 ' +
@@ -346,7 +345,6 @@ export function ItemDetail({
         </span>
         {archivedChip}
         <span className="flex-1" />
-        <TicketDispatch itemId={item.id} actorId={userId ?? undefined} />
         <Button size="sm" onClick={() => void copyLink(window.location.href)}>
           {copied ? 'Copied' : '⧉ Copy link'}
         </Button>

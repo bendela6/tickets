@@ -15,6 +15,13 @@
       "when": 1784765505049,
       "tag": "0001_groovy_timeslip",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791676607424,
+      "tag": "0002_drop_ai_terminal_workdirs",
+      "breakpoints": true
     }
   ]
 }

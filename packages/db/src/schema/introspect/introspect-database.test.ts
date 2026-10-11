@@ -5,9 +5,9 @@ import { introspectDatabase } from './introspect-database';
 type Graph = Awaited<ReturnType<typeof introspectDatabase>>;
 
 // Look up by schema AND name — never by array position or "first match".
-// `sessions` alone is ambiguous (both terminal.sessions and agent.sessions
-// exist), and position-based lookups break silently whenever an unrelated
-// table is added or reordered upstream.
+// A bare name can be ambiguous once two schemas share it, and position-based
+// lookups break silently whenever an unrelated table is added or reordered
+// upstream.
 function findTable(graph: Graph, schema: string | null, name: string) {
   const t = graph.tables.find((t) => t.schema === schema && t.name === name);
   if (!t) throw new Error(`table ${schema ?? 'public'}.${name} not found`);
@@ -78,11 +78,11 @@ describe('introspectDatabase', () => {
   // expected values so a wiring regression can't hide behind a `typeof`
   // check or a trivially-satisfiable "resolves to something" assertion.
 
-  it('wires a cross-schema fk end-to-end: terminal.sessions.workdir_id -> core.workdirs.id', async () => {
+  it('wires a cross-schema fk end-to-end: records.items.created_by -> core.users.id', async () => {
     const graph = await introspectDatabase('tickets_test');
-    const sessions = findTable(graph, 'terminal', 'sessions');
-    const workdirId = sessions.columns.find((c) => c.name === 'workdir_id')!;
-    expect(workdirId.fk).toEqual({ schema: 'core', table: 'workdirs', column: 'id' });
+    const items = findTable(graph, 'records', 'items');
+    const createdBy = items.columns.find((c) => c.name === 'created_by')!;
+    expect(createdBy.fk).toEqual({ schema: 'core', table: 'users', column: 'id' });
   });
 
   it('wires a self-referencing fk end-to-end: records.items.parent_id -> records.items.id', async () => {
@@ -109,9 +109,8 @@ describe('introspectDatabase', () => {
 
     // Two concrete tables that must land in different groups.
     const items = findTable(graph, 'records', 'items');
-    const sessions = findTable(graph, 'terminal', 'sessions');
+    const users = findTable(graph, 'core', 'users');
     expect(items.group).toBe('rc');
-    expect(sessions.group).toBe('terminal');
-    expect(items.group).not.toBe(sessions.group);
+    expect(users.group).toBe('ws');
   });
 });

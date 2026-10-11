@@ -111,9 +111,9 @@ export function exportDrizzle(model: Model): string {
   // ---- name assignment (one JS identifier namespace for every top-level export) ----
   const usedIdentifiers = new Set<string>();
 
-  // Two enums CAN legitimately share a bare name across schemas (e.g.
-  // terminal.session_status / agent.session_status) — see the terminal/agent
-  // split. Key everything that must stay 1:1 with a *specific* enum by its
+  // Two enums CAN legitimately share a bare name across schemas (e.g. a
+  // `session_status` in each of two schemas). Key everything that must stay
+  // 1:1 with a *specific* enum by its
   // schema-qualified id, the same way tableVarNames keys off Entity.id rather
   // than the bare table name, or two same-named enums collapse onto one JS
   // identifier (an "Identifier has already been declared" parse error) and
@@ -132,9 +132,9 @@ export function exportDrizzle(model: Model): string {
   // A column's stored type is the enum's BARE name only (drizzle's
   // getSQLType() for an enum column returns just `enumName`, with no schema —
   // see describe-drizzle.ts). When more than one enum shares that bare name,
-  // resolve to the one declared in the column's OWN table's schema (a
-  // `terminal.sessions` column named "session_status" means the `terminal`
-  // enum, not `agent`'s); fall back to a public/global enum of that name, then
+  // resolve to the one declared in the column's OWN table's schema (an
+  // `a.sessions` column typed "session_status" means schema `a`'s enum, not
+  // `b`'s); fall back to a public/global enum of that name, then
   // to the first match, for configurations this repo doesn't have yet.
   function resolveEnumForColumn(entitySchema: string | null, bareName: string): EnumDecl {
     const candidates = enumsByBareName.get(bareName) ?? [];

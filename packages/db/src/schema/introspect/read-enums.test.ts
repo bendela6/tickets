@@ -12,13 +12,13 @@ describe('readEnums', () => {
     }
   });
 
-  it('keeps same-named enums in different schemas distinct', async () => {
-    // agent.session_status and terminal.session_status both exist and print
-    // the same bare name — collapsing them would lose one entirely.
+  it('reads every enum once, qualified by its schema', async () => {
     const enums = await withDatabase('tickets_test', (sql) => readEnums(sql));
-    const sessionStatus = enums.filter((e) => e.name === 'session_status');
-    expect(sessionStatus.length).toBe(2);
-    expect(new Set(sessionStatus.map((e) => e.schema))).toEqual(new Set(['agent', 'terminal']));
+    expect(enums.map((e) => `${e.schema}.${e.name}`).sort()).toEqual([
+      'core.user_kind',
+      'structure.field_type',
+      'structure.status_kind',
+    ]);
   });
 
   it('carries the real namespace, never the string "public"', async () => {

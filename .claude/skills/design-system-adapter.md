@@ -179,9 +179,9 @@ here should need to leak back into those skills.
 2. **Unlayered CSS outranks every layered rule, whatever the specificity.**
    The legacy `globals.css` that used to bite here is gone, but the hazard is
    structural, not historical: any third-party stylesheet imported without
-   `layer(...)` beats all of Tailwind. `styles/index.css` handles the one live
-   case by declaring `@layer xterm, …` first and importing `xterm.css` into that
-   bottom layer. A new third-party stylesheet must be wrapped the same way.
+   `layer(...)` beats all of Tailwind. None is imported today; a new one must
+   get a bottom layer of its own — declare it first (`@layer vendor, theme, …`)
+   and import the sheet into it (`@import 'x.css' layer(vendor)`).
 3. **`twMerge` drops a color class when it sits next to a custom text-size
    token** (patched in `cn.ts`, but watch for regressions). If a color class
    silently vanishes from the rendered DOM, inspect the `cn()`/`twMerge`

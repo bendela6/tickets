@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 import { Drawer, SidePanel, useIsNarrow } from '@bh/ui';
 import { ActivityRail } from './activity-rail';
 import { BrandMark } from './brand-mark';
@@ -15,7 +15,6 @@ export function AppShell({
   onNewTicket?: () => void;
   children: ReactNode;
 }) {
-  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // `useRouterState` (already used above for `pathname`) rather than
   // `schemaRoute.useSearch()`, which throws when the active route isn't
@@ -36,18 +35,7 @@ export function AppShell({
     if (!narrow) setMobileNavOpen(false);
   }, [narrow]);
 
-  // The session viewer routes are split by kind (/terminals/$sessionId,
-  // /agents/$sessionId), so the path alone determines the mode — no session
-  // lookup needed any more.
   const mode = modeForPath(pathname);
-
-  // Terminals are the only session kind created from this shell's "New"
-  // affordance (a dispatched agent session navigates itself); it always opens
-  // under /terminals/$sessionId.
-  const onNavigateSession = (sessionId: number) => {
-    setMobileNavOpen(false);
-    void navigate({ to: '/terminals/$sessionId', params: { sessionId: String(sessionId) } });
-  };
 
   const panel = (
     <ModePanel
@@ -55,7 +43,6 @@ export function AppShell({
       activeProjectKey={activeProjectKey}
       onNewTicket={onNewTicket}
       onNavigate={() => setMobileNavOpen(false)}
-      onNavigateSession={onNavigateSession}
       schemaDatabase={search.database}
     />
   );

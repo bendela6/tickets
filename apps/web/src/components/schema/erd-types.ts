@@ -2,8 +2,8 @@
 // so the web bundle takes no runtime dependency on the db package. It is a
 // SUBSET — the db side also carries checks/indexes, which the ERD does not
 // draw — but every field it does mirror must match, `schema` above all:
-// terminal.sessions and agent.sessions share a bare name, so without it this
-// renderer cannot tell two independent subsystems' tables apart.
+// two schemas may each declare a same-named table, so without it this renderer
+// cannot tell them apart.
 export type ColumnMeta = {
   name: string;
   type: string;
@@ -12,7 +12,7 @@ export type ColumnMeta = {
   // `schema` is the REFERENCED table's schema (null = public), so an fk to
   // `sessions` names exactly one table. It is the target's own schema, never
   // the referencing table's — an fk routinely crosses schemas
-  // (terminal.sessions.workdir_id -> core.workdirs.id).
+  // (records.items.created_by -> core.users.id).
   fk: { schema: string | null; table: string; column: string } | null;
 };
 export type UniqueMeta = { name: string; columns: string[] };

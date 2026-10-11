@@ -88,8 +88,8 @@ if (typeof document !== 'undefined' && typeof document.elementFromPoint === 'und
   document.elementFromPoint = () => null;
 }
 
-// jsdom has no matchMedia — xterm's CoreBrowserService reads it on construction
-// (devicePixelRatio tracking) even in tests that never touch real media queries.
+// jsdom has no matchMedia — useIsNarrow and other media-query hooks read it on
+// mount even in tests that never touch real media queries.
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   window.matchMedia = ((query: string) => ({
     matches: false,

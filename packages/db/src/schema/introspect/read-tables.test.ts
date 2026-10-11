@@ -17,11 +17,7 @@ describe('readTables', () => {
     // public tables at all — so this asserts a real value, not a vacuous one.
     const tables = await withDatabase('tickets_test', (sql) => readTables(sql));
     expect(tables.find((t) => t.name === 'items')!.schema).toBe('records');
-    // There are TWO `sessions` tables (agent.sessions and terminal.sessions);
-    // `.find()` would silently pick whichever one comes first, so assert both
-    // exist with their exact, distinct schemas rather than on a single match.
-    const sessionsTables = tables.filter((t) => t.name === 'sessions');
-    expect(sessionsTables.map((t) => t.schema).sort()).toEqual(['agent', 'terminal']);
+    expect(tables.find((t) => t.name === 'users')!.schema).toBe('core');
     for (const t of tables) expect(t.schema).not.toBe('public');
   });
 

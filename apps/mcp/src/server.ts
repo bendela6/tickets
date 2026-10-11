@@ -6,7 +6,6 @@ import { environment } from './environment';
 import { initMcpSignals } from './signals';
 import { registerAddComment } from './tools/add-comment';
 import { registerCreateTicket } from './tools/create-ticket';
-import { registerDispatchAgent } from './tools/dispatch-agent';
 import { registerGetBoard } from './tools/get-board';
 import { registerGetTicket } from './tools/get-ticket';
 import { registerLinkTickets } from './tools/link-tickets';
@@ -46,7 +45,6 @@ registerUpdateTicket(server, context);
 registerAddComment(server, context);
 registerLinkTickets(server, context);
 registerRemoveLink(server, context);
-registerDispatchAgent(server, context);
 
 // The stdio transport calls this when the client disconnects (e.g. the
 // parent process closes the pipe) — the closest thing this server has to a

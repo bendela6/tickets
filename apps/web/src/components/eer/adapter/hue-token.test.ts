@@ -47,7 +47,7 @@ describe('every hue the schema data can produce has a reachable token', () => {
   // Guards against the three regexes above quietly matching nothing and making
   // the real assertions vacuous — the exact way this class of test rots.
   it('actually parsed the hue lists and the token declarations', () => {
-    expect(curatedHues.length).toBeGreaterThanOrEqual(7);
+    expect(curatedHues.length).toBeGreaterThanOrEqual(4);
     expect(curatedHues).toContain('indigo'); // the largest curated group
     expect(fallbackHues.length).toBeGreaterThanOrEqual(9);
     expect(fallbackHues).toContain('yellow'); // fallback-only, in no curated group

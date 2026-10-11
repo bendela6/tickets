@@ -1,4 +1,4 @@
-import { agentSchema, coreSchema, structureSchema, terminalSchema } from './schemas';
+import { coreSchema, structureSchema } from './schemas';
 
 export const userKindEnum = coreSchema.enum('user_kind', ['human', 'agent']);
 
@@ -25,36 +25,4 @@ export const fieldTypeEnum = structureSchema.enum('field_type', [
   'option',
   'user',
   'json',
-]);
-
-// ── core schema ──────────────────────────────────────────────────────────────
-
-// Where a session's process runs. Only `local` is implemented.
-export const runnerKindEnum = coreSchema.enum('runner_kind', ['local', 'container']);
-
-// ── terminal schema ──────────────────────────────────────────────────────────
-
-// A PTY's lifecycle. `live` = attached and running; `disconnected` = the API
-// restarted and the process died with it. No turn states — those are agent facts.
-export const terminalStatusEnum = terminalSchema.enum('session_status', [
-  'starting', 'live', 'disconnected', 'exited', 'failed',
-]);
-
-// ── agent schema ─────────────────────────────────────────────────────────────
-
-// An agent turn's lifecycle. No live/disconnected — those are PTY facts.
-export const agentStatusEnum = agentSchema.enum('session_status', [
-  'starting', 'running', 'idle', 'awaiting_input', 'interrupted', 'exited', 'failed',
-]);
-
-// How a persona decides whether a tool call needs a human — mirrors the Claude
-// Agent SDK's PermissionMode. Exactly the 5 SDK values; no legacy `auto`.
-export const permissionModeEnum = agentSchema.enum('permission_mode', [
-  'default', 'acceptEdits', 'bypassPermissions', 'plan', 'dontAsk',
-]);
-
-// A pending permission request is a `canUseTool` promise in the supervisor
-// waiting on a human; the terminal transitions are the human's decision.
-export const permissionStatusEnum = agentSchema.enum('permission_status', [
-  'pending', 'allowed', 'denied',
 ]);
