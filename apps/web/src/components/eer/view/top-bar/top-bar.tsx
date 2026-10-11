@@ -6,7 +6,7 @@
 // "what am I looking at" lives in the left sidebar, "how is it drawn" lives
 // here.
 
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { useDiagramActions } from '../../state/diagram-context';
 import { btn } from './button-class';
 import { RoutingMenu } from './routing-menu';

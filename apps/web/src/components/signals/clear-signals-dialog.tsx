@@ -2,7 +2,7 @@ import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import type { ClearSignalsFilters, SignalsAppRow } from '../../api/signals/signals-api';
 import { useAppReleases, useClearAppSignals } from '../../api/signals/use-signals';
-import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle } from '@tickets/ui';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle } from '@bh/ui';
 
 type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;
 type Mode = 'all' | 'older-than' | 'release';

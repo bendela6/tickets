@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import type { BooleanEngine } from './boolean/ops';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Pill } from '@tickets/ui';
+import { Pill } from '@bh/ui';
 import { statusPill, typePill } from './status';
 
 describe('statusPill', () => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { PenGlyph, PEN_TOOL, ShapeGlyph, SHAPE_TOOLS } from '../canvas/shape-tools';
 import { useEditor } from '../editor-context';
 import { everyNode, isGroup, levelOf } from '../doc/tree';

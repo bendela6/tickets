@@ -15,7 +15,7 @@ import { typePill } from '../domain/status';
 import { FieldWidget } from '../registry/field-widget';
 import { hexToOptionColor, type OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@tickets/ui';
+import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';

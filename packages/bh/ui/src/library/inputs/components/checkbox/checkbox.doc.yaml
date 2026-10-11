@@ -1,0 +1,58 @@
+title: Checkbox
+summary: One yes-or-no choice, with an optional label beside the box.
+related: [CheckboxGroup, Switch, RadioGroup]
+body:
+  - |
+    One yes-or-no choice, with an optional label beside the box.
+
+    It holds no value of its own: `value` is the boolean it shows, and
+    `onChange` hands back the next one, with the change event second.
+    `indeterminate` is a dash drawn over the value, not a third value.
+  - h2: Import
+  - code: import { Checkbox } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Keep the value in state and pass its setter as `onChange`.
+  - demo: examples/controlled.tsx
+  - |
+    `indeterminate` draws a dash, for a box that stands for several others
+    when only some of them are on.
+    [CheckboxGroup](/components/inputs/checkbox-group) draws one for you with
+    `selectAllLabel`.
+  - demo: examples/indeterminate.tsx
+  - |
+    `size` sets the box, 14, 16 or 20 pixels, and the label's type size
+    together.
+  - demo: examples/sizes.tsx
+  - |
+    `tone` colours the checked fill and the focus ring, and is `primary`
+    unless set: [Tones](/foundations/tones) has the names.
+  - demo: examples/tones.tsx
+  - |
+    `readOnly` keeps the box in the tab order and in its colour, and ignores
+    clicks; `disabled` takes it out of the tab order and fades it. All three
+    boxes here show one value, and only the first can change it.
+  - demo: examples/read-only-and-disabled.tsx
+  - |
+    Leave `label` out when something else names the box: give it an
+    `aria-label`, or point a `<label htmlFor>` at its `id`.
+  - demo: examples/without-a-label.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Space]
+        does: Toggles the box, unless it is read-only.
+  - |
+    It is a native `<input type="checkbox">` inside a `<label>`, so `label`
+    names it and a click on the text toggles it. `id`, and any other
+    attribute it doesn't take itself, go on the input. `readOnly` sets
+    `aria-readonly`; the platform's `readonly` does nothing on a checkbox.
+    `indeterminate` is set on the input's own `indeterminate` property,
+    which has no attribute.
+  - h2: When not to use it
+  - |
+    For several choices under one name, use
+    [CheckboxGroup](/components/inputs/checkbox-group): it draws the boxes,
+    names the group and holds the chosen values as one array.
+  - h2: Props
+  - props: Checkbox

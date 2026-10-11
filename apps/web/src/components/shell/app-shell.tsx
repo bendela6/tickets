@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { Drawer, SidePanel, useIsNarrow } from '@tickets/ui';
+import { Drawer, SidePanel, useIsNarrow } from '@bh/ui';
 import { ActivityRail } from './activity-rail';
 import { BrandMark } from './brand-mark';
 import { ModePanel } from './mode-panel';

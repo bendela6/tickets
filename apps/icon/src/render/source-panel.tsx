@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cn, useCopy } from '@tickets/ui';
+import { cn, useCopy } from '@bh/ui';
 import { useEditor } from '../editor-context';
 import { tokenizeSvg, type TokenKind } from './highlight';
 import { renderSvg } from './svg';

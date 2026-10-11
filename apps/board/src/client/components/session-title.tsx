@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Input, Tooltip } from '@tickets/ui';
+import { Button, Input, Tooltip } from '@bh/ui';
 import { useEffect, useState } from 'react';
 
 // Claude Code generates a session title into the transcript. A rename is stored as an

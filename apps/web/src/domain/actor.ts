@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import type { Avatar } from '@tickets/ui';
+import type { Avatar } from '@bh/ui';
 
 /** Who or what performed an action. A ticket-domain distinction. */
 export type ActorKind = 'human' | 'agent';

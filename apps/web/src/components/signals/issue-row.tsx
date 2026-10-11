@@ -1,6 +1,6 @@
 import type { IssueRow as IssueRowData } from '../../api/signals/signals-api';
 import { signalStatus } from '../../domain/signal-status';
-import { cn, Pill } from '@tickets/ui';
+import { cn, Pill } from '@bh/ui';
 import { formatCount, relativeTime } from './format';
 import { LevelDot } from './level-dot';
 import { Sparkline } from './sparkline';

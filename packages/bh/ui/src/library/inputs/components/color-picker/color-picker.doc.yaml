@@ -1,0 +1,57 @@
+title: ColorPicker
+summary: Picks one of the eleven colour scales.
+related: [Pill, IconPicker, Select]
+body:
+  - |
+    Picks one of the eleven colour scales.
+
+    There is no spectrum and no eyedropper: `value` is a scale's name, from
+    `red` to `gray`, or `null`. The field shows the scale's swatch and its
+    name. [Colours](/foundations/colours#scales) has the scales.
+  - h2: Import
+  - code: import { ColorPicker } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The swatches sit six to a row. The chosen one carries a dot inside it
+    rather than a border, which would mix with the swatch's own colour; the
+    ring is the keyboard's cursor.
+  - demo: examples/choosing-a-colour.tsx
+  - |
+    A scale's name is also a `tone`, so the colour picked can paint another
+    component. [Tones](/foundations/tones) has what each component does with
+    one.
+  - demo: examples/as-a-tone.tsx
+  - |
+    `size` steps the field's height, padding, radius and type together: 30,
+    38 and 46 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` dims the field and takes it out of the tab order. `readOnly`
+    keeps the tab stop and the value at full contrast, drops the chevron, and
+    refuses to open.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the grid. In the grid, picks the swatch under the cursor and closes it.
+      - keys: [ArrowLeft, ArrowRight]
+        does: Moves the cursor one swatch back or forward.
+      - keys: [ArrowUp, ArrowDown]
+        does: Moves the cursor one row up or down.
+      - keys: [Escape]
+        does: Closes the grid.
+  - |
+    The grid opens with focus on the chosen swatch, and focus moves with the
+    cursor. The cursor stops at the first and last swatch rather than
+    wrapping.
+
+    The field is a `button` with `role="combobox"` and
+    `aria-haspopup="dialog"`; name it with a `<label htmlFor>` and `id`. The
+    grid is a `grid` named by `label`, "Colour" by default, in rows of six.
+    Each swatch is a
+    button named by its scale, capitalised, and `aria-selected` marks the
+    chosen one. `readOnly` sets `aria-disabled`, and `tone="danger"` sets
+    `aria-invalid`.
+  - h2: Props
+  - props: ColorPicker

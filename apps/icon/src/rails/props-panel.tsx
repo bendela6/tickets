@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { Button, Slider, cn } from '@tickets/ui';
+import { Button, Slider, cn } from '@bh/ui';
 import { BOOLEAN_OPS } from '../boolean/ops';
 import { useCombine } from '../boolean/use-combine';
 import { ShapeGlyph } from '../canvas/shape-tools';

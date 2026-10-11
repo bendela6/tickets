@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Entity } from '../../../engine/model/types';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { mix } from '../../../ui/color-mix';
 import { FieldRow } from './field-row';
 

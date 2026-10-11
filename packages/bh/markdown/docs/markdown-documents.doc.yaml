@@ -1,0 +1,123 @@
+title: Markdown documents
+summary: Write blocks inside markdown, as fences and directives, for documents kept outside the docs site.
+order: 3
+related: [Writing a page, Rendering a document, The block registry]
+body:
+  - |
+    Write blocks inside markdown, as fences and directives, for documents
+    kept outside the docs site: a help article an app stores, a report a
+    model writes.
+  - h2: Blocks in markdown
+  - |
+    A document is markdown, with its frontmatter between two `---` lines at
+    the top. A block is written one of two ways:
+
+    - **A fence** whose language is a registered name: ` ```callout `. A
+      fence of any other language stays a code block, whatever it holds.
+    - **A directive**: `:::callout` on a line, its body, then `:::`. A
+      directive is always a block, so a misspelt name draws the error card
+      rather than vanishing. Four colons wrap three, so one can hold
+      another.
+
+    What goes between the lines is the block's body, as its renderer reads
+    it: YAML for a data block, text kept as written for a text block, and
+    markdown, parsed again with the same blocks, for a markdown one.
+  - |
+    Attributes go on the opening line, in braces: `key=value`, a quoted
+    value with spaces, or a bare name for a flag, as in
+    ` ```code{lang=ts file=src/app.ts lines=3-7} `. A word before the name
+    is the block's language, as GitHub and editors read it: ` ```yaml callout `
+    is a callout, shown elsewhere as YAML. It becomes the block's `lang`
+    unless the braces set one.
+
+    An inline mark sits inside a sentence or a heading:
+    `:badge[stable]{tone=success}`, the label in brackets. A mark no inline
+    block is named for stays as written.
+  - |
+    Edit the document: it is drawn with the site's blocks as you type, and
+    the strip under it shows what `validateDocument` finds. Misspell the
+    callout's name and the fence turns back into code, with a warning on
+    its line.
+  - panel: |
+      ## Before the van comes
+
+      Pack the books first: they are the heaviest. :badge[two days]{tone=warning}
+
+      ```yaml callout
+      type: tip
+      title: Label every box
+      content: Write the room on two sides, so it reads whichever way it is stacked.
+      ```
+
+      ```keyboard
+      - keys: [Ctrl+P]
+        does: Prints the box labels.
+      ```
+
+      :::callout
+      type: note
+      title: Keep the receipts
+      content: The deposit comes back only with them.
+      :::
+
+      ```ts
+      const boxes = 24;
+      ```
+    title: A document
+  - h2: Checking a document
+  - |
+    `parseDocument` reads a document against a registry: its frontmatter,
+    its tree, every block in a flat list, its headings, and the YAML that
+    didn't parse, on its line. `validateDocument` reads it again and sorts
+    what it finds:
+
+    - **Errors** render wrong: a block no renderer is named for, data its
+      schema refuses (on the block's opening line, with the field's path),
+      YAML that doesn't parse.
+    - **Warnings** are probably typos: a fence language that is neither a
+      block nor a language it knows, a word before a block name that isn't
+      a language, a line that looks like a directive but wasn't read as one,
+      an inline mark with no renderer. The directive and mark checks skip
+      code, so a page showing that syntax in a fence or in backticks
+      raises nothing.
+
+    A document's attributes are text, taken as written: only a
+    [YAML page](/markdown/writing-a-page) checks them against what a block
+    declares.
+  - h2: Drawing it
+  - |
+    `MarkdownDoc` parses a document and draws it, parsing again only when
+    the source or the registry changes. [Rendering a document](/markdown/rendering)
+    has the elements it draws with. Text the app didn't write, such as a
+    tool's output, goes to `MarkdownText` instead, which reads no blocks at
+    all.
+  - h2: Rules
+  - |
+    - A fence is a block only when its language is a registered name; any
+      other fence stays markdown, with what it holds.
+    - A directive is always a block, so an unknown name reaches the error
+      card instead of vanishing.
+    - A fence closes on a run of backticks at least as long as it opened
+      with, and a directive on as many colons, so a longer one holds a
+      shorter one. A block left open runs to the end.
+    - A fence or directive inside a list item or a blockquote stays
+      markdown. Validation warns about the directive.
+    - A word before a block's name is its `lang`, unless its braces set one.
+      Validation warns about an unknown word in either place.
+    - Attributes are text, taken as written, and a document checks none of
+      them.
+  - h2: Reference
+  - ref: parseDocument
+  - ref: ParsedDoc
+  - ref: ParseIssue
+  - ref: readFrontmatter
+  - ref: validateDocument
+  - ref: ValidationResult
+  - ref: ValidationError
+  - ref: ValidationWarning
+  - ref: scanBlocks
+  - ref: Segment
+  - ref: BlockSegment
+  - ref: MarkdownSegment
+  - ref: parseAttrs
+  - ref: Attrs

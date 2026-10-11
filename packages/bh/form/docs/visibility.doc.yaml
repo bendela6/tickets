@@ -1,0 +1,60 @@
+title: Visibility
+summary: Show a field, or a whole layout, only while other fields hold certain values, with when.
+order: 5
+related: [Building a form, Rendering and submitting, Async options]
+body:
+  - |
+    Show a field, or a whole layout, only while other fields hold certain
+    values.
+  - h2: A clause
+  - |
+    A node's `when` is a clause about other fields' values, by name. It
+    compares one field's value, or combines clauses:
+  - |
+    | Clause                          | Holds when                            |
+    | ------------------------------- | ------------------------------------- |
+    | `{ field, eq: value }`          | the field's value is `value`          |
+    | `{ field, neq: value }`         | the field's value is not `value`      |
+    | `{ field, in: [a, b] }`         | the field's value is one of these     |
+    | `{ field, truthy: true }`       | the field's value is truthy           |
+    | `{ all: [clause, clause] }`     | every clause holds                    |
+    | `{ any: [clause, clause] }`     | at least one clause holds             |
+    | `{ not: clause }`               | the clause doesn't                    |
+  - |
+    Here the address card shows for courier and post, the intercom switch
+    for courier only, and its code once the switch is on as well:
+  - demo: examples/delivery.tsx
+  - h2: Layouts
+  - |
+    A layout's `when` shows or hides it with everything in it. A field shows
+    while its own `when` holds and every layout above it shows, so the
+    intercom code above needs no clause about the method's being courier or
+    post: its card's has one.
+  - h2: What a hidden field keeps
+  - |
+    A hidden field keeps its value: pick Courier, type a street, pick
+    Pickup and back, and the street is still there. But a submit leaves it
+    out, its own check doesn't run, and its async options don't hold the
+    submit up. What is sent is what is on screen.
+  - h2: In your own code
+  - |
+    `evaluateWhen` answers a clause for some values, the way the form does,
+    for code of your own that needs the same answer:
+  - code: |
+      import { evaluateWhen, type WhenClause } from '@bh/form';
+
+      const courier: WhenClause = { field: 'method', eq: 'courier' };
+      evaluateWhen(courier, { method: 'post' }); // false
+    lang: tsx
+  - h2: Rules
+  - |
+    - `eq`, `neq` and `in` compare with `===`: an array or an object is equal
+      only to itself.
+    - `truthy` is JavaScript's own: `''`, `0`, `null` and `false` are not,
+      but an empty array is, so a multi-select with nothing chosen is truthy.
+    - A clause reads the fields beside it: at the top level, the form's; in
+      a list's item or an object, that object's own.
+    - A node redraws only when a field its clause names changes.
+  - h2: Reference
+  - ref: WhenClause
+  - ref: evaluateWhen

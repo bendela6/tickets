@@ -2,7 +2,7 @@ import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useDeleteApp } from '../../api/signals/use-signals';
-import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldLabel, Input } from '@tickets/ui';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldLabel, Input } from '@bh/ui';
 
 type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;
 

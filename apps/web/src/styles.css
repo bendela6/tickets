@@ -1,0 +1,9 @@
+/* `xterm` is declared FIRST so it is the lowest-priority layer: xterm.css is
+   third-party UNLAYERED CSS and unlayered CSS outranks every layered rule —
+   left as-is it would beat Instrument. Wrapping it in the bottom layer keeps the
+   terminal's own canvas styles while letting any app utility win on conflict.
+   It used to sit in @tickets/ui's token sheet; bh's has no terminal, so it is
+   this app's. */
+@layer xterm, theme, base, components, utilities;
+@import '@xterm/xterm/css/xterm.css' layer(xterm);
+@import '@bh/ui/tokens.css';

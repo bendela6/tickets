@@ -23,8 +23,8 @@ afterEach(() => vi.restoreAllMocks());
 describe('DirectoryTree', () => {
   it('renders root rows and reveals children on expand', async () => {
     render(<Wrap><DirectoryTree roots={ROOTS} selected={null} onSelect={() => {}} /></Wrap>);
-    // caret toggle for the root
-    await userEvent.click(screen.getByRole('button', { name: /expand \/home\/me/i }));
+    // caret toggle for the root (aria-hidden: the mouse's way in, the keyboard has the arrows)
+    await userEvent.click(screen.getByLabelText(/expand \/home\/me/i, { selector: 'button' }));
     await waitFor(() => expect(screen.getByText('work')).toBeInTheDocument());
   });
 

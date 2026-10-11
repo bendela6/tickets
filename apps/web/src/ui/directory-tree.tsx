@@ -1,5 +1,5 @@
 import type { WorkdirRoot } from '../api/types';
-import { Spinner, Tree, TreeRow, cn } from '@tickets/ui';
+import { Spinner, Tree, TreeRow, cn } from '@bh/ui';
 import { useDirectoryTree, type VisibleRow } from './use-directory-tree';
 
 function Row({

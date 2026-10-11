@@ -1,0 +1,79 @@
+title: Dialog
+summary: A modal window over the page, for a short task or a question.
+related: [DialogFooter, Drawer, Popover]
+body:
+  - |
+    A modal window over the page, for a short task or a question.
+
+    Build one from its parts, or take `ConfirmDialog`, which puts them
+    together for a question with a cancel button and a confirm button.
+  - h2: Import
+  - code: |
+      import {
+        ConfirmDialog,
+        DialogClose,
+        DialogContent,
+        DialogDescription,
+        DialogRoot,
+        DialogTitle,
+        DialogTrigger,
+      } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `DialogContent` puts the window in a portal, centred over a dim: 448
+    pixels wide at most, and never closer than 16 pixels to the window's
+    sides. [DialogFooter](/components/overlays/dialog-footer) lays out the
+    buttons, and `DialogClose` closes the dialog from one of them.
+    [Elevation](/foundations/elevation) has the layers the dim and the
+    window sit on.
+  - demo: examples/from-its-parts.tsx
+  - |
+    `ConfirmDialog` takes the question as `title` and closes after either
+    button, calling `onConfirm` first. `destructive` paints the confirm
+    button in the `danger` tone.
+  - demo: examples/confirm-before-deleting.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the trigger, opens the dialog.
+      - keys: [Tab]
+        does: Moves to the next control in the dialog; from the last, back to the first.
+      - keys: [Shift+Tab]
+        does: Moves to the previous control in the dialog; from the first, to the last.
+      - keys: [Esc]
+        does: Closes the dialog.
+  - |
+    `DialogContent` has the `dialog` role, named by `DialogTitle` and
+    described by `DialogDescription` when there is one. While it is open,
+    focus stays inside it, the page behind is hidden from assistive
+    technology and takes no pointer events, and a click on the dim closes
+    it.
+
+    Opening moves focus to the first control inside; in `ConfirmDialog`,
+    the cancel button. Closing returns focus to `DialogTrigger`.
+    `ConfirmDialog` has none, since `open` opens it, so it returns focus to
+    whatever had it as it opened, unless that has left the page.
+  - h2: When not to use it
+  - |
+    - For a panel at the page's edge, use [Drawer](/components/overlays/drawer).
+    - For a panel beside its button that leaves the page usable, use
+      [Popover](/components/overlays/popover).
+  - h2: Props
+  - |
+    `DialogRoot`, `DialogTrigger` and `DialogClose` are Radix's Dialog parts
+    as they are, so their props are Radix's.
+  - h3: DialogRoot
+  - props: DialogRoot
+  - h3: DialogTrigger
+  - props: DialogTrigger
+  - h3: DialogContent
+  - props: DialogContent
+  - h3: DialogTitle
+  - props: DialogTitle
+  - h3: DialogDescription
+  - props: DialogDescription
+  - h3: DialogClose
+  - props: DialogClose
+  - h3: ConfirmDialog
+  - props: ConfirmDialog

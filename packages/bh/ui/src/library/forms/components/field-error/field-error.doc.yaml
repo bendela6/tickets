@@ -1,0 +1,23 @@
+title: FieldError
+summary: A field's error message, in red, announced as an alert.
+related: [FieldLabel, FieldWrapper, Input]
+body:
+  - |
+    A field's error message, in red, announced as an alert.
+
+    It is for a field laid out by hand. In a form drawn by `@bh/form`,
+    [FieldWrapper](/components/forms/field-wrapper) shows the error for you.
+  - h2: Import
+  - code: import { FieldError } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Put it under the control. Give the control `tone="danger"`, which marks
+    it `aria-invalid`, and point its `aria-describedby` at the error's `id`.
+  - demo: examples/under-the-field.tsx
+  - h2: Keyboard and accessibility
+  - |
+    It is a `<p>` with `role="alert"`, so a screen reader announces it when
+    it appears. Other attributes, `id` among them, reach the `<p>`.
+  - h2: Props
+  - props: FieldError

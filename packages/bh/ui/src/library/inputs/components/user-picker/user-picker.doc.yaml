@@ -1,0 +1,54 @@
+title: UserPicker
+summary: Picks one person, or several, from a list you can search.
+related: [Avatar, Combobox, MultiCombobox]
+body:
+  - |
+    Picks one person, or several, from a list you can search.
+
+    `value` is a `string[]` of `Person` ids in both modes, so nobody is `[]`.
+    With nobody chosen, the field shows a dashed ring where an avatar would
+    be.
+  - h2: Import
+  - code: import { UserPicker, type Person } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Picking a person closes the list. The search matches a person's `detail`
+    as well as their name, so a handle finds them too.
+  - demo: examples/one-person.tsx
+  - |
+    With `multiple`, picking toggles a person and keeps the list open. The
+    field overlaps their avatars and counts them; past `maxAvatars`, 3 by
+    default, the rest show as `+N`.
+  - demo: examples/several-people.tsx
+  - |
+    `size` steps the field's height, padding, radius and type, and its avatars
+    with it.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` dims the field and takes it out of the tab order. `readOnly`
+    keeps the tab stop and the value at full contrast, drops the chevron, and
+    refuses to open.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the list, with the focus in its search box.
+      - keys: [ArrowDown, ArrowUp]
+        does: Moves the cursor to the next or previous person.
+      - keys: [Enter]
+        does: In the list, picks the person under the cursor. One person closes the list; with `multiple`, it toggles them and the list stays open.
+      - keys: [Escape]
+        does: Closes the list.
+  - |
+    The field is a `button` with `role="combobox"` and
+    `aria-haspopup="listbox"`; name it with a `<label htmlFor>` and `id`. The
+    list is a `listbox` named by `label`, "People" by default, and
+    `aria-multiselectable` with `multiple`. Focus stays in the search box,
+    which points at the list with `aria-controls` and at the person under
+    the cursor with `aria-activedescendant`, so a screen reader follows the
+    cursor. `readOnly` sets `aria-disabled`, and `tone="danger"` sets
+    `aria-invalid`.
+  - h2: Props
+  - props: UserPicker
+  - ref: Person

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Input, Pill, ScreenState, StatusDot } from '@tickets/ui';
+import { Input, Pill, ScreenState, StatusDot } from '@bh/ui';
 import { useState } from 'react';
 import type { BoardState, SessionSummary } from '../../shared/types';
 import { relative } from '../api';

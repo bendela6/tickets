@@ -5,11 +5,6 @@ import { aiAgentRoute } from './routes/ai-agent-route';
 import { aiAgentsRoute } from './routes/ai-agents-route';
 import { aiRoute } from './routes/ai-route';
 import { allItemsRoute } from './routes/all-items-route';
-import {
-  galleryComponentRoute,
-  galleryComponentTabRoute,
-  galleryRoute,
-} from './routes/gallery-route';
 import { indexRoute } from './routes/index-route';
 import { projectIndexRoute } from './routes/project-index-route';
 import { projectRoute } from './routes/project-route';
@@ -37,9 +32,6 @@ const routeTree = rootRoute.addChildren([
   aiAgentsRoute,
   aiAgentRoute,
   agentSessionRoute,
-  galleryRoute,
-  galleryComponentRoute,
-  galleryComponentTabRoute,
   schemaRoute,
   settingsRoute,
   signalsRoute,

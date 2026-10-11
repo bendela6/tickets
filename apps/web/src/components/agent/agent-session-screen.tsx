@@ -4,7 +4,7 @@ import type { AgentEvent, AgentSessionStatus } from '../../api/types';
 import { useAgentSession } from '../../api/use-agent-session';
 import { useArchiveAgentSession, useStopAgentSession } from '../../api/use-archive-agent-session';
 import { sessionStatus } from '../../domain/session-status';
-import { Menu, MenuContent, MenuItem, MenuTrigger, Pill } from '@tickets/ui';
+import { Menu, MenuContent, MenuItem, MenuTrigger, Pill } from '@bh/ui';
 import { useSessionSocket } from '../session/use-session-socket';
 import { contextWindowFor } from './agent-models';
 import { buildMessageStream, type SeqEvent } from './build-message-stream';

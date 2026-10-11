@@ -1,4 +1,4 @@
-import { Pill, ScreenState, SectionHeader } from '@tickets/ui';
+import { Pill, ScreenState, SectionHeader } from '@bh/ui';
 import type { Activity, GitState, Prompt } from '../../shared/types';
 import { relative } from '../api';
 

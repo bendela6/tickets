@@ -1,4 +1,4 @@
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import config from '../../../icons.config.json';
 
 /**

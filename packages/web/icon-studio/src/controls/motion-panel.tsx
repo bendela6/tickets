@@ -1,4 +1,4 @@
-import { Button } from '@tickets/ui';
+import { Button } from '@bh/ui';
 import { REST_POSES, type RestPose } from '../config';
 import type { IconDoc } from '../doc';
 import {

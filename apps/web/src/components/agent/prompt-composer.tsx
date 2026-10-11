@@ -1,4 +1,4 @@
-import { Button, Combobox, type Option } from '@tickets/ui';
+import { Button, Combobox, type Option } from '@bh/ui';
 
 // Models the Claude provider offers (mirror of apps/api CLAUDE_MODELS). The
 // switcher is compact and lives in the composer per screen 10.

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider, useMutation } from '@tanstack/react-q
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
-import { ToastProvider } from '@tickets/ui';
+import { ToastProvider } from '@bh/ui';
 import { OWN_ERROR, type MutationHookOptions } from '../api/mutation-meta';
 import { MutationErrorToasts } from './mutation-error-toasts';
 

@@ -7,14 +7,20 @@ describe('formRegistry', () => {
   it('registers every base input plus the app-specific directory', () => {
     expect(Object.keys(formRegistry.inputs).sort()).toEqual([
       'checkbox', 'checkbox-group', 'color', 'date', 'date-range', 'directory',
-      'duration', 'file', 'icon', 'json', 'multi-select', 'number', 'password',
-      'pin', 'radio', 'range', 'rating', 'segmented', 'select', 'slider', 'tags',
-      'text', 'textarea', 'time', 'toggle', 'user',
+      'duration', 'email', 'file', 'icon', 'json', 'list', 'multi-select', 'number',
+      'object', 'password', 'pin', 'radio', 'range', 'rating', 'segmented', 'select',
+      'slider', 'tags', 'text', 'textarea', 'time', 'toggle', 'user',
     ]);
   });
 
-  it('registers the four base layouts', () => {
-    expect(Object.keys(formRegistry.layouts).sort()).toEqual(['card', 'column', 'group', 'row']);
+  it('registers the five base layouts', () => {
+    expect(Object.keys(formRegistry.layouts).sort()).toEqual([
+      'actions',
+      'card',
+      'column',
+      'group',
+      'row',
+    ]);
   });
 
   it('the text widget renders a control wired to onChange', async () => {

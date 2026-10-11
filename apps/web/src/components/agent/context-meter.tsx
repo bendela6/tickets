@@ -1,4 +1,4 @@
-import { cn, Progress } from '@tickets/ui';
+import { cn, Progress } from '@bh/ui';
 import { formatTokens } from './agent-models';
 
 // Context-window fill + cumulative output tokens, shown beside the CostMeter in

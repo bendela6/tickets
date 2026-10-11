@@ -1,6 +1,7 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { useSignalsIssues } from '../../api/signals/use-signals';
-import { cn, RailLabel } from '@tickets/ui';
+import { cn } from '@bh/ui';
+import { RailLabel } from './rail-label';
 
 function navItemClasses(active: boolean) {
   return cn(

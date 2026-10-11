@@ -1,0 +1,94 @@
+title: tsconfig presets
+summary: The compiler options every bh project shares, and the presets for React, Node and a package tsc builds.
+order: 5
+related: [bh-lint, Vitest, Styles and fonts]
+body:
+  - |
+    The compiler options every bh project shares, and the presets for React,
+    Node and a package `tsc` builds.
+  - h2: Extending one
+  - code: |
+      {
+        "extends": "@bh/config/tsconfig/react",
+        "compilerOptions": {
+          "noEmit": true,
+          "types": ["node", "vite/client"]
+        },
+        "include": ["src", "vite.config.ts", "vitest.config.ts"]
+      }
+    lang: json
+    file: apps/web/tsconfig.json
+  - code: |
+      {
+        "extends": "@bh/config/tsconfig/node",
+        "compilerOptions": {
+          "noEmit": true
+        },
+        "include": ["src", "vitest.config.ts"]
+      }
+    lang: json
+    file: apps/api/tsconfig.json
+  - |
+    `extends` names the preset as `@bh/config` exports it, and TypeScript
+    follows the export to its file: `@bh/config/tsconfig/react` is
+    `tsconfig/react.json`. A preset sets compiler
+    options only: `include`, `types` and whatever else is the project's, the
+    project writes. Something else runs the code (Vite builds the front end,
+    a runner such as `tsx` starts the server), so `tsc` only checks it:
+    `noEmit`.
+  - h2: The presets
+  - |
+    | Preset    | Adds to `base`                                              |
+    | --------- | ----------------------------------------------------------- |
+    | `base`    | The options below                                           |
+    | `react`   | `jsx: react-jsx`, and `lib`: ES2022, DOM, DOM.Iterable      |
+    | `node`    | `types: ["node"]`, and `lib`: ES2022 alone                  |
+    | `package` | `declaration`, `declarationMap` and `sourceMap`             |
+
+    - **`base`** sets no `lib`, so it takes TypeScript's default for
+      ES2022, which has the DOM. A project with no DOM takes `node`.
+    - **`node`** loads `@types/node` and no other type package, so the
+      project lists `@types/node` in its dev dependencies.
+    - **`package`** is for a library `tsc` builds into `dist`: its
+      declarations, and their maps, which lead an editor from a use to the
+      source.
+  - h2: What base sets
+  - |
+    | Option                                              | So                                                                                         |
+    | --------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+    | `target`, `module`: `ES2022`                        | modern syntax and ES modules, as Vite and Node 24 run them                                 |
+    | `moduleResolution: bundler`                         | imports resolve as a bundler resolves them: a package's `exports`, a relative path with no extension |
+    | `strict`                                            | every strict check                                                                         |
+    | `noUncheckedIndexedAccess`                          | `rows[0]` and `byName[key]` may be undefined until checked                                 |
+    | `noImplicitOverride`                                | a method that overrides one says `override`                                                |
+    | `noImplicitReturns`, `noFallthroughCasesInSwitch`   | every path returns, and no `case` runs into the next                                       |
+    | `noUnusedLocals`, `noUnusedParameters`              | an unused name fails the check; a parameter named `_…` may go unused                       |
+    | `verbatimModuleSyntax`, `isolatedModules`           | each file compiles alone, so an import used only as a type says `import type`              |
+    | `esModuleInterop`, `resolveJsonModule`              | a CommonJS module's default import, and a `.json` import                                   |
+    | `skipLibCheck`                                      | the `.d.ts` files of installed packages are not checked                                    |
+    | `forceConsistentCasingInFileNames`                  | an import's case matches the file's, as Linux needs                                        |
+    | `useDefineForClassFields`                           | class fields are defined as the standard defines them                                      |
+  - code: |
+      const sizes = [12, 40, 7];
+
+      const first = sizes[0]; // number | undefined
+      const doubled = (first ?? 0) * 2;
+    lang: ts
+  - h2: bh's sources in an app's check
+  - |
+    `@bh/ui` and the others export their TypeScript sources, not built files.
+    An app's `tsc` follows its imports into `packages/bh` and checks bh's
+    code with the app's options; `skipLibCheck` doesn't skip it, since it is
+    `.ts`, not `.d.ts`. So:
+
+    - The app extends the preset bh's code is written to. An option the
+      presets leave off, turned on in the app, is checked on bh's code too.
+    - Its `types` hold `vite/client`: `@bh/ui`'s sources use
+      `import.meta.glob` and `?raw` imports, which those types declare.
+  - h2: Rules
+  - |
+    - A project extends a preset, and adds only what is its own.
+    - A relative import has no extension.
+    - An import used only as a type is `import type`.
+    - An index into an array or a record may be undefined, and is checked
+      before use.

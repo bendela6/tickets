@@ -4,7 +4,7 @@ import type { Agent } from '../../api/types';
 import { useAgents } from '../../api/use-agents';
 import { useAgentProviders } from '../../api/use-agent-providers';
 import { useAgentSessions } from '../../api/use-agent-sessions';
-import { Button, ScreenState } from '@tickets/ui';
+import { Button, ScreenState } from '@bh/ui';
 import { AgentCard } from './agent-card';
 import { AgentEditor } from './agent-editor';
 

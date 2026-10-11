@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
-import { cn, Icon, type SessionKind, type Tone } from '@tickets/ui';
+import { cn, Icon, type Tone } from '@bh/ui';
+import type { SessionKind } from '../components/session/session-kind-glyph';
 
 // The app's ONE terminal/agent session status mapping — ported from the
 // retired session-status pill component's PILL + TERMINAL_LABELS tables.

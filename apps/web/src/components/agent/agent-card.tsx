@@ -1,5 +1,5 @@
 import type { Agent, PermissionMode } from '../../api/types';
-import { Avatar, cn } from '@tickets/ui';
+import { Avatar, cn } from '@bh/ui';
 import { avatarFor } from '../../domain/actor';
 
 const PROVIDER_LABEL: Record<string, string> = {

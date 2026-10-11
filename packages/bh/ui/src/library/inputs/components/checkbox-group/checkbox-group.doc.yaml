@@ -1,0 +1,54 @@
+title: CheckboxGroup
+summary: Several independent choices, all visible, held as one array of values.
+related: [Checkbox, RadioGroup, ToggleChips, MultiCombobox]
+body:
+  - |
+    Several independent choices, all visible, held as one array of values.
+
+    It draws a [Checkbox](/components/inputs/checkbox) for each of `options`
+    inside a `<fieldset>`. `label` is required and becomes the `<legend>`,
+    because a fieldset can't be named from outside.
+  - h2: Import
+  - code: import { CheckboxGroup } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `value` is the chosen options' values; a click adds one to the array or
+    takes it out.
+  - demo: examples/controlled.tsx
+  - |
+    `selectAllLabel` adds a parent box that checks and clears the whole group.
+    It shows a dash while only some boxes are on, and is checked when every
+    box that can be toggled is. The legend is read only by screen readers
+    unless `showLabel` shows it.
+  - demo: examples/select-all.tsx
+  - |
+    The parent leaves a `disabled` option as it was, on or off, both when it
+    checks the group and when it clears it: here `readme.md` stays on.
+  - demo: examples/disabled-option.tsx
+  - |
+    `disabled` disables the fieldset, and every box in it. `readOnly`
+    instead keeps every box in the tab order and ignores clicks.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves from box to box.
+      - keys: [Space]
+        does: Toggles the focused box, unless the group is read-only.
+  - |
+    The `<fieldset>` is a group named by its `<legend>`, so a screen reader
+    announces `label` on entering it, shown or not. `id` goes on the
+    fieldset. `readOnly` marks each box `aria-readonly`.
+  - h2: When not to use it
+  - |
+    - For one choice among several, use
+      [RadioGroup](/components/inputs/radio-group).
+    - For a row of short options, like filters, use
+      [ToggleChips](/components/inputs/toggle-chips): the same array, as
+      chips.
+    - To keep the options out of sight until asked for, use
+      [MultiCombobox](/components/inputs/multi-combobox): the same array,
+      behind a field that opens.
+  - h2: Props
+  - props: CheckboxGroup

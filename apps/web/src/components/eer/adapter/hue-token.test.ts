@@ -7,7 +7,7 @@ import { HUE_TOKEN, hueToken } from './hue-token';
 
 // This test exists because the hue -> token path spans three packages and no
 // single one of them can see the whole chain: @tickets/db names the hues,
-// @tickets/ui declares the tokens, and apps/web is the only place that has to
+// @bh/ui declares the tokens, and apps/web is the only place that has to
 // turn one into the other. Everything in between compiles and every unit test
 // passes with a hue whose token is never emitted — the failure is a custom
 // property that resolves to nothing at paint time, which took a whole-branch
@@ -25,7 +25,7 @@ const schemaGroupsSrc = read('packages/db/src/schema/schema-groups.ts');
 const groupTablesSrc = read('packages/db/src/schema/introspect/group-tables.ts');
 // The generated stylesheets are split one per token type; colours.css is the
 // only one that declares the `--color-*` bridge this test reads.
-const tokensCss = read('packages/web/ui/styles/generated/colors.css');
+const tokensCss = read('packages/bh/ui/styles/generated/colors.css');
 
 // Curated hues: every `color: '<hue>'` in SCHEMA_GROUPS.
 const curatedHues = [...schemaGroupsSrc.matchAll(/^\s*color: '([a-z]+)',$/gm)].map((m) => m[1]!);
@@ -63,7 +63,7 @@ describe('every hue the schema data can produce has a reachable token', () => {
   });
 
   it('resolves each mapped hue to a token tokens.css declares', () => {
-    // A token string that names a variable @tickets/ui never declares is
+    // A token string that names a variable @bh/ui never declares is
     // exactly as broken as no mapping at all: `stroke: var(--edge-c)` with an
     // undefined property is an invalid declaration, so the edge paints
     // `stroke: none` rather than falling back to anything.

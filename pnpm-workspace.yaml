@@ -2,4 +2,7 @@ packages:
   - apps/*
   - packages/*
   - packages/web/*
+  # Copies of a bh release, never edited here: a change to one is a change in
+  # bh, copied in with its next version (the gateway's bh page shows which).
+  - packages/bh/*
   - packages/signals/*

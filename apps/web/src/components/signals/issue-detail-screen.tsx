@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsIssue, useSignalsOccurrences, useSignalsSession } from '../../api/signals/use-signals';
 import { signalStatus } from '../../domain/signal-status';
-import { Button, cn, Pill, ScreenState } from '@tickets/ui';
+import { Button, cn, Pill, ScreenState } from '@bh/ui';
 import type { TerminalBreadcrumb } from './breadcrumb-list';
 import { BreadcrumbList } from './breadcrumb-list';
 import { ContextRail } from './context-rail';

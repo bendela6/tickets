@@ -2,7 +2,7 @@
 // modes behind one control meant two clicks to reach the third and no way to
 // see what the others were without landing on them.
 
-import { Dropdown, cn } from '@tickets/ui';
+import { Dropdown, cn } from '@bh/ui';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramView } from '../../state/diagram-context';
 import { btn } from './button-class';

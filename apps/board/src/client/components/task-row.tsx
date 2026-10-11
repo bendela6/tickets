@@ -1,4 +1,5 @@
-import { Pill, Prose, type Tone } from '@tickets/ui';
+import { Pill, type Tone } from '@bh/ui';
+import { Prose } from '@bh/markdown';
 import type { Feature, Task, TaskStatus } from '../../shared/types';
 import { duration } from '../api';
 

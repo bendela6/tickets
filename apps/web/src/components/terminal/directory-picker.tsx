@@ -1,5 +1,5 @@
 import { useWorkdirRoots } from '../../api/use-workdir-dirs';
-import { Input } from '@tickets/ui';
+import { Input } from '@bh/ui';
 import { DirectoryTree } from '../../ui/directory-tree';
 
 export function DirectoryPicker({

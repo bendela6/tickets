@@ -12,8 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "verify:tokens": "pnpm --filter @tickets/ui tokens:verify"
+    "test": "turbo test"
   },
   "devDependencies": {
     "mprocs": "^0.9.6",

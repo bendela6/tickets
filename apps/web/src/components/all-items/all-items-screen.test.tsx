@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board, Field, ItemType, Option } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
-import { ToastProvider } from '@tickets/ui';
+import { ToastProvider } from '@bh/ui';
 import { AllItemsScreen } from './all-items-screen';
 
 const createdAt = '2026-01-01T00:00:00.000Z';
@@ -245,7 +245,7 @@ test('filtering by a shared field narrows rows across projects', async () => {
   await userEvent.click(screen.getByRole('button', { name: '＋ Filter' }));
   await userEvent.click(screen.getByRole('button', { name: /Field…/ }));
   await userEvent.click(await screen.findByRole('option', { name: 'Severity' }));
-  await userEvent.click(screen.getByRole('button', { name: 'Values…' }));
+  await userEvent.click(screen.getByRole('combobox', { name: 'Values…' }));
   await userEvent.click(await screen.findByRole('option', { name: 'Sev 1' }));
   await userEvent.keyboard('{Escape}');
   await userEvent.click(screen.getByRole('button', { name: 'Add' }));

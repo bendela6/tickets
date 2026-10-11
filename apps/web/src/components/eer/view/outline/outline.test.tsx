@@ -66,7 +66,7 @@ describe('Outline', () => {
   it('reopens a collapsed group when a query matches inside it', async () => {
     await renderDiagram(<Outline />, twoZoneRaw());
     // Every group starts OPEN, so the first click on Zone Two's caret collapses it.
-    fireEvent.click(screen.getByRole('button', { name: 'collapse Zone Two' }));
+    fireEvent.click(screen.getByLabelText('collapse Zone Two', { selector: 'button' }));
     expect(screen.queryByRole('treeitem', { name: 'tags' })).not.toBeInTheDocument();
     // Filtering has to win over the collapsed state, or a match lands inside a
     // closed group and the search looks like it found nothing.
@@ -90,10 +90,10 @@ describe('Outline', () => {
     // mount-time loop of `toggle()` calls.
     const row = screen.getByRole('treeitem', { name: 'Zone One, 1 table' });
     expect(row).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'collapse Zone One' }));
+    fireEvent.click(screen.getByLabelText('collapse Zone One', { selector: 'button' }));
     expect(row).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('treeitem', { name: 'users' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'expand Zone One' }));
+    fireEvent.click(screen.getByLabelText('expand Zone One', { selector: 'button' }));
     expect(screen.getByRole('treeitem', { name: 'users' })).toBeInTheDocument();
   });
 
@@ -250,7 +250,7 @@ describe('Outline', () => {
   it('draws the disclosure caret as an icon, not a text glyph', async () => {
     await renderDiagram(<Outline />, twoZoneRaw());
     // Every group starts open, so the caret's accessible name is "collapse …".
-    const caret = screen.getByRole('button', { name: 'collapse Zone One' });
+    const caret = screen.getByLabelText('collapse Zone One', { selector: 'button' });
     expect(caret.querySelector('svg')).not.toBeNull();
     expect(caret.textContent).toBe('');
   });

@@ -1,0 +1,54 @@
+title: Switch
+summary: Turns one setting on or off, and can show that a save is in flight.
+related: [Checkbox, CheckboxGroup]
+body:
+  - |
+    Turns one setting on or off.
+
+    It holds a boolean the way [Checkbox](/components/inputs/checkbox) does:
+    `value` in, the next boolean out of `onChange`. `pending` shows a save in
+    flight without taking the switch away from whoever just pressed it.
+  - h2: Import
+  - code: import { Switch } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Keep the value in state and pass its setter as `onChange`.
+  - demo: examples/controlled.tsx
+  - |
+    While `pending`, the knob carries a spinner and the switch keeps the
+    value just chosen, and stays focusable. If the save fails, set the value
+    back.
+  - demo: examples/pending.tsx
+  - |
+    `size` sets the track: 28 by 16, 32 by 18 or 40 by 22 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `tone` colours the track when it is on, and the focus ring; it is
+    `primary` unless set. [Tones](/foundations/tones) has the names.
+  - demo: examples/tones.tsx
+  - |
+    `readOnly` keeps the switch in the tab order and in its colour, and
+    ignores clicks; `disabled` takes it out of the tab order and fades it.
+    All three here show one value, and only the first can change it.
+  - demo: examples/read-only-and-disabled.tsx
+  - |
+    Leave `label` out when something else names the switch: point a
+    `<label htmlFor>` at its `id`, or give it an `aria-label`.
+  - demo: examples/named-from-outside.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Space]
+        does: Turns the switch on or off, unless it is read-only.
+  - |
+    It is a native checkbox with `role="switch"`, so a screen reader
+    announces a switch, on or off. `id`, and any other attribute it doesn't
+    take itself, go on that input. `pending` sets `aria-busy` and leaves the
+    switch enabled. `readOnly` sets `aria-readonly`; the platform's
+    `readonly` does nothing on a checkbox.
+  - h2: When not to use it
+  - |
+    For a mixed state, use [Checkbox](/components/inputs/checkbox): it has
+    `indeterminate`, and a switch has not.
+  - h2: Props
+  - props: Switch

@@ -5,7 +5,7 @@ import { useCreateField, usePlaceField, useUnplaceField, useUpdateField, useUpda
 import { typePill } from '../../domain/status';
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@tickets/ui';
+import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 

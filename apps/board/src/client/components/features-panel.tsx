@@ -1,4 +1,5 @@
-import { Drawer, Pill, Progress, Prose, ScreenState } from '@tickets/ui';
+import { Drawer, Pill, Progress, ScreenState } from '@bh/ui';
+import { Prose } from '@bh/markdown';
 import { useState } from 'react';
 import type { Feature } from '../../shared/types';
 import { duration } from '../api';

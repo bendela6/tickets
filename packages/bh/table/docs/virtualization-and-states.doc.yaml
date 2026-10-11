@@ -1,0 +1,70 @@
+title: Virtualization and states
+summary: Show ten thousand rows by drawing only those in view, load more as the user nears the end, and show loading, empty and failed tables.
+order: 10
+related: [Overview, Groups, Writing a skin]
+body:
+  - |
+    Show ten thousand rows by drawing only those in view, load more as the
+    user nears the end, and show loading, empty and failed tables.
+  - h2: Only the rows in view
+  - |
+    The table draws the rows in view and a few either side, whatever the
+    length of `rows`, and pads the space for the rest so the scrollbar is
+    true. It has no scroll box of its own: the nearest ancestor that scrolls
+    vertically scrolls it, which in an app is the shell's main area, and its
+    header sticks to that ancestor's top. It fills at least the rest of that
+    ancestor's height, and never less than 200 pixels.
+  - |
+    A row's height is known before the row is drawn: `rowHeight` is a number
+    of pixels, 40 (`ROW_HEIGHT`) without one, or a function of the row and
+    its index for rows of different heights. `@bh/ui`'s `rowHeightFor`
+    gives its two densities, 42 for `comfortable` and 32 for `compact`. A
+    skin draws each row exactly as tall as it is told, or every row after it
+    lands in the wrong place.
+  - h2: Loading more as the user scrolls
+  - |
+    `onEndReached` is called once the drawn rows reach the last ten, so the
+    next page loads while the user is still reading. It is called once for
+    each length of `rows`: a page that answers
+    with more rows is asked again at the new end, and one that answers with
+    none, at the true end of the list, is not. `status` is what the bar under
+    the table says on the page's behalf; without it, the bar counts the rows
+    the table holds.
+  - demo: examples/loading-more-as-you-scroll.tsx
+  - h2: Loading, empty and failed
+  - |
+    The header and the frame always stay; what changes is the body under
+    them:
+  - |
+    - **Loading:** `isLoading` with no rows draws ten skeleton rows, as tall
+      as `rowHeight`. With rows it changes nothing.
+    - **Refreshing:** `isRefreshing` keeps the rows where they are, dimmed,
+      with a moving line under the header, so nothing shifts under the
+      pointer and an old number reads as old.
+    - **Empty:** no rows, no error, not loading. `isFiltered` says the
+      filters are why, and `onClearFilters` gives that state its button.
+      `tableRender({ empty: { title, detail } })` words the plain empty
+      state for what the table holds.
+    - **Failed:** `error` replaces the body with its message, and `onRetry`
+      gives it a button. It wins over every other state.
+  - demo: examples/table-states.tsx
+  - |
+    Without `onRetry` or `onClearFilters` the skin draws no button: the
+    table can't retry a load it never made, or clear filters it never saw.
+    The totals row shows only beside rows, so it is gone in all four.
+  - h2: Rules
+  - |
+    - Only the rows in view are drawn, and the table is as tall as all of
+      them: the page scrolls it.
+    - A row is exactly as tall as `rowHeight` says, which the skin applies.
+    - Skeleton rows show only while loading with no rows; a reload with rows
+      shows them, dimmed only when `isRefreshing` is given.
+    - An error wins over loading, and loading over empty.
+    - In every state the header and the frame stay, and only the body is
+      replaced.
+    - `onEndReached` is called once per length of `rows`.
+  - h2: Reference
+  - ref: ROW_HEIGHT
+  - ref: rowHeightFor
+  - ref: tableRender
+  - ref: EmptyCopy

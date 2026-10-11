@@ -1,4 +1,4 @@
-import { Tabs, cn } from '@tickets/ui';
+import { Tabs, cn } from '@bh/ui';
 import { selectedNodeOnly, type EditorState } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';

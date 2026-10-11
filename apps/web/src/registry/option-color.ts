@@ -1,4 +1,4 @@
-import { colorOf, HUES, type Hue } from '@tickets/ui';
+import { HUES, PALETTE, type Hue } from '@bh/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 
@@ -88,7 +88,7 @@ export function kindColor(kind: StatusKind | null): OptionColor {
 // against the old list keeps rendering its own colour, and hexToOptionColor
 // above still maps it onto the nearest hue for chip tinting.
 export const OPTION_COLOR_CHOICES: { color: OptionColor; hex: string }[] = HUES.map(
-  (color) => ({ color, hex: colorOf('light', color, 9).toUpperCase() }),
+  (color) => ({ color, hex: (PALETTE.light.hue[color]?.['9'] ?? '').toUpperCase() }),
 );
 
 export const DEFAULT_OPTION_HEX = OPTION_COLOR_CHOICES[0]!.hex;

@@ -4,7 +4,8 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Input, ItemKey, Pill, SectionHeader } from '@tickets/ui';
+import { Button, Combobox, type Option, Input, Pill, SectionHeader } from '@bh/ui';
+import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Direction is folded into the chip text: outgoing "label →", incoming

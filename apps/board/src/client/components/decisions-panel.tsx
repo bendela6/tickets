@@ -1,4 +1,5 @@
-import { Pill, Prose, ScreenState, type Tone } from '@tickets/ui';
+import { Pill, ScreenState, type Tone } from '@bh/ui';
+import { Prose } from '@bh/markdown';
 import type { Decision, DecisionOption, DecisionStatus } from '../../shared/types';
 
 // The richest object on the board. A decision is only useful with the reasoning that

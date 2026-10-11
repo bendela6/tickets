@@ -1,5 +1,5 @@
 import type { IssueLevel, SignalsAppRow } from '../../api/signals/signals-api';
-import { cn, Input } from '@tickets/ui';
+import { cn, Input } from '@bh/ui';
 
 const selectClasses =
   'h-28 rounded-8 border-1 border-gray-6 bg-surface-raised px-8 font-sans text-12 text-gray-11 ' +

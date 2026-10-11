@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
+import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
 import type { SharedField, UnsharedField } from './shared-fields';
 import { canonicalColumns } from './shared-fields';
 

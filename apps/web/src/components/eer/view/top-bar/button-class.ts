@@ -1,7 +1,7 @@
 // Shared default top-bar button look — <TopBar/>'s own buttons (Lines, Fit,
 // Rearrange, …), defined once here instead of duplicated per-button.
 
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 
 export const btn = cn(
   'rounded-6 border-1 border-gray-6 bg-gray-2 px-12 py-8',

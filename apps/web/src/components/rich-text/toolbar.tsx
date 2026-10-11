@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
-import { cn, Icon, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@tickets/ui';
+import { cn, Icon, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
 
 export type ToolbarVariant = 'full' | 'compact';
 
@@ -37,7 +37,7 @@ const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
 // One glyph + one action per toolbar control id (see @tickets/richtext
 // REGISTRY for the full id list). Text glyph treatments match the DEF table
-// in RteToolbar.dc.html; icon glyphs stand in for lucide via @tickets/ui's
+// in RteToolbar.dc.html; icon glyphs stand in for lucide via @bh/ui's
 // Icon registry (list/quote/link/plus/chevron-down/chevron-right/
 // circle-info/minus/check).
 const CONTROLS: Record<string, ControlDef> = {

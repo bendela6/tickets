@@ -1,0 +1,32 @@
+title: ScreenState
+summary: 'What a screen shows in place of its content: empty, not found, or an error.'
+related: [Spinner, Card, Toast]
+body:
+  - |
+    What a screen shows in place of its content: empty, not found, or an
+    error.
+
+    One component draws them all, and `tone` and `icon` tell them apart: the
+    icon sits in a disc of the tone, above a title, a line of body and an
+    action, each optional but the title.
+  - h2: Import
+  - code: import { ScreenState } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    An error takes the `danger` tone, and an action to try again.
+  - demo: examples/an-error.tsx
+  - |
+    An empty state takes the `neutral` tone, the default, or `success` when
+    empty is the good outcome.
+  - demo: examples/empty.tsx
+  - |
+    Without `icon`, there is no disc.
+  - demo: examples/not-found.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The title is a plain `div`, not a heading, and the block is not a live
+    region: a screen reader reads it in place but doesn't announce it when it
+    appears.
+  - h2: Props
+  - props: ScreenState

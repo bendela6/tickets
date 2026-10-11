@@ -1,0 +1,38 @@
+title: StatusDot
+summary: Shows whether something is running right now.
+related: [Dot, Pill, Spinner]
+body:
+  - |
+    Shows whether something is running right now.
+
+    It has two states, told apart by shape as well as colour: `active` is a
+    filled dot in `tone` that pulses, and `resting` a neutral hollow ring. The
+    state is also written out for screen readers.
+  - h2: Import
+  - code: import { StatusDot } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `active` and `resting`, each beside the name of what it describes.
+  - demo: examples/states.tsx
+  - |
+    `tone` colours the active dot, `success` by default. A resting dot is
+    always neutral.
+  - demo: examples/tones.tsx
+  - |
+    `label` replaces the word a screen reader hears, `active` or `resting`,
+    with your own.
+  - demo: examples/labels.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The dot itself is `aria-hidden`. Beside it, visually hidden text says
+    `label`, or the state's name when there is no `label`. The pulse runs only
+    when the reader's system allows motion.
+  - h2: When not to use it
+  - |
+    - For a state with more than two values, put a
+      [Pill](/components/primitives/pill) beside the dot.
+    - For colour alone, with nothing to say, use
+      [Dot](/components/primitives/dot).
+  - h2: Props
+  - props: StatusDot

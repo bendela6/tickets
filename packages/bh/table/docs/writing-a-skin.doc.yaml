@@ -1,0 +1,113 @@
+title: Writing a skin
+summary: Draw the table in a look of your own, or change one part of @bh/ui's, by writing the functions the table calls for each part.
+order: 12
+related: [Overview, Cell renderers, Keyboard focus]
+body:
+  - |
+    Draw the table in a look of your own, or change one part of `@bh/ui`'s,
+    by writing the functions the table calls for each part.
+  - h2: What a skin is
+  - |
+    `<Table render>` takes a `TableRender`: a function for each part of the
+    table, each handed what to draw. The table decides which parts to draw
+    and when, and draws nothing itself but the boxes they sit in: the frame,
+    a box that clips the columns and slides them sideways, and a dock at the
+    foot for the scrollbar and the status bar. `@bh/ui`'s skin is
+    `tableRender<Row>()`.
+  - |
+    Eleven parts are required: `root`, `thead`, `th`, `tbody`, `tr`, `td`,
+    `groupHeader`, `skeletonRow`, `error`, `empty` and `tfoot`. The rest are
+    optional, and a skin without one draws none of what it would:
+    `filterRow` (no filter row), `selectCell` (no checkbox column),
+    `statusBar`, `hbar` (the docked scrollbar), `resizeGuide`, `scrim` (the
+    fades at hidden edges) and `frameClass` (classes for the frame, given how
+    far it is scrolled).
+  - h2: A plain skin
+  - |
+    This one draws the required parts with plain elements and a few classes,
+    and a resize grip with `useColumnResize`. It sorts, resizes, and moves by
+    keyboard like any table, because all of that is the table's.
+  - demo: examples/a-plain-skin.tsx
+    collapse: 20
+  - h2: What every skin must do
+  - |
+    - **Spread `focusProps`** onto the element `th` and `td` draw. It carries
+      the keyboard's tab stop and the cell's address, `data-cell-row` and
+      `data-cell-col`, by which the table finds a cell again after its row
+      has scrolled away and back, and measures it to fit or resize a column.
+    - **Attach `tbody`'s `ref` and `style`** to the element that holds the
+      rows. The ref tells the table where its rows start in the page; the
+      style is the padding that stands in for the rows not drawn.
+    - **Apply `style` on `tr` and `groupHeader`.** It is the row's height,
+      which the table counted on when it placed every row after it.
+    - **Lay rows out on `gridTemplate`**, which every row-shaped part is
+      handed and `root` too, so a skin can set it once for the whole table.
+    - **Draw rows inside the grid.** `root` is `role="grid"`, and a grid holds
+      rows: the empty and error states are a row holding one cell, whatever
+      the cell holds.
+    - **Name the checkbox** `selectCell` draws with its `label`, and call its
+      `onChange` with the click's `shiftKey`.
+  - h2: Headers
+  - |
+    Put `onSortClick` on the control that sorts. Enter on a focused header
+    clicks the first control in it, so that control comes first; a column's
+    `headerAccessory` goes after it, inside an element carrying
+    `HEADER_ACCESSORY_ATTR`, where Alt+↓ finds it. A slot is called as a
+    function, so a hook it needs, `useColumnResize` for one, goes in a
+    component it draws, as `Grip` above. Calling `resize.onDragChange` with
+    the width as it changes, and `null` when the drag ends, has the table
+    draw `resizeGuide` over every row.
+  - h2: Pinned columns
+  - |
+    A pinned cell is handed a `pin` (the totals, filter and skeleton rows a
+    `pins` map, since they draw their own cells): apply `pin.shift` as
+    `position: relative; left`, and give the cell an opaque background so the
+    columns sliding under it don't show through. `tr`'s `hasPinned` says when
+    a row needs a background of its own for a pinned cell to inherit. The
+    [Pinning](/tables/pinning) page has the rest.
+  - h2: Changing one part
+  - |
+    To change one part of `@bh/ui`'s look, spread its skin and replace that
+    function. Here the empty table offers to put the books back:
+  - demo: examples/replacing-one-slot.tsx
+  - |
+    For the empty state's words alone, `tableRender({ empty: { title,
+    detail } })` is enough ([Virtualization and
+    states](/tables/virtualization-and-states)).
+  - h2: Testing
+  - |
+    `makeStubRender()` is a skin with no look, for tests: each part draws a
+    plain element marked `data-slot` (`th`, `tr`, `td`, `empty`, ...) with
+    what it was handed as data attributes, so a test checks what the table
+    asked for without any real chrome.
+  - h2: Rules
+  - |
+    - The table draws every header, row, cell, band and state through the
+      skin, and nothing of its own but the frame, the clip and the dock.
+    - `focusProps`, `tbody`'s `ref` and `style`, and a row's `style` are
+      always applied, or focus, scrolling and row positions break.
+    - A skin without an optional part loses that feature, and nothing else.
+    - Each part is called as a function during the table's render, not
+      mounted as a component.
+  - h2: Reference
+  - ref: TableRender
+  - ref: RenderRootCtx
+  - ref: RenderTheadCtx
+  - ref: RenderThCtx
+  - ref: RenderThResize
+  - ref: RenderTbodyCtx
+  - ref: RenderTrCtx
+  - ref: RenderTdCtx
+  - ref: RenderGroupHeaderCtx
+  - ref: RenderSkeletonRowCtx
+  - ref: RenderErrorCtx
+  - ref: RenderEmptyCtx
+  - ref: RenderTfootCtx
+  - ref: RenderFilterRowCtx
+  - ref: RenderSelectCellCtx
+  - ref: RenderStatusBarCtx
+  - ref: RenderHbarCtx
+  - ref: RenderResizeGuideCtx
+  - ref: RenderScrimCtx
+  - ref: HEADER_ACCESSORY_ATTR
+  - ref: makeStubRender

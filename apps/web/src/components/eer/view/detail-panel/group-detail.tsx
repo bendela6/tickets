@@ -1,4 +1,4 @@
-import { cn, Dot } from '@tickets/ui';
+import { cn, Dot } from '@bh/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';

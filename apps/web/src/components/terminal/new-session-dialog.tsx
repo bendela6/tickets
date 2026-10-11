@@ -8,15 +8,15 @@ import {
   type ReactNode,
 } from 'react';
 
-import { defineForm, Form, useForm, type FormApi } from '@tickets/form';
+import { defineForm, Form, useForm, type FormApi } from '@bh/form';
 
 import { useCreateTerminalSession } from '../../api/use-create-terminal-session';
 import { useCreateWorkdir } from '../../api/use-create-workdir';
 import { useWorkdirs } from '../../api/use-workdirs';
 import { formRegistry } from '../../form/registry';
-import { Button, Combobox, DialogContent, DialogDescription, DialogFooter, DialogRoot, DialogTitle, Input, SectionHeader } from '@tickets/ui';
+import { Button, Combobox, DialogContent, DialogDescription, DialogFooter, DialogRoot, DialogTitle, Input, SectionHeader } from '@bh/ui';
 
-// The add-workdir fields, driven by @tickets/form: a mono name and the
+// The add-workdir fields, driven by @bh/form: a mono name and the
 // directory-tree widget. `command` is NOT here — it applies to both the add
 // and pick flows, so it stays a plain controlled input below the form.
 const workdirFormConfig = defineForm(formRegistry).build((b) => [
@@ -46,7 +46,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
 }
 
 // The "New terminal session" flow (screen 10, terminal variant). Picks an
-// existing workdir (Combobox) or adds one inline via @tickets/form — E1 has no
+// existing workdir (Combobox) or adds one inline via @bh/form — E1 has no
 // separate workdir-admin screen, so the first workdir is created here — then
 // POSTs the session and hands the new id back so the caller can navigate.
 export function NewSessionDialog({
@@ -67,7 +67,8 @@ export function NewSessionDialog({
   // rendered via `<Form formApi>` (api mode) so this single instance backs both
   // the fields and our imperative reads/writes.
   const { form, cache } = useForm({
-    config: workdirFormConfig,
+    form: workdirFormConfig,
+    registry: formRegistry,
     defaultValues: { name: '', path: '' },
   });
 
@@ -170,7 +171,8 @@ export function NewSessionDialog({
     },
     reset: () => form.reset(),
     getValues: () => form.store.state.values,
-    __internals: { form, cache },
+    // Widened as bh's own useStandaloneForm widens it: <Form formApi> draws any registry's form.
+    __internals: { form, cache, config: workdirFormConfig as unknown as FormApi['__internals']['config'] },
   };
 
   function reset() {
@@ -220,7 +222,7 @@ export function NewSessionDialog({
         <div className="mt-16 flex flex-col gap-16">
           {showAddForm ? (
             <>
-              <Form formApi={formApi} config={workdirFormConfig} registry={formRegistry} />
+              <Form formApi={formApi} registry={formRegistry} />
               {list.length > 0 ? (
                 <button
                   type="button"

@@ -7,8 +7,9 @@ import { useProjects } from '../../api/use-projects';
 import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@tickets/table';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@tickets/ui';
+import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
+import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
+import { ItemKey } from '../item-key';
 import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
@@ -391,7 +392,7 @@ export function AllItemsScreen() {
 
   // Every column sorts, matching the project board's table where every header
   // is clickable. Column RESIZING stays off: it is a new, persisted capability
-  // the old hand-rolled table never had — the migration onto @tickets/table
+  // the old hand-rolled table never had — the migration onto @bh/table
   // introduced it silently — and nobody has yet seen it run in a browser.
   const columns: Column<Row>[] = [
     {

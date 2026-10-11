@@ -1,0 +1,61 @@
+title: Tree
+summary: A hierarchy of rows that expand and collapse, which the keyboard can walk.
+related: [Tabs, Spinner]
+body:
+  - |
+    A hierarchy of rows that expand and collapse, which the keyboard can walk.
+
+    `useTreeView` holds the state: which rows show, and which is expanded,
+    focused and selected. `Tree` and `TreeRow` draw what it returns, so what
+    a row shows is yours. It never fetches: a node whose `children` is
+    `undefined` is not loaded yet, and the hook asks for it with `onExpand`.
+  - h2: Import
+  - code: import { Tree, TreeRow, useTreeView } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `useTreeView` flattens the nodes into `rows`, and each row becomes a
+    `TreeRow`, wired to the hook's `toggle`, `select` and `rowElementId`. A
+    leaf has `children: []`: a node with no `children` at all gets a caret,
+    since it may have some once loaded.
+  - demo: examples/file-tree.tsx
+  - |
+    Expanding a node whose `children` is `undefined` calls `onExpand` with its
+    id, once. Give it children on a later render, and `caret` can show a
+    [Spinner](/components/feedback/spinner) until then.
+  - demo: examples/loading-children.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [↓, ↑]
+        does: Moves to the next or the previous row.
+      - keys: [→]
+        does: Expands a collapsed row; on an open row or a leaf, moves to the next row.
+      - keys: [←]
+        does: Collapses an open row; otherwise moves to its parent.
+      - keys: [Home, End]
+        does: Moves to the first or the last row.
+      - keys: [Enter, Space]
+        does: Selects the focused row.
+      - keys: [A–Z, 0–9]
+        does: Moves to the next row whose node's `label` starts with that character.
+      - keys: [Tab]
+        does: Moves past the whole tree, which is one tab stop.
+  - |
+    The tree keeps focus on itself and points `aria-activedescendant` at the
+    focused row, so no row is a tab stop. The rows are flat in the DOM, so
+    each `treeitem` carries `aria-level`, `aria-selected` and, when it can
+    expand, `aria-expanded`. Its name is its text, or `label`.
+
+    The caret is for the mouse, so assistive tech skips it: the arrow keys
+    expand a row, and its `treeitem` says `aria-expanded`. `leading` sits
+    outside the `treeitem` too: an icon there is fine, but a control there is
+    something a tree may not hold, and axe reports it.
+  - h2: Props
+  - h3: Tree
+  - props: Tree
+  - h3: TreeRow
+  - props: TreeRow
+  - h3: useTreeView
+  - ref: useTreeView
+  - ref: UseTreeViewResult
+  - ref: TreeNode

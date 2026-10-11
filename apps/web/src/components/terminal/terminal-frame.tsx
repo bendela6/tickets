@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button, cn } from '@tickets/ui';
+import { Button, cn } from '@bh/ui';
 import { exitCodeTone } from '../../domain/session-status';
 import type { ConnState } from '../session/use-session-socket';
 

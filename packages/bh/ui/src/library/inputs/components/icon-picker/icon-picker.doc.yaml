@@ -1,0 +1,53 @@
+title: IconPicker
+summary: Picks one icon from a grid you can search.
+related: [Icon, ColorPicker, Combobox]
+body:
+  - |
+    Picks one icon from a grid you can search.
+
+    `value` is an icon's name, or `null`. The field shows the glyph and its
+    name: the drawing says more than `circle-dashed` does, and the name is
+    what you search by.
+  - h2: Import
+  - code: import { IconPicker } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The grid offers every icon in the registry, eight to a row. Typing filters
+    it by name; when nothing matches, it says so and names the query.
+  - demo: examples/choosing-an-icon.tsx
+  - |
+    `icons` narrows the set on offer, in the order given.
+  - demo: examples/a-few-icons.tsx
+  - |
+    `size` steps the field's height, padding, radius and type together: 30,
+    38 and 46 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` dims the field and takes it out of the tab order. `readOnly`
+    keeps the tab stop and the value at full contrast, drops the chevron, and
+    refuses to open.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the grid, with the focus in its search box.
+      - keys: [ArrowUp, ArrowDown]
+        does: Moves the cursor one row up or down, from the search box or the grid.
+      - keys: [ArrowLeft, ArrowRight]
+        does: In the grid, moves the cursor one icon back or forward. In the search box, they move the text caret.
+      - keys: [Enter]
+        does: In the grid, picks the icon under the cursor and closes it.
+      - keys: [Escape]
+        does: Closes the grid.
+  - |
+    The field is a `button` with `role="combobox"` and
+    `aria-haspopup="dialog"`; name it with a `<label htmlFor>` and `id`. The
+    grid is a `grid` named by `label`, "Icons" by default, in rows of eight.
+    Each cell is a button named by its icon's name, and `aria-selected` marks
+    the chosen one. In the search box, focus stays put and the box points at
+    the cell under the cursor with `aria-activedescendant`; in the grid,
+    focus moves with the cursor.
+    `readOnly` sets `aria-disabled`, and `tone="danger"` sets `aria-invalid`.
+  - h2: Props
+  - props: IconPicker

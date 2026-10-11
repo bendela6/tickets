@@ -1,0 +1,243 @@
+---
+title: bh-lint
+summary: "ESLint with bh's presets: base for any TypeScript, react and node on
+  top of it, and bh's own rule."
+order: 2
+related: [bh-format, tsconfig presets, bh-madge]
+---
+
+[//]: # 'written from bh-lint.doc.yaml by pnpm docs:sync; edit that file, not this one'
+
+# bh-lint
+
+ESLint with bh's presets: `base` for any TypeScript, `react` and `node` on
+top of it, and bh's own rule.
+
+`bh-lint` is ESLint, run from `@bh/config`'s dependencies with the
+arguments you give it. ESLint finds the config for each file itself: the
+nearest `eslint.config.js`, in the file's folder or above it.
+
+## Running it
+
+```sh
+bh-lint src/
+bh-lint --fix src/
+bh-lint src/ docs/examples/
+```
+
+A package's `lint` script names its folders, and `pnpm lint` at the root
+runs every package's. `--fix` writes what a rule can mend itself; run
+[bh-format](bh-format.md) after it.
+
+## A config
+
+A config spreads a preset and adds what the project wants beside it. An
+app's root config leaves bh's copies out:
+
+```js
+import base from '@bh/config/eslint/base';
+
+export default [{ ignores: ['packages/bh/**'] }, ...base];
+```
+
+Every preset is type-aware: it reads each file's types through the
+nearest `tsconfig.json` that includes it. A file none includes is not
+skipped but fails, "was not found by the project service". So every
+folder given to `bh-lint` is in some `tsconfig.json`'s `include`: in bh,
+a guide's examples have a `docs/tsconfig.json` of their own for it.
+
+### A preset per project
+
+The config in a project's folder is the one its files take, over the
+root's. An app with a React front end and a Node server gives each its
+own:
+
+```js
+import react from '@bh/config/eslint/react';
+
+export default [...react];
+```
+
+```js
+import node from '@bh/config/eslint/node';
+
+export default [...node];
+```
+
+## The presets
+
+- **`base`**: ESLint's recommended rules, typescript-eslint's `strict`
+  and `stylistic`, the rules below, and `eslint-config-prettier`, which
+  turns off every rule Prettier's layout would fight. It ignores `dist`,
+  `build`, `.turbo`, `node_modules` and `.legacy`, `eslint.config.js`,
+  and every `*.config.{js,mjs,cjs,ts}`.
+- **`react`**: `base`, with the browser's globals, `eslint-plugin-react`'s
+  recommended rules, and `eslint-plugin-react-hooks`'s: the rules of
+  hooks, and the React Compiler's checks (`set-state-in-effect`, `refs`,
+  `purity`, ...). `react-in-jsx-scope` and `prop-types` are off: the JSX
+  transform needs no `React` in scope, and the types check the props.
+  React is taken as 19. `jsx-a11y` is registered with none of its rules
+  on, for a project to turn on the ones it wants.
+- **`node`**: `base`, with Node's globals, and `process.env` refused
+  everywhere but a file named `environment.ts`.
+
+## What base asks
+
+| Rule                                                              | Asks                                                                                     |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `@typescript-eslint/consistent-type-imports`                      | `import type` for what is used only as a type                                            |
+| `@typescript-eslint/consistent-type-definitions`                  | `interface`, not `type`, for an object's shape                                           |
+| `@typescript-eslint/no-explicit-any`                              | no `any`                                                                                 |
+| `@typescript-eslint/no-non-null-assertion`                        | no `value!`                                                                              |
+| `@typescript-eslint/no-floating-promises`                         | each promise awaited, returned, or marked `void`                                         |
+| `@typescript-eslint/no-misused-promises`                          | no promise where a condition goes; an async callback may stand where a void one is asked |
+| `@typescript-eslint/await-thenable`                               | `await` on a promise only                                                                |
+| `@typescript-eslint/no-unnecessary-type-assertion`                | no `as` that changes nothing                                                             |
+| `@typescript-eslint/prefer-nullish-coalescing`                    | `??`, not a logical or, for a value that may be missing                                  |
+| `@typescript-eslint/prefer-optional-chain`                        | `a?.b` over `a && a.b`                                                                   |
+| `@typescript-eslint/no-unused-vars`                               | no unused name, unless it starts with `_`                                                |
+| `@typescript-eslint/no-deprecated`                                | a warning where code uses something marked `@deprecated`                                 |
+| `no-restricted-syntax`                                            | no `.js` on a relative import or re-export: `./rows`, not `./rows.js`                    |
+| `no-console`                                                      | `console.warn` and `console.error` only                                                  |
+| `eqeqeq`                                                          | `===` and `!==`, but `== null` for null or undefined                                     |
+| `curly`                                                           | braces round every `if`, `else` and loop body                                            |
+| `no-var`, `prefer-const`, `object-shorthand`                      | `const` unless reassigned, and `{ name }` over `{ name: name }`                          |
+| [`bh/multiline-arrow-needs-body`](#bh-multiline-arrow-needs-body) | a block, with `return`, for an arrow whose body runs over lines                          |
+
+An empty function is allowed, for a no-op, and `void` may be a type
+argument, as in `Promise<void>`. `curly` comes after
+`eslint-config-prettier`, which turns it off: Prettier never adds or
+takes away braces, so the two can't fight.
+
+## bh/multiline-arrow-needs-body
+
+An arrow whose body is an expression that ends on a later line than its
+`=>` takes a block, with `return`. One line stays as it is.
+
+Every function whose body runs over lines then has one shape, and a line
+goes in before its `return` (a check, a name for a part) without
+reshaping it. It meets Prettier's work too: an arrow too long for its
+line is wrapped onto the next, and then fails.
+
+```ts
+interface City {
+  name: string;
+  size: number;
+}
+
+// Fails: the body runs onto the next line.
+export const bigNames = (cities: City[]) =>
+  cities.filter((city) => city.size > 1000).map((city) => city.name);
+```
+
+```ts
+interface City {
+  name: string;
+  size: number;
+}
+
+export const bigNames = (cities: City[]) => {
+  return cities.filter((city) => city.size > 1000).map((city) => city.name);
+};
+
+// One line needs no block.
+export const count = (cities: City[]) => cities.length;
+```
+
+The same holds for a body in parentheses, as a list's rows often are:
+
+```tsx
+// Fails: the row's body ends two lines below its arrow.
+export function Names({ names }: { names: string[] }) {
+  return (
+    <ul>
+      {names.map((name) => (
+        <li key={name}>{name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+export function Names({ names }: { names: string[] }) {
+  return (
+    <ul>
+      {names.map((name) => {
+        return <li key={name}>{name}</li>;
+      })}
+    </ul>
+  );
+}
+```
+
+`bh-lint --fix` writes the block and drops the parentheses round the
+body; `bh-format` then lays it out.
+
+## process.env in one file
+
+Under `node`, the settings a server reads from its environment come from
+one module, `environment.ts`, which reads `process.env` and hands the rest
+of the server typed values with their defaults. Anywhere else,
+`process.env`, `process['env']` and `const { env } = process` are errors:
+"Read env via ./environment.ts, not process.env directly."
+
+```ts
+export const environment = {
+  port: Number(process.env.PORT ?? 3000),
+  dataDir: process.env.DATA_DIR ?? './data',
+};
+```
+
+Any `environment.ts` may read it, in whichever folder: each of an app's
+servers keeps its own.
+
+## Adding rules
+
+A block after the preset wins for the files it names. bh's own root
+config adds its layers this way: each package may import only the
+packages below it.
+
+```js
+import base from '@bh/config/eslint/base';
+
+function onlyImports(pkg, allowed) {
+  return {
+    files: [`packages/*/${pkg}/**/*.{ts,tsx}`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@bh/*', ...allowed.map((name) => `!@bh/${name}`)],
+              message: `@bh/${pkg} may only import @bh/{${allowed.join(',')}}`,
+            },
+          ],
+        },
+      ],
+    },
+  };
+}
+
+export default [
+  ...base,
+  onlyImports('form', ['config']),
+  onlyImports('ui', ['config', 'form', 'table', 'markdown']),
+  onlyImports('shell', ['config', 'ui']),
+];
+```
+
+Flat config replaces a rule's options whole, file by file. A later block
+that sets `no-restricted-syntax` drops `base`'s ban on `.js` imports for
+the files it names, so a block adding a selector repeats `base`'s.
+
+## Rules
+
+- Every file `bh-lint` reads is in a `tsconfig.json`'s `include`.
+- A relative import has no extension: `moduleResolution: bundler` finds
+  the `.ts` ([tsconfig presets](tsconfig.md)).
+- What is used only as a type is imported with `import type`.
+- Under `node`, `process.env` is read in `environment.ts` alone.
+- Layout is Prettier's: `eslint-config-prettier` comes last in `base` but
+  for `curly`, which can't fight it.

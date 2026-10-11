@@ -1,0 +1,61 @@
+title: Combobox
+summary: One choice from a list with a search box, shown as plain text.
+related: [Select, MultiCombobox, UserPicker]
+body:
+  - |
+    One choice from a list with a search box.
+
+    `value` is `string | null`, since a single choice can always be empty.
+    There is no clear button: a value is changed by picking another. The
+    field shows the chosen label as plain text, with a dot before it when the
+    option has a `color`.
+  - h2: Import
+  - code: import { Combobox } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Opening it puts the focus in the search box. Typing keeps the options
+    whose label contains the text, ignoring case, and a count says how many
+    of the whole are left.
+  - demo: examples/searching.tsx
+  - |
+    `searchable={false}` drops the search box, for a short, fixed set. The
+    list takes the focus instead, and the keys stay the same.
+  - demo: examples/without-search.tsx
+  - |
+    An option's `color` puts a dot before the label on the field, and draws
+    the option as a pill in the list.
+  - demo: examples/coloured-options.tsx
+  - |
+    `size` steps the height, padding, radius and type together: 30, 38 and 46
+    pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` dims the field and takes it out of the tab order. `readOnly`
+    keeps the tab stop and the value at full contrast, and refuses to open.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the list.
+      - keys: [ArrowDown, ArrowUp]
+        does: Moves the cursor to the next or previous option, stepping over disabled ones.
+      - keys: [Enter]
+        does: In the list, picks the option under the cursor and closes it.
+      - keys: [Escape]
+        does: Closes the list.
+  - |
+    The field is a plain `button`, named by what it shows, the chosen label or
+    the placeholder, unless a `<label htmlFor>` with its `id` names it. In the
+    open list, the search box is a `searchbox` whose `aria-activedescendant`
+    points at the option under the cursor in the `listbox`; with
+    `searchable={false}`, the listbox points at it itself.
+
+    `readOnly` sets `aria-disabled` rather than `disabled`, so the field keeps
+    its tab stop.
+  - h2: When not to use it
+  - |
+    - For a short list that needs no search, use [Select](/components/inputs/select).
+    - For several values, use [MultiCombobox](/components/inputs/multi-combobox).
+  - h2: Props
+  - props: Combobox

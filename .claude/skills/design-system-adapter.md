@@ -1,5 +1,11 @@
 # Design-System Adapter — tickets
 
+> **The design system is bh's now** (`bendela6/bh`): `packages/web/ui`, `form`
+> and `table` became `packages/bh/{ui,form,table}`, copies of a bh release
+> that are never edited here. Paths below that name `packages/web/ui` and
+> `@tickets/ui` describe what is now bh's `packages/web/ui` (`@bh/ui`): change
+> a token or a component there, in bh.
+
 Filled instance of `_adapter-template.md` for this repo. The four generic
 design→code skills read this file for every stack-specific detail; nothing
 here should need to leak back into those skills.

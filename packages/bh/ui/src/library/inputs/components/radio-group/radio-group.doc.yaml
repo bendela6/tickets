@@ -1,0 +1,63 @@
+title: RadioGroup
+summary: One choice from a few options, every option visible.
+related: [SegmentedControl, Select, CheckboxGroup]
+body:
+  - |
+    One choice from a few options, every option visible.
+
+    `value` is the chosen option's `value`. A click changes it and never
+    empties it, so a radio group always holds a choice. `label` is required:
+    it becomes the `<legend>` of a `<fieldset>`, which nothing outside can
+    name.
+  - h2: Import
+  - code: import { RadioGroup } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Keep the value in state and pass its setter as `onChange`. The radios
+    share a generated `name`; pass `name` only when a submitted form needs a
+    particular key.
+  - demo: examples/controlled.tsx
+  - |
+    `variant="card"` gives each option a bordered box that lights up when
+    chosen, and the whole box takes the click. `tone` colours that border
+    and fill as well as the dot.
+  - demo: examples/cards.tsx
+  - |
+    `size` sets the circle, 14, 16 or 20 pixels, the type, and the space
+    between options.
+  - demo: examples/sizes.tsx
+  - |
+    The options sit in a row. Add `flex-wrap` through `className` to let a
+    long row wrap.
+  - demo: examples/many-options.tsx
+  - |
+    From the top: editable, read-only and disabled. An option's own
+    `disabled` takes out that option alone, and the group's takes out all of
+    them. `readOnly` keeps the group in the tab order and ignores clicks,
+    and its labels keep their contrast.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves into the group, onto the chosen option, and on out of it.
+      - keys: [ArrowDown, ArrowRight, ArrowUp, ArrowLeft]
+        does: Moves to the next or previous option and chooses it, unless the group is read-only.
+      - keys: [Space]
+        does: Chooses the focused option.
+  - |
+    The radios are native and share one `name`, so the browser treats them
+    as one choice with one tab stop. The `<fieldset>` has
+    `role="radiogroup"` and is named by its legend, which is visually
+    hidden; `id` goes on it. `readOnly` sets `aria-readonly` on the group.
+  - h2: When not to use it
+  - |
+    - For two to five short options drawn as one control, use
+      [SegmentedControl](/components/inputs/segmented-control).
+    - To keep the options out of sight until asked for, use
+      [Select](/components/inputs/select): one choice, behind a field that
+      opens.
+    - For several choices at once, use
+      [CheckboxGroup](/components/inputs/checkbox-group).
+  - h2: Props
+  - props: RadioGroup

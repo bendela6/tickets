@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Icon, type IconName, type Tone } from '@tickets/ui';
+import { Icon, type IconName, type Tone } from '@bh/ui';
 
 // The app's ONE signals issue-status mapping — ported from the retired
 // signals status-chip component's STATUS table. Shape-coded per

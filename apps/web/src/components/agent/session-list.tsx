@@ -3,7 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { useArchiveAgentSession, useUnarchiveAgentSession } from '../../api/use-archive-agent-session';
 import type { AgentSession } from '../../api/types';
 import { sessionStatus } from '../../domain/session-status';
-import { Pill, SessionKindGlyph } from '@tickets/ui';
+import { Pill } from '@bh/ui';
+import { SessionKindGlyph } from '../session/session-kind-glyph';
 import { formatAge } from '../../utils/format-age';
 import { buildSessionTree, type SessionTreeNode } from './build-session-tree';
 

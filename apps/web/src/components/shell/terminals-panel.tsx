@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTerminalSessions } from '../../api/use-terminal-sessions';
 import { useWorkdirs } from '../../api/use-workdirs';
-import { RailLabel } from '@tickets/ui';
+import { RailLabel } from './rail-label';
 import { NewSessionDialog } from '../terminal/new-session-dialog';
 import { SessionList } from '../terminal/session-list';
 

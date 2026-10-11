@@ -1,0 +1,108 @@
+title: Writing an input
+summary: Make a control of your own into a kind any form can name.
+order: 9
+related: [The registry, Instrument's bindings, Building a form]
+body:
+  - |
+    Make a control of your own into a kind any form can name.
+  - h2: An input
+  - |
+    An input is a component that takes `InputProps`: the field's `name`, its
+    `value` and `onChange`, its resolved `config`, and its state. This one
+    keeps an address to lowercase letters, digits and dashes as you type,
+    and is registered as `slug` beside `@bh/ui`'s kinds:
+  - demo: examples/slug-input.tsx
+  - |
+    Its config's type and its value's are the two type arguments of
+    `InputProps`, and the registry carries them to the builder: `b.slug`
+    takes a `prefix` and starts at `''`, and anything else is a type error.
+  - h2: What an input does with its props
+  - |
+    - **`name`**: the `id` of its focusable element, which the field
+      wrapper's label is for.
+    - **`describedBy`**: that element's `aria-describedby`, the id of the
+      help or the problem the wrapper draws under it.
+    - **`label`**: the field's label, which the wrapper draws. An input a
+      `<label for>` cannot name, such as a group, names itself with it.
+    - **`value`**: drawn as given. It holds no value of its own, and it
+      defaults an undefined one, which a registry with no `defaultValue` for
+      it can give.
+    - **`onChange`**: called with the new value alone, not an event.
+    - **`onBlur`**: called when focus leaves it, which checks the form.
+    - **`error`**: drawn as invalid, `tone="danger"` in `@bh/ui`; the
+      wrapper draws the message.
+    - **`disabled`**, and **`loading`** if its config loads: takes no
+      changes.
+  - h2: Registering it
+  - |
+    A kind is a key of the registry's `inputs`: the component, and the
+    value a field of it starts at, which must be one it can hold and draws
+    as empty. Spread `baseInputs` to keep `@bh/ui`'s kinds.
+  - code: |
+      import type { ReactNode } from 'react';
+      import { defineRegistry, type InputProps } from '@bh/form';
+      import { baseInputs, baseLayouts, FieldWrapper, RootWrapper } from '@bh/ui';
+
+      declare function SlugField(props: InputProps<{ prefix?: string }, string>): ReactNode;
+
+      export const registry = defineRegistry({
+        inputs: { ...baseInputs, slug: { Component: SlugField, defaultValue: '' } },
+        layouts: baseLayouts,
+        field: { Component: FieldWrapper },
+        root: { Component: RootWrapper },
+      });
+    lang: tsx
+  - h2: An input that draws fields
+  - |
+    `list` and `object` draw forms inside a field. `NestedFields` draws some
+    fields with the registry of the `<Form>` around it, their values one
+    object that the input holds: it is the input's `value`, and each change
+    is a new one through `onChange`. `useFormRegistry` gives an input that
+    registry, and `defaultValuesOf` the object a new item starts as.
+  - code: |
+      import {
+        defaultValuesOf,
+        NestedFields,
+        useFormRegistry,
+        type FormConfig,
+        type InputProps,
+        type InputRegistry,
+      } from '@bh/form';
+
+      type Item = Record<string, unknown>;
+
+      // One item, with a button for a fresh one.
+      export function OneItem(p: InputProps<{ item: FormConfig<InputRegistry> }, Item | null>) {
+        const registry = useFormRegistry();
+        const fresh = () => p.onChange(defaultValuesOf(p.config.item.nodes, registry));
+        return (
+          <div id={p.name} onBlur={p.onBlur}>
+            <NestedFields
+              name={p.name}
+              nodes={p.config.item.nodes}
+              value={p.value ?? {}}
+              onChange={p.onChange}
+              disabled={p.disabled}
+            />
+            <button type="button" onClick={fresh}>
+              Start again
+            </button>
+          </div>
+        );
+      }
+    lang: tsx
+  - h2: Rules
+  - |
+    - An input is controlled: what it shows is `value`, and what it changes
+      goes through `onChange`.
+    - A kind's `defaultValue` is a value its input can hold: it is what a
+      field starts at, and what a list's new item holds.
+    - A kind's name is stored with every form that names it.
+    - Nested fields' names are made unique under the field's, as
+      `links.0.url`, so their ids don't clash with the form's.
+  - h2: Reference
+  - ref: InputProps
+  - ref: InputDefinition
+  - props: NestedFields
+  - ref: useFormRegistry
+  - ref: defaultValuesOf

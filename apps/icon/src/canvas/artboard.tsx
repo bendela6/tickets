@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
 import { gridPitch } from '../doc/snap';
 import { anchorControlPoints, vertexPoints } from '../doc/geometry';

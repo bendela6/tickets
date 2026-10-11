@@ -2,7 +2,7 @@
 // this whichever row it is drawing, so nesting is TreeRow's guide columns
 // rather than a container this component wraps around its own children.
 
-import { Dot, TreeRow, cn, type TreeRowModel } from '@tickets/ui';
+import { Dot, TreeRow, cn, type TreeRowModel } from '@bh/ui';
 import { groupColor } from '../../engine/colors/group-color';
 import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
