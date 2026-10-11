@@ -28,9 +28,12 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 ## Live deploy (gateway)
 
 The real tickets runs on the gateway (WSL distro `medialib`), not on :4610. **A push
-to `main` does not deploy.** Deploy from the gateway's tickets stack
+to `main` deploys** (since 2026-10-11): the gateway reads the branch head every
+minute and deploys a new one, "asked by a push to main" — so push only what is
+ready to go live. Deploy on push is on the stack's Settings (`deployOnPush`). To
+deploy a commit by hand, use "Deploy main" on the gateway's tickets stack
 (https://gateway.bendelhome.cc/stacks) — it is `POST /api/stacks/tickets/deploys`
-with `{ "commit": "<sha>" }`, made from the logged-in page. It starts the new
+with `{ "commit": "<sha>" }`, made from the logged-in page. Either way it starts the new
 container next to the old one and swaps once it is healthy; migrations run on start
 against the live `tickets` database on `postgres-postgres-1`. Each deploy's record
 and log are `/srv/appdata/gateway/deployer/deploys/tickets/<n>.json|log`.

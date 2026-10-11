@@ -24,7 +24,7 @@ Project-specific ops:
 
 ## Running (details in running-the-stack)
 
-`docker compose up -d` → single `app` container on :4610 (nginx serves web + reverse-proxies `/api` to an internal node api). Dev loop: `pnpm dev` (mprocs: api :4600, web :4620, studio, watchers). Publish to 4610 at phase boundaries: `docker compose up -d --build` (or `sh scripts/deploy-web.sh`). Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`. The live app (tickets.bendelhome.cc) is deployed from the gateway, never by a push — see running-the-stack.
+`docker compose up -d` → single `app` container on :4610 (nginx serves web + reverse-proxies `/api` to an internal node api). Dev loop: `pnpm dev` (mprocs: api :4600, web :4620, studio, watchers). Publish to 4610 at phase boundaries: `docker compose up -d --build` (or `sh scripts/deploy-web.sh`). Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`. The live app (tickets.bendelhome.cc) runs on the gateway, and **a push to `main` deploys it** within a minute — see running-the-stack.
 
 ## Conventions
 
