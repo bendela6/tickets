@@ -1,0 +1,67 @@
+title: ToggleChips
+summary: A multiple choice among a few short options, each a chip one click away, as in a filter bar.
+related: [CheckboxGroup, MultiCombobox, SegmentedControl]
+body:
+  - |
+    A multiple choice among a few short options, each a chip one click away,
+    as in a filter bar.
+
+    `value` is the pressed options' values, and pressing a chip adds its value
+    or takes it out. It holds the same array as
+    [MultiCombobox](/components/inputs/multi-combobox), with every option in
+    view.
+  - h2: Import
+  - code: import { ToggleChips } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Keep the value in state and pass its setter as `onChange`.
+  - demo: examples/controlled.tsx
+  - |
+    An option's `color` draws a dot before its label and paints the chip
+    when pressed; without one, a pressed chip paints from `tone`,
+    `primary` unless given, and so does the `+N` chip.
+  - demo: examples/coloured-options.tsx
+  - |
+    Past `maxVisible`, 6 unless set, the rest of the options sit behind a
+    `+N` chip that opens a searchable list. While some of them are pressed,
+    the `+N` chip is pressed too and counts them.
+  - demo: examples/overflow.tsx
+  - |
+    `size` sets the chips' height, 30, 38 or 46 pixels, with their type and
+    padding.
+  - demo: examples/sizes.tsx
+  - |
+    An option's own `disabled` takes out that chip alone, and the group's
+    takes out all of them. `readOnly` instead keeps the chips in the tab
+    order and ignores clicks, and its `+N` chip opens nothing.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves from chip to chip.
+      - keys: [Enter, Space]
+        does: Presses or releases the focused chip; on the `+N` chip, opens the list.
+      - keys: [ArrowDown, ArrowUp]
+        does: In the list, moves through the options, past any that are disabled.
+      - keys: [Enter]
+        does: In the list, presses or releases the highlighted option, and keeps the list open.
+      - keys: [Escape]
+        does: Closes the list.
+  - |
+    Each chip is a button with `aria-pressed` in a `group` named by `label`,
+    so a screen reader hears a toggle button, pressed or not; `id` goes on
+    the group. The `+N` chip is named from the count and `label`, as "4 more
+    cities options" above, and the list opens with its search box focused.
+    `disabled` sets `aria-disabled` on the group and disables every chip.
+    `readOnly` sets `aria-disabled` on each chip instead, which keeps its tab
+    stop: ARIA allows no `aria-readonly` on a button.
+  - h2: When not to use it
+  - |
+    - For one choice, use
+      [SegmentedControl](/components/inputs/segmented-control).
+    - To keep the options out of sight until asked for, use
+      [MultiCombobox](/components/inputs/multi-combobox): the same array,
+      behind a field that opens.
+  - h2: Props
+  - props: ToggleChips

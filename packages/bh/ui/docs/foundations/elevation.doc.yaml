@@ -1,0 +1,25 @@
+title: Elevation
+summary: A shadow says how far above the page a thing sits; a layer, what it sits over.
+order: 6
+related: [Radius, Dark mode]
+body:
+  - |
+    A shadow says how far above the page a thing sits, and its layer what it sits over.
+  - h2: Shadows
+  - |
+    Everything that floats over the page takes `shadow-lg`: dialogs, drawers,
+    menus, popovers and toasts. `shadow-xs` is a card resting on a canvas, and
+    `shadow-md` the same card lifted while it is dragged.
+  - tokens: shadow
+  - |
+    Shadows are the one family whose two themes differ in kind. The light theme
+    tints with the page's warm gray; the dark theme occludes with black, since a
+    tint doesn't show on a dark ground.
+  - h2: Layers
+  - |
+    Three numbers stack the page. The number in the class is the z-index, so
+    any whole number compiles; these three are the ones overlays use.
+  - tokens: layers
+  - |
+    A dialog's dim sits over pinned headers and toolbars, and the dialog over
+    its dim. Menus, popovers, toasts and tooltips take the dialog's `z-50`.

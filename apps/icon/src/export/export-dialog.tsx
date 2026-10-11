@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, DialogContent, DialogRoot, DialogTitle, cn } from '@tickets/ui';
+import { Button, DialogContent, DialogRoot, DialogTitle, cn } from '@bh/ui';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import { runExport } from './run';

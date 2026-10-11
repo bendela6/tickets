@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
-import { cn, Progress, RailLabel } from '@tickets/ui';
+import { cn, Progress } from '@bh/ui';
+import { RailLabel } from './rail-label';
 import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {

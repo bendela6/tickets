@@ -10,7 +10,7 @@
 
 import { useCallback, useId, useMemo, useState } from 'react';
 
-import { Tree, cn, useTreeView } from '@tickets/ui';
+import { Tree, cn, useTreeView } from '@bh/ui';
 import type { Selection } from '../../engine/model/types';
 import {
   useDiagramActionsOrNull,

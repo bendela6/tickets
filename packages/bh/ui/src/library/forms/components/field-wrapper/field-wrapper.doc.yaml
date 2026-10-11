@@ -1,0 +1,46 @@
+title: FieldWrapper
+summary: 'Draws one form field: its label, its control, then its description or its error.'
+related: [FieldLabel, FieldError, Input]
+body:
+  - |
+    Draws one form field: its label, its control, then its description or its
+    error.
+
+    It is the `field` slot of the registry `@bh/form` draws a form with, so a
+    form wraps every field in it. It takes the props the form gives a field,
+    and draws the control it is given as its children.
+  - h2: Import
+  - code: import { FieldWrapper } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The label is a [FieldLabel](/components/forms/field-label) for `name`, so
+    the control takes `name` as its `id`. `required` marks the label, and
+    `description` sits under the control.
+  - demo: examples/labelled-field.tsx
+  - |
+    An `error` takes the description's place, as a
+    [FieldError](/components/forms/field-error), whatever `touched` says.
+    A `configError`, a config that failed to load, takes it before an
+    `error` does, with its own message. `touched` and `loading` change
+    nothing it draws.
+  - demo: examples/with-an-error.tsx
+  - |
+    Where the label goes depends on the field's own width, not the window's
+    (see [Layout](/foundations/layout#containers)). From 520 pixels, it sits
+    beside the control in a 104-pixel column; below that, it sits on top. A
+    field with no `label` keeps the column empty, so its control lines up with
+    the others.
+  - demo: examples/label-beside.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The label is a `<label>` for `name`, so it names the control whose `id`
+    is `name`. The error is a `role="alert"`, announced when it appears.
+
+    The description takes `descriptionId` and the error `errorId`, and a
+    form gives the control `aria-describedby` pointing at whichever is
+    drawn, so a screen reader reads it with the control. Used outside a form,
+    pass the ids and point the control's `aria-describedby` at them
+    yourself.
+  - h2: Props
+  - props: FieldWrapper

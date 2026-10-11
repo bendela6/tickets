@@ -1,5 +1,5 @@
 import type { Board } from '../../api/types';
-import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@tickets/ui';
+import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Combobox, type Option, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
+import { Button, Combobox, type Option, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
 import { KIND_TONE } from '../../domain/status';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';

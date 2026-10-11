@@ -5,7 +5,7 @@ import { useCreateOption, useCreateTransition, useDeleteTransition, useUpdateOpt
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
 import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES, hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Icon, Input, Pill, Tabs } from '@tickets/ui';
+import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Icon, Input, Pill, Tabs } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Feature } from '@tickets/richtext';
 import type { Board, Field, Item } from '../api/types';
 import { RichTextEditor } from '../components/rich-text/rich-text-editor';
-import { Checkbox, Combobox, type Option, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@tickets/ui';
+import { Checkbox, Combobox, type Option, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@bh/ui';
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor, kindColor } from './option-color';
 

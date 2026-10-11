@@ -1,0 +1,72 @@
+title: Drawer
+summary: A modal panel that slides in from the left or right edge of the page.
+related: [SidePanel, Dialog]
+body:
+  - |
+    A modal panel that slides in from the left or right edge of the page.
+
+    The reader can drag its inner edge to resize it, and with a
+    `storageKey` it remembers the width they left it at. What it holds is
+    yours; `DrawerControls` gives it a close button.
+  - h2: Import
+  - code: import { Drawer, DrawerControls } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `side` picks the edge. The content is a column: here, a header with the
+    controls, then a body that scrolls.
+  - demo: examples/from-either-side.tsx
+  - |
+    `size` is the width it opens at: 288, 400 or 620 pixels. The reader can
+    drag it between `minWidth` and `maxWidth`, 280 and 960 by default.
+  - demo: examples/sizes.tsx
+  - |
+    `maximizable` adds a button that widens the drawer to the window. With a
+    `storageKey`, it remembers its width and whether it was maximized.
+  - demo: examples/maximizable.tsx
+  - |
+    However wide its `size`, a drawer stops 48 pixels short of the window's
+    other edge, so there is always some of the dim left to tap. In a window
+    narrower than `minWidth` and those 48 pixels, the resize handle goes, as
+    there is no room to drag. [Elevation](/foundations/elevation) has the
+    layers the dim and the drawer sit on.
+  - demo: examples/narrow-window.tsx
+    width: phone
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves to the next control in the drawer; from the last, back to the first.
+      - keys: [Shift+Tab]
+        does: Moves to the previous control in the drawer; from the first, to the last.
+      - keys: [Esc]
+        does: Closes the drawer.
+      - keys: [←, →]
+        does: On the resize handle, widens or narrows the drawer by 24 pixels; the arrow pointing away from its edge widens it.
+  - |
+    The drawer has the `dialog` role, named by `label`, which is not shown.
+    Its content is yours, so it has no description. The resize handle is a
+    focusable `separator` named "Resize" and the label, whose
+    `aria-valuenow` is the width in pixels. The controls are named Close,
+    Maximize and Restore.
+
+    While it is open, the page behind is hidden from assistive technology
+    and takes no pointer events, and a click on the dim closes it. Something
+    a library mounts outside the drawer, like a popover added to `body`,
+    needs `pointer-events: auto` of its own to take a click.
+
+    Closing returns focus to whatever had it when the drawer opened, also
+    when the drawer is mounted already open, and also after its content has
+    changed while it was open.
+  - h2: When not to use it
+  - |
+    - For a column beside the content rather than over it, use
+      [SidePanel](/components/overlays/side-panel).
+    - For a window in the middle of the page, use
+      [Dialog](/components/overlays/dialog).
+  - h2: Props
+  - h3: Drawer
+  - props: Drawer
+  - h3: DrawerControls
+  - |
+    It reads the drawer it is in, so it throws outside one.
+  - props: DrawerControls

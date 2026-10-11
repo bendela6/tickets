@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Dot, Pill } from '@tickets/ui';
+import { Dot, Pill } from '@bh/ui';
 import { BADGE_TONE, type BadgeTone } from './badge-tone';
 
 // Sticky panel header shared by every view (entity/group/edge). Read-only —

@@ -1,0 +1,47 @@
+title: Textarea
+summary: Several lines of text, held by the caller.
+related: [Input, FieldLabel, FieldError]
+body:
+  - |
+    Several lines of text.
+
+    Like [Input](/components/inputs/input), it holds no value of its own:
+    `onChange` hands back the new string, so `onChange={setNotes}` is the whole
+    handler. `size` sets a minimum height, not a fixed one.
+  - h2: Import
+  - code: import { Textarea } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Name it with a `<label htmlFor>` pointing at its `id`, or with
+    `aria-label`.
+  - demo: examples/with-a-label.tsx
+  - |
+    `size` sets the minimum height, the padding and the type together: at
+    least 56, 72 and 88 pixels tall.
+  - demo: examples/sizes.tsx
+  - |
+    Every `<textarea>` attribute passes through: `rows` starts it taller,
+    `maxLength` caps it. While it is editable, a grip at the corner drags it
+    taller.
+  - demo: examples/more-rows.tsx
+  - |
+    A field in error takes `tone="danger"`, which colours it and sets
+    `aria-invalid`. Point `aria-describedby` at the message.
+    [Tones](/foundations/tones#danger-on-a-field) has what the other tones do.
+  - demo: examples/with-an-error.tsx
+  - |
+    `readOnly` keeps the field focusable and submitted with a form, and swaps
+    its fill for a line under the text. `disabled` takes it out of the tab
+    order and the submission, and fades it. Neither keeps the resize grip.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - |
+    It is a native `<textarea>`, so typing, Enter for a new line and Tab are
+    the browser's. The ref lands on the `<textarea>`. `readOnly` is HTML's
+    `readonly`, not `aria-readonly`.
+  - h2: When not to use it
+  - |
+    For one line, use [Input](/components/inputs/input).
+  - h2: Props
+  - props: Textarea

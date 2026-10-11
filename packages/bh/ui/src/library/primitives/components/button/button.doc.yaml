@@ -1,0 +1,56 @@
+title: Button
+summary: 'Starts an action: save, open a dialog, run a job.'
+related: [CopyButton, Menu, SegmentedControl]
+body:
+  - |
+    Starts an action: save, open a dialog, run a job.
+
+    `variant` is how much of its tone a button spends and `tone` is which
+    colour, so a destructive button is `variant="solid" tone="danger"`, not a
+    variant of its own.
+  - h2: Import
+  - code: import { Button } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Tones and variants mean little alone, so they are shown together:
+    [Tones](/foundations/tones) has what each variant spends.
+  - variants:
+      of: Button
+      rows: tone
+      columns: variant
+      fixed:
+        children: Save
+  - |
+    `size` sets the height, padding, radius and type together: 28, 36 and 44
+    pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `loading` puts a spinner before the label and disables the button, keeping
+    its fill, so it keeps its width and its look.
+  - demo: examples/loading.tsx
+  - |
+    A destructive action takes the `danger` tone.
+  - demo: examples/danger.tsx
+  - |
+    `chevron` marks a button that opens a menu or a popover.
+  - demo: examples/menu-trigger.tsx
+  - |
+    There is no icon size: pick a size, square it with a width and no padding,
+    and name it with `aria-label`.
+  - demo: examples/icon-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: Activates the button.
+  - |
+    A Button is `type="button"`, so it never submits a form by accident; give
+    a form's submit button `type="submit"`. While `loading`, it sets
+    `aria-busy`.
+  - h2: When not to use it
+  - |
+    - To go somewhere, use a link: a button does something where you are.
+    - To copy a value, use `CopyButton`, which says when it has copied.
+    - For one of a few choices, use `SegmentedControl`.
+  - h2: Props
+  - props: Button

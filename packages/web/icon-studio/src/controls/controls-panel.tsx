@@ -1,4 +1,4 @@
-import { Button } from '@tickets/ui';
+import { Button } from '@bh/ui';
 import type { Adjust } from '../color';
 import { GROUND } from '../color';
 import { PRESETS, type PresetName } from '../config';

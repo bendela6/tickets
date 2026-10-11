@@ -5,13 +5,13 @@ import { SignalsErrorBoundary } from '@bendela6/signals-react';
 
 import { App } from './app';
 import { initWebSignals } from './signals-init';
-import { Button } from '@tickets/ui';
+import { Button } from '@bh/ui';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
-import '@tickets/playground/styles.css';
+import './styles.css';
 
 // Fire-and-forget: self-report errors to Signals without delaying render.
 void initWebSignals();

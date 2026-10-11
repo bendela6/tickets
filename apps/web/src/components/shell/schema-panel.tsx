@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Button, Dropdown, RailLabel, cn } from '@tickets/ui';
+import { Button, Dropdown, cn } from '@bh/ui';
+import { RailLabel } from './rail-label';
 import { useDatabases } from '../../api/use-schema';
 import { EerOutline } from '../eer';
 

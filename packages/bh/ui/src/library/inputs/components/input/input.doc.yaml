@@ -1,0 +1,60 @@
+title: Input
+summary: A single line of text, held by the caller.
+related: [Textarea, SearchInput, PasswordInput, NumberInput]
+body:
+  - |
+    A single line of text.
+
+    It holds no value of its own: `value` comes in, and `onChange` hands back
+    the new string, not the event, so `onChange={setName}` is the whole
+    handler. The event follows as a second argument, for the rare handler that
+    reads it.
+  - h2: Import
+  - code: import { Input } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Name a field with a `<label htmlFor>` pointing at its `id`, or with
+    `aria-label`.
+  - demo: examples/with-a-label.tsx
+  - |
+    `size` sets the height, padding, radius and type together: 30, 38 and 46
+    pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `leading` and `trailing` pin content inside the field, before and after the
+    text: an icon, a unit, a domain. The border draws around them.
+  - demo: examples/leading-and-trailing.tsx
+  - |
+    `showCount` draws how many characters there are against `maxLength`. It
+    needs `maxLength`: without it there is no count.
+  - demo: examples/character-count.tsx
+  - |
+    There is no `invalid` prop: a field in error takes `tone="danger"`, which
+    colours it and sets `aria-invalid`. Point `aria-describedby` at the message.
+    [Tones](/foundations/tones#danger-on-a-field) has what the other tones do.
+  - demo: examples/with-an-error.tsx
+  - |
+    `readOnly` keeps the field focusable and submitted with a form, and swaps
+    its fill for a line under the value. `disabled` takes it out of the tab
+    order and the submission, and fades it.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - |
+    It is a native `<input>`, so typing, selecting and Tab are the browser's.
+    The ref lands on the `<input>`, with or without `leading` and `trailing`.
+
+    `readOnly` is HTML's `readonly`, not `aria-readonly`. The count from
+    `showCount` is `aria-hidden`. An `Icon` given as `leading` or `trailing`
+    with no `label` is hidden from screen readers too.
+  - h2: When not to use it
+  - |
+    - For several lines, use [Textarea](/components/inputs/textarea).
+    - For a number, use [NumberInput](/components/inputs/number-input), which
+      steps and holds `null` when empty.
+    - For a secret, use [PasswordInput](/components/inputs/password-input); for
+      a search, [SearchInput](/components/inputs/search-input).
+    - To pick from a known list, use [Select](/components/inputs/select) or
+      [Combobox](/components/inputs/combobox).
+  - h2: Props
+  - props: Input

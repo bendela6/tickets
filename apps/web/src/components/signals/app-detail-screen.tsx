@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsApp, useSignalsIssues } from '../../api/signals/use-signals';
-import { cn, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Pill, ScreenState } from '@tickets/ui';
+import { cn, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Pill, ScreenState } from '@bh/ui';
 import { appInitials, avatarTone } from './apps-screen';
 import { ClearSignalsDialog } from './clear-signals-dialog';
 import { DeleteAppDialog } from './delete-app-dialog';

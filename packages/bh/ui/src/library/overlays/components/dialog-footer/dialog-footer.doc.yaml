@@ -1,0 +1,33 @@
+title: DialogFooter
+summary: The row of buttons at the bottom of a dialog.
+related: [Dialog, Button]
+body:
+  - |
+    The row of buttons at the bottom of a dialog.
+
+    It lays the buttons out and leaves them to you: a hairline above, the
+    buttons at the right, and `cancel` before the rest. The cancel button is
+    yours to pass, since only your dialog knows how it closes.
+  - h2: Import
+  - code: import { DialogFooter } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    A ghost Cancel, then the action. In a dialog, wrap Cancel in
+    `DialogClose`, as [Dialog](/components/overlays/dialog) does.
+  - demo: examples/cancel-and-save.tsx
+  - |
+    With one button, pass `cancel` alone for a dialog that only closes, or
+    `children` alone for one with a single action.
+  - demo: examples/one-button.tsx
+  - |
+    For something before the buttons, a hint or a field, draw the row
+    yourself and nest the footer in it without its border, padding and
+    margin: where `className` clashes with the footer's own classes, it wins.
+  - demo: examples/hint-before-buttons.tsx
+  - h2: Keyboard and accessibility
+  - |
+    `cancel` comes first in the DOM, so Tab reaches it before the other
+    buttons.
+  - h2: Props
+  - props: DialogFooter

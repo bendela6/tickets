@@ -1,0 +1,46 @@
+title: Avatar
+summary: Shows a name as its initials in a coloured disc or square.
+related: [Pill, Dropdown, UserPicker]
+body:
+  - |
+    Shows a name as its initials in a coloured disc or square.
+
+    The initials are the first letters of the first two words of `name`,
+    split at spaces and hyphens, and the whole name is the avatar's `title`.
+    `shape`, `font` and `tone` are separate axes: any combination works.
+  - h2: Import
+  - code: import { Avatar } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `tone` picks the scale and `shape` the corners, and neither changes the
+    other.
+  - variants:
+      of: Avatar
+      rows: shape
+      columns: tone
+      fixed:
+        name: Mara Kowalski
+        size: xl
+      tones: roles
+      view: cards
+  - |
+    `size` runs 16, 18, 22, 28 and 36 pixels and defaults to `sm`, 18: an
+    avatar's own ladder, not the 28, 36 and 44 of the controls.
+  - demo: examples/sizes.tsx
+  - |
+    `font` sets the typeface of the initials, whatever the shape.
+  - demo: examples/typefaces.tsx
+  - |
+    Given an `onClick`, an avatar is a `<button>`. A
+    [Dropdown](/components/overlays/dropdown) gives its trigger one, and the
+    avatar forwards its ref and passes its other props on, which the dropdown
+    needs to place its panel.
+  - demo: examples/opening-a-dropdown.tsx
+  - h2: Keyboard and accessibility
+  - |
+    Without `onClick`, an avatar is a `<span>` outside the tab order. With
+    one, it is a `<button type="button">`: Enter and Space activate it, and
+    its name is its initials unless an `aria-label` gives it another.
+  - h2: Props
+  - props: Avatar

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Tabs, useToast } from '@tickets/ui';
+import { Button, Tabs, useToast } from '@bh/ui';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';

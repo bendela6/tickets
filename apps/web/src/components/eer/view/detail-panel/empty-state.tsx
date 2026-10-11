@@ -1,5 +1,5 @@
 import type { Model } from '../../engine/model/types';
-import { Pill } from '@tickets/ui';
+import { Pill } from '@bh/ui';
 import { Section } from './section';
 import { Stat } from './stat';
 

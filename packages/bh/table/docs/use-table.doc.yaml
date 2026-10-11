@@ -1,0 +1,77 @@
+title: useTable
+summary: Hold a table's sort, widths, collapsed groups, focused cell and selection in one hook, or own any of them yourself.
+order: 3
+related: [Overview, Sorting, Widths and resizing]
+body:
+  - |
+    Hold a table's sort, widths, collapsed groups, focused cell and selection
+    in one hook, or own any of them yourself.
+  - h2: The hook
+  - |
+    `<Table>` holds no state: it is drawn from a `TableState` and calls a
+    handler when the user changes it. `useTable` holds one, and returns it
+    with its handlers under the names `<Table>` takes, so the whole of it is
+    spread onto the table:
+  - code: |
+      import { Table, useTable, type Column } from '@bh/table';
+      import { tableRender } from '@bh/ui';
+
+      interface Order {
+        id: string;
+        total: number;
+      }
+      declare const columns: Column<Order>[];
+      declare const orders: Order[];
+
+      export function Orders() {
+        const table = useTable({ storageKey: 'shop:orders' });
+        return (
+          <Table
+            {...table}
+            columns={columns}
+            rows={orders}
+            isLoading={false}
+            render={tableRender<Order>()}
+          />
+        );
+      }
+    lang: tsx
+  - |
+    Its options set where the table starts: `initialSort`,
+    `initialCollapsed` (group keys) and `initialSelected` (row ids), and
+    `storageKey`, the name the dragged widths are saved under
+    ([Widths and resizing](/tables/widths-and-resizing)). The three
+    `initial` options are read on the first render only.
+  - |
+    Three of its handlers turn a behaviour on by being there:
+    `onFocusChange` the [keyboard focus](/tables/keyboard-focus),
+    `onCollapseChange` the [group](/tables/groups) toggles, and
+    `onSelectionChange`, with a `getRowId` of yours, the
+    [selection](/tables/selection). To leave one off, pass `undefined` for
+    it after the spread.
+  - h2: Owning one piece
+  - |
+    The props are ordinary props, so a page that keeps one piece of the state
+    itself (the sort in the address, say, or set from a control above the
+    table) passes its own after the spread: its value inside `state`, and its
+    handler. Everything else stays with the hook.
+  - demo: examples/sort-from-outside.tsx
+  - |
+    The control and the headers change the same sort, so each shows what the
+    other did: click the Pages header and the control lets go of its choice,
+    since no option is sorting.
+  - h2: Rules
+  - |
+    - `<Table>` is controlled: it shows `state` and changes nothing until a
+      handler is called and a new `state` comes back.
+    - `initialSort`, `initialCollapsed` and `initialSelected` are read on the
+      first render only.
+    - The focused cell starts as `null`: no ring shows until the user puts
+      focus in the table, though the first cell is already its tab stop.
+    - A table that owns a piece passes both halves, the value in `state` and
+      the handler, or the table shows one and changes the other.
+  - h2: Reference
+  - ref: useTable
+  - ref: UseTableOptions
+  - ref: UseTableResult
+  - ref: TableState

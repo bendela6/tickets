@@ -1,4 +1,4 @@
-import { Pill, ScreenState } from '@tickets/ui';
+import { Pill, ScreenState } from '@bh/ui';
 import type { Feature } from '../../shared/types';
 import { byStatus, rollup, TaskRow } from './task-row';
 

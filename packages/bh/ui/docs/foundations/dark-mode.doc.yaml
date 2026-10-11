@@ -1,0 +1,46 @@
+title: Dark mode
+summary: Dark is data-theme="dark" on <html>; every colour and shadow has both values, and dark classes follow the attribute.
+order: 9
+related: [Colours, Elevation, Styles and fonts]
+body:
+  - |
+    Dark is an attribute on `<html>`, `data-theme="dark"`, and every token follows it.
+
+    The stylesheet states each colour and shadow once per theme. A class names a
+    step, `bg-gray-2`, and the step's value follows the theme, so most code has
+    no dark half to write.
+  - h2: What changes
+  - |
+    - **The scales turn over.** In dark, step 1 is the darkest background and
+      step 12 the lightest text; each step keeps its job.
+    - **Surfaces are stated per theme**: `surface-raised` is white in light and
+      a lifted dark gray in dark.
+    - **Shadows change in kind**: the light theme tints, the dark one occludes
+      with black ([Elevation](/foundations/elevation#shadows)).
+    - **The focus rim moves a step**: step 11 in light, step 9 in dark, the
+      readable step on each ground.
+  - h2: The dark variant
+  - |
+    `dark:` follows the attribute, not the operating system:
+  - code: "@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));"
+    lang: css
+    file: '@bh/ui/tokens.css'
+    numbers: false
+  - |
+    Reach for it only where a step's job differs between the themes, as the
+    focus rim's does: `border-indigo-11 dark:border-indigo-9`. Nothing in
+    `@bh/ui` reads `prefers-color-scheme`.
+  - h2: Setting it
+  - |
+    `@bh/ui` only reads the attribute; setting it is the app's job. With
+    `@bh/shell`, `applyTheme` stamps it before the first render
+    ([Styles and fonts](/getting-started/styles-and-fonts#the-theme)) and the
+    theme control changes it. `system` follows the operating system while
+    something using `useTheme` is on screen, as `ThemeFooter` does.
+  - ref: applyTheme
+  - ref: useTheme
+  - h2: Checking both
+  - |
+    Every contrast pairing is measured in both themes
+    ([Colours](/foundations/colours#contrast)). On this site the theme control
+    at the foot of the nav switches every page and example.

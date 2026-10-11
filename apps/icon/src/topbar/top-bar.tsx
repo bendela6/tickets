@@ -1,4 +1,4 @@
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { useEditor } from '../editor-context';
 import { steppedZoom } from '../view';
 import { DocumentsPopover } from './documents-popover';

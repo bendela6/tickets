@@ -2,7 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { useArchiveTerminalSession, useUnarchiveTerminalSession } from '../../api/use-archive-terminal-session';
 import type { TerminalSession } from '../../api/types';
 import { exitCodeTrailing, sessionStatus } from '../../domain/session-status';
-import { Pill, SessionKindGlyph } from '@tickets/ui';
+import { Pill } from '@bh/ui';
+import { SessionKindGlyph } from '../session/session-kind-glyph';
 import { formatAge } from '../../utils/format-age';
 
 // The mode-panel session list (Terminals). A terminal session never parents

@@ -1,4 +1,5 @@
-@import '@tickets/ui/tokens.css';
+@import '@bh/ui/tokens.css';
+@import '@bh/markdown/styles.css';
 
 /* Tailwind must scan this app's own class literals. Relative to this file. */
 @source '../';

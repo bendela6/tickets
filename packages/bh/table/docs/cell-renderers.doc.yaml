@@ -1,0 +1,83 @@
+title: Cell renderers
+summary: Draw a column's values as text, numbers, dates, badges, links, pictures or row actions with @bh/ui's renderers, or write your own.
+order: 11
+related: [Columns, Keyboard focus, Writing a skin]
+body:
+  - |
+    Draw a column's values as text, numbers, dates, badges, links, pictures
+    or row actions with `@bh/ui`'s renderers, or write your own.
+  - h2: Import
+  - code: |
+      import {
+        ActionsColumn,
+        BadgeColumn,
+        DateColumn,
+        ImageColumn,
+        LinkColumn,
+        NumberColumn,
+        TextColumn,
+      } from '@bh/ui';
+    lang: tsx
+  - h2: The renderers
+  - |
+    Each is a function you call once, where the column is written, with its
+    options, and it returns the column's `as`: `as: NumberColumn({ format:
+    'currency', currency: 'EUR' })`. The table hands it each cell's
+    `value(row)` and the row.
+  - demo: examples/every-renderer.tsx
+  - |
+    - **`TextColumn`** keeps the text on one line and fades it out where it
+      runs past the column, showing the whole of it on hover. `mono` sets it
+      in the mono face; `truncate: false` lets it wrap, beside a `rowHeight`
+      that leaves room.
+    - **`NumberColumn`** right-aligns digits that line up: `integer`,
+      `decimal` (up to six places, or `fractionDigits`), or `currency` with a
+      `currency` code. Give its column `align: 'right'`, which puts the cell
+      and its footer on the right.
+    - **`DateColumn`** says how long ago (`relative`, the default) or the
+      date and time in full (`absolute`), from an ISO string or a `Date`.
+    - **`BadgeColumn`** draws the value as a pill, its `tone` from the value,
+      its words from `label`, else the value itself.
+    - **`LinkColumn`** links the value to `href(row)`, opening a new tab with
+      `external`.
+    - **`ImageColumn`** draws the picture at the value's address, named by
+      `fallback(row)`, and an avatar from that name when there is none.
+    - **`ActionsColumn`** draws an icon button for each item, named by its
+      `label` and coloured by its `tone`, shown while the row is hovered or a
+      button has keyboard focus. Its column needs no `value`: each item's
+      `onClick` is handed the row.
+  - |
+    A missing value draws a dash in the number and date columns, nothing in
+    the text and badge columns, and the avatar in the picture column. A
+    link's or an action's click stays its own: it doesn't
+    reach the row's `onRowClick` behind it. Links and action buttons are out
+    of the tab order, like everything in a cell, and Enter on the cell steps
+    into them ([Keyboard focus](/tables/keyboard-focus)).
+  - h2: A renderer of your own
+  - |
+    A renderer is a function from `{ value, row }` to what the cell shows.
+    Wrap it in one that takes the options, as `@bh/ui`'s do, and the column
+    reads the same as theirs. This one draws the copies left as a bar, beside
+    the number that says it:
+  - demo: examples/a-renderer-of-your-own.tsx
+  - |
+    For a cell that needs more of the row than one value, `render(row)` on
+    the column does the same without a value at all.
+  - h2: Rules
+  - |
+    - A renderer is made once, where the column is written, and called for
+      every cell.
+    - A missing value draws a dash in `NumberColumn` and `DateColumn`,
+      nothing in `TextColumn` and `BadgeColumn`, and the avatar in
+      `ImageColumn`.
+    - A click on a link or an action never also clicks the row.
+    - A renderer's buttons and links leave the tab order to the table: Enter
+      on the cell reaches them.
+  - h2: Reference
+  - ref: TextColumn
+  - ref: NumberColumn
+  - ref: DateColumn
+  - ref: BadgeColumn
+  - ref: LinkColumn
+  - ref: ImageColumn
+  - ref: ActionsColumn

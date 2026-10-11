@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Icon } from '@tickets/ui';
+import { Icon } from '@bh/ui';
 import type { SignalListRow } from '../../api/signals/signals-api';
 import { signalKindIcon, signalKindTone } from '../../domain/signal-status';
 import { relativeTime } from './format';

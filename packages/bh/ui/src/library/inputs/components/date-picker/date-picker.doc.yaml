@@ -1,0 +1,77 @@
+title: DatePicker
+summary: Picks one day, from a calendar or typed, and holds it as an ISO string.
+related: [DateRangePicker, TimePicker, FieldLabel]
+body:
+  - |
+    Picks one day, from a calendar or typed as `YYYY-MM-DD`.
+
+    `value` is an ISO string, never a `Date`, or `null` when empty. A pick
+    comes back as UTC midnight, `2026-07-09T00:00:00Z`, and only the first ten
+    characters are read, so no time zone can move the day.
+  - h2: Import
+  - code: import { DatePicker } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    A label, here [FieldLabel](/components/forms/field-label), names the
+    field through `id`, which lands on the trigger button. The calendar opens
+    on the value's month. Under it, a text field takes a typed date, and the
+    footer picks today, picks the next Friday, or clears the value.
+  - demo: examples/with-a-label.tsx
+  - |
+    `min` and `max` bound the days that can be picked, clicked or typed, as
+    ISO `yyyy-mm-dd`. Days outside them are still drawn, but disabled. A value
+    already outside is still shown: the bounds govern what can be picked, not
+    what can be held.
+  - demo: examples/min-and-max.tsx
+  - |
+    Where no label can point at it, as in a filter under a column header,
+    name it with `aria-label`. An empty field shows `placeholder`, and its
+    calendar opens on the current month.
+  - demo: examples/without-a-visible-label.tsx
+  - |
+    `size` steps the height, padding and type together: 30, 38 and 46 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    Left without a `tone`, the field rests in gray. A tone colours the field
+    and the calendar's selected day, and a form gives `danger` to a field
+    whose value is wrong. [Tones](/foundations/tones) has the rest.
+  - demo: examples/invalid.tsx
+  - |
+    `disabled` takes the field out of the tab order. `readOnly` keeps its tab
+    stop and its value, drops the chevron, and does not open the calendar.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the calendar. On a day, picks it.
+      - keys: [←, →]
+        does: Moves to the day before or after, turning the month at its edges.
+      - keys: [↑, ↓]
+        does: Moves a week back or forward.
+      - keys: [PageUp, PageDown]
+        does: Moves a month back or forward, keeping the day, or the month's last if it is shorter.
+      - keys: [Home, End]
+        does: Moves to the first or the last day of the month.
+      - keys: [Esc]
+        does: Closes the calendar.
+  - |
+    The trigger is a `button`, so a `<label for>` names it through `id`, and
+    `aria-label` names it where nothing else does. The calendar opens in a
+    popover with `role="dialog"`.
+
+    The days are a `grid` with one tab stop: only the day under the keyboard
+    cursor is tabbable, and moving the cursor picks nothing until Enter. The
+    picked day has `aria-selected`. The text field under the grid is named
+    "Enter date", and Enter in it picks the typed date if it is within `min`
+    and `max`.
+
+    A read-only trigger sets `aria-disabled`, since ARIA allows no
+    `aria-readonly` on a button, and stays in the tab order.
+  - h2: When not to use it
+  - |
+    - For a span of days or months, use
+      [DateRangePicker](/components/inputs/date-range-picker).
+    - For a time of day, use [TimePicker](/components/inputs/time-picker).
+  - h2: Props
+  - props: DatePicker

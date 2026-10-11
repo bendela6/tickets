@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import type { PlatformInfo, SessionEventRow, SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { useSignalsSession } from '../../api/signals/use-signals';
-import { cn, Icon, Pill, ScreenState, useCopy } from '@tickets/ui';
+import { cn, Icon, Pill, ScreenState, useCopy } from '@bh/ui';
 import { signalKindIcon, signalKindTone, type SignalKind } from '../../domain/signal-status';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
 const IDLE_GAP_THRESHOLD_MS = 30_000;

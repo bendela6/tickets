@@ -1,4 +1,4 @@
-import { Dot } from '@tickets/ui';
+import { Dot } from '@bh/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model, Relationship } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';

@@ -1,4 +1,4 @@
-import { cn, Progress } from '@tickets/ui';
+import { cn, Progress } from '@bh/ui';
 
 // Agent runs cost real money and the UI must never hide that (screen 10): spend
 // so far, always visible in the session header. With a budget cap it shows

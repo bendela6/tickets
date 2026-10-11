@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from 'react';
-import { Button } from '@tickets/ui';
+import { Button } from '@bh/ui';
 import { fetchConfig, generate } from './api';
 import { adjust, NEUTRAL, type Adjust } from './color';
 import { PRESETS, STICKS, type PresetName } from './config';

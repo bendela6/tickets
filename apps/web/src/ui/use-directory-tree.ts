@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useTreeView, type TreeNode, type UseTreeViewResult } from '@tickets/ui';
+import { useTreeView, type TreeNode, type UseTreeViewResult } from '@bh/ui';
 
 import { workdirDirQuery } from '../api/use-workdir-dirs';
 import type { WorkdirDirEntry, WorkdirRoot } from '../api/types';

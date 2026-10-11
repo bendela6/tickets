@@ -1,6 +1,6 @@
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useSignalsApp } from '../../api/signals/use-signals';
-import { DialogContent, DialogRoot, DialogTitle } from '@tickets/ui';
+import { DialogContent, DialogRoot, DialogTitle } from '@bh/ui';
 import { DsnField } from './dsn-field';
 import { SdkSnippet } from './sdk-snippet';
 

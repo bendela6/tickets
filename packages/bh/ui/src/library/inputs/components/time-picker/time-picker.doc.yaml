@@ -1,0 +1,60 @@
+title: TimePicker
+summary: Picks a time of day from a list, or typed, and holds it as HH:MM.
+related: [DatePicker, DurationInput, Select]
+body:
+  - |
+    Picks a time of day from a list, or typed.
+
+    `value` is `HH:MM` on a 24-hour clock, or `null` when empty. The list
+    offers a time every `stepMinutes`, 15 by default, and the field above it
+    takes any time typed as `H:MM` or `HH:MM`.
+  - h2: Import
+  - code: import { TimePicker } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    A label names the field through `id`, which lands on the trigger button.
+    The list opens scrolled to the value.
+  - demo: examples/with-a-label.tsx
+  - |
+    `stepMinutes` sets the gap between listed times. A time not on the list
+    can still be typed, and Enter commits it; one that is not a time of day,
+    like `25:99`, is refused with a message.
+  - demo: examples/five-minute-steps.tsx
+  - |
+    `size` steps the height, padding and type together: 30, 38 and 46 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` takes the field out of the tab order. `readOnly` keeps its tab
+    stop and its value, drops the chevron, and does not open the list.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the field, opens the list with focus in the time field. On a listed time, picks it.
+      - keys: [Enter]
+        does: In the time field, commits the typed time if it is a time of day.
+      - keys: [Tab]
+        does: Moves from the time field through the listed times.
+      - keys: [Esc]
+        does: Closes the list.
+  - |
+    The trigger is a `button` with `role="combobox"`, `aria-haspopup="listbox"`
+    and `aria-expanded`. Name it with a `<label for>` pointing at `id`, or,
+    where no label can point at it, with `aria-label`. `tone="danger"` sets
+    `aria-invalid`.
+
+    The times are a `listbox` named by `label`, "Times" by default, and each
+    is an `option`; the picked one has `aria-selected`. The time field is
+    named "Enter a time", and its message for an entry that is not a time has
+    `role="alert"`.
+
+    A read-only trigger sets `aria-disabled`, since ARIA allows no
+    `aria-readonly` on a button, and stays in the tab order.
+  - h2: When not to use it
+  - |
+    - For a length of time rather than a time of day, use
+      [DurationInput](/components/inputs/duration-input).
+    - For a day, use [DatePicker](/components/inputs/date-picker).
+  - h2: Props
+  - props: TimePicker

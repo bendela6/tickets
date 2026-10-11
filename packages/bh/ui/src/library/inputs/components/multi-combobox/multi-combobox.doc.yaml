@@ -1,0 +1,68 @@
+title: MultiCombobox
+summary: Several choices from a list with a search box, shown as chips.
+related: [Combobox, TagInput, ToggleChips]
+body:
+  - |
+    Several choices from a list with a search box.
+
+    `value` is a `string[]`, and nothing chosen is `[]`, never `null`. The
+    chosen options show on the field as chips, each with a button that
+    removes it.
+  - h2: Import
+  - code: import { MultiCombobox } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Picking an option toggles it, and the list stays open for the next. The
+    list's footer selects every option that is not disabled, or clears them
+    all. A chip's × removes it without opening the list.
+  - demo: examples/picking-several.tsx
+  - |
+    `maxChips`, 3 by default, caps the chips on the field. The rest collapse
+    into a `+N` chip, a button that opens the list.
+  - demo: examples/overflow.tsx
+  - |
+    For a list too long to load whole, `onSearchChange` hands you each
+    keystroke, and the list stops filtering `options` itself: they are taken
+    as the matches. While `loading`, it draws placeholder rows. `options` must
+    still hold the chosen values, or their chips have no label.
+  - demo: examples/searching-elsewhere.tsx
+  - |
+    `size` steps the field's height, padding, radius and type, and its chips
+    with it.
+  - demo: examples/sizes.tsx
+  - |
+    `disabled` and `readOnly` both drop the chips' remove buttons and keep the
+    list shut. `disabled` also dims the field and takes it out of the tab
+    order; `readOnly` keeps the tab stop and the value at full contrast.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space, ArrowDown]
+        does: On the field, opens the list.
+      - keys: [ArrowDown, ArrowUp]
+        does: In the list, moves the cursor to the next or previous option, stepping over disabled ones.
+      - keys: [Enter]
+        does: In the list, picks or unpicks the option under the cursor. The list stays open.
+      - keys: [Escape]
+        does: Closes the list.
+      - keys: [Enter, Space]
+        does: On a chip's remove button, removes the chip without opening the list.
+  - |
+    Tab moves from the field to each chip's remove button in turn, then to
+    `+N`. Each remove button is named "Remove" and the chip's label.
+
+    The field is a `div` with `role="combobox"`, since a button may not hold
+    the chips' buttons. Its accessible name is its `placeholder`, given as
+    `aria-label`. `readOnly` sets `aria-readonly` and keeps the tab stop;
+    `disabled` sets `aria-disabled` and leaves the tab order.
+  - h2: When not to use it
+  - |
+    - For one value, use [Combobox](/components/inputs/combobox).
+    - For values that don't exist until someone types them, use
+      [TagInput](/components/inputs/tag-input).
+    - To show a few short options at once, use
+      [ToggleChips](/components/inputs/toggle-chips) or
+      [CheckboxGroup](/components/inputs/checkbox-group).
+  - h2: Props
+  - props: MultiCombobox

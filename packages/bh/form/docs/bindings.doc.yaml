@@ -1,0 +1,109 @@
+title: Instrument's bindings
+summary: The inputs, layouts, wrappers and button @bh/ui registers, what each kind holds, and what its config takes.
+order: 8
+related: [The registry, Writing an input, FieldWrapper]
+body:
+  - |
+    The inputs, layouts, wrappers and button `@bh/ui` registers, what each kind of
+    field holds, and what its config takes.
+  - h2: Import
+  - code: import { baseInputs, baseLayouts, FieldWrapper, FormButton, RootWrapper } from '@bh/ui';
+    lang: tsx
+  - |
+    `baseInputs` and `baseLayouts` are a registry's `inputs` and `layouts`;
+    `FieldWrapper`, `RootWrapper` and `FormButton` its `field`, `root` and `action`
+    ([The registry](/forms/registry)). Spread `baseInputs` to add kinds of
+    your own.
+  - h2: Inputs
+  - |
+    One kind per control, each drawing the component it names. Its value is
+    what the form holds for it, and empty is where a field of it starts.
+  - |
+    | Kind             | Control                                                      | Value                                | Empty        | Config                                       |
+    | ---------------- | ------------------------------------------------------------ | ------------------------------------ | ------------ | -------------------------------------------- |
+    | `text`           | [Input](/components/inputs/input)                            | `string`                             | `''`         | `placeholder`, `mono`, `prefix`              |
+    | `email`          | [Input](/components/inputs/input), `type="email"`             | `string`                             | `''`         | `placeholder`                                |
+    | `textarea`       | [Textarea](/components/inputs/textarea)                      | `string`                             | `''`         | `rows`, `placeholder`                        |
+    | `number`         | [NumberInput](/components/inputs/number-input)               | `number \| null`                     | `null`       | `min`, `max`, `step`, `suffix`               |
+    | `select`         | [Combobox](/components/inputs/combobox)                      | `string \| null`                     | `null`       | `options`, `placeholder`                     |
+    | `multi-select`   | [MultiCombobox](/components/inputs/multi-combobox)           | `string[]`                           | `[]`         | `options`, `placeholder`, `maxChips`         |
+    | `radio`          | [RadioGroup](/components/inputs/radio-group)                 | `string`                             | `''`         | `options`, `variant`, `label`                |
+    | `segmented`      | [SegmentedControl](/components/inputs/segmented-control)     | `string`                             | `''`         | `options`, `label`                           |
+    | `checkbox-group` | [CheckboxGroup](/components/inputs/checkbox-group)           | `string[]`                           | `[]`         | `options`, `label`, `selectAllLabel`         |
+    | `toggle`         | [Switch](/components/inputs/switch)                          | `boolean`                            | `false`      | `label`                                      |
+    | `checkbox`       | [Checkbox](/components/inputs/checkbox)                      | `boolean`                            | `false`      | `label`                                      |
+    | `date`           | [DatePicker](/components/inputs/date-picker)                 | `string \| null`, `yyyy-mm-dd`       | `null`       | `placeholder`, `min`, `max`                  |
+    | `date-range`     | [DateRangePicker](/components/inputs/date-range-picker)      | `[string \| null, string \| null]`   | `[null, null]` | `placeholder`                              |
+    | `time`           | [TimePicker](/components/inputs/time-picker)                 | `string \| null`, `HH:MM`            | `null`       | `stepMinutes`, `placeholder`                 |
+    | `duration`       | [DurationInput](/components/inputs/duration-input)           | `number \| null`, in minutes         | `null`       | `placeholder`, `budgetMinutes`               |
+    | `slider`         | [Slider](/components/inputs/slider)                          | `number`                             | `0`          | `min`, `max`, `step`, `label`, `valueText`   |
+    | `range`          | [RangeSlider](/components/inputs/range-slider)               | `[number, number]`                   | `[0, 100]`   | `min`, `max`, `step`, `label`                |
+    | `rating`         | [Rating](/components/inputs/rating)                          | `number`, `0` unrated                | `0`          | `max`, `label`, `showValue`                  |
+    | `tags`           | [TagInput](/components/inputs/tag-input)                     | `string[]`                           | `[]`         | `suggestions`, `placeholder`                 |
+    | `password`       | [PasswordInput](/components/inputs/password-input)           | `string`                             | `''`         | `placeholder`                                |
+    | `pin`            | [PinInput](/components/inputs/pin-input)                     | `string`, the whole code             | `''`         | `length`                                     |
+    | `color`          | [ColorPicker](/components/inputs/color-picker)               | `string \| null`, a hue's name       | `null`       | `placeholder`, `label`                       |
+    | `icon`           | [IconPicker](/components/inputs/icon-picker)                 | `string \| null`, an icon's name     | `null`       | `placeholder`, `icons`                       |
+    | `user`           | [UserPicker](/components/inputs/user-picker)                 | `string[]`, people's ids             | `[]`         | `people`, `multiple`, `placeholder`          |
+    | `file`           | [FileInput](/components/inputs/file-input)                   | `UploadFile[]`                       | `[]`         | `accept`, `multiple`, `onSelect`             |
+    | `json`           | [Textarea](/components/inputs/textarea), parsed as you type  | `string`, the text itself            | `''`         | `rows`, `placeholder`                        |
+    | `list`           | a form per item                                              | `Record<string, unknown>[]`          | `[]`         | `item`, `itemLabel`                          |
+    | `object`         | a form inside the form                                       | `Record<string, unknown> \| null`    | `null`       | `fields`                                     |
+  - |
+    `select`, `multi-select`, `radio`, `segmented`, `checkbox-group` and
+    `user` are disabled while their config [loads](/forms/async-options).
+    `InputKind` names every kind, and `ValueOfKind` what each one holds.
+
+    A `<label for>` names one element, and `radio`, `segmented`,
+    `checkbox-group`, `rating`, `slider` and `range` are drawn as groups or
+    on a div, which it cannot name. Those take the field's label as their
+    accessible name instead; a `label` in their config names them in its
+    place.
+  - h2: Two kinds for one value
+  - |
+    `toggle` and `checkbox` both hold a boolean, and `radio`, `segmented`
+    and `select` one string. Which one a form uses is a decision a stored
+    form records: a switch reads as taking effect at once, a checkbox as a
+    value saved with the form; a radio group shows every option, a select
+    keeps them behind a trigger. Search has no kind: it filters a view, and a
+    form has nothing to keep of it.
+  - h2: Lists and objects
+  - |
+    A `list` holds any number of objects of one shape, its `item` the form
+    of one; Add puts a new one at the end, filled with its fields' defaults,
+    and each moves up and down and comes out. An `object` holds one, its
+    `fields` the form of it. Both draw their fields with the form's own
+    registry.
+  - demo: examples/lists-and-objects.tsx
+  - h2: Layouts
+  - |
+    | Kind      | Props                    | Draws                                                                        |
+    | --------- | ------------------------ | ---------------------------------------------------------------------------- |
+    | `card`    | `title`, `description`   | A [Card](/components/layout/card) with its title in a header, an `<h3>`      |
+    | `group`   | `title`, `description`   | A rule and a caption, an `<h4>`, and no surface: a part of a card            |
+    | `row`     | none                     | Its fields side by side once it is 760 pixels wide, stacked below that       |
+    | `column`  | none                     | Its fields stacked, spaced as the form's own                                 |
+    | `actions` | none                     | Its buttons side by side at their own widths, a little below the fields      |
+  - h2: Wrappers
+  - |
+    [FieldWrapper](/components/forms/field-wrapper) draws a field's label,
+    its input, and its help or its problem; the label sits beside the field
+    once the field is 520 pixels wide, above it below that. `RootWrapper`
+    spaces the form's top-level fields. `FormButton` draws a submit as a solid
+    [Button](/components/primitives/button) that shows the submit running,
+    and a reset as a ghost one.
+  - h2: Rules
+  - |
+    - A kind's name is stored with every form that uses it: renaming one is
+      a migration of that data.
+    - A kind's empty value is one its control can draw: a field never
+      starts undefined.
+    - A field's problem shows once the field has been left or a submit
+      tried, and `touched` says which fields have been left. The field
+      wrapper draws whatever problem it is given.
+  - h2: Reference
+  - ref: InputKind
+  - ref: ValueOfKind
+  - props: FieldWrapper
+  - props: RootWrapper
+  - props: FormButton

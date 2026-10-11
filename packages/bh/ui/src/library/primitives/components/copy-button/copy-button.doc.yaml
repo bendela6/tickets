@@ -1,0 +1,36 @@
+title: CopyButton
+summary: Copies a string to the clipboard and says whether it worked.
+related: [Button, JsonViewer]
+body:
+  - |
+    Copies a string to the clipboard and says whether it worked.
+
+    After a click the label turns to `copiedLabel`, with a check, or to
+    `failedLabel` when the clipboard refuses the write. After `resetMs` it
+    returns to `label`.
+  - h2: Import
+  - code: import { CopyButton } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `value` is the exact string written. The labels default to Copy, Copied
+    and Failed.
+  - demo: examples/copy-a-link.tsx
+  - |
+    Name what it copies when the button is not next to it.
+  - demo: examples/custom-labels.tsx
+  - |
+    `useCopy` is the same behaviour without the button, for a control of your
+    own.
+  - demo: examples/without-the-button.tsx
+  - ref: useCopy
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: Copies the value.
+  - |
+    It is a `<button type="button">`, and its name is whichever label is
+    showing, so the name changes with the state; there is no live region. The
+    icon is hidden from assistive tech.
+  - h2: Props
+  - props: CopyButton

@@ -1,0 +1,112 @@
+---
+title: Releases
+summary: "How bh's commits make its versions: the release workflow, the script
+  it runs, and pnpm release:next."
+order: 8
+related: [Versions and updates, Adding bh to an app, 'tokens:build']
+---
+
+[//]: # 'written from releases.doc.yaml by pnpm docs:sync; edit that file, not this one'
+
+# Releases
+
+How bh's commits make its versions: the release workflow, the script it
+runs, and `pnpm release:next`.
+
+bh has one version for all its packages: a tag such as `v1.4.0` on the
+commit it was made from, and a GitHub release beside it. What an app does
+with one is in Getting started:
+[Versions and updates](../../../../apps/docs/content/getting-started/versions.md). This page is the
+script's reference. It is `scripts/release.mjs` at bh's root.
+
+## Running it
+
+```sh
+pnpm release:next
+```
+
+Says what the next version would be, with its notes, and changes nothing.
+It reads the tags of the clone it runs in, so fetch them first:
+`git fetch --tags`.
+
+| Run as                               | Does                                                              |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `node scripts/release.mjs`           | What `pnpm release:next` runs: says the next version              |
+| `node scripts/release.mjs --publish` | Tags `HEAD` with it, pushes the tag, and makes the GitHub release |
+
+`--publish` is the workflow's. It needs `gh`, with a token that may push
+tags and make releases.
+
+## The workflow
+
+`.github/workflows/release.yml` runs on every push to `main`, one at a
+time and in push order, since each reads the tags the one before made. It
+checks out the whole history, runs the script's tests, then
+`release.mjs --publish` with the workflow's own token.
+
+## Which commits count
+
+The commits since the newest `vX.Y.Z` tag that touch `packages/` or
+`copy.json`: what an app's copy is made of. A push that touches only the
+docs site, the scripts or the workflow makes no version.
+
+Each is read by its subject, written as a conventional commit:
+`type(scope)!: summary`, the scope and the `!` optional.
+
+| The commit                                                                    | Makes                               |
+| ----------------------------------------------------------------------------- | ----------------------------------- |
+| `fix:`, `perf:`                                                               | a patch: `1.4.0` to `1.4.1`         |
+| `feat:`                                                                       | a minor version: `1.4.0` to `1.5.0` |
+| `!` before the colon, any type (`feat(ui)!:`), or a `BREAKING CHANGE:` footer | a major version: `1.4.0` to `2.0.0` |
+| Any other type: `refactor:`, `docs:`, `chore:`, `test:`                       | none of its own                     |
+
+The largest among them wins. Commits that make none go out with the next
+version that is made, and are in its notes. With no tag yet, the first
+version is `1.0.0`.
+
+## What a release holds
+
+- **The tag**, `v1.5.0`, on the commit the push ended at. A push whose
+  `HEAD` has a version's tag already makes none, so running the workflow
+  again is safe.
+- **A GitHub release** of the same name, whose notes list the commits
+  since the last version, each with its short hash, under Breaking,
+  Features, Fixes and Also. The first release's notes say it is the
+  first.
+
+```markdown
+### Features
+
+- feat(ui): a date range by month, with an open end (bd3c818)
+
+### Fixes
+
+- fix(shell): a branch opens and lights while one of its pages is on screen (c7b51f8)
+```
+
+The packages' own `version` in bh is a placeholder, never bumped. The tag
+is the version: the gateway writes it into each copy's `package.json`
+when it copies the release into an app.
+
+## copy.json
+
+`copy.json`, at bh's root, tells the gateway how to make a copy: bh's
+name, and the strings that carry it. An app that names bh otherwise gets
+each string with `bh` replaced by its name. items-core names it `bw`, so
+`@bh/` becomes `@bw/`, `bh-lint` becomes `bw-lint`, and
+`bh/multiline-arrow-needs-body` becomes `bw/multiline-arrow-needs-body`.
+A change to it changes the copies, so it counts toward a version as a
+change to `packages/` does.
+
+## The tests
+
+`node --test scripts/release.test.mjs`, the first step of `pnpm test` at
+bh's root and of the workflow: which commits make which version, and the
+notes they make.
+
+## Rules
+
+- One version for every package; the tag is the version.
+- Only commits that touch `packages/` or `copy.json` count.
+- A change an app must meet is marked breaking: `!` before the colon, or
+  a `BREAKING CHANGE:` footer.

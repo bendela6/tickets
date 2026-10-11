@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cn, CopyButton, Tabs } from '@tickets/ui';
+import { cn, CopyButton, Tabs } from '@bh/ui';
 
 export type SdkPlatform = 'react' | 'node' | 'browser';
 

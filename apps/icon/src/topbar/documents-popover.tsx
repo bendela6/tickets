@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popover, PopoverContent, PopoverTrigger, cn } from '@tickets/ui';
+import { Popover, PopoverContent, PopoverTrigger, cn } from '@bh/ui';
 import type { Documents } from './use-documents';
 import { agoOf } from './use-documents';
 

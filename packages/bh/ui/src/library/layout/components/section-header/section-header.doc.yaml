@@ -1,0 +1,32 @@
+title: SectionHeader
+summary: "A section's caption row: an uppercase title, an optional count, and an action on the right."
+related: [Card, Row, FieldLabel]
+body:
+  - |
+    A section's caption row: an uppercase title, an optional count, and an
+    action on the right.
+  - h2: Import
+  - code: import { SectionHeader } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `count` sits beside the title, a gap away. It takes the caption's small
+    type unless it sets its own.
+  - demo: examples/with-count.tsx
+  - |
+    `action` is pinned to the right end of the row.
+  - demo: examples/with-an-action.tsx
+  - |
+    Something that must touch the title, like a required mark, goes inside
+    `title` rather than in `count`. To restyle the title, use
+    `titleClassName`: `className` lands on the row and can't reach it.
+  - demo: examples/required-mark.tsx
+  - |
+    `as="h2"` or `as="h3"` makes the title a real heading.
+  - demo: examples/as-heading.tsx
+  - h2: Keyboard and accessibility
+  - |
+    By default the title is a `div`, which a screen reader doesn't list as a
+    heading. Give `as` when the section needs one.
+  - h2: Props
+  - props: SectionHeader

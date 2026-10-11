@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { SWATCHES } from '../doc/constants';
 import { contrastRatio, grade } from '../doc/contrast';
 import type { Ground, Pair } from '../doc/types';

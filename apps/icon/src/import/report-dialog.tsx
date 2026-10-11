@@ -1,4 +1,4 @@
-import { Button, DialogContent, DialogRoot, DialogTitle } from '@tickets/ui';
+import { Button, DialogContent, DialogRoot, DialogTitle } from '@bh/ui';
 import type { ImportSummary } from './map';
 
 /**

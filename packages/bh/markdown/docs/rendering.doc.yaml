@@ -1,0 +1,111 @@
+title: Rendering a document
+summary: Draw a parsed page or a markdown document with your own component for each element, for code, and for a block that fails.
+order: 4
+related: [The block registry, Markdown documents, Prose]
+body:
+  - |
+    Draw a parsed page or a markdown document with your own component for
+    each element, for code, and for a block that fails.
+  - h2: Drawing a page
+  - |
+    `DocView` takes a parsed page as `doc`, and the registry it was read
+    with. It draws the page's nodes in order: markdown with the elements you
+    give it, each block through its renderer. A YAML page is read with
+    `parsePage` first, as in the [Overview](/markdown/overview#a-first-page).
+
+    `MarkdownDoc` takes a markdown document as `source` instead, and parses
+    it itself, again only when the source or the registry changes. Both
+    take `ctx`, which every block is handed as it is: the site passes the
+    page's own file there, so an example finds its file beside the page.
+  - h2: Your elements
+  - |
+    `elements` maps an HTML tag to the component that draws it, taking that
+    element's props: `p`, `h2`, `a`, `ul`, `table`, `td` and the rest. A tag
+    left out is drawn as the plain element, so with no elements a page is
+    unstyled HTML. Two more keys take what a tag can't:
+
+    - **`codeBlock`** draws a fence that is no block, given its `lang`, the
+      rest of its opening line as `meta`, and its `value`. `code` is inline
+      code only.
+    - **`errorCard`** draws a block that couldn't be drawn, given a `title`
+      and its `reasons`.
+
+    The package has one for each, drawn with `@bh/ui`: `CodeBlock`, and
+    `BlockErrorCard`. Keep the map in a constant: every block reads it from
+    the page's context, which changes with it.
+  - code: |
+      import { BlockErrorCard, CodeBlock, type MarkdownElements } from '@bh/markdown';
+
+      export const ELEMENTS: MarkdownElements = {
+        h2: ({ id, children }) => (
+          <h2 id={id} className="text-18/26 font-600 text-gray-12 mt-32 first:mt-0">
+            {children}
+          </h2>
+        ),
+        p: ({ children }) => <p className="text-15/24 text-gray-11 mt-12 first:mt-0">{children}</p>,
+        a: ({ href, children }) => (
+          <a href={href} className="text-indigo-11 underline underline-offset-2">
+            {children}
+          </a>
+        ),
+        codeBlock: ({ lang, value }) => <CodeBlock lang={lang} value={value} />,
+        errorCard: BlockErrorCard,
+      };
+    lang: tsx
+  - |
+    A heading is handed its `id` like any other prop: its text slugged, the
+    same id the parse lists it under. A screen that draws many documents
+    leaves it off, as `Prose` does, so two with the same heading don't share
+    one.
+  - h2: When a block fails
+  - |
+    A block that can't be drawn shows the error card in its place, and the
+    rest of the page still draws. The card says which of three things went
+    wrong:
+
+    - **No renderer** is named for it: `No renderer named "aside"`.
+    - **Its data fails its schema**: `Block "callout" failed validation`,
+      with each problem's field and message. The schema runs once per parse,
+      not on every draw.
+    - **It throws** as it draws: `Block "price" failed to render`, with the
+      error's message. A new parse gives it another try, so a fixed source
+      draws it again.
+
+    Here the app registers a `price` block of its own, beside `markdownBlocks`.
+    Give the second callout a `title`, or the second price a number, and
+    its card gives way to the block.
+  - demo: examples/three-ways-to-fail.tsx
+  - h2: Text the app didn't write
+  - |
+    `MarkdownText` draws plain markdown, GitHub's tables, strikethrough and
+    footnotes included, with your elements: no frontmatter, no blocks, no
+    marks. A fence is a code block, a `:::` line or a `:mark[…]` is text,
+    and raw HTML draws nothing. It is for what the app didn't write, such as
+    a note a tool left, where a fence must never reach a renderer.
+
+    [Prose](/markdown/prose) is `MarkdownText` in `@bh/ui`'s look. It also draws a link whose scheme isn't `http`,
+    `https` or `mailto` as text, and gives headings no id.
+  - h2: Rules
+  - |
+    - A tag left out of `elements` is the plain element: the package has no
+      look of its own.
+    - A block that fails draws the card in its place, and its siblings still
+      draw. An inline mark that throws shows the card too; one with no
+      renderer stays as written.
+    - A data block's schema runs once per parse. An async schema isn't run
+      as the page draws, so its block draws unchecked.
+    - Raw HTML draws nothing. A reference link with no definition stays as
+      written, brackets and all, so the slip shows.
+    - A link definition anywhere in the page, a block's markdown included,
+      serves a reference anywhere in it.
+  - h2: Reference
+  - props: DocView
+  - props: MarkdownDoc
+  - props: MarkdownText
+  - ref: MarkdownElements
+  - ref: TagElements
+  - ref: CodeBlockProps
+  - ref: ErrorCardProps
+  - ref: RenderContext
+  - ref: Doc
+  - ref: Heading

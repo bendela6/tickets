@@ -1,0 +1,70 @@
+title: Pinning
+summary: Freeze columns to the left or right edge of a table wider than its frame, and scroll the rest sideways under them.
+order: 9
+related: [Widths and resizing, Columns, Writing a skin]
+body:
+  - |
+    Freeze columns to the left or right edge of a table wider than its frame,
+    and scroll the rest sideways under them.
+  - h2: Freezing a column
+  - |
+    A column with `pinned: 'left'` or `pinned: 'right'` holds still while
+    the table scrolls sideways: a left-pinned one where it is with the table
+    scrolled to its start, a right-pinned one where it is scrolled to its
+    end. So the left ones come first in `columns` and the right ones last.
+    Here the order number and the customer stay on the left, the edit button
+    on the right, and the totals row holds its count under the order column
+    as the rest goes by:
+  - demo: examples/frozen-columns.tsx
+  - |
+    A pinned column needs a width in pixels. The table adds up the widths of
+    the left-pinned columns to know where the frozen part ends, and a track
+    such as `minmax(200px, 1fr)` has no such width: it is counted as 160
+    pixels, and the edge is drawn in the wrong place. Give pinned columns a
+    number, as every column here has.
+  - |
+    `@bh/ui` draws a line where the frozen columns end and a fade where the
+    columns pass under them, once the table has moved, and a fade at either
+    side of the frame while there are columns hidden past it.
+  - h2: Scrolling sideways
+  - |
+    The table slides its columns sideways under a clip, rather than scrolling
+    a box of its own, so the page keeps scrolling it up and down and its
+    header stays stuck. It moves by:
+  - |
+    - a sideways swipe or wheel, or Shift and the wheel;
+    - the scrollbar docked at its foot, which shows while the pointer is over
+      the table, while it moves, and while it is dragged: drag the thumb, or
+      click the track to jump;
+    - the middle button: hold it and drag, or click it and move the pointer
+      away, then click again, press Escape or turn the wheel to stop;
+    - the keyboard: focus moving to a cell out of view brings its column in.
+  - |
+    A swipe that would go past either end is left to the page, so the page
+    still scrolls.
+  - h2: How it is done
+  - |
+    Every column keeps its track in one CSS grid, and every row stays one
+    grid row, frozen columns included: there are no separate panes to keep
+    in step. A pinned cell is moved back by exactly as far as the columns
+    have slid, so it seems not to move. The table works the distance out and
+    hands it to the skin as a `CellPin` on each header, cell and filter
+    cell, and as `RowPins` for the totals and skeleton rows, which draw their
+    own cells; the skin applies it as `position: relative; left`. `pin.edge`
+    marks the innermost pinned column on each side, the one that borders
+    the part that scrolls.
+  - h2: Rules
+  - |
+    - A pinned column needs a width in pixels; a track function is counted as
+      160.
+    - A left-pinned column holds the place it has at the start of the scroll,
+      a right-pinned one the place it has at the end.
+    - Every kind of row pins the same columns: the header, the filter row,
+      the rows, the skeleton and the totals row.
+    - Pinning never splits the table: one grid, one row per row.
+    - Only the innermost pinned column on each side is the `edge`.
+    - A sideways gesture past either end of the table goes to the page.
+  - h2: Reference
+  - ref: CellPin
+  - ref: RowPins
+  - ref: ScrollX

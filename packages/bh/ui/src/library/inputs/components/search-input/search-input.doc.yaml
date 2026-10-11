@@ -1,0 +1,47 @@
+title: SearchInput
+summary: A search field, with a clear button once there is something to clear.
+related: [Input, Combobox]
+body:
+  - |
+    A search field, with a clear button once there is something to clear.
+
+    The slot after the text shows one thing at a time: a spinner while
+    `loading`; otherwise the clear button, once there is a value; otherwise the
+    `shortcut` hint.
+  - h2: Import
+  - code: import { SearchInput } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    While the field is empty it shows `shortcut`. Type, and the hint gives way
+    to the clear button, which sets the value to `''`. The hint is only
+    drawn: binding the key is yours.
+  - demo: examples/shortcut-and-clear.tsx
+  - |
+    `loading` puts a spinner in the slot, in place of the clear button or the
+    hint.
+  - demo: examples/loading.tsx
+  - |
+    `size` is [Input](/components/inputs/input)'s: 30, 38 and 46 pixels.
+  - demo: examples/sizes.tsx
+  - |
+    Neither a read-only nor a disabled search can be cleared: the clear button
+    is disabled in both.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves on to the next field. The clear button is not a tab stop.
+  - |
+    It is an `<input type="search">`, so its role is `searchbox`; name it with
+    `aria-label` or a `<label htmlFor>`. The placeholder, `Search…` unless you
+    give one, is not a name.
+
+    The search glyph is hidden from screen readers. The clear button is named
+    "Clear search", and the spinner is an image named "Loading".
+  - h2: When not to use it
+  - |
+    To pick one option from a list, searching it as you type, use
+    [Combobox](/components/inputs/combobox).
+  - h2: Props
+  - props: SearchInput

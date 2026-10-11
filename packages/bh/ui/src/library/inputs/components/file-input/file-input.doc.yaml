@@ -1,0 +1,55 @@
+title: FileInput
+summary: Takes files by drop or by browse, and lists them with their size, progress or error.
+related: [Progress, Input]
+body:
+  - |
+    Takes files by drop or by browse, and lists them.
+
+    It uploads nothing. `onSelect` hands over the browser's `File`s; the
+    caller uploads them and lists each in `value` as an `UploadFile`.
+    `onChange` reports a file removed.
+  - h2: Import
+  - code: import { FileInput, type UploadFile } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The drop target is also a button that opens the browser's file dialog.
+    `id` goes on it, so a label pointing at it names it, and a click on the
+    label opens the dialog too. Here `onSelect`
+    lists each chosen file with its name and size, where an app would also
+    start its upload.
+  - demo: examples/choosing-files.tsx
+  - |
+    A file shows its `error` if it has one, else a progress bar while
+    `progress` is set, else its `size`. An error belongs to its file and
+    leaves the others alone. The progress bars, the focus ring and the target
+    under a dragged file take `tone`, `primary` by default.
+  - demo: examples/errors-per-file.tsx
+  - |
+    `multiple={false}` lets the dialog choose one file and takes only the
+    first of a drop. `accept` filters the dialog only: a dropped file is not
+    checked against it. `label` names the drop target where no label points
+    at it.
+  - demo: examples/one-image.tsx
+  - |
+    `readOnly` keeps the list at full contrast and drops the remove buttons;
+    the target takes no drop and opens no dialog. `disabled` also dims the
+    target and takes it out of the tab order.
+  - demo: examples/disabled-and-read-only.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the drop target, opens the file dialog. On a remove button, removes its file.
+  - |
+    The drop target is a `button`, named by `label`, else by a `<label for>`
+    pointing at `id`, else by its own text. The file `<input>` behind it is
+    visually hidden, out of the tab order, and hidden from screen readers.
+    Each remove button is named "Remove" and the file's name, and a file in
+    progress shows a `progressbar` named "Uploading" and the file's name.
+
+    A read-only target sets `aria-disabled` and stays in the tab order.
+  - h2: Props
+  - props: FileInput
+  - |
+    Each file in `value`:
+  - ref: UploadFile

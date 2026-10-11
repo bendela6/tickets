@@ -1,4 +1,4 @@
-import { Button } from '@tickets/ui';
+import { Button } from '@bh/ui';
 import { ELEMENT_TYPES, type IconDoc } from '../doc';
 import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';

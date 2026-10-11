@@ -1,0 +1,43 @@
+title: Spinner
+summary: A mark that moves while something loads.
+related: [Progress, Icon, Button]
+body:
+  - |
+    A mark that moves while something loads.
+
+    It is an [Icon](/components/primitives/icon) that moves, so it takes
+    Icon's sizes and tones. With no `tone`, it takes the colour of the text
+    around it.
+  - h2: Import
+  - code: import { Spinner } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `arc`, the default, is a turning sweep. `dashed` is a quieter turning
+    ring, for a refresh the reader didn't ask for. `pulse` doesn't turn: it
+    fades a dot, for something live, where turning would suggest work that
+    finishes.
+  - variants:
+      of: Spinner
+      rows: tone
+      columns: variant
+  - |
+    `size` is a rung of Icon's ladder: 8, 10, 12, 14, 16, 20 and 28 pixels,
+    `md` (14) by default.
+  - demo: examples/sizes.tsx
+  - |
+    With no `tone`, a spinner takes the colour of the text it sits in.
+  - demo: examples/in-the-text-colour.tsx
+  - h2: Keyboard and accessibility
+  - |
+    A spinner is an `img` named by `label`, `Loading` unless you say what is
+    loading. An empty `label` hides it from assistive tech. It is not a live
+    region, so nothing is announced when it appears.
+  - h2: When not to use it
+  - |
+    - To show how far along something is, use
+      [Progress](/components/feedback/progress).
+    - For a button that is working, give the [Button](/components/primitives/button)
+      `loading`, which adds the spinner itself.
+  - h2: Props
+  - props: Spinner

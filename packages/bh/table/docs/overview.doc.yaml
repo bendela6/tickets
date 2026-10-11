@@ -1,0 +1,66 @@
+title: Overview
+summary: Draw a sortable, resizable, virtualized table over an array of rows, in @bh/ui's look or one of your own.
+order: 1
+related: [Columns, useTable, Writing a skin]
+body:
+  - |
+    Draw a sortable, resizable, virtualized table over an array of rows, in
+    `@bh/ui`'s look or one of your own.
+  - h2: Import
+  - code: |
+      import { Table, sortRows, useTable, type Column } from '@bh/table';
+      import { tableRender } from '@bh/ui';
+    lang: tsx
+  - h2: A first table
+  - |
+    A table is its columns, its rows, the state `useTable` holds, and a skin
+    to draw it. Click a header to sort by it, drag a column's edge to resize
+    it, or Tab into the table and move with the arrows. The widths you drag
+    are saved under `docs:files:widths`, from the key this example names, and
+    are back when you reload the page.
+  - demo: examples/files.tsx
+  - h2: The parts
+  - |
+    1. **[Columns](/tables/columns)**: what each header says, how a cell is
+       drawn from a row, and how the column sorts, sizes and sticks.
+    2. **[`useTable`](/tables/use-table)**: the sort, the widths, the
+       collapsed groups, the focused cell and the selection, with a handler
+       for each, spread onto `<Table>`.
+    3. **`<Table>`**: decides what to draw and when (the header, the rows on
+       screen, a skeleton, an empty or failed state) and reports what the user
+       asks for: a [sort](/tables/sorting), a
+       [width](/tables/widths-and-resizing), a
+       [selection](/tables/selection), a [focused cell](/tables/keyboard-focus).
+    4. **A skin**: a function for each part of the table. `@bh/ui`'s
+       `tableRender()` draws them in its look, and its
+       [cell renderers](/tables/cell-renderers) draw values: text, numbers,
+       dates, badges, links. [Writing a skin](/tables/writing-a-skin) makes
+       one of your own.
+  - |
+    The table draws no cell, row or header itself, and never reorders the
+    rows it is given. A header click reports the sort through `onSortChange`,
+    and the page orders the rows: with `sortRows` in the browser, as here, or
+    by asking a server for them in that order.
+  - h2: Where it scrolls
+  - |
+    The table has no scroll box of its own. It is as tall as its rows, and
+    the nearest ancestor that scrolls (in an app, the shell's main area)
+    scrolls it: its header sticks to that ancestor's top, and only the rows
+    in view are drawn. The examples on these pages sit in a box of a fixed
+    height that stands in for the page. More on this in
+    [Virtualization and states](/tables/virtualization-and-states).
+  - h2: Rules
+  - |
+    - The table draws nothing of its own but a few plain boxes: the frame,
+      the box that clips the columns, and the dock at its foot. Every header,
+      row, cell, band and state comes from the skin.
+    - It never reorders, filters or fetches rows: it reports the sort, and
+      draws the rows it is given in the order given.
+    - Keyboard focus and collapsing groups are on only when their handler is
+      given, and selection when `getRowId` is given too. `useTable` gives all
+      three handlers.
+    - The app names the key widths are saved under, and the table adds no
+      prefix: `useTable({ storageKey: 'shop:orders' })` saves to
+      `shop:orders:widths`. Without a key nothing is saved.
+  - h2: Reference
+  - props: Table

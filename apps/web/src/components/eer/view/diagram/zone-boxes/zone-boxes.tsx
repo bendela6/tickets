@@ -1,6 +1,6 @@
 import { groupColor } from '../../../engine/colors/group-color';
 import { useDiagramModel, useDiagramUi } from '../../../state/diagram-context';
-import { cn } from '@tickets/ui';
+import { cn } from '@bh/ui';
 import { mix } from '../../../ui/color-mix';
 import { useFocusSets, useHiddenIds } from '../entity-cards';
 

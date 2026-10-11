@@ -1,0 +1,41 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import { MultiSelectField } from './multi-select-field';
+
+const OPTIONS = [
+  { value: 'a', label: 'Alpha' },
+  { value: 'b', label: 'Beta' },
+];
+const base = { name: 'labels', loading: false, onBlur: vi.fn(), config: { options: OPTIONS } };
+
+describe('MultiSelectField', () => {
+  it('shows every selected option', () => {
+    render(<MultiSelectField {...base} value={['a', 'b']} onChange={vi.fn()} />);
+    expect(screen.getByText('Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Beta')).toBeInTheDocument();
+  });
+
+  it('adds the option the user picks to the existing selection', async () => {
+    const onChange = vi.fn();
+    render(<MultiSelectField {...base} value={['a']} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('combobox', { name: /select/i }));
+    await userEvent.click(screen.getByText('Beta'));
+    expect(onChange).toHaveBeenCalledWith(['a', 'b']);
+  });
+
+  it('treats an unset value as an empty selection', () => {
+    render(
+      <MultiSelectField {...base} value={undefined as unknown as string[]} onChange={vi.fn()} />,
+    );
+    expect(screen.getByRole('combobox', { name: /select/i })).toBeInTheDocument();
+  });
+
+  it('is disabled while the engine resolves async config', () => {
+    render(<MultiSelectField {...base} value={[]} onChange={vi.fn()} loading />);
+    expect(screen.getByRole('combobox', { name: /select/i })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+});

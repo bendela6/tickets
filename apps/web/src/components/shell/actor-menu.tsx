@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCreateUser } from '../../api/use-create-user';
 import { useUsers } from '../../api/use-users';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@tickets/ui';
+import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
 import { avatarFor } from '../../domain/actor';
 
 // Sidebar footer card: who edits are attributed to. Design 01 §sidebar footer.

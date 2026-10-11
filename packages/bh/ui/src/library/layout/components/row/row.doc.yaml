@@ -1,0 +1,32 @@
+title: Row
+summary: Lays its children out side by side, with a gap between them.
+related: [Stack, Card, SectionHeader]
+body:
+  - |
+    Lays its children out side by side, with a gap between them.
+
+    Unlike [Stack](/components/layout/stack), it centres its children by
+    default, so a label, a control and a button in a row line up on their
+    middles. It paints nothing: it is a flex `div`.
+  - h2: Import
+  - code: import { Row } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `gap` counts in steps of 4 pixels: `gap={2}` is 8 pixels, and the default,
+    `4`, is 16.
+  - demo: examples/gaps.tsx
+  - |
+    `justify` spreads the children along the row: to the `start`, the
+    `center` or the `end`, or `between`, which pushes the first and the last
+    to the ends.
+  - demo: examples/justify.tsx
+  - |
+    `align="baseline"` lines up the baselines of text in different sizes, such
+    as a figure and its label.
+  - demo: examples/baseline.tsx
+  - h2: When not to use it
+  - |
+    - For a column, use [Stack](/components/layout/stack).
+  - h2: Props
+  - props: Row

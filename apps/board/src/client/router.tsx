@@ -8,7 +8,7 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router';
-import { Pill, Progress, ScreenState, Spinner, StatusDot, Tabs } from '@tickets/ui';
+import { Pill, Progress, ScreenState, Spinner, StatusDot, Tabs } from '@bh/ui';
 import type { SessionDetail } from '../shared/types';
 import { boardQuery, duration, relative, sessionQuery } from './api';
 import { DecisionsPanel } from './components/decisions-panel';

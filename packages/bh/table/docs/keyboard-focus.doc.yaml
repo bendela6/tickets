@@ -1,0 +1,89 @@
+title: Keyboard focus
+summary: Move through the table cell by cell with the arrows, sort from its headers, and step into a cell's buttons and out again.
+order: 7
+related: [Selection, Sorting, Cell renderers]
+body:
+  - |
+    Move through the table cell by cell with the arrows, sort from its
+    headers, and step into a cell's buttons and out again.
+  - h2: One tab stop
+  - |
+    With `onFocusChange` given, as `useTable` gives it, the table is a grid
+    and its cells are a single stop in the tab order: Tab enters them at one
+    cell, the arrows move from there, and the next Tab moves on. The buttons
+    and links inside cells are taken out of the tab order, so a hundred rows
+    of row actions don't stand between the user and the rest of the page;
+    Enter steps into them.
+  - |
+    Tab into this table, move with the arrows, and go up from the first row
+    to the headers. Enter on a header sorts; Enter on a cell opens its order;
+    Enter on Actions steps into its buttons, and Escape steps back out.
+  - demo: examples/moving-by-keyboard.tsx
+  - h2: The keys
+  - keyboard:
+      - keys: [Tab]
+        does: Enters the cells at the focused one, else the first; pressed again, moves on.
+      - keys: [←, →, ↑, ↓]
+        does: Moves one cell. ↑ from the first row reaches the header row.
+      - keys: [Home, End]
+        does: Moves to the first or the last cell in the row.
+      - keys: [Ctrl+Home, Ctrl+End]
+        does: Moves to the first cell of the first row, or the last cell of the last row. Cmd does what Ctrl does.
+      - keys: [PageUp, PageDown]
+        does: Moves a screenful of rows. PageUp stops at the first row, not the header.
+      - keys: [Enter]
+        does: 'On a header, sorts as a click does, and Shift+Enter as a shift-click. On a cell with buttons or links, steps into the first. On any other cell, calls onRowActivate with its row.'
+      - keys: [F2]
+        does: Steps into the cell's first button or link.
+      - keys: [Esc]
+        does: Steps out of the cell, back to the grid.
+      - keys: [Space]
+        does: Ticks or unticks the focused row, when the table selects. Shift+Space adds the range.
+      - keys: [Ctrl+C]
+        does: Copies the focused cell's text.
+      - keys: [Alt+↓]
+        does: On a header, clicks its headerAccessory.
+  - h2: Stepping into a cell
+  - |
+    Inside a cell the keys are the controls': Tab walks the cell's buttons,
+    the arrows go to whatever has focus, and only Escape is the table's,
+    which it stops there so it doesn't also close a dialog the table sits
+    in. Clicking a button in a cell steps into that cell too.
+  - |
+    A control the table holds outside its cells keeps its own place in the
+    tab order and its own keys: a filter under the header, the button of an
+    empty or failed state, a group's band.
+  - h2: Where focus is
+  - |
+    The focused cell is `state.focused`, a `CellRef`: the row's index among
+    the rows on screen, from 0, and the column's `key`, with `rowIndex: -1`
+    for the header row. It is `null` until the user first puts focus in the
+    table, so no ring shows before then, though the first cell is already
+    the table's tab stop. A click on a cell focuses it too.
+  - |
+    Only the rows in view exist, so a key that moves to a row out of view
+    scrolls it in first, then focuses it. If the user scrolls the focused row
+    away with the mouse, focus waits on the table and comes back to the cell
+    when its row does.
+  - |
+    `@bh/ui` rings the focused cell however focus got there, and a header
+    only when it was reached by keyboard: a header is a control, and a click
+    on it sorts.
+  - h2: Rules
+  - |
+    - Keyboard focus is on only with `onFocusChange`. Without it the table
+      leaves the tab order alone, and the controls in its cells stay
+      tabbable.
+    - The cells are one tab stop, and Tab is never trapped in them. A
+      control outside the cells keeps its own place in the tab order and its
+      own keys.
+    - Focus is a position: a row's index and a column's key. After a sort it
+      stays where it was on screen, and a column keeps it however the
+      columns move.
+    - The header row is row -1, which is how sorting is reached without a
+      mouse.
+    - A key moves to a row out of view by scrolling it in before focusing
+      it.
+  - h2: Reference
+  - ref: CellRef
+  - ref: CellFocusProps

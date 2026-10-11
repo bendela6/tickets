@@ -4,7 +4,7 @@ import type { ProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { KIND_ICON, KIND_TONE } from '../../domain/status';
-import { Button, Icon, relativeLabel } from '@tickets/ui';
+import { Button, Icon, relativeLabel } from '@bh/ui';
 import { NewProjectDialog } from '../shell/new-project-dialog';
 
 const BAR_MAX_PX = 18;

@@ -1,0 +1,23 @@
+title: RelativeDate
+summary: 'Shows a date as days from now: today, in 3 days, 2 days ago.'
+related: [DatePicker, DateRangePicker]
+body:
+  - |
+    Shows a date as days from now: today, in 3 days, 2 days ago.
+
+    It counts whole calendar days in UTC, so the time of day does not change
+    the answer. The exact date, such as `Jul 13, 2026`, is its `title`.
+  - h2: Import
+  - code: import { RelativeDate } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Each date is counted from `now`, the current time unless given. One day
+    either way reads `tomorrow` or `yesterday`.
+  - demo: examples/days-from-now.tsx
+  - |
+    `overdue` draws the date in red. It does not look at the date itself:
+    the caller decides when a date is overdue.
+  - demo: examples/overdue.tsx
+  - h2: Props
+  - props: RelativeDate

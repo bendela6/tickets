@@ -1,0 +1,55 @@
+title: Tooltip
+summary: A short hint that shows when its trigger is hovered or focused.
+related: [Button, Popover]
+body:
+  - |
+    A short hint that shows when its trigger is hovered or focused.
+
+    Every Tooltip needs a `TooltipProvider` above it: without one, it
+    throws. Put one near the app's root.
+  - h2: Import
+  - code: import { Tooltip, TooltipProvider } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    On icon buttons, each still named with its own `aria-label`.
+  - demo: examples/icon-buttons.tsx
+  - |
+    `side` picks the side of the trigger it shows on: `top` by default.
+  - demo: examples/sides.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Focusing the trigger shows its tooltip at once; moving focus away hides it.
+      - keys: [Esc]
+        does: Hides the tooltip.
+      - keys: [Enter, Space]
+        does: Activates the trigger, and hides the tooltip.
+  - |
+    The tooltip has the `tooltip` role, and while it shows, the trigger is
+    `aria-describedby` it. It describes its trigger and does not name it,
+    so an icon-only trigger still needs an `aria-label`.
+
+    The trigger is `children` itself, through Radix's `asChild`: one
+    element that takes a ref and focus, like a Button.
+  - h2: When not to use it
+  - |
+    For content with buttons or fields in it, use
+    [Popover](/components/overlays/popover): a tooltip hides when its
+    trigger loses focus.
+  - h2: Props
+  - h3: Tooltip
+  - props: Tooltip
+  - h3: TooltipProvider
+  - |
+    It sets the delay for every tooltip under it: a hovered trigger shows
+    its tooltip after 300 milliseconds.
+  - props: TooltipProvider
+  - code: |
+      import type { ReactNode } from 'react';
+      import { TooltipProvider } from '@bh/ui';
+
+      export function Providers({ children }: { children: ReactNode }) {
+        return <TooltipProvider>{children}</TooltipProvider>;
+      }
+    lang: tsx

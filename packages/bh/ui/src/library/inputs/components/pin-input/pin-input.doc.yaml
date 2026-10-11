@@ -1,0 +1,53 @@
+title: PinInput
+summary: A short code of fixed length, one character to a cell.
+related: [PasswordInput, Input]
+body:
+  - |
+    A short code of fixed length, one character to a cell.
+
+    The cells are one value: `value` is the whole code and `onChange` sends the
+    whole code. A half-entered code is sent as far as it goes, `429` rather
+    than `429` and three spaces, so its length says whether it is complete.
+  - h2: Import
+  - code: import { PinInput } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Typing a character fills the cell and moves to the next. A paste fills the
+    cells from the one it lands in and moves to the last it filled, rather than
+    putting the whole code in one cell.
+  - demo: examples/a-verification-code.tsx
+  - |
+    `length` sets how many cells: six unless you say.
+  - demo: examples/four-cells.tsx
+  - |
+    There is no `invalid` prop: a rejected code takes `tone="danger"`, which
+    colours the cells and marks the group `aria-invalid`. The message is yours
+    to place.
+  - demo: examples/a-rejected-code.tsx
+  - |
+    `readOnly` keeps the cells focusable and refuses changes, and swaps their
+    fill for a line under each. `disabled` takes them out of the tab order and
+    fades them.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Backspace]
+        does: Clears the cell. In an empty cell, steps back and clears the one before.
+      - keys: [ArrowLeft, ArrowRight]
+        does: Moves to the cell before or after, changing nothing.
+      - keys: [Tab]
+        does: Moves to the next cell. Each cell is a tab stop.
+  - |
+    The cells sit in a `group` named by `label`, "Verification code" unless you
+    give one, and each cell is named "Character 1 of 6" and so on. The first
+    cell takes the `id` and `autoComplete="one-time-code"`. Focusing a cell
+    selects its character, so typing replaces it.
+
+    The cells ask a phone for a number pad (`inputMode="numeric"`), but take
+    any character.
+  - h2: When not to use it
+  - |
+    For a secret of any length, use [PasswordInput](/components/inputs/password-input).
+  - h2: Props
+  - props: PinInput

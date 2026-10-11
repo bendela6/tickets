@@ -1,0 +1,65 @@
+title: Rendering and submitting
+summary: Draw a form, start it with values, take what it submits, and submit it from a button outside it.
+order: 4
+related: [Building a form, Validation and valibot, Visibility]
+body:
+  - |
+    Draw a form, start it with values, take what it submits, and submit it
+    from a button outside it.
+  - h2: Drawing a form
+  - |
+    `<Form form={…}>` draws the form inside a `<form>` with the registry
+    the app's [`FormProvider`](/forms/registry#one-registry-for-the-app)
+    gives it, and holds the values. Its buttons are nodes of the form like
+    its fields: [`b.submit()`](/forms/building-a-form#buttons) submits,
+    as does Enter in a one-line field, and `b.reset()` puts the values
+    back. `onSubmit` is then called with the values, once every
+    [check](/forms/validation) passes.
+  - |
+    `<Form>`'s children are drawn inside the `<form>` after the fields, for
+    anything else: a button the registry's doesn't suit, or a line that reads
+    a value.
+  - h2: Starting values
+  - |
+    A field starts at `<Form defaultValues>` for its name, else the form's
+    own (`build`'s `defaultValues`), else its own `defaultValue`, else its
+    input's from the registry. Here the title comes from `<Form>`, the pages
+    from the field, and the labels from the input: `[]`, which `tags` draws
+    as empty.
+  - demo: examples/starting-values.tsx
+  - |
+    While a submit is checking the values and running `onSubmit`, every input
+    is disabled. A submit first waits for the
+    [async options](/forms/async-options) of the fields on screen.
+  - h2: A button outside the form
+  - |
+    A Save button in a dialog's footer, or a page's header, sits outside the
+    form. `useStandaloneForm` holds the form instead, given the form and
+    `onSubmit` (and the provider's registry, so it is called under the
+    provider); `<Form formApi>` draws it, and its `submit`, `reset`,
+    `isDirty` and `isSubmitting` are yours to use.
+  - demo: examples/button-outside-the-form.tsx
+  - |
+    The form, `defaultValues`, `onSubmit` and the cross-field `schema` go to
+    the hook, not to `<Form>`, whose types refuse them beside `formApi`.
+  - h2: Reading a value
+  - |
+    Anything drawn inside `<Form>` (its children, an input, a layout) can
+    read a field's value as it changes with `useFieldValue`.
+  - demo: examples/reading-a-value.tsx
+  - h2: Rules
+  - |
+    - `onSubmit` is given the visible fields' values only; a hidden field
+      keeps its value in the form, and has it back when it shows again.
+    - `<Form formApi>` draws the form the hook holds and never builds a
+      second one, so both see the same values, checks and loading options.
+    - `useFieldValue` throws outside a `<Form>`.
+    - `reset` puts every value back where it started.
+    - Both buttons wait while a submit runs, and a reset waits for a change
+      to put back.
+  - h2: Reference
+  - props: Form
+  - ref: useStandaloneForm
+  - ref: UseStandaloneFormOptions
+  - ref: FormApi
+  - ref: useFieldValue

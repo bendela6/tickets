@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useWorkdirs } from '../../api/use-workdirs';
-import { RailLabel } from '@tickets/ui';
+import { RailLabel } from './rail-label';
 import { SessionList } from '../agent/session-list';
 
 export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {

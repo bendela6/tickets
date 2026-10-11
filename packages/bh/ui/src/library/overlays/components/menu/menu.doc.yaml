@@ -1,0 +1,67 @@
+title: Menu
+summary: A list of commands that opens from a button.
+related: [Button, Dropdown, Popover]
+body:
+  - |
+    A list of commands that opens from a button.
+
+    It is Radix's DropdownMenu in bh's look: the arrow keys move between the
+    items, a letter jumps to one, and choosing one runs its `onSelect` and
+    closes the menu.
+  - h2: Import
+  - code: import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `shortcut` shows a key at the item's end. It only shows it: binding the
+    key is the app's to do.
+  - demo: examples/shortcuts.tsx
+  - |
+    `destructive` paints an item red, and a `MenuSeparator` sets it apart.
+  - demo: examples/destructive.tsx
+  - |
+    From an icon button, named with `aria-label`. A `disabled` item is
+    dimmed, and the arrow keys pass over it.
+  - demo: examples/icon-trigger.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the trigger, opens the menu on its first item. On an item, chooses it.
+      - keys: [↓]
+        does: On the trigger, opens the menu. In it, moves to the next item.
+      - keys: [↑]
+        does: Moves to the previous item.
+      - keys: [Home, End]
+        does: Moves to the first or the last item.
+      - keys: [Esc]
+        does: Closes the menu and returns focus to the trigger.
+  - |
+    Typing a letter moves to the next item that starts with it.
+
+    `MenuContent` has the `menu` role, labelled by its trigger; each item is
+    a `menuitem`, and `MenuSeparator` a `separator`. The trigger gets
+    `aria-haspopup="menu"` and `aria-expanded`. While the menu is open, the
+    page behind is hidden from assistive technology and takes no pointer
+    events.
+  - h2: When not to use it
+  - |
+    For a panel of anything other than commands, a form or a picker, use
+    [Dropdown](/components/overlays/dropdown) or
+    [Popover](/components/overlays/popover).
+  - h2: Props
+  - |
+    `Menu` and `MenuTrigger` are Radix's DropdownMenu parts as they are, so
+    their props are Radix's.
+  - h3: Menu
+  - props: Menu
+  - h3: MenuTrigger
+  - props: MenuTrigger
+  - h3: MenuContent
+  - |
+    It opens 6 pixels from the trigger, aligned to its start, and is at
+    least 190 pixels wide.
+  - props: MenuContent
+  - h3: MenuItem
+  - props: MenuItem
+  - h3: MenuSeparator
+  - props: MenuSeparator
