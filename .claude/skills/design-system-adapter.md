@@ -4,7 +4,9 @@
 > and `table` became `packages/bh/{ui,form,table}`, copies of a bh release
 > that are never edited here. Paths below that name `packages/web/ui` and
 > `@tickets/ui` describe what is now bh's `packages/web/ui` (`@bh/ui`): change
-> a token or a component there, in bh.
+> a token or a component there, in bh. The same goes for the gallery: tickets
+> has no `/gallery` any more, so "the gallery" below (its pages, its demos,
+> traps 6 and 7) is bh's docs site.
 
 Filled instance of `_adapter-template.md` for this repo. The four generic
 design→code skills read this file for every stack-specific detail; nothing
@@ -106,10 +108,12 @@ here should need to leak back into those skills.
 
 ## workbench
 
-- The `/gallery` route renders primitives in isolation, one state at a time.
-- Run: `WEB_DEV_PORT=4620 pnpm --filter @tickets/web dev` (the docker API
-  must be up first: `docker compose up -d`).
-- View at http://localhost:4620/gallery.
+- bh's components render in isolation, one state at a time, on bh's docs
+  site: `pnpm docs:dev` in `Projects/bh`, at http://localhost:4660.
+- tickets' own components (`ItemKey`, `RailLabel` in `apps/web`) have no
+  isolated view; check them on the real screens. Run:
+  `WEB_DEV_PORT=4620 pnpm --filter @tickets/web dev` (the docker API must be up
+  first: `docker compose up -d`), at http://localhost:4620.
 
 ## testCommands
 

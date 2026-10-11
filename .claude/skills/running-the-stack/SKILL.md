@@ -1,6 +1,6 @@
 ---
 name: running-the-stack
-description: Use when starting, restarting, deploying, or screenshotting the app — when a URL is needed for the web app or /gallery, when localhost refuses connection or shows stale code, when /api calls fail, or before driving the app with browser tools.
+description: Use when starting, restarting, deploying, or screenshotting the app — when a URL is needed for the web app, when localhost refuses connection or shows stale code, when /api calls fail, or before driving the app with browser tools.
 ---
 
 # Running the Stack
@@ -14,15 +14,26 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | Dev API (tsx watch) | http://localhost:4600 | part of `pnpm dev` (mprocs); dev web proxies `/api` here |
 | DB browser (docker) | http://localhost:4610/studio | self-hosted **pgweb** (`--prefix studio`, internal `127.0.0.1:4983`), locked to prod `tickets`. Baked into the image → works offline. (Dev's mprocs `studio` pane still uses drizzle-kit studio, which needs internet.) |
 | Postgres (docker) | `127.0.0.1:5532` | ONE server, TWO databases: `tickets` (prod, used by the deployed app) and `tickets_dev` (dev, used by local tooling); loopback-only. Inspect: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`) |
-| Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
+| Live | https://tickets.bendelhome.cc | the real deployment, on the gateway — see "Live deploy" below |
+| Component gallery | bh's docs site: `pnpm docs:dev` in `Projects/bh` → http://localhost:4660 | tickets has no `/gallery` since the components became bh's; tickets' own (`ItemKey`, `RailLabel`) are checked on the real screens at 4620 |
 
 ## Commands
 
 - Full stack: `docker compose up -d` → postgres (`127.0.0.1:5532`, prod+dev dbs) + app on `:4610` serving everything by path: `/` (web), `/api`, `/studio`
 - Deploy current source to 4610: `sh scripts/deploy-web.sh` (`docker compose up -d --build app`) — at phase boundaries, not every commit
 - Dev loop: `pnpm dev` — mprocs dashboard with panes for api (`:4600`), web (`:4620`), studio, watchers, all against `tickets_dev` (`POSTGRES_DATABASE` in root `.env`)
-- DB: `pnpm db:migrate` / `db:seed` / `db:import` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
+- DB: `pnpm db:migrate` / `db:seed`, `pnpm --filter @tickets/db db:import` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
 - Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`
+
+## Live deploy (gateway)
+
+The real tickets runs on the gateway (WSL distro `medialib`), not on :4610. **A push
+to `main` does not deploy.** Deploy from the gateway's tickets stack
+(https://gateway.bendelhome.cc/stacks) — it is `POST /api/stacks/tickets/deploys`
+with `{ "commit": "<sha>" }`, made from the logged-in page. It starts the new
+container next to the old one and swaps once it is healthy; migrations run on start
+against the live `tickets` database on `postgres-postgres-1`. Each deploy's record
+and log are `/srv/appdata/gateway/deployer/deploys/tickets/<n>.json|log`.
 
 ## Icon studio
 
@@ -45,6 +56,8 @@ the PNGs, `site.webmanifest`, the `index.html` head block) from it. Nobody hand-
   Windows resolves `localhost` to `::1` (IPv6) first, and Vite's dev server binds only
   that address by default — so `http://127.0.0.1:4660` gets connection-refused while
   `http://localhost:4660` works. This cost an hour to track down once; don't repeat it.
+- **The icon studio and bh's docs site both claim :4660** (both `strictPort`), so only
+  one runs at a time — the second exits with "port in use".
 - **4610 shows stale code until `deploy-web.sh` is rerun.** The `app` container is a baked image, not a bind mount. "My fix isn't visible" on 4610 → check 4620 first; if it's right there, 4610 just needs a redeploy (`docker compose up -d --build app`).
 - **Dev web with `pnpm dev` down → `/api` proxy ECONNREFUSED.** Vite proxies to `127.0.0.1:4600`; the mprocs api pane must be running.
 - **Port 4620 busy → vite exits** (strictPort). Kill the stale dev server; don't switch ports — the verify pipeline and docs assume 4620.
