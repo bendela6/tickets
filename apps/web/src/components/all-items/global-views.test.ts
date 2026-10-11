@@ -2,28 +2,24 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { readGlobalViews } from './global-views';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
 
-const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
-vi.mock('@bendela6/signals-react', () => ({ captureError }));
+const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 afterEach(() => {
   window.localStorage.clear();
-  captureError.mockClear();
+  warn.mockClear();
 });
 
-test('corrupt persisted JSON is captured as a warning and resets to []', () => {
+test('corrupt persisted JSON is warned about and resets to []', () => {
   window.localStorage.setItem(STORAGE_KEYS.globalViews, '{not valid json');
 
   const views = readGlobalViews();
 
   expect(views).toEqual([]);
-  expect(captureError).toHaveBeenCalledTimes(1);
-  expect(captureError).toHaveBeenCalledWith(
-    expect.any(Error),
-    { level: 'warning', contexts: { storage: { key: 'global-views' } } },
-  );
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(warn).toHaveBeenCalledWith(expect.stringContaining('global views'), expect.any(Error));
 });
 
-test('valid persisted JSON is returned without capturing', () => {
+test('valid persisted JSON is returned without a warning', () => {
   window.localStorage.setItem(
     STORAGE_KEYS.globalViews,
     JSON.stringify([{ id: 'v1', name: 'Mine', config: {} }]),
@@ -33,11 +29,11 @@ test('valid persisted JSON is returned without capturing', () => {
 
   expect(views).toHaveLength(1);
   expect(views[0]).toMatchObject({ id: 'v1', name: 'Mine' });
-  expect(captureError).not.toHaveBeenCalled();
+  expect(warn).not.toHaveBeenCalled();
 });
 
-test('absent storage returns [] without capturing', () => {
+test('absent storage returns [] without a warning', () => {
   const views = readGlobalViews();
   expect(views).toEqual([]);
-  expect(captureError).not.toHaveBeenCalled();
+  expect(warn).not.toHaveBeenCalled();
 });

@@ -10,7 +10,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY apps/mcp/package.json apps/mcp/
-COPY apps/signals/package.json apps/signals/
 COPY packages/db/package.json packages/db/
 COPY packages/web/richtext/package.json packages/web/richtext/
 COPY packages/bh/config/package.json packages/bh/config/
@@ -18,25 +17,10 @@ COPY packages/bh/form/package.json packages/bh/form/
 COPY packages/bh/markdown/package.json packages/bh/markdown/
 COPY packages/bh/table/package.json packages/bh/table/
 COPY packages/bh/ui/package.json packages/bh/ui/
-COPY packages/signals/core/package.json packages/signals/core/
-COPY packages/signals/browser/package.json packages/signals/browser/
-COPY packages/signals/node/package.json packages/signals/node/
-COPY packages/signals/react/package.json packages/signals/react/
 RUN pnpm install --frozen-lockfile
 COPY . .
-# signals SDK packages — built once here so every downstream stage sees real
-# dist/ output: web-build needs @bendela6/signals-react resolvable at bundle
-# time (apps/web imports it), and the app stage's apps/signals runs from
-# source via tsx but its /sdk.js route resolves @bendela6/signals-browser's
-# built dist/sdk.js (createRequire) at runtime.
-RUN pnpm --filter './packages/signals/*' build
 
 FROM deps AS web-build
-# Baked into the bundle so every signal the browser reports carries this
-# release; the deploy script uploads the matching source maps under the SAME
-# value, which is what lets the collector symbolicate minified frames.
-ARG SIGNALS_RELEASE=""
-ENV VITE_SIGNALS_RELEASE=$SIGNALS_RELEASE
 RUN pnpm --filter @tickets/web build
 
 FROM deps AS app
@@ -45,13 +29,6 @@ RUN apk add --no-cache nginx supervisor
 COPY --from=sosedoff/pgweb:latest /usr/bin/pgweb /usr/bin/pgweb
 # built SPA bundle
 COPY --from=web-build /app/apps/web/dist /usr/share/nginx/html
-# Source maps are for the collector, not the public: stage them where the
-# deploy script's upload step can read them, then strip them from the served
-# root so nginx can never hand them out. ('hidden' sourcemaps already omit the
-# sourceMappingURL comment, so nothing references them either way.)
-RUN mkdir -p /app/sourcemaps \
-  && find /usr/share/nginx/html -name '*.map' -exec mv {} /app/sourcemaps/ \; \
-  && echo "staged $(ls -1 /app/sourcemaps | wc -l) source maps"
 # infra
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/tickets.conf

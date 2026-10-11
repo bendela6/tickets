@@ -1,8 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { isDatabaseUnreachable } from './worker';
 
-vi.mock('@bendela6/signals-node', () => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
-
 // The shape that actually reached the logs during a postgres outage: drizzle
 // wraps the socket error, so the code only appears on `cause`.
 function drizzleWrapped(code: string) {

@@ -9,7 +9,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bendela6/signals-node": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@tickets/richtext": "workspace:*",
     "zod": "^4.4.3"

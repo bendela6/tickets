@@ -23,11 +23,6 @@ services:
     build:
       context: .
       target: app
-      args:
-        # Set by scripts/deploy-web.sh (git short SHA). Baked into the web
-        # bundle as VITE_SIGNALS_RELEASE and reused to tag the source maps it
-        # uploads, so reported frames and stored maps agree on one release.
-        SIGNALS_RELEASE: ${SIGNALS_RELEASE:-}
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -36,9 +31,6 @@ services:
       POSTGRES_DATABASE: tickets
       API_HOST: 127.0.0.1
       API_PORT: 4600
-      SIGNALS_HOST: 0.0.0.0
-      SIGNALS_PORT: 4640
-      SIGNALS_DATABASE: signals
     ports:
       # Loopback-bound, like postgres above. `/api` is unauthenticated and now
       # includes /api/schema/databases + /api/schema?database=, which enumerate
@@ -47,7 +39,6 @@ services:
       # cluster-wide schema disclosure. Reach it from another host over an SSH
       # tunnel, not by widening this.
       - '127.0.0.1:4610:80' # everything by path: / (web) · /api · /studio
-      - '4640:4640'         # signals collector, published directly for external SDKs
     depends_on:
       postgres:
         condition: service_healthy

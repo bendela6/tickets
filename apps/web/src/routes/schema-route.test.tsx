@@ -115,7 +115,6 @@ describe('/schema inside the app shell', () => {
     renderSchemaRoute();
     expect(await screen.findByLabelText('Schema')).toBeInTheDocument();
     expect(screen.getByLabelText('Tasks')).toBeInTheDocument();
-    expect(screen.getByLabelText('Signals')).toBeInTheDocument();
   });
 
   it('shows the schema mode panel with its database dropdown', async () => {
