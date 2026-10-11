@@ -1,4 +1,3 @@
-import { captureError, captureEvent } from '@bendela6/signals-node';
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { ensureUser } from '@tickets/db';
@@ -56,7 +55,7 @@ export function createOutboxWorker(
   let timer: NodeJS.Timeout | null = null;
   // Latches while postgres is unreachable so an outage reports once instead of
   // once per poll. Previously a single postgres restart produced a stack trace
-  // every 500ms — and, since these are captured, hundreds of duplicate signals.
+  // every 500ms.
   let dbDown = false;
 
   function noteFailure(err: unknown, phase: 'drain' | 'notify'): void {
@@ -67,20 +66,17 @@ export function createOutboxWorker(
         console.error(
           `outbox worker: database unreachable — retrying every ${DB_DOWN_POLL_MS / 1000}s, further errors suppressed until it returns`,
         );
-        captureError(err, { level: 'error', contexts: { outbox: { phase, dbDown: true } } });
       }
       return;
     }
     // A real processing failure — always surfaced.
     console.error(`outbox worker ${phase} failed`, err);
-    captureError(err, { level: 'error', contexts: { outbox: { phase } } });
   }
 
   function noteReachable(): void {
     if (dbDown) {
       dbDown = false;
       console.log('outbox worker: database reachable again — resuming');
-      captureEvent('outbox.db-recovered');
     }
   }
 
@@ -135,7 +131,7 @@ export function createOutboxWorker(
       // Record the failure but leave done_at null. attempts was already bumped at
       // claim time, so a poison row climbs to MAX_ATTEMPTS and is then excluded
       // from future claims — visible (last_error) but non-blocking.
-      captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
+      console.error(`outbox event ${eventId} failed`, err);
       await db
         .update(outbox)
         .set({ lastError: err instanceof Error ? err.message : String(err) })
@@ -154,7 +150,6 @@ export function createOutboxWorker(
     for (const id of ids) {
       if (await processOne(id, actorId, opts.rules)) ok++;
     }
-    captureEvent('outbox.flush', { count: ok });
     return ok;
   }
 

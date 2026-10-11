@@ -3,8 +3,8 @@ import type { Db } from '@tickets/db';
 
 // The API is useless without postgres — every route, the outbox worker, and
 // automations all hit it. Rather than boot into a broken state and emit an
-// error per poll cycle forever (which is what used to happen, and which also
-// flooded Signals with duplicate issues), we refuse to start.
+// error per poll cycle forever (which is what used to happen), we refuse to
+// start.
 //
 // The wait matters as much as the exit: in the container supervisord restarts
 // the api process but gives up permanently after a few tries, so exiting on

@@ -9,7 +9,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bendela6/signals-react": "workspace:^",
     "@bh/form": "workspace:*",
     "@bh/table": "workspace:*",
     "@bh/ui": "workspace:*",

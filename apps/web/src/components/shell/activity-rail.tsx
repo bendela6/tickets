@@ -8,12 +8,11 @@ import type { Mode } from './mode-for-path';
 
 const ITEMS: {
   mode: Mode;
-  to: '/' | '/signals' | '/schema';
+  to: '/' | '/schema';
   glyph: string;
   label: string;
 }[] = [
   { mode: 'tasks', to: '/', glyph: '▦', label: 'Tasks' },
-  { mode: 'signals', to: '/signals', glyph: '∿', label: 'Signals' },
   { mode: 'schema', to: '/schema', glyph: '⌗', label: 'Schema' },
 ];
 

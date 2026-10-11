@@ -8,12 +8,6 @@ describe('modeForPath', () => {
     expect(modeForPath('/p/APP')).toBe('tasks');
     expect(modeForPath('/p/APP/v/3')).toBe('tasks');
   });
-  it('maps signals routes by prefix', () => {
-    expect(modeForPath('/signals')).toBe('signals');
-    expect(modeForPath('/signals/apps')).toBe('signals');
-    expect(modeForPath('/signals/sessions/x')).toBe('signals');
-    expect(modeForPath('/signals/issues/3')).toBe('signals');
-  });
   it('maps /schema to the schema mode', () => {
     expect(modeForPath('/schema')).toBe('schema');
   });

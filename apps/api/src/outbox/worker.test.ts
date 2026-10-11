@@ -6,14 +6,7 @@ import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
 import { createOutboxWorker } from './worker';
 
-const { captureError, captureEvent } = vi.hoisted(() => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
-vi.mock('@bendela6/signals-node', () => ({ captureError, captureEvent }));
-
-beforeEach(() => {
-  captureError.mockClear();
-  captureEvent.mockClear();
-  return resetDb();
-});
+beforeEach(resetDb);
 afterAll(resetDb);
 
 it('drains pending rows, projects them, and marks done', async () => {
@@ -27,7 +20,6 @@ it('drains pending rows, projects them, and marks done', async () => {
   expect(await testDb.select().from(itemActivity).where(eq(itemActivity.itemId, created.id))).toHaveLength(1);
   const pending = await testDb.select().from(outbox).where(sql`${outbox.doneAt} IS NULL`);
   expect(pending).toHaveLength(0);
-  expect(captureEvent).toHaveBeenCalledWith('outbox.flush', { count: processed });
 });
 
 it('re-processing (done_at reset) does not duplicate the projection', async () => {
@@ -61,19 +53,18 @@ it('retires a poison event after 5 attempts without blocking', async () => {
   expect(rows.some((r) => r.attempts === 5 && r.doneAt === null && r.lastError !== null)).toBe(true);
 });
 
-it('captures a processing failure to Signals (level error, phase drain) without blocking the lastError write', async () => {
+it('logs a processing failure and still records it as lastError', async () => {
   const fx = await seedFixture();
   await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
     projectKey: fx.projectKey, typeKey: 'task', values: { title: 'A' },
   });
   const boom = { id: 'boom', on: ['item.created', 'item.field_changed'], when: async () => true, run: async () => { throw new Error('boom'); } };
   const worker = createOutboxWorker(testDb, { rules: [boom] });
+  const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
   await worker.drainOnce();
 
-  expect(captureError).toHaveBeenCalledWith(
-    expect.any(Error),
-    { level: 'error', contexts: { outbox: { phase: 'drain' } } },
-  );
+  expect(logged).toHaveBeenCalledWith(expect.stringMatching(/^outbox event \d+ failed$/), expect.any(Error));
+  logged.mockRestore();
   const rows = await testDb.select().from(outbox);
   expect(rows.some((r) => r.lastError !== null)).toBe(true);
 });

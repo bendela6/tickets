@@ -10,7 +10,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bendela6/signals-node": "workspace:^",
     "@tickets/db": "workspace:*",
     "@tickets/richtext": "workspace:*",
     "drizzle-orm": "^0.45.2",

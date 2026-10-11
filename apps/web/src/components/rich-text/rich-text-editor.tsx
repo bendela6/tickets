@@ -1,4 +1,3 @@
-import { captureError } from '@bendela6/signals-react';
 import {
   buildExtensions,
   DOC_SENTINEL,
@@ -102,10 +101,7 @@ export function RichTextEditor({
   // toDisplayDoc — report it once so the corruption doesn't go unnoticed.
   useEffect(() => {
     if (value.startsWith(DOC_SENTINEL) && parseDoc(value) === null) {
-      captureError(new Error('RichTextEditor: stored doc failed to parse'), {
-        mechanism: 'manual',
-        contexts: { richText: { length: value.length } },
-      });
+      console.error(`RichTextEditor: stored doc failed to parse (${value.length} chars)`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-check only when the stored value itself changes
   }, [value]);

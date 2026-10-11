@@ -1,4 +1,3 @@
-import { captureError } from '@bendela6/signals-react';
 import type { BoardIndexes } from '../../utils/index-board';
 import { readLocal } from '../../utils/read-local';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
@@ -135,9 +134,9 @@ export function readGlobalViews(): GlobalView[] {
     }
     return views;
   } catch (err) {
-    // Corrupted persisted JSON — capture before resetting so a silent data
-    // loss is at least visible in Signals, then degrade to an empty list.
-    captureError(err, { level: 'warning', contexts: { storage: { key: 'global-views' } } });
+    // Corrupted persisted JSON — say so before resetting, so a silent data
+    // loss is at least visible in the console, then degrade to an empty list.
+    console.warn('global views: stored JSON is corrupt, starting empty', err);
     return [];
   }
 }

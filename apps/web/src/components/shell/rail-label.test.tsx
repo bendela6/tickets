@@ -17,7 +17,7 @@ describe('RailLabel', () => {
   });
 
   it('merges an extra className', () => {
-    render(<RailLabel className="mt-8">SIGNALS</RailLabel>);
-    expect(screen.getByText('SIGNALS').className).toContain('mt-8');
+    render(<RailLabel className="mt-8">SCHEMA</RailLabel>);
+    expect(screen.getByText('SCHEMA').className).toContain('mt-8');
   });
 });

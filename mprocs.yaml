@@ -8,8 +8,6 @@ procs:
     shell: pnpm --filter @tickets/web dev
     env:
       WEB_DEV_PORT: "4620"
-  signals:
-    shell: pnpm --filter @tickets/signals dev
   # Client-only, so it needs no database and no api — but it shares
   # @bh/ui, and a token change that breaks it should break it here rather
   # than the next time somebody opens it on purpose. Reach it at
