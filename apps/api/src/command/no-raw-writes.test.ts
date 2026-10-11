@@ -3,13 +3,9 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 
 // No route may write events/commands/outbox directly — those go through
-// runCommand/ctx.emit. Scanned recursively (not just src/routes/): the
-// terminal/agent split moved route + orchestration files (agent/routes.ts,
-// agent/dispatch.ts, terminal/routes.ts) out of src/routes/ entirely, and
-// agent/dispatch.ts explicitly cites this test by name as the reason it goes
-// through runCommand — so the guard must actually cover the directory it
-// lives in, or the citation is a lie.
-const SCAN_DIRS = ['routes', 'agent', 'terminal'];
+// runCommand/ctx.emit. Scanned recursively, so a route file in a subfolder
+// of src/routes/ is covered too.
+const SCAN_DIRS = ['routes'];
 
 const collectTsFiles = (dir: string): string[] => {
   const out: string[] = [];
@@ -21,7 +17,7 @@ const collectTsFiles = (dir: string): string[] => {
   return out;
 };
 
-it('no route/agent/terminal file inserts into events/commands/outbox directly', () => {
+it('no route file inserts into events/commands/outbox directly', () => {
   const srcDir = join(import.meta.dirname, '..');
   const offenders: string[] = [];
   for (const dir of SCAN_DIRS) {

@@ -11,7 +11,7 @@ function navItemClasses(active: boolean) {
 }
 
 // The "signals" mode panel: Issues / Apps nav with the open-issues count.
-// Mirrors TerminalsPanel/AgentsPanel's structure — a mono section label up
+// Mirrors TasksPanel's structure — a mono section label up
 // top, then the mode's content below.
 export function SignalsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const matchRoute = useMatchRoute();

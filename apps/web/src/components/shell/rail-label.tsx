@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@bh/ui';
 
-// The sidebar rail's small mono section caption ("AGENTS", "PROJECTS",
-// "TERMINALS", "SIGNALS") — retires 4 near-identical spans.
+// The sidebar rail's small mono section caption ("PROJECTS", "SIGNALS").
 export function RailLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span

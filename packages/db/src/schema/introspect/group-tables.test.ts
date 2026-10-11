@@ -21,7 +21,8 @@ describe('groupTables', () => {
   });
 
   it('keeps the curated grouping that ignores a table real schema', () => {
-    // core.users renders in WORKSPACE, not WORKDIRS — see schema-groups.ts.
+    // core.users renders in WORKSPACE, not a group named after its schema —
+    // see schema-groups.ts.
     const { tables } = groupTables([table('users', 'core')]);
     expect(tables[0]!.group).toBe('ws');
   });
@@ -60,8 +61,8 @@ describe('groupTables', () => {
   });
 
   it('lists group tables by qualified name', () => {
-    const { groups } = groupTables([table('sessions', 'terminal')]);
+    const { groups } = groupTables([table('users', 'core')]);
     const group = groups.find((g) => g.tables.length > 0)!;
-    expect(group.tables).toContain('terminal.sessions');
+    expect(group.tables).toContain('core.users');
   });
 });

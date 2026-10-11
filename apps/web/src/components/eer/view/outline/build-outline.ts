@@ -34,7 +34,7 @@ export function outlineCount(node: OutlineNode): number {
 function matchEntity(entity: Entity, q: string, inScope: boolean): OutlineEntity[] {
   if (inScope) return [{ entity, columns: [] }];
   // `id` as well as `label`: on a database graph the id is the QUALIFIED name
-  // (`terminal.sessions`) while the label is bare, so searching by schema only
+  // (`records.items`) while the label is bare, so searching by schema only
   // works if the id is searched too.
   if (entity.label.toLowerCase().includes(q) || entity.id.toLowerCase().includes(q)) {
     return [{ entity, columns: [] }];

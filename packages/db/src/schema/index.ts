@@ -1,11 +1,7 @@
 // drizzle-kit only emits CREATE SCHEMA for schemas it sees exported from this
-// entry point. terminalSchema and agentSchema graduated with the terminal/agent
-// split; structureSchema/recordsSchema/historySchema graduated with the
-// core/structure/records/history namespacing — all six now own real tables.
+// entry point.
 export {
   coreSchema,
-  terminalSchema,
-  agentSchema,
   structureSchema,
   recordsSchema,
   historySchema,
@@ -14,11 +10,6 @@ export {
   userKindEnum,
   statusKindEnum,
   fieldTypeEnum,
-  runnerKindEnum,
-  terminalStatusEnum,
-  agentStatusEnum,
-  permissionModeEnum,
-  permissionStatusEnum,
 } from './enums';
 export { attachments } from './attachments';
 export { users } from './users';
@@ -43,12 +34,6 @@ export { events } from './events';
 export { commands } from './commands';
 export { outbox } from './outbox';
 export { itemActivity } from './item-activity';
-export { workdirs } from './workdirs';
-export { terminalSessions, terminalOutput } from './terminal-sessions';
-export { agentSessions } from './agent-sessions';
-export { agentMessages } from './agent-messages';
-export { agentPermissionRequests } from './agent-permission-requests';
-export { agentAgents } from './agent-agents';
 
 export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';

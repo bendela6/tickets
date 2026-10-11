@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { formRegistry } from './registry';
 
 describe('formRegistry', () => {
-  it('registers every base input plus the app-specific directory', () => {
+  it('registers every base input', () => {
     expect(Object.keys(formRegistry.inputs).sort()).toEqual([
-      'checkbox', 'checkbox-group', 'color', 'date', 'date-range', 'directory',
+      'checkbox', 'checkbox-group', 'color', 'date', 'date-range',
       'duration', 'email', 'file', 'icon', 'json', 'list', 'multi-select', 'number',
       'object', 'password', 'pin', 'radio', 'range', 'rating', 'segmented', 'select',
       'slider', 'tags', 'text', 'textarea', 'time', 'toggle', 'user',

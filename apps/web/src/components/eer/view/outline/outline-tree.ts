@@ -57,7 +57,7 @@ export function indexOutline(
 }
 
 /** Dispatches a row click. Split on the FIRST colon only — entity ids are
- *  schema-qualified (`terminal.sessions`) and column ids carry two separators. */
+ *  schema-qualified (`records.items`) and column ids carry two separators. */
 export function parseRowId(rowId: string): { kind: string; rest: string } {
   const at = rowId.indexOf(':');
   return { kind: rowId.slice(0, at), rest: rowId.slice(at + 1) };

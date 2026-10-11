@@ -1,12 +1,7 @@
-export type Mode = 'tasks' | 'terminals' | 'agents' | 'signals' | 'schema';
+export type Mode = 'tasks' | 'signals' | 'schema';
 
-// Which rail mode a route belongs to. The session viewer routes are split by
-// kind (/terminals/$sessionId, /agents/$sessionId) now that there is no
-// `kind` discriminator to look a session up by, so the path alone always
-// determines the mode — no session-data lookup needed.
+// Which rail mode a route belongs to — the path alone decides it.
 export function modeForPath(pathname: string): Mode | null {
-  if (pathname.startsWith('/terminals')) return 'terminals';
-  if (pathname.startsWith('/agents')) return 'agents';
   if (pathname.startsWith('/signals')) return 'signals';
   if (pathname.startsWith('/schema')) return 'schema';
   return 'tasks';

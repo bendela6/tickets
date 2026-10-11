@@ -1,9 +1,4 @@
 import { createRouter } from '@tanstack/react-router';
-import { agentsRoute } from './routes/agents-route';
-import { agentSessionRoute } from './routes/agent-session-route';
-import { aiAgentRoute } from './routes/ai-agent-route';
-import { aiAgentsRoute } from './routes/ai-agents-route';
-import { aiRoute } from './routes/ai-route';
 import { allItemsRoute } from './routes/all-items-route';
 import { indexRoute } from './routes/index-route';
 import { projectIndexRoute } from './routes/project-index-route';
@@ -17,21 +12,12 @@ import { signalsAppsRoute } from './routes/signals-apps-route';
 import { signalsIssueRoute } from './routes/signals-issue-route';
 import { signalsRoute } from './routes/signals-route';
 import { signalsSessionRoute } from './routes/signals-session-route';
-import { terminalsRoute } from './routes/terminals-route';
-import { terminalSessionRoute } from './routes/terminal-session-route';
 import { ticketPageRoute } from './routes/ticket-page-route';
 import { viewRoute } from './routes/view-route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   allItemsRoute,
-  aiRoute,
-  terminalsRoute,
-  terminalSessionRoute,
-  agentsRoute,
-  aiAgentsRoute,
-  aiAgentRoute,
-  agentSessionRoute,
   schemaRoute,
   settingsRoute,
   signalsRoute,

@@ -29,20 +29,20 @@ describe('readConstraints', () => {
   });
 
   it("resolves a cross-schema foreign key to the REFERENCED table's schema", async () => {
-    // terminal.sessions.workdir_id -> core.workdirs.id. refSchema must be
-    // 'core' (the referenced table's schema) — if it were flipped to take
-    // the referencing table's schema instead, this would read 'terminal'.
+    // records.items.created_by -> core.users.id. refSchema must be 'core'
+    // (the referenced table's schema) — if it were flipped to take the
+    // referencing table's schema instead, this would read 'records'.
     const { tables, constraints } = await withDatabase('tickets_test', async (sql) => {
       const tables = await readTables(sql);
       return { tables, constraints: await readConstraints(sql, tables) };
     });
-    const sessions = tables.find((t) => t.name === 'sessions' && t.schema === 'terminal')!;
-    expect(sessions).toBeDefined();
-    const fk = constraints.get(sessions.oid)!.fks.find((f) => f.column === 'workdir_id');
+    const items = tables.find((t) => t.name === 'items' && t.schema === 'records')!;
+    expect(items).toBeDefined();
+    const fk = constraints.get(items.oid)!.fks.find((f) => f.column === 'created_by');
     expect(fk).toEqual({
-      column: 'workdir_id',
+      column: 'created_by',
       refSchema: 'core',
-      refTable: 'workdirs',
+      refTable: 'users',
       refColumn: 'id',
     });
   });

@@ -8,16 +8,6 @@ describe('modeForPath', () => {
     expect(modeForPath('/p/APP')).toBe('tasks');
     expect(modeForPath('/p/APP/v/3')).toBe('tasks');
   });
-  it('maps terminal and agent list routes', () => {
-    expect(modeForPath('/terminals')).toBe('terminals');
-    expect(modeForPath('/agents')).toBe('agents');
-    expect(modeForPath('/agents/personas')).toBe('agents');
-    expect(modeForPath('/agents/personas/5')).toBe('agents');
-  });
-  it('maps the split session viewer routes by path alone — no session lookup needed', () => {
-    expect(modeForPath('/terminals/12')).toBe('terminals');
-    expect(modeForPath('/agents/12')).toBe('agents');
-  });
   it('maps signals routes by prefix', () => {
     expect(modeForPath('/signals')).toBe('signals');
     expect(modeForPath('/signals/apps')).toBe('signals');
