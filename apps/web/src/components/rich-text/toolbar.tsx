@@ -101,7 +101,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   taskList: {
     content: (
-      <span className="box-border flex h-12 w-12 items-center justify-center rounded-4 border-2 border-current">
+      <span className="box-border flex h-12 w-12 items-center justify-center rounded-4 border-1.5 border-current">
         <Icon name="check" size="2xs" />
       </span>
     ),
@@ -120,7 +120,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   image: {
     content: (
-      <span className="relative box-border inline-block h-12 w-15 rounded-4 border-2 border-current">
+      <span className="relative box-border inline-block h-12 w-15 rounded-4 border-1.5 border-current">
         <span className="absolute top-2 left-2 h-3 w-3 rounded-full bg-current" />
       </span>
     ),
