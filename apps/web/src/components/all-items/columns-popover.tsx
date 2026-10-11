@@ -104,7 +104,7 @@ export function ColumnsPopover({
                 >
                   <span
                     aria-hidden
-                    className="size-15 shrink-0 rounded-4 border-2 border-gray-6 bg-surface-inset"
+                    className="size-15 shrink-0 rounded-4 border-1.5 border-gray-6 bg-surface-inset"
                   />
                   <span className="flex-1 truncate font-sans text-13/19 text-gray-11">
                     {field.label}

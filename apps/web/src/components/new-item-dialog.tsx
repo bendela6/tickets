@@ -68,7 +68,7 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
       )}
     >
       {dashed ? (
-        <span className="size-10 shrink-0 rounded-none border-2 border-dashed border-gray-9" />
+        <span className="size-10 shrink-0 rounded-none border-1.5 border-dashed border-gray-9" />
       ) : (
         <span className="size-10 shrink-0 rounded-none bg-current" />
       )}
@@ -568,7 +568,7 @@ export function SubtaskQuickCreate({
     >
       <span
         aria-hidden
-        className="size-9 shrink-0 rounded-full border-2 border-dashed border-gray-7"
+        className="size-9 shrink-0 rounded-full border-1.5 border-dashed border-gray-7"
       />
       <input
         value={title}

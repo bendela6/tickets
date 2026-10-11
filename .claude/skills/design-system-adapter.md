@@ -198,10 +198,11 @@ here should need to leak back into those skills.
    a cleared namespace, and a bare `rounded` matches no definition, so it compiles
    to nothing and the corner stays square. The `vocabulary.ts` scan that once
    enforced the spelling was deleted 2026-08-04. Off-scale ARBITRARY values
-   (`border-[1.5px]`, `rounded-[7px]`) remain unguarded — `rounded-[7px]` is the
-   documented escape hatch now that every integer compiles. The retired rungs
-   (`rounded-sm`/`md`/`lg`/`xl`, `rounded-control-*`, `rounded-xs`/`2xl`/`3xl`/`4xl`)
-   all fail loudly: nothing defines them, so they emit no rule at all.
+   (`rounded-[7px]`) remain unguarded, and are the escape hatch for anything the
+   utilities do not cover. The retired rungs (`rounded-sm`/`md`/`lg`/`xl`,
+   `rounded-control-*`, `rounded-xs`/`2xl`/`3xl`/`4xl`) all fail loudly: nothing
+   defines them, so they emit no rule at all. Note `border-[1.5px]` is no longer
+   the way to spell a hairline — write `border-1.5`, see trap 10.
 6. **A demo that declares plain `{ name, render }` literals AND has a playground
    never renders those literals.** `state-grid.tsx` prefers the derived axes
    when a playground exists, so authored states are silently dropped — several
@@ -234,14 +235,21 @@ here should need to leak back into those skills.
    composite whose shell never matches `:focus`). Tests assert
    `.toContain(focusRing(hue))` rather than any rung, so they follow a change
    instead of blocking it.
-10. **`ring-<number>` takes INTEGERS only — `ring-1.5` compiles to nothing.**
-    Not an error, not a warning: the utility silently does not exist, so the
-    control keeps its ring colour and its ring offset and paints no ring at all,
-    which looks like a cascade problem and is not one. Use `ring-[1.5px]`. The
-    sibling trap is `ring-offset-<n>` with no colour — Tailwind's
-    `--tw-ring-offset-color` defaults to **white**, drawing a white hairline
-    around every control in the dark theme, so an offset ring MUST name its
-    surface (`ring-offset-surface-raised` here).
+10. **Fractional widths work — but only for the five families bh redefines.**
+    `border-1.5`, `ring-1.5` and `outline-1.5` compiled to NOTHING until
+    2026-08-08 (not an error, not a warning — the utility silently did not
+    exist, which is how a control once kept its ring colour and its ring offset
+    and painted no ring at all). bh's `generators/border.ts` (a copy here, under
+    `packages/bh/ui/scripts/`) redefines `border-*` + its 8 sides, `outline-*`
+    and `ring-*` with `--value(number)`, and radius went to `number` with them
+    so the edge families keep one rule. **`divide-x/y-*`, `inset-ring-*` and
+    `stroke-*` were deliberately NOT redefined** — `divide-y-1.5` still
+    compiles to nothing; use `divide-y-[1.5px]`. Changing that is a change in
+    bh, not here.
+    The sibling trap is unchanged: `ring-offset-<n>` with no colour —
+    Tailwind's `--tw-ring-offset-color` defaults to **white**, drawing a white
+    hairline around every control in the dark theme, so an offset ring MUST name
+    its surface (`ring-offset-surface-raised` here).
 11. **A regenerated safelist does not reach a RUNNING dev server.** `tokens:build`
     rewrites `styles/generated/safelist.css`, but Vite keeps serving the CSS it
     compiled at boot, so every newly-interpolated class is on the element and
