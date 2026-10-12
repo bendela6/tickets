@@ -24,16 +24,57 @@ export async function files() {
     .sort((a, b) => (a === 'tickets.json' ? -1 : b === 'tickets.json' ? 1 : a.localeCompare(b)));
 }
 
-export const read = async (file) => JSON.parse(await readFile(DIR + file, 'utf8'));
+/** One file, parsed; one that doesn't parse throws, naming the file. */
+export async function read(file) {
+  const text = await readFile(DIR + file, 'utf8');
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(`tasks/${file} doesn't parse (${error.message})`, { cause: error });
+  }
+}
 
+let writes = 0;
+/**
+ * Writes a whole file through prettier: first as tasks/.runtime/<file>.<pid>-<n>.tmp, then
+ * renamed over the file, so a reader gets the old file or the new one, never half of one.
+ * Windows refuses the rename while a reader has the file open; it's tried again for 10 seconds.
+ */
 export async function write(file, doc) {
   const options = { ...(await prettier.resolveConfig(DIR + file)), filepath: DIR + file };
-  await writeFile(DIR + file, await prettier.format(JSON.stringify(doc, null, 2), options));
+  const text = await prettier.format(JSON.stringify(doc, null, 2), options);
+  await mkdir(RUNTIME, { recursive: true });
+  const tmp = `${RUNTIME}${file}.${process.pid}-${++writes}.tmp`;
+  await writeFile(tmp, text);
+  try {
+    await patiently(() => rename(tmp, DIR + file));
+  } catch (error) {
+    await unlink(tmp).catch(() => {});
+    throw error;
+  }
 }
 
 /** Every file, each with its `file`. */
 export const readAll = async () =>
   Promise.all((await files()).map(async (file) => ({ file, ...(await read(file)) })));
+
+let unread;
+/**
+ * readAll for a wait, which must outlive a file that doesn't parse (one written by hand, or by
+ * a writer that doesn't go through write()): null instead of throwing, and the wait reads again
+ * a moment later. Says on stderr what it couldn't read, once until it reads again.
+ */
+export async function readAllOrNull() {
+  try {
+    const docs = await readAll();
+    unread = undefined;
+    return docs;
+  } catch (error) {
+    if (error.message !== unread) console.error(`${error.message}; reading again.`);
+    unread = error.message;
+    return null;
+  }
+}
 
 /** The epic ("GW/E1"), feature ("GW-3") or ticket ("GW-3.2") with this id, if the file holds it. */
 export function find(doc, id) {

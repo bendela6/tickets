@@ -8,11 +8,13 @@
 //   node scripts/tasks-planner.mjs pending  Prints them now and exits.
 //   node scripts/tasks-planner.mjs say <listening|working|stopped> [text]
 //                                           Tells the viewer what the planner is doing.
-import { VIEWER, pendingOf, readAll, tell } from './tasks-lib.mjs';
+import { VIEWER, pendingOf, readAll, readAllOrNull, tell } from './tasks-lib.mjs';
 
 /** How long the user's words must stay as they are before the planner takes them in. */
 const SETTLE_MS = Number(process.env.SETTLE_MS ?? 15_000);
 const POLL_MS = 2_000;
+/** How soon a read that didn't parse is tried again. */
+const RETRY_MS = 500;
 const BEAT_MS = 20_000;
 
 let warned = false;
@@ -63,7 +65,12 @@ if (command === 'pending') {
       await say('listening');
       beat = Date.now();
     }
-    const pending = pendingOf(await readAll());
+    const docs = await readAllOrNull();
+    if (!docs) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
+      continue;
+    }
+    const pending = pendingOf(docs);
     const key = JSON.stringify(pending);
     if (key !== seen) {
       seen = key;
