@@ -47,12 +47,17 @@ export const parentRollup = defineAutomation({
     const kindByItem = new Map<number, string | null>();
     for (const s of siblings) kindByItem.set(s.id, null);
     for (const v of sibValues) kindByItem.set(v.itemId, v.optionId === null ? null : (vocab.optionById.get(v.optionId)?.kind ?? null));
-    const allResolved = siblings.length > 0 && [...kindByItem.values()].every((k) => k !== null && RESOLVED.has(k));
+    const kinds = [...kindByItem.values()];
+    const allResolved = siblings.length > 0 && kinds.every((k) => k !== null && RESOLVED.has(k));
     if (!allResolved) return;
-    const doneOption = vocab.optionsForField(parent.typeId, parentWf.id).find((o) => o.kind === 'done' && !o.archivedAt);
-    if (!doneOption) return;
+    // Done once every child is done or dropped and at least one is done; dropped
+    // (its first dropped option) when every child is. A parent with no dropped
+    // option is left as it is: its children all dropped don't make it done.
+    const target = kinds.includes('done') ? 'done' : 'dropped';
+    const option = vocab.optionsForField(parent.typeId, parentWf.id).find((o) => o.kind === target && !o.archivedAt);
+    if (!option) return;
     await ctx.dispatch(itemUpdate, {
-      id: parent.id, expectedUpdatedAt: parent.updatedAt, values: { [parentWf.key]: doneOption.value },
+      id: parent.id, expectedUpdatedAt: parent.updatedAt, values: { [parentWf.key]: option.value },
     }, 'parent');
   },
 });
