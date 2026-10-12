@@ -4,7 +4,7 @@ import { indexBoard } from './index-board';
 
 function board(): Board {
   return {
-    project: { id: 1, key: 'core', name: 'Core', schemeId: 1, itemPrefix: 'CORE', createdAt: 'x' },
+    project: { id: 1, key: 'core', name: 'Core', schemeId: 1, itemPrefix: 'CORE', createdAt: 'x', repositoryUrl: null, defaultBranch: null },
     types: [{ id: 1, schemeId: 1, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null }],
     fields: [
       { id: 10, schemeId: 1, key: 'status', label: 'Status', type: 'option', config: { workflow: true }, optionSetId: 100, archivedAt: null },

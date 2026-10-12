@@ -97,6 +97,8 @@ type Project = {
   key: string;
   name: string;
   ticketPrefix: string;
+  repositoryUrl: string | null;  // git link everyone clones (https, ssh, git@host:path)
+  defaultBranch: string | null;  // null = the remote's own default; only set with a repository
   createdAt: string;
 };
 

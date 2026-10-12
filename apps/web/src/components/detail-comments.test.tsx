@@ -11,7 +11,7 @@ const createdAt = '2026-01-01T00:00:00.000Z';
 
 function makeBoard(): Board {
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [{ id: 1, schemeId: 1, key: 'bug', label: 'Bug', position: 1, config: {}, archivedAt: null }],
     fields: [],

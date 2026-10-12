@@ -5,7 +5,7 @@ import { normalizeViewConfig } from './view-config';
 function makeBoard(): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [],
     types: [],
     placements: [],
