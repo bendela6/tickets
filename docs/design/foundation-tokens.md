@@ -306,7 +306,7 @@ has no number that means anything to a reader.
 Breakpoints are Tailwind's standard `sm` 640 · `md` 768 · `lg` 1024 · `xl` 1280 ·
 `2xl` 1536. The former `narrow`/`wide` were exact duplicates of `lg` and `2xl`.
 
-`design-system.html` specifies `border:1.5px` in 30 rules; the app uses `border-2`
+The design spec, bh's `docs/design/design-system.html`, specifies `border:1.5px` in 30 rules; the app uses `border-2`
 instead — a deliberate deviation recorded in
 `docs/superpowers/specs/2026-07-29-foundation-scale-vocabulary-design.md`.
 
