@@ -7,16 +7,19 @@ import { Button, Tabs, useToast } from '@bh/ui';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
+import { RepositoryTab } from './repository-tab';
 import { TypesTab } from './types-tab';
 import { WorkflowTab } from './workflow-tab';
 
-type TabKey = 'types' | 'fields' | 'workflow' | 'links';
+type TabKey = 'types' | 'fields' | 'workflow' | 'links' | 'repository';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'types', label: 'Types' },
   { key: 'fields', label: 'Fields' },
   { key: 'workflow', label: 'Workflow' },
   { key: 'links', label: 'Links' },
+  // The project's own, not its scheme's: the scheme banner is left off it.
+  { key: 'repository', label: 'Repository' },
 ];
 
 // The schema admin shell per the approved prototype: a scheme banner above a
@@ -88,22 +91,24 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* scheme banner */}
-      <div className="flex flex-none items-center gap-12 border-b-1 border-gray-6 bg-surface-inset px-24 py-12">
-        <p className="m-0 flex-1 font-sans text-13/19 text-gray-11">
-          Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
-          changes affect all projects on this scheme.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={userId === null || forkScheme.isPending || updateProject.isPending}
-          title={userId === null ? 'Sign in to fork the scheme' : undefined}
-          onClick={handleFork}
-        >
-          Fork for this project
-        </Button>
-      </div>
+      {/* scheme banner: the four scheme tabs only */}
+      {tab === 'repository' ? null : (
+        <div className="flex flex-none items-center gap-12 border-b-1 border-gray-6 bg-surface-inset px-24 py-12">
+          <p className="m-0 flex-1 font-sans text-13/19 text-gray-11">
+            Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
+            changes affect all projects on this scheme.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+            title={userId === null ? 'Sign in to fork the scheme' : undefined}
+            onClick={handleFork}
+          >
+            Fork for this project
+          </Button>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1">
         <nav
@@ -137,8 +142,10 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
             <FieldsTab key={board.project.schemeId} {...tabProps} />
           ) : tab === 'workflow' ? (
             <WorkflowTab key={board.project.schemeId} {...tabProps} />
-          ) : (
+          ) : tab === 'links' ? (
             <LinksTab key={board.project.schemeId} {...tabProps} />
+          ) : (
+            <RepositoryTab {...tabProps} />
           )}
         </div>
       </div>
