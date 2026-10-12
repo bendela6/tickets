@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiMutate } from './client';
 import type { MutationHookOptions } from './mutation-meta';
 
-function useConfigMutation<TInput extends { actorId: number }>(
-  fn: (input: TInput) => Promise<unknown>,
+function useConfigMutation<TInput extends { actorId: number }, TResult = unknown>(
+  fn: (input: TInput) => Promise<TResult>,
   options: MutationHookOptions = {},
 ) {
   const qc = useQueryClient();
@@ -59,7 +59,7 @@ export function useUpdatePlacement(options: MutationHookOptions = {}) {
 export function useCreateOption(options: MutationHookOptions = {}) {
   return useConfigMutation((i: { actorId: number; fieldId: number; value: string; label: string; kind?: string; config?: Record<string, unknown> }) => {
     const { actorId, fieldId, ...body } = i;
-    return apiMutate(`/api/fields/${fieldId}/options`, { method: 'POST', actorId, body });
+    return apiMutate<{ id: number }>(`/api/fields/${fieldId}/options`, { method: 'POST', actorId, body });
   }, options);
 }
 export function useUpdateOption(options: MutationHookOptions = {}) {

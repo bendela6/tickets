@@ -1,7 +1,13 @@
 import { toasted } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { Option, StatusKind, Transition } from '../../api/types';
-import { useCreateOption, useCreateTransition, useDeleteTransition, useUpdateOption } from '../../api/use-admin';
+import {
+  useCreateOption,
+  useCreateTransition,
+  useDeleteTransition,
+  useUpdateOption,
+  useUpdatePlacement,
+} from '../../api/use-admin';
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
 import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES, hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
@@ -175,8 +181,8 @@ function OptionForm({
 }
 
 // Workflow tab per the task-12 prototype: pick a type, then manage its
-// workflow field's option pool (statuses) and the transition graph scoped to
-// that type. Layout follows the read-only reference at
+// statuses (the workflow field's options it takes) and the transition graph
+// scoped to that type. Layout follows the read-only reference at
 // `git show dab1e97:.../workflow-settings.tsx`, rebuilt against the new
 // model where a "status" is an option (kind != null) on a shared option set
 // and a transition references options directly instead of a status table.
@@ -185,6 +191,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   const disabled = userId === null;
   const createOption = useCreateOption();
   const updateOption = useUpdateOption();
+  const updatePlacement = useUpdatePlacement();
   const createTransition = useCreateTransition();
   const deleteTransition = useDeleteTransition();
 
@@ -197,13 +204,25 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
 
   const workflowField = activeTypeId !== null ? indexes.workflowField(activeTypeId) : undefined;
 
-  // The field's whole option pool, INCLUDING archived ones — indexes.optionsBySetId
-  // drops archived rows, but this panel needs to show/restore them, so read
-  // straight off board.options (the source of truth) instead.
+  // A type may take only some of the field's shared options: its placement's
+  // allowlist (absent = it takes them all), as indexes.optionsForField reads it.
+  const allowedOptionIds =
+    workflowField !== undefined && activeTypeId !== null
+      ? indexes.placement(activeTypeId, workflowField.id)?.configOverride?.allowedOptionIds
+      : undefined;
+
+  // The type's own statuses in option order, INCLUDING archived ones —
+  // indexes.optionsForField drops archived rows, but this panel needs to
+  // show/restore them, so read straight off board.options (the source of
+  // truth) instead.
   const options: Option[] =
     workflowField?.optionSetId != null
       ? [...board.options]
-          .filter((option) => option.optionSetId === workflowField.optionSetId)
+          .filter(
+            (option) =>
+              option.optionSetId === workflowField.optionSetId &&
+              (allowedOptionIds === undefined || allowedOptionIds.includes(option.id)),
+          )
           .sort((left, right) => left.position - right.position)
       : [];
   const activeOptions = options.filter((option) => !option.archivedAt);
@@ -232,11 +251,11 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   }
 
   async function submitCreateOption() {
-    if (disabled || userId === null || workflowField === undefined) return;
+    if (disabled || userId === null || workflowField === undefined || activeTypeId === null) return;
     const label = newOption.label.trim();
     const value = slugify(label);
     if (label === '' || value === '') return;
-    await createOption.mutateAsync({
+    const created = await createOption.mutateAsync({
       actorId: userId,
       fieldId: workflowField.id,
       value,
@@ -244,6 +263,16 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
       kind: newOption.kind,
       config: { color: newOption.color },
     });
+    // The option joins the field's shared set; a type that takes only some of
+    // it would not list it, so it joins this type's allowlist too.
+    if (allowedOptionIds !== undefined) {
+      await updatePlacement.mutateAsync({
+        actorId: userId,
+        itemTypeId: activeTypeId,
+        fieldId: workflowField.id,
+        allowedOptionIds: [...allowedOptionIds, created.id],
+      });
+    }
     setAddingOption(false);
   }
 
@@ -366,7 +395,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
             </p>
           ) : (
             <>
-              {/* options — the workflow field's status pool */}
+              {/* options — the statuses this type takes from its workflow field */}
               <div
                 role="region"
                 aria-label="Options"
@@ -457,7 +486,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     onCancel={() => setAddingOption(false)}
                     onSubmit={() => void submitCreateOption().catch(toasted)}
                     submitLabel="Create option"
-                    pending={createOption.isPending}
+                    pending={createOption.isPending || updatePlacement.isPending}
                     valueHint={newOption.label.trim() ? `value: ${slugify(newOption.label)}` : undefined}
                   />
                 ) : null}
