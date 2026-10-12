@@ -7,13 +7,18 @@ import { loadSchemeVocab } from '../../vocab/load-scheme-vocab';
 import { buildValueRows } from '../../values/build-value-rows';
 import { renderValue } from '../../values/render-value';
 import { itemArchived, itemFieldChanged, itemReparented, itemRestored } from './events';
-import { checkParent, checkTransition, lockItem, runTransitionGuard, transitionEdge } from './helpers';
+import {
+  checkParent, checkTransition, lockItem, runTransitionGuard, statusToRestore, transitionEdge,
+} from './helpers';
 
 export const itemUpdateInput = v.object({
   id: v.pipe(v.number(), v.integer()),
   expectedUpdatedAt: v.pipe(v.string(), v.minLength(1)),
   parentId: v.optional(v.nullable(v.pipe(v.number(), v.integer()))),
   archived: v.optional(v.boolean()),
+  // Restore a cancelled item: its status goes back to the one it had before
+  // it was cancelled (see statusToRestore).
+  restoreStatus: v.optional(v.boolean()),
   values: v.optional(v.record(v.string(), v.unknown())),
 });
 
@@ -41,7 +46,15 @@ export const itemUpdate = defineCommand({
     }
 
     const wf = vocab.workflowField(typeId);
-    for (const [fieldKey, value] of Object.entries(input.values ?? {})) {
+    const values = { ...input.values };
+    if (input.restoreStatus) {
+      if (!wf) throw new HttpError(400, 'this item has no status to restore');
+      if (values[wf.key] !== undefined) {
+        throw new HttpError(400, `restoreStatus sets "${wf.key}" itself: leave it out of values`);
+      }
+      values[wf.key] = await statusToRestore(tx, vocab, { itemId: item.id, typeId, field: wf });
+    }
+    for (const [fieldKey, value] of Object.entries(values)) {
       const field = vocab.fieldByTypeKey.get(`${typeId}:${fieldKey}`);
       if (!field || field.archivedAt) throw new HttpError(400, `unknown field "${fieldKey}" for this item type`);
 

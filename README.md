@@ -24,7 +24,7 @@ pnpm db:import                # one-shot import of ../items-core/tasks (optional
 pnpm dev                      # mprocs: api on 4600 + web on 4620 + studio + watchers
 ```
 
-New empty project: `pnpm db:seed <key> <name> <PREFIX>` or `POST /api/projects`.
+New empty project: `pnpm db:seed <key> <name> <PREFIX> [software|plan]` (the scheme, `software` by default) or `POST /api/projects`.
 
 ## Run in Docker
 
