@@ -18,7 +18,7 @@ First run `curl -s http://127.0.0.1:4741/planner`. If it shows the planner liste
 ## The loop
 
 1. **Make sure the viewer runs.** If `curl -s http://127.0.0.1:4741/planner` fails, start it with `preview_start` and the name `tasks`. If that tool isn't there, run `node scripts/tasks-view.mjs` in the background.
-2. **Arm the wait.** Run `node scripts/tasks-planner.mjs wait` with Bash's `run_in_background`. While it waits it tells the viewer you're listening (the green "Planner listening" badge). It exits once the user has said something you haven't taken in yet and has left it alone for 15 seconds. You are woken when it exits. Never poll, never sleep, and never use a loop or a cron job: the background wait is the only clock.
+2. **Arm the wait.** Run `node scripts/tasks-planner.mjs wait` with Bash's `run_in_background`. While it waits it tells the viewer you're listening (the green "Planner listening" badge). It exits once the list of what waits for you (answers and notes you haven't taken in) isn't empty and has stood still for 15 seconds, counted from the wait's start and again from each change to the list. You are woken when it exits. Never poll, never sleep, and never use a loop or a cron job: the background wait is the only clock.
 3. **End the turn** with one line in chat, for the log.
 4. **When the wait exits**, its output lists the words to take in, as JSON:
    - `{kind: "answer", file, id, index, question, answer, picked}`: an answered question. `picked` is the index of the chosen option, or null for the user's own words.
@@ -26,7 +26,7 @@ First run `curl -s http://127.0.0.1:4741/planner`. If it shows the planner liste
 
    The badge already says "Planner working". Update it as you go with `node scripts/tasks-planner.mjs say working "Folding TK-11's answers"`.
 5. **Take in every item** (see below). Then run `pnpm tasks:check` and fix whatever it reports.
-6. **Re-arm** (step 2). If an item you were given is still unresolved, the wait returns at once. Resolve each one: fold it, reply to it, or mark it read.
+6. **Re-arm** (step 2). If an item you were given is still unresolved, the wait returns it again 15 seconds after you re-arm, not at once, since it counts the 15 seconds from its own start. Resolve each one: fold it, reply to it, or mark it read.
 
 If the user tells you in chat to stop, run `node scripts/tasks-planner.mjs say stopped` and don't re-arm.
 

@@ -2,9 +2,11 @@
 //
 //   node scripts/tasks-planner.mjs wait     Waits until the user has said something in the viewer
 //                                           that no session has taken in (an answered question, a
-//                                           note without `seen`), and their words have settled for
-//                                           a while, then prints them as JSON and exits. Meanwhile
-//                                           it tells the viewer the planner is listening.
+//                                           note without `seen`), and the list of them has stood
+//                                           still for 15 seconds (SETTLE_MS), counted from the
+//                                           wait's start, so it never returns at once; then prints
+//                                           them as JSON and exits. Meanwhile it tells the viewer
+//                                           the planner is listening.
 //   node scripts/tasks-planner.mjs pending  Prints them now and exits.
 //   node scripts/tasks-planner.mjs say <listening|working|stopped> [text]
 //                                           Tells the viewer what the planner is doing.
