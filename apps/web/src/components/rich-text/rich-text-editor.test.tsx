@@ -58,6 +58,20 @@ describe('RichTextEditor', () => {
     expect(screen.getByRole('menuitem', { name: /divider/i })).toBeInTheDocument();
   });
 
+  it('reaches each text colour by the arrow keys, and picks one with Enter', async () => {
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="full" />);
+    await user.click(screen.getByRole('button', { name: /more formatting/i }));
+    await user.hover(await screen.findByRole('menuitem', { name: /text color/i }));
+    expect(await screen.findByRole('menuitem', { name: 'Accent' })).toBeInTheDocument();
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('menuitem', { name: 'Accent' })).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Danger' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+  });
+
   it('compact config has no overflow menu and drops underline/ordered-list/quote from the strip', () => {
     render(<RichTextEditor value="" onSave={vi.fn()} features="compact" />);
     expect(screen.queryByRole('button', { name: /more formatting/i })).not.toBeInTheDocument();
