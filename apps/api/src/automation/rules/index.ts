@@ -2,3 +2,4 @@
 export { parentRollup } from './parent-rollup';
 export { autoAssignOnStart } from './auto-assign-on-start';
 export { blockedLinkFlag } from './blocked-link-flag';
+export { reposFromWhere } from './repos-from-where';

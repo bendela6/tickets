@@ -56,4 +56,4 @@ Body:
 ## Related
 
 - [Get board](get-board.md) to fetch everything that was seeded
-- CLI equivalent: `pnpm db:seed <key> <name> <PREFIX>`
+- CLI equivalent: `pnpm db:seed <key> <name> <PREFIX> [software|plan]`
