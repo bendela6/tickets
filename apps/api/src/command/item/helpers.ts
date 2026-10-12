@@ -145,20 +145,39 @@ export async function statusToRestore(
   const dropped = new Set(
     (vocab.optionsByFieldId.get(input.field.id) ?? []).filter((o) => o.kind === 'dropped').map((o) => o.value),
   );
-  const changes = await tx
-    .select({ payload: events.payload })
-    .from(events)
-    .where(and(eq(events.aggregateType, 'item'), eq(events.aggregateId, input.itemId), eq(events.kind, 'item.field_changed')))
-    .orderBy(desc(events.seq));
-  let into = current.value;
-  for (const { payload } of changes) {
-    const change = payload as { fieldKey?: unknown; from?: unknown; to?: unknown };
-    if (change.fieldKey !== input.field.key) continue;
-    if (change.to !== into || typeof change.from !== 'string') break; // history doesn't lead here
+  for (const change of await statusChain(tx, { itemId: input.itemId, fieldKey: input.field.key, current: current.value })) {
+    if (change.from === null) break;
     if (!dropped.has(change.from)) return change.from;
-    into = change.from;
   }
   const initial = vocab.initialOption(input.typeId);
   if (!initial) throw new HttpError(422, `there is no ${input.field.key} to restore to`);
   return initial.value;
+}
+
+export type StatusChange = { from: string | null; to: string; commandId: string; causedBy: number | null };
+
+// The changes of a field that led to its current value, newest first: the
+// item.field_changed events whose `to` is the value the next one moved from.
+// It ends where the history doesn't lead here, or at a change from no value.
+export async function statusChain(
+  tx: DbExecutor,
+  input: { itemId: number; fieldKey: string; current: string },
+): Promise<StatusChange[]> {
+  const changes = await tx
+    .select({ payload: events.payload, commandId: events.commandId, causedBy: events.causedBy })
+    .from(events)
+    .where(and(eq(events.aggregateType, 'item'), eq(events.aggregateId, input.itemId), eq(events.kind, 'item.field_changed')))
+    .orderBy(desc(events.seq));
+  const chain: StatusChange[] = [];
+  let into = input.current;
+  for (const { payload, commandId, causedBy } of changes) {
+    const change = payload as { fieldKey?: unknown; from?: unknown; to?: unknown };
+    if (change.fieldKey !== input.fieldKey) continue;
+    if (change.to !== into) break; // history doesn't lead here
+    const from = typeof change.from === 'string' ? change.from : null;
+    chain.push({ from, to: into, commandId, causedBy });
+    if (from === null) break;
+    into = from;
+  }
+  return chain;
 }
