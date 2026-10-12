@@ -24,6 +24,20 @@ function directionLabel(
   return { text: `← ${linkType.inverseLabel}`, blocked: linkType.key === 'blocks' };
 }
 
+// The item a typed key names on this board: the key as it is, in any case, or
+// a bare number for the item with that number (`131` for TIX-131).
+function findItem(indexes: BoardIndexes, typed: string) {
+  const key = typed.trim();
+  if (/^\d+$/.test(key)) {
+    return indexes.itemByNumber.get(Number(key));
+  }
+  const upper = key.toUpperCase();
+  return (
+    indexes.itemByKey.get(key) ??
+    [...indexes.itemByKey.values()].find((candidate) => candidate.key.toUpperCase() === upper)
+  );
+}
+
 export function DetailLinks({
   board,
   indexes,
@@ -33,13 +47,12 @@ export function DetailLinks({
   board: Board;
   indexes: BoardIndexes;
   item: Item;
-  onOpenItem: (itemNumber: number) => void;
+  onOpenItem: (itemKey: string) => void;
 }) {
   const { userId } = useCurrentUser();
   const createLink = useCreateLink(OWN_ERROR);
   const deleteLink = useDeleteLink();
 
-  const prefix = board.project.itemPrefix;
   const linkTypes = [...board.linkTypes]
     .filter((linkType) => !linkType.archivedAt)
     .sort((left, right) => left.position - right.position);
@@ -55,7 +68,7 @@ export function DetailLinks({
 
   const [adding, setAdding] = useState(false);
   const [choice, setChoice] = useState<string | null>(() => options[0]?.value ?? null);
-  const [numberDraft, setNumberDraft] = useState('');
+  const [keyDraft, setKeyDraft] = useState('');
   const [error, setError] = useState('');
 
   const submit = async () => {
@@ -63,10 +76,9 @@ export function DetailLinks({
     if (choice === null) {
       return;
     }
-    const digits = numberDraft.trim().match(/(\d+)\s*$/)?.[1];
-    const other = digits ? indexes.itemByNumber.get(Number(digits)) : undefined;
+    const other = findItem(indexes, keyDraft);
     if (!other) {
-      setError(`no item #${numberDraft.trim()}`);
+      setError(`no item ${keyDraft.trim()}`);
       return;
     }
     if (userId === null) {
@@ -80,7 +92,7 @@ export function DetailLinks({
         sourceItemId: direction === 'out' ? item.id : other.id,
         targetItemId: direction === 'out' ? other.id : item.id,
       });
-      setNumberDraft('');
+      setKeyDraft('');
     } catch (linkError) {
       setError((linkError as Error).message);
     }
@@ -127,13 +139,9 @@ export function DetailLinks({
                 <button
                   type="button"
                   className="shrink-0"
-                  onClick={() => onOpenItem(other.number)}
+                  onClick={() => onOpenItem(other.key)}
                 >
-                  <ItemKey
-                    prefix={prefix}
-                    number={other.number}
-                    className="text-11 hover:text-indigo-9"
-                  />
+                  <ItemKey itemKey={other.key} className="text-11 hover:text-indigo-9" />
                 </button>
                 <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
                   {String(other.values['title'] ?? '')}
@@ -176,16 +184,16 @@ export function DetailLinks({
           <Input
             size="xs"
             className="w-112"
-            placeholder={`${prefix}-131`}
-            aria-label="Item number"
-            value={numberDraft}
+            placeholder={item.key}
+            aria-label="Item key"
+            value={keyDraft}
             disabled={userId === null}
-            onChange={(next) => setNumberDraft(next)}
+            onChange={(next) => setKeyDraft(next)}
           />
           <Button
             type="submit"
             size="sm"
-            disabled={userId === null || numberDraft.trim().length === 0 || createLink.isPending}
+            disabled={userId === null || keyDraft.trim().length === 0 || createLink.isPending}
           >
             Link
           </Button>

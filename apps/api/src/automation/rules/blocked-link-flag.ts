@@ -38,7 +38,7 @@ export const blockedLinkFlag = defineAutomation({
     for (const link of links) {
       await ctx.dispatch(itemComment, {
         itemId: link.targetItemId,
-        body: `Blocker #${item.number} was reopened`,
+        body: `Blocker ${item.key} was reopened`,
       }, String(link.targetItemId));
     }
   },

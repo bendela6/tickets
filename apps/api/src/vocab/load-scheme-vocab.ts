@@ -2,7 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import {
   fields, itemTypeFields, itemTypes, linkTypeTargetTypes, linkTypes, optionSets,
-  optionTransitions, options, projects, users, views,
+  optionTransitions, options, projects, schemes, users, views,
 } from '@tickets/db';
 import { HttpError } from '../errors';
 
@@ -14,7 +14,8 @@ export async function loadSchemeVocab(db: DbExecutor, selector: { key?: string; 
   if (!project) throw new HttpError(404, `unknown project "${selector.key ?? selector.id}"`);
   const schemeId = project.schemeId;
 
-  const [typeRows, fieldRows, optionSetRows, viewRows, userRows] = await Promise.all([
+  const [schemeRows, typeRows, fieldRows, optionSetRows, viewRows, userRows] = await Promise.all([
+    db.select().from(schemes).where(eq(schemes.id, schemeId)),
     db.select().from(itemTypes).where(eq(itemTypes.schemeId, schemeId)),
     db.select().from(fields).where(eq(fields.schemeId, schemeId)),
     db.select().from(optionSets).where(eq(optionSets.schemeId, schemeId)),
@@ -76,6 +77,10 @@ export async function loadSchemeVocab(db: DbExecutor, selector: { key?: string; 
   const vocab = {
     project,
     schemeId,
+    // A plan project (its scheme's config says plan: true, as the seeded plan
+    // scheme and every fork of it do): its items take the plans' keys, never
+    // move to another parent, and its blockers say why.
+    plan: (schemeRows[0]?.config as { plan?: unknown } | undefined)?.plan === true,
     views: viewRows,
     usersById: new Map(userRows.map((u) => [u.id, u])),
     types: typeRows,

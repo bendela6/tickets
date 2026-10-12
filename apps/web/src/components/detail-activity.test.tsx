@@ -29,6 +29,7 @@ vi.mock('../api/use-item-activity', () => ({
 const item: Item = {
   id: 10,
   number: 1,
+  key: 'CORE-1',
   typeId: 1,
   parentId: null,
   createdBy: 1,

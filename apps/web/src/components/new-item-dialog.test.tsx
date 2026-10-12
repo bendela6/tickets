@@ -89,6 +89,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
       {
         id: 100,
         number: 128,
+        key: 'CORE-128',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -159,7 +160,7 @@ test('step 1 lists creatable types with field counts; subtask is not pickable', 
 });
 
 test('pick type → fill title → required gate → submit POSTs body and opens the item', async () => {
-  const fetchMock = mockCreateFetch({ id: 500, number: 136 });
+  const fetchMock = mockCreateFetch({ id: 500, number: 136, key: 'CORE-136' });
   const { onClose } = renderDialog(makeBoard());
 
   await userEvent.click(screen.getByRole('button', { name: /bug/i }));
@@ -203,7 +204,7 @@ test('pick type → fill title → required gate → submit POSTs body and opens
     search: (previous: Record<string, unknown>) => Record<string, unknown>;
   };
   expect(navArg.to).toBe('.');
-  expect(navArg.search({})).toEqual({ t: 136 });
+  expect(navArg.search({})).toEqual({ t: 'CORE-136' });
 });
 
 // A kanban column's ＋ opens the dialog on that column's status.

@@ -1,11 +1,16 @@
-import { asc, eq, inArray, or } from 'drizzle-orm';
+import { and, asc, eq, inArray, or } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { comments, itemLinks, itemValues, items } from '@tickets/db';
 import { renderValue } from '../values/render-value';
 import type { SchemeVocab } from '../vocab/load-scheme-vocab';
 
-export async function assembleItems(db: DbExecutor, vocab: SchemeVocab) {
-  const itemRows = await db.select().from(items).where(eq(items.projectId, vocab.project.id));
+// The project's items, or only those whose ids are in `only`.
+export async function assembleItems(db: DbExecutor, vocab: SchemeVocab, only?: number[]) {
+  const inProject = eq(items.projectId, vocab.project.id);
+  const itemRows = await db
+    .select()
+    .from(items)
+    .where(only ? and(inProject, inArray(items.id, only)) : inProject);
   if (itemRows.length === 0) return [];
   const ids = itemRows.map((r) => r.id);
 
@@ -50,6 +55,7 @@ export async function assembleItems(db: DbExecutor, vocab: SchemeVocab) {
   return itemRows.map((row) => ({
     id: row.id,
     number: row.number,
+    key: row.key,
     typeId: row.typeId,
     parentId: row.parentId,
     createdBy: row.createdBy,

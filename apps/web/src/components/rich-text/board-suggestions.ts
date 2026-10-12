@@ -3,15 +3,13 @@ import type { RichTextSuggestions } from './suggestions';
 
 // Wires the Mention (@) and ticket-ref (#) popovers to the board already
 // loaded for the drawer/page — no extra fetch, just re-shaping indexes the
-// caller already has in scope. `prefix` comes from `board.project.itemPrefix`
-// since BoardIndexes itself carries no project-level fields (it only indexes
-// board.{types,fields,users,items,options,placements}).
-export function boardSuggestions(indexes: BoardIndexes, prefix: string): RichTextSuggestions {
+// caller already has in scope. A ticket ref's label is the item's key.
+export function boardSuggestions(indexes: BoardIndexes): RichTextSuggestions {
   return {
     users: () => [...indexes.userById.values()].map((u) => ({ id: u.id, label: u.name, kind: u.kind })),
     tickets: (query) => {
       const q = query.toLowerCase();
-      return [...indexes.itemByNumber.values()]
+      return [...indexes.itemByKey.values()]
         .map((item) => {
           // Same lookup kanban-view/statusPill use to color a card's status
           // dot: the item's type owns a workflow field, whose current option
@@ -26,7 +24,7 @@ export function boardSuggestions(indexes: BoardIndexes, prefix: string): RichTex
             : null;
           return {
             id: item.id,
-            label: `${prefix}-${item.number}`,
+            label: item.key,
             title: String(item.values['title'] ?? ''),
             statusKind,
           };

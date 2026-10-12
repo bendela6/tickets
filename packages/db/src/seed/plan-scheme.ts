@@ -34,6 +34,10 @@ export const PLAN_REPOS = [
 export const planScheme: SchemeDef = {
   key: 'plan',
   name: 'Plan',
+  // A plan project: an epic's key is PREFIX/E<n>, a feature's PREFIX-<n>, a
+  // ticket's or a subticket's its parent's and .<n>; set when the item is made,
+  // never changed, so an item never moves to another parent.
+  config: { plan: true },
   optionSets: [
     { key: 'status', name: 'Status', options: STATUS_OPTIONS },
     { key: 'repos', name: 'Repos', options: PLAN_REPOS.map((repo) => ({ value: repo, label: repo })) },

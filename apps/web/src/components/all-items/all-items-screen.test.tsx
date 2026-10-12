@@ -69,6 +69,7 @@ function makeCoreBoard(): Board {
       {
         id: 100,
         number: 1,
+        key: 'CORE-1',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -82,6 +83,7 @@ function makeCoreBoard(): Board {
       {
         id: 101,
         number: 2,
+        key: 'CORE-2',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -96,6 +98,7 @@ function makeCoreBoard(): Board {
       {
         id: 102,
         number: 3,
+        key: 'CORE-3',
         typeId: 1,
         parentId: 100,
         createdBy: 7,
@@ -138,6 +141,7 @@ function makeAppBoard(): Board {
       {
         id: 200,
         number: 1,
+        key: 'APP-1',
         typeId: 5,
         parentId: null,
         createdBy: 9,

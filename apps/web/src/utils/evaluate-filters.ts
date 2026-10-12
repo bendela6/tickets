@@ -30,7 +30,7 @@ export function evaluateFilters(
 ): boolean {
   if (query.length > 0) {
     const haystack = [
-      String(item.number),
+      item.key,
       ...Object.values(item.values).map((value) => String(value ?? '')),
     ]
       .join(' ')

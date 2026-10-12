@@ -33,6 +33,12 @@ export const itemUpdate = defineCommand({
     ctx.projectId = item.projectId;
 
     if (input.parentId !== undefined && input.parentId !== item.parentId) {
+      if (vocab.plan) {
+        throw new HttpError(
+          422,
+          `${item.key} never moves to another parent, since its key says where it sits: cancel it and write it anew under the other`,
+        );
+      }
       if (input.parentId !== null) {
         await checkParent(tx, vocab, { itemId: item.id, parentId: input.parentId, childTypeId: typeId });
       }

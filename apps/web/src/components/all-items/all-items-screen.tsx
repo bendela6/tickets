@@ -402,7 +402,7 @@ export function AllItemsScreen() {
       sortable: true,
       resizable: false,
       render: (row) => (
-        <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
+        <ItemKey itemKey={row.ticket.key} />
       ),
     },
     {
@@ -673,10 +673,10 @@ export function AllItemsScreen() {
           indexes={selectedEntry.indexes}
           item={selectedTicket}
           onClose={() => setSelected(null)}
-          onOpenItem={(itemNumber) => {
+          onOpenItem={(itemKey) => {
             // /all keeps the open item in state, not in the URL's `t`, so the
             // drawer's subtask, link and parent rows open through here.
-            const target = selectedEntry.indexes.itemByNumber.get(itemNumber);
+            const target = selectedEntry.indexes.itemByKey.get(itemKey);
             if (target) setSelected({ projectKey: selectedEntry.project.key, ticketId: target.id });
           }}
         />

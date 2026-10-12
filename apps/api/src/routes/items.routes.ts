@@ -5,6 +5,7 @@ import { runCommand } from '../command/run-command';
 import { itemComment } from '../command/item/comment';
 import { itemCreate } from '../command/item/create';
 import { itemUpdate } from '../command/item/update';
+import { itemByKey } from '../read/item-by-key';
 import { parseId } from '../utils/parse-id';
 
 export function registerItemsRoutes(app: FastifyInstance, ctx: { db: Db }) {
@@ -15,6 +16,13 @@ export function registerItemsRoutes(app: FastifyInstance, ctx: { db: Db }) {
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, itemCreate, envelope, { ...(request.body as object), projectKey: key });
     reply.status(201).send(result);
+  });
+
+  // An item by its key. An epic's key has a slash (`TK/E14`): sent encoded
+  // (`TK%2FE14`) or as it is, the wildcard takes the rest of the path.
+  app.get('/api/items/by-key/*', async (request, reply) => {
+    const key = (request.params as { '*': string })['*'];
+    reply.send(await itemByKey(db, key));
   });
 
   app.patch('/api/items/:id', async (request, reply) => {

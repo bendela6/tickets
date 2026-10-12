@@ -99,9 +99,9 @@ export function ItemDetail({
   indexes: BoardIndexes;
   item: Item;
   variant: 'drawer' | 'page';
-  /** Opens another item of this board by number. A host that keeps the open
+  /** Opens another item of this board by its key. A host that keeps the open
    *  item in its own state, not in the URL's `t`, passes its own. */
-  onOpenItem?: (itemNumber: number) => void;
+  onOpenItem?: (itemKey: string) => void;
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
@@ -110,7 +110,6 @@ export function ItemDetail({
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
   const { copied, copy: copyLink } = useCopy();
 
-  const prefix = board.project.itemPrefix;
   const type = indexes.typeById.get(item.typeId);
   const parent = item.parentId !== null ? indexes.itemById.get(item.parentId) : null;
   const creator = indexes.userById.get(item.createdBy);
@@ -129,16 +128,16 @@ export function ItemDetail({
 
   const openItem =
     onOpenItem ??
-    ((itemNumber: number) => {
+    ((itemKey: string) => {
       if (variant === 'page') {
         void navigate({
-          to: '/p/$projectKey/t/$number',
-          params: { projectKey, number: String(itemNumber) },
+          to: '/p/$projectKey/t/$itemKey',
+          params: { projectKey, itemKey },
         });
       } else {
         void navigate({
           to: '.',
-          search: (previous: Record<string, unknown>) => ({ ...previous, t: itemNumber }),
+          search: (previous: Record<string, unknown>) => ({ ...previous, t: itemKey }),
         });
       }
     });
@@ -221,13 +220,11 @@ export function ItemDetail({
   const breadcrumb = parent ? (
     <button
       type="button"
-      onClick={() => openItem(parent.number)}
+      onClick={() => openItem(parent.key)}
       className="flex w-fit min-w-0 items-center gap-6 bg-transparent p-0 text-left font-sans text-12/17 font-500 text-indigo-9 hover:underline"
     >
       <span aria-hidden>‹</span>
-      <span className="shrink-0 font-mono">
-        {prefix}-{parent.number}
-      </span>
+      <span className="shrink-0 font-mono">{parent.key}</span>
       <span className="truncate">{String(parent.values['title'] ?? '')}</span>
     </button>
   ) : null;
@@ -243,7 +240,7 @@ export function ItemDetail({
         }
         disabled={userId === null || patch.isPending}
         features="full"
-        suggestions={boardSuggestions(indexes, prefix)}
+        suggestions={boardSuggestions(indexes)}
         onSave={(next) => saveValues({ [descriptionField.key]: next.length > 0 ? next : null })}
       />
     </section>
@@ -268,7 +265,7 @@ export function ItemDetail({
     return (
       <>
         <div className="flex shrink-0 items-center gap-9 border-b-1 border-gray-6 px-20 py-14">
-          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
+          <ItemKey itemKey={item.key} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
@@ -284,8 +281,8 @@ export function ItemDetail({
           {archivedChip}
           <span className="flex-1" />
           <Link
-            to="/p/$projectKey/t/$number"
-            params={{ projectKey, number: String(item.number) }}
+            to="/p/$projectKey/t/$itemKey"
+            params={{ projectKey, itemKey: item.key }}
             className="inline-flex h-28 shrink-0 items-center gap-4 rounded-6 border-1 border-gray-7 bg-surface-raised px-10 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
@@ -316,7 +313,7 @@ export function ItemDetail({
             />
             <div className="pt-12">
               {tab === 'comments' ? (
-                <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
+                <DetailComments indexes={indexes} item={item} onOpenItem={openItem} />
               ) : (
                 <DetailActivity item={item} indexes={indexes} />
               )}
@@ -340,9 +337,7 @@ export function ItemDetail({
         <span aria-hidden className="font-sans text-12/17 text-gray-9">
           <Icon name="chevron-right" size="2xs" />
         </span>
-        <span className="shrink-0 font-mono text-12/17 font-500 text-gray-12">
-          {prefix}-{item.number}
-        </span>
+        <span className="shrink-0 font-mono text-12/17 font-500 text-gray-12">{item.key}</span>
         {archivedChip}
         <span className="flex-1" />
         <Button size="sm" onClick={() => void copyLink(window.location.href)}>
@@ -355,7 +350,7 @@ export function ItemDetail({
           <div>
             {breadcrumb ? <div className="mb-10">{breadcrumb}</div> : null}
             <div className="mb-10 flex items-center gap-9">
-              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
+              <ItemKey itemKey={item.key} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
               <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 created{' '}
@@ -375,7 +370,7 @@ export function ItemDetail({
           {linksSection}
           <section>
             <SectionHeader title="Comments" className="mb-12" />
-            <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
+            <DetailComments indexes={indexes} item={item} onOpenItem={openItem} />
           </section>
         </div>
         <div className="flex w-320 shrink-0 flex-col gap-20">

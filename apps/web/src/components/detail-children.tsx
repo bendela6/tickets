@@ -10,6 +10,7 @@ import { cn, Icon, Progress, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { StatusSelect } from '../ui/status-select';
 import { childProgress } from '../utils/child-progress';
+import { nextKey } from '../utils/next-key';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 
@@ -26,7 +27,7 @@ export function DetailChildren({
   board: Board;
   indexes: BoardIndexes;
   item: Item;
-  onOpenItem: (itemNumber: number) => void;
+  onOpenItem: (itemKey: string) => void;
 }) {
   const { userId } = useCurrentUser();
   const createItem = useCreateItem(OWN_ERROR);
@@ -34,12 +35,11 @@ export function DetailChildren({
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
 
-  const prefix = board.project.itemPrefix;
   const children = [...(indexes.childrenByParent.get(item.id) ?? [])].sort(
     (left, right) => left.number - right.number,
   );
   const progress = childProgress(item, indexes);
-  const nextNumber = board.items.reduce((max, row) => Math.max(max, row.number), 0) + 1;
+  const nextChildKey = nextKey(board, indexes, { typeKey: 'subtask', parentId: item.id });
 
   const setChildStatus = (child: Item, next: string) => {
     if (userId === null) {
@@ -105,17 +105,12 @@ export function DetailChildren({
             <div
               key={child.id}
               className="flex h-38 cursor-pointer items-center gap-10 border-b-1 border-gray-6 px-12 hover:bg-gray-1"
-              onClick={() => onOpenItem(child.number)}
+              onClick={() => onOpenItem(child.key)}
             >
               <span aria-hidden className="inline-flex shrink-0">
                 <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
-              <ItemKey
-                prefix={prefix}
-                number={child.number}
-                muted={settled}
-                className="shrink-0 text-11"
-              />
+              <ItemKey itemKey={child.key} muted={settled} className="shrink-0 text-11" />
               <span
                 className={cn(
                   'min-w-0 flex-1 truncate font-sans text-13/19',
@@ -167,9 +162,9 @@ export function DetailChildren({
             disabled={userId === null}
             onChange={(event) => setTitle(event.target.value)}
           />
-          {title.trim().length > 0 ? (
+          {title.trim().length > 0 && nextChildKey !== null ? (
             <span className="shrink-0 font-mono text-10 text-gray-9">
-              ↵ creates {prefix}-{nextNumber}
+              ↵ creates {nextChildKey}
             </span>
           ) : null}
         </form>
