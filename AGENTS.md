@@ -4,7 +4,7 @@ pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (
 
 ## UI redesign (in progress, branch `redesign`)
 
-- Total redesign to the **Instrument** design system. Spec of record: `docs/design/design-system.html` (exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
+- Total redesign to the **Instrument** design system. Spec of record: bh's `docs/design/design-system.html` (`../bh/docs/design/design-system.html`, exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
 - Locked decisions: full-stack scope; **replace per phase** (legacy `styles/globals.css` screens coexist with redesigned ones until ported); extend vocabulary + seed data; verify by measurement, not screenshot judgment; autonomous execution with a commit per task.
 - **Tailwind preflight is OFF.** Native controls and unlayered legacy CSS bite — see the trap tables in the project skills before debugging styles.
 
