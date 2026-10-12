@@ -169,13 +169,14 @@ function userIdsInPayloads(events: Row[], userFieldKeys: Set<string>): number[] 
   return ids(found);
 }
 
-async function exportOne(
+// Every row that belongs to one project, table by table: what an export holds
+// under `rows`, and exactly what deleting the project deletes
+// (delete-project.ts), so the backup and the delete can never disagree.
+export async function selectProjectRows(
   tx: Tx,
-  project: ProjectSummary,
-  exportedAt: string,
-  database: string,
-): Promise<ProjectExport> {
-  const pid = project.id;
+  projectId: number,
+): Promise<Record<ProjectTable, Row[]>> {
+  const pid = projectId;
   // Fresh fragments per use: a postgres.js fragment is a lazily-run query
   // object, so each enclosing statement gets its own.
   const itemsOf = () => tx`SELECT id FROM records.items WHERE project_id = ${pid}`;
@@ -186,7 +187,7 @@ async function exportOne(
   const eventsOf = () =>
     tx`SELECT id FROM history.events WHERE project_id = ${pid} OR ${aggregates()}`;
 
-  const rows: Record<ProjectTable, Row[]> = {
+  return {
     'core.projects': plain(await tx<Row[]>`SELECT * FROM core.projects WHERE id = ${pid}`),
     'structure.views': plain(
       await tx<Row[]>`SELECT * FROM structure.views WHERE project_id = ${pid} ORDER BY id`,
@@ -229,7 +230,15 @@ async function exportOne(
       >`SELECT * FROM history.outbox WHERE event_id IN (${eventsOf()}) ORDER BY event_id`,
     ),
   };
+}
 
+async function exportOne(
+  tx: Tx,
+  project: ProjectSummary,
+  exportedAt: string,
+  database: string,
+): Promise<ProjectExport> {
+  const rows = await selectProjectRows(tx, project.id);
   const items = rows['records.items'];
   const values = rows['records.item_values'];
   const links = rows['records.item_links'];

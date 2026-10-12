@@ -17,9 +17,13 @@
 // about to talk to," everywhere.
 import { environment } from '../environment';
 
-const PRODUCTION_DATABASE = 'tickets';
+// The local server's production database and the live one on the gateway are
+// both named this; the project delete (export/delete-project.ts) refuses it too.
+export const PRODUCTION_DATABASE = 'tickets';
 
-export function assertNotProductionDatabase(databaseName: string = environment.postgres.database): void {
+export function assertNotProductionDatabase(
+  databaseName: string = environment.postgres.database,
+): void {
   if (databaseName === PRODUCTION_DATABASE) {
     throw new Error(
       `Refusing to run: POSTGRES_DATABASE is "${PRODUCTION_DATABASE}" — the LIVE PRODUCTION ` +

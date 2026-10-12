@@ -40,6 +40,15 @@ const safeInteger = {
   },
 };
 
+// How an export reads each type. The project delete (delete-project.ts) reads
+// with the same parsing, so a row it is about to delete compares equal to the
+// same row in a backup file.
+export const EXPORT_TYPES = {
+  timestamptz: { ...rawString, from: [1184] },
+  timestamp: { ...rawString, from: [1114] },
+  int8: { ...safeInteger, from: [20] },
+};
+
 export function createReadOnlyClient(url: string = connectionUrl): { sql: Sql } {
   return {
     sql: postgres(url, {
@@ -48,11 +57,7 @@ export function createReadOnlyClient(url: string = connectionUrl): { sql: Sql } 
         default_transaction_read_only: true,
         application_name: 'tickets-db-export',
       },
-      types: {
-        timestamptz: { ...rawString, from: [1184] },
-        timestamp: { ...rawString, from: [1114] },
-        int8: { ...safeInteger, from: [20] },
-      },
+      types: EXPORT_TYPES,
     }),
   };
 }
