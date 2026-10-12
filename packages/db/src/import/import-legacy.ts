@@ -279,6 +279,8 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
     // ordering constraint is needed at all, for chains of any depth or
     // shape. ---
     if (legacy.tickets.length) {
+      // A legacy project numbers its tickets, so each keeps PREFIX-number.
+      const prefixOf = new Map(legacy.projects.map((p) => [p.id, p.ticketPrefix]));
       await inChunks(legacy.tickets, (chunk) =>
         tx.insert(items).values(
           chunk.map((t) => ({
@@ -287,6 +289,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
             typeId: t.typeId,
             parentId: null,
             number: t.number,
+            key: `${prefixOf.get(t.projectId)}-${t.number}`,
             createdBy: t.createdBy,
             archivedAt: t.archivedAt,
             createdAt: t.createdAt,

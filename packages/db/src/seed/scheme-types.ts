@@ -70,6 +70,9 @@ export type ViewDef = {
 export type SchemeDef = {
   key: string;
   name: string;
+  // schemes.config. `plan: true` makes every project on the scheme a plan
+  // project: its items take the plans' keys and never move to another parent.
+  config?: { plan?: boolean } & Record<string, unknown>;
   optionSets: OptionSetDef[];
   fields: FieldDef[];
   types: TypeDef[];

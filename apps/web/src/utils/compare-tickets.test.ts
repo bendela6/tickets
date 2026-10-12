@@ -45,6 +45,7 @@ function item(number: number, priority: string): Item {
   return {
     id: 500 + number,
     number,
+    key: `CORE-${number}`,
     typeId: 1,
     parentId: null,
     createdBy: 1,

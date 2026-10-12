@@ -7,6 +7,7 @@ export function indexBoard(board: Board) {
   const userById = new Map<number, User>(board.users.map((u) => [u.id, u]));
   const itemById = new Map<number, Item>(board.items.map((i) => [i.id, i]));
   const itemByNumber = new Map<number, Item>(board.items.map((i) => [i.number, i]));
+  const itemByKey = new Map<string, Item>(board.items.map((i) => [i.key, i]));
   const optionById = new Map<number, Option>(board.options.map((o) => [o.id, o]));
 
   const optionsBySetId = new Map<number, Option[]>();
@@ -57,7 +58,7 @@ export function indexBoard(board: Board) {
   }
 
   return {
-    typeById, fieldById, fieldByKey, userById, itemById, itemByNumber, optionById,
+    typeById, fieldById, fieldByKey, userById, itemById, itemByNumber, itemByKey, optionById,
     optionsBySetId, placementsByType, childrenByParent,
     placement, workflowField, optionsForField, optionByValue,
   };

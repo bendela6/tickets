@@ -35,6 +35,7 @@ function board(): Board {
       {
         id: 500,
         number: 1,
+        key: 'CORE-1',
         typeId: 1,
         parentId: null,
         createdBy: 7,

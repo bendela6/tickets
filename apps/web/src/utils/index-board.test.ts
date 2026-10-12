@@ -21,8 +21,8 @@ function board(): Board {
     ],
     transitions: [], linkTypes: [], targetTypes: [], views: [], childTypes: [], users: [{ id: 7, name: 'A', email: null, kind: 'human', archivedAt: null }],
     items: [
-      { id: 500, number: 1, typeId: 1, parentId: null, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: { status: 'todo', title: 'P' }, comments: [], links: [] },
-      { id: 501, number: 2, typeId: 1, parentId: 500, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: {}, comments: [], links: [] },
+      { id: 500, number: 1, key: 'CORE-1', typeId: 1, parentId: null, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: { status: 'todo', title: 'P' }, comments: [], links: [] },
+      { id: 501, number: 2, key: 'CORE-2', typeId: 1, parentId: 500, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: {}, comments: [], links: [] },
     ],
   };
 }

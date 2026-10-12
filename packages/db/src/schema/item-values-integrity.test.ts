@@ -82,7 +82,7 @@ describe('item_values integrity (runs against tickets_test — see test/setup-en
 
     const [item] = await db
       .insert(items)
-      .values({ projectId: project!.id, typeId: type!.id, number: 1, createdBy: userId })
+      .values({ projectId: project!.id, typeId: type!.id, number: 1, key: `IVT${RUN_ID}-1`, createdBy: userId })
       .returning();
     itemId = item!.id;
   });

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useBoard } from '../api/use-board';
 import { useCurrentUser } from '../state/current-user-context';
@@ -17,11 +17,11 @@ import { NewItemDialog } from './new-item-dialog';
 
 // The board area of a view route: header, filter chips, KPI strip, then the
 // mode-selected renderer (table or kanban). Ad-hoc state rides the URL
-// (q = title query, f = unsaved filter rules, t = drawer ticket number);
+// (q = title query, f = unsaved filter rules, t = drawer item's key);
 // everything else persists into the view config.
 export function BoardScreen() {
   const params = useParams({ strict: false }) as { projectKey?: string; viewId?: string };
-  const search = useSearch({ strict: false }) as { t?: number; q?: string; f?: FilterRule[] };
+  const search = useSearch({ strict: false }) as { t?: string; q?: string; f?: FilterRule[] };
   const navigate = useNavigate();
   const projectKey = params.projectKey ?? '';
   const boardQuery = useBoard(projectKey);
@@ -32,6 +32,19 @@ export function BoardScreen() {
   const { config, update } = useViewConfig(board, view, userId);
   // Open with the status a kanban column's ＋ preselects, or none.
   const [creating, setCreating] = useState<{ status: string | null } | null>(null);
+
+  // An old link's `?t=<number>` becomes the item's key.
+  const oldNumber = search.t !== undefined && /^\d+$/.test(search.t) ? Number(search.t) : null;
+  const renamed = oldNumber !== null ? indexes?.itemByNumber.get(oldNumber)?.key : undefined;
+  useEffect(() => {
+    if (renamed) {
+      void navigate({
+        to: '.',
+        search: (previous: Record<string, unknown>) => ({ ...previous, t: renamed }),
+        replace: true,
+      });
+    }
+  }, [renamed, navigate]);
 
   if (!board || !indexes) {
     return null;
@@ -51,7 +64,7 @@ export function BoardScreen() {
   const rows = topLevel
     .filter((ticket) => evaluateFilters(effectiveRules, query, ticket, indexes))
     .sort(compareTickets(indexes, config.sort));
-  const openTicket = search.t !== undefined ? (indexes.itemByNumber.get(search.t) ?? null) : null;
+  const openTicket = search.t !== undefined ? (indexes.itemByKey.get(search.t) ?? null) : null;
 
   const doneCount = topLevel.filter((ticket) => {
     const workflowField = indexes.workflowField(ticket.typeId);
@@ -102,7 +115,7 @@ export function BoardScreen() {
           indexes={indexes}
           rows={rows}
           projectKey={projectKey}
-          onOpenTicket={(ticketNumber) => setSearch({ t: ticketNumber })}
+          onOpenTicket={(itemKey) => setSearch({ t: itemKey })}
           onNewTicket={(status) => setCreating({ status })}
         />
       ) : (
@@ -116,7 +129,7 @@ export function BoardScreen() {
           filterCount={effectiveRules.length + (query.length > 0 ? 1 : 0)}
           totalCount={topLevel.length}
           onUpdate={update}
-          onOpenTicket={(ticketNumber) => setSearch({ t: ticketNumber })}
+          onOpenTicket={(itemKey) => setSearch({ t: itemKey })}
           onClearFilters={() => setSearch({ f: [], q: undefined })}
           onNewTicket={() => setCreating({ status: null })}
         />

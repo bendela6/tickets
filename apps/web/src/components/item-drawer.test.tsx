@@ -98,6 +98,7 @@ function makeBoard(): Board {
       {
         id: 100,
         number: 128,
+        key: 'CORE-128',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -125,6 +126,7 @@ function makeBoard(): Board {
       {
         id: 101,
         number: 129,
+        key: 'CORE-129',
         typeId: 1,
         parentId: 100,
         createdBy: 7,
@@ -138,6 +140,7 @@ function makeBoard(): Board {
       {
         id: 102,
         number: 131,
+        key: 'CORE-131',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -152,7 +155,7 @@ function makeBoard(): Board {
   };
 }
 
-async function renderDrawer(onOpenItem?: (itemNumber: number) => void) {
+async function renderDrawer(onOpenItem?: (itemKey: string) => void) {
   const board = makeBoard();
   const indexes = indexBoard(board);
   const item = indexes.itemByNumber.get(128);
@@ -246,7 +249,7 @@ test('a subtask row opens through the host when it supplies onOpenItem', async (
   const onOpenItem = vi.fn();
   await renderDrawer(onOpenItem);
   await userEvent.click(screen.getByText('Repro harness for virtualizer offsets'));
-  expect(onOpenItem).toHaveBeenCalledWith(129);
+  expect(onOpenItem).toHaveBeenCalledWith('CORE-129');
 });
 
 test('escape closes the drawer', async () => {

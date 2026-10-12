@@ -1,6 +1,7 @@
 import { createRouter } from '@tanstack/react-router';
 import { allItemsRoute } from './routes/all-items-route';
 import { indexRoute } from './routes/index-route';
+import { itemKeyRoute } from './routes/item-key-route';
 import { projectIndexRoute } from './routes/project-index-route';
 import { projectRoute } from './routes/project-route';
 import { rootRoute } from './routes/root-route';
@@ -12,6 +13,7 @@ import { viewRoute } from './routes/view-route';
 const routeTree = rootRoute.addChildren([
   indexRoute,
   allItemsRoute,
+  itemKeyRoute,
   schemaRoute,
   settingsRoute,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),

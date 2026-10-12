@@ -6,6 +6,7 @@ import { loadSchemeVocab } from '../../vocab/load-scheme-vocab';
 import { buildValueRows } from '../../values/build-value-rows';
 import { itemCreated } from './events';
 import { checkParent, checkTransition, nextItemNumber } from './helpers';
+import { nextItemKey, planKeyForm } from './keys';
 
 export const itemCreateInput = v.object({
   projectKey: v.pipe(v.string(), v.minLength(1)),
@@ -44,9 +45,17 @@ export const itemCreate = defineCommand({
 
     if (input.parentId != null) {
       await checkParent(tx, vocab, { itemId: null, parentId: input.parentId, childTypeId: type.id });
+    } else if (vocab.plan && planKeyForm(type.key) === 'child') {
+      throw new HttpError(
+        422,
+        `a ${type.key} is made under its parent in a plan: its key is its parent's and the next number under it`,
+      );
     }
 
+    // nextItemNumber locks the project's row, so the key's "next number" is
+    // taken under the same lock.
     const number = await nextItemNumber(tx, vocab.project.id);
+    const key = await nextItemKey(tx, vocab, { type, parentId: input.parentId ?? null, number });
     const inserted = await tx
       .insert(items)
       .values({
@@ -54,6 +63,7 @@ export const itemCreate = defineCommand({
         typeId: type.id,
         parentId: input.parentId ?? null,
         number,
+        key,
         createdBy: ctx.envelope.actorId,
       })
       .returning();
@@ -77,9 +87,10 @@ export const itemCreate = defineCommand({
     await ctx.emit(itemCreated, {
       typeKey: type.key,
       number: item.number,
+      key: item.key,
       parentId: item.parentId,
       values,
     });
-    return { id: item.id, number: item.number, updatedAt: item.updatedAt };
+    return { id: item.id, number: item.number, key: item.key, updatedAt: item.updatedAt };
   },
 });
