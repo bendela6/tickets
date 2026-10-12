@@ -4,7 +4,7 @@
 //
 //   node scripts/tasks-agents.mjs say <name> <state> [--item <id>] [text…]
 //       name   who: planner, builder, or a worker's own name (worker-tk-7, worker-gw-13)
-//       state  listening | working | done | failed | abandoned | stopped
+//       state  listening | working | done | failed | abandoned | stopped, or clear (as clear <name>)
 //       item   what it works on: TK-7, TK-7.2, TK/E4
 //       text   what it's doing now, in a few words: "Writing the Sort type"
 //   node scripts/tasks-agents.mjs clear <name>   Forgets an agent (the viewer's × does the same).
@@ -29,7 +29,9 @@ try {
     const at = words.indexOf('--item');
     const item = at >= 0 ? words.splice(at, 2)[1] : undefined;
     const told = await tell({ name, state, item, text: words.join(' ') });
-    console.log(`${told.name}: ${told.state}${told.item ? ` on ${told.item}` : ''}`);
+    // The viewer answers a clear with null: the agent is gone. Say so as `clear <name>` does.
+    if (state === 'clear') console.log(`${name}: cleared`);
+    else console.log(`${told.name}: ${told.state}${told.item ? ` on ${told.item}` : ''}`);
   } else if (command === 'clear') {
     if (!rest[0]) usage();
     await tell({ name: rest[0], state: 'clear' });
