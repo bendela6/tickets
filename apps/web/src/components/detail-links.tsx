@@ -53,9 +53,12 @@ export function DetailLinks({
   const createLink = useCreateLink(OWN_ERROR);
   const deleteLink = useDeleteLink();
 
+  // One entry per key: a plan scheme's types each own their own `blocks`.
+  const seenKeys = new Set<string>();
   const linkTypes = [...board.linkTypes]
     .filter((linkType) => !linkType.archivedAt)
-    .sort((left, right) => left.position - right.position);
+    .sort((left, right) => left.position - right.position)
+    .filter((linkType) => !seenKeys.has(linkType.key) && Boolean(seenKeys.add(linkType.key)));
   // `${key}|out` / `${key}|in` — one combobox entry per legal direction.
   const options: Option[] = linkTypes.flatMap((linkType) =>
     linkType.directional
@@ -69,6 +72,7 @@ export function DetailLinks({
   const [adding, setAdding] = useState(false);
   const [choice, setChoice] = useState<string | null>(() => options[0]?.value ?? null);
   const [keyDraft, setKeyDraft] = useState('');
+  const [whyDraft, setWhyDraft] = useState('');
   const [error, setError] = useState('');
 
   const submit = async () => {
@@ -91,8 +95,10 @@ export function DetailLinks({
         linkTypeKey,
         sourceItemId: direction === 'out' ? item.id : other.id,
         targetItemId: direction === 'out' ? other.id : item.id,
+        ...(whyDraft.trim().length > 0 ? { why: whyDraft.trim() } : {}),
       });
       setKeyDraft('');
+      setWhyDraft('');
     } catch (linkError) {
       setError((linkError as Error).message);
     }
@@ -127,39 +133,41 @@ export function DetailLinks({
             }
             const chip = directionLabel(linkType, outgoing);
             return (
-              <div
-                key={link.id}
-                className="flex h-34 items-center gap-9 rounded-8 border-1 border-gray-6 px-11 hover:bg-gray-1"
-              >
-                <Pill
-                  tone={chip.blocked ? 'orange' : 'secondary'}
-                  label={chip.text}
-                  className="h-20 rounded-6 text-11/13 tracking-wider"
-                />
-                <button
-                  type="button"
-                  className="shrink-0"
-                  onClick={() => onOpenItem(other.key)}
-                >
-                  <ItemKey itemKey={other.key} className="text-11 hover:text-indigo-9" />
-                </button>
-                <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
-                  {String(other.values['title'] ?? '')}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Remove link"
-                  title="Remove link"
-                  disabled={userId === null || deleteLink.isPending}
-                  className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
-                  onClick={() => {
-                    if (userId !== null) {
-                      deleteLink.mutate({ linkId: link.id, actorId: userId });
-                    }
-                  }}
-                >
-                  ×
-                </button>
+              <div key={link.id} className="rounded-8 border-1 border-gray-6 hover:bg-gray-1">
+                <div className="flex h-34 items-center gap-9 px-11">
+                  <Pill
+                    tone={chip.blocked ? 'orange' : 'secondary'}
+                    label={chip.text}
+                    className="h-20 rounded-6 text-11/13 tracking-wider"
+                  />
+                  <button
+                    type="button"
+                    className="shrink-0"
+                    onClick={() => onOpenItem(other.key)}
+                  >
+                    <ItemKey itemKey={other.key} className="text-11 hover:text-indigo-9" />
+                  </button>
+                  <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
+                    {String(other.values['title'] ?? '')}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Remove link"
+                    title="Remove link"
+                    disabled={userId === null || deleteLink.isPending}
+                    className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
+                    onClick={() => {
+                      if (userId !== null) {
+                        deleteLink.mutate({ linkId: link.id, actorId: userId });
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                {link.why ? (
+                  <p className="m-0 px-11 pb-8 font-sans text-12/17 text-gray-11">{link.why}</p>
+                ) : null}
               </div>
             );
           })
@@ -189,6 +197,15 @@ export function DetailLinks({
             value={keyDraft}
             disabled={userId === null}
             onChange={(next) => setKeyDraft(next)}
+          />
+          <Input
+            size="xs"
+            className="min-w-160 flex-1"
+            placeholder={board.plan ? 'Why it waits' : 'Why (optional)'}
+            aria-label="Why"
+            value={whyDraft}
+            disabled={userId === null}
+            onChange={(next) => setWhyDraft(next)}
           />
           <Button
             type="submit"
