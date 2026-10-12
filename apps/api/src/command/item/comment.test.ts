@@ -153,3 +153,47 @@ describe('a comment on a fragment of the description', () => {
     expect(await row((res.json() as { id: number }).id)).toMatchObject({ quote: 'the fragment', nth: 2 });
   });
 });
+
+describe('a reply', () => {
+  it('goes under a comment on the same item', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const thread = await comment(fx, { itemId: item.id, body: 'hello' });
+    const reply = await comment(fx, { itemId: item.id, body: 'hi', parentId: thread.id });
+    expect(await row(reply.id)).toMatchObject({ itemId: item.id, parentId: thread.id });
+  });
+
+  it('is refused under a comment on another item', async () => {
+    const fx = await seedFixture();
+    const here = await createItem(fx, 'Here');
+    const there = await createItem(fx, 'There');
+    const elsewhere = await comment(fx, { itemId: there.id, body: 'over there' });
+    await expect(comment(fx, { itemId: here.id, body: 'stray', parentId: elsewhere.id }))
+      .rejects.toMatchObject({ statusCode: 422, message: 'the parent comment is on another item' });
+    expect(await testDb.select().from(comments).where(eq(comments.itemId, here.id))).toHaveLength(0);
+    expect(await testDb.select().from(events).where(eq(events.kind, 'comment.added'))).toHaveLength(1);
+  });
+
+  it('is refused under a comment that does not exist', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    await expect(comment(fx, { itemId: item.id, body: 'stray', parentId: 999_999 }))
+      .rejects.toMatchObject({ statusCode: 404, message: 'parent comment not found' });
+  });
+
+  it('answers 422 through the comments route', async () => {
+    const fx = await seedFixture();
+    const here = await createItem(fx, 'Here');
+    const there = await createItem(fx, 'There');
+    const elsewhere = await comment(fx, { itemId: there.id, body: 'over there' });
+    const app = buildApp({ db: testDb });
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/items/${here.id}/comments`,
+      payload: { ...envelope(fx.actorId), body: 'stray', parentId: elsewhere.id },
+    });
+    await app.close();
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({ error: 'the parent comment is on another item' });
+  });
+});

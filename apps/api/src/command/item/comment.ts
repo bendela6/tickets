@@ -67,9 +67,7 @@ async function placeOf(
     if (quote !== null || nth !== null) {
       throw new HttpError(422, "a reply is on its thread's quote and can't set its own");
     }
-    const parentRows = await tx.select().from(comments).where(eq(comments.id, input.parentId));
-    const parent = parentRows[0];
-    if (!parent) throw new HttpError(404, 'parent comment not found');
+    const parent = await replyParent(tx, input.itemId, input.parentId);
     return { quote: parent.quote, nth: parent.nth };
   }
   if (quote === null) {
@@ -77,4 +75,14 @@ async function placeOf(
     return { quote: null, nth: null };
   }
   return { quote, nth: nth ?? 0 };
+}
+
+// A reply goes under a comment on the same item: any row of records.comments,
+// whatever its kind, so a question (a comment too, TK-81.1) passes the same check.
+async function replyParent(tx: DbExecutor, itemId: number, parentId: number) {
+  const parentRows = await tx.select().from(comments).where(eq(comments.id, parentId));
+  const parent = parentRows[0];
+  if (!parent) throw new HttpError(404, 'parent comment not found');
+  if (parent.itemId !== itemId) throw new HttpError(422, 'the parent comment is on another item');
+  return parent;
 }
