@@ -6,6 +6,7 @@ import { loadSchemeVocab } from '../../vocab/load-scheme-vocab';
 import { runCommand } from '../run-command';
 import { itemCreate } from './create';
 import { itemUpdate } from './update';
+import { commentDelete, itemComment } from './comment';
 import { transitionCreate } from '../config/transition';
 
 beforeEach(resetDb);
@@ -58,6 +59,31 @@ it('a requiresComment guard blocks the transition until a comment exists', async
   const item = await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
     projectKey: fx.projectKey, typeKey: 'task', values: { title: 'A' },
   });
+  await expect(
+    runCommand(testDb, itemUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+      id: item.id, expectedUpdatedAt: item.updatedAt, values: { status: 'done' },
+    }),
+  ).rejects.toMatchObject({ statusCode: 422 });
+});
+
+it('a requiresComment guard is not met by a deleted comment', async () => {
+  const fx = await seedFixture();
+  const vocab = await loadSchemeVocab(testDb, { key: fx.projectKey });
+  const taskId = vocab.typeByKey.get('task')!.id;
+  const wf = vocab.workflowField(taskId)!;
+  const backlog = vocab.optionsForField(taskId, wf.id).find((o) => o.value === 'backlog')!;
+  const done = vocab.optionsForField(taskId, wf.id).find((o) => o.value === 'done')!;
+  await runCommand(testDb, transitionCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    fieldId: wf.id, fromOptionId: backlog.id, toOptionId: done.id, itemTypeId: taskId,
+    config: { guard: { requiresComment: true } },
+  });
+  const item = await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    projectKey: fx.projectKey, typeKey: 'task', values: { title: 'A' },
+  });
+  const note = await runCommand(testDb, itemComment, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    itemId: item.id, body: 'resolved: see the PR',
+  });
+  await runCommand(testDb, commentDelete, { commandId: crypto.randomUUID(), actorId: fx.actorId }, { id: note.id });
   await expect(
     runCommand(testDb, itemUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
       id: item.id, expectedUpdatedAt: item.updatedAt, values: { status: 'done' },

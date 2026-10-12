@@ -1,10 +1,10 @@
 import * as v from 'valibot';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { comments, items } from '@tickets/db';
 import { HttpError } from '../../errors';
 import { defineCommand } from '../registry';
-import { commentAdded } from './events';
+import { commentAdded, commentDeleted } from './events';
 
 export const QUOTE_MAX_LENGTH = 1000;
 
@@ -55,6 +55,31 @@ export const itemComment = defineCommand({
   },
 });
 
+export const commentDeleteInput = v.object({ id: v.pipe(v.number(), v.integer()) });
+
+// Its author deletes it: it is marked deleted and leaves every list and read.
+// Its comment.added event stays in the item's activity, and so do the replies
+// under it (they keep their parentId and, on a fragment, their quote).
+export const commentDelete = defineCommand({
+  kind: 'comment.delete',
+  input: commentDeleteInput,
+  aggregate: () => ({ type: 'item' }),
+  async handler(tx, input, ctx) {
+    const rows = await tx.select().from(comments).where(eq(comments.id, input.id));
+    const comment = rows[0];
+    if (!comment || comment.deletedAt !== null) throw new HttpError(404, 'comment not found');
+    if (comment.authorId !== ctx.envelope.actorId) {
+      throw new HttpError(403, 'only its author can delete a comment');
+    }
+    const item = (await tx.select().from(items).where(eq(items.id, comment.itemId)))[0]!;
+    ctx.aggregateId = comment.itemId;
+    ctx.projectId = item.projectId;
+    await tx.update(comments).set({ deletedAt: sql`now()` }).where(eq(comments.id, comment.id));
+    await ctx.emit(commentDeleted, { commentId: comment.id });
+    return { id: comment.id };
+  },
+});
+
 // Where the comment sits: a thread's first comment names its fragment (or none,
 // for the item as a whole); a reply takes its thread's, and can't name its own.
 async function placeOf(
@@ -77,12 +102,13 @@ async function placeOf(
   return { quote, nth: nth ?? 0 };
 }
 
-// A reply goes under a comment on the same item: any row of records.comments,
+// A reply goes under a live comment on the same item: any row of records.comments,
 // whatever its kind, so a question (a comment too, TK-81.1) passes the same check.
+// A deleted comment keeps the replies it has but takes no more.
 async function replyParent(tx: DbExecutor, itemId: number, parentId: number) {
   const parentRows = await tx.select().from(comments).where(eq(comments.id, parentId));
   const parent = parentRows[0];
-  if (!parent) throw new HttpError(404, 'parent comment not found');
+  if (!parent || parent.deletedAt !== null) throw new HttpError(404, 'parent comment not found');
   if (parent.itemId !== itemId) throw new HttpError(422, 'the parent comment is on another item');
   return parent;
 }

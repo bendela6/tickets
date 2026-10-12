@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Db } from '@tickets/db';
 import { parseEnvelope } from '../command/envelope';
 import { runCommand } from '../command/run-command';
-import { itemComment } from '../command/item/comment';
+import { commentDelete, itemComment } from '../command/item/comment';
 import { itemCreate } from '../command/item/create';
 import { itemUpdate } from '../command/item/update';
 import { parseId } from '../utils/parse-id';
@@ -29,5 +29,13 @@ export function registerItemsRoutes(app: FastifyInstance, ctx: { db: Db }) {
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, itemComment, envelope, { ...(request.body as object), itemId: id });
     reply.status(201).send(result);
+  });
+
+  // Only its author deletes a comment (the envelope's actorId); see commentDelete.
+  app.delete('/api/comments/:id', async (request, reply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, commentDelete, envelope, { id });
+    reply.send(result);
   });
 }

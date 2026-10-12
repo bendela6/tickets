@@ -1,4 +1,4 @@
-import { asc, eq, inArray, or } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { comments, itemLinks, itemValues, items } from '@tickets/db';
 import { renderValue } from '../values/render-value';
@@ -11,7 +11,8 @@ export async function assembleItems(db: DbExecutor, vocab: SchemeVocab) {
 
   const [valueRows, commentRows, linkRows] = await Promise.all([
     db.select().from(itemValues).where(inArray(itemValues.itemId, ids)).orderBy(asc(itemValues.id)),
-    db.select().from(comments).where(inArray(comments.itemId, ids)),
+    // A deleted comment leaves every read (its comment.added event stays).
+    db.select().from(comments).where(and(inArray(comments.itemId, ids), isNull(comments.deletedAt))),
     db.select().from(itemLinks).where(or(inArray(itemLinks.sourceItemId, ids), inArray(itemLinks.targetItemId, ids))),
   ]);
 

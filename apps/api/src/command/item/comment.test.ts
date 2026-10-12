@@ -1,11 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { comments, events } from '@tickets/db';
+import { comments, ensureUser, events } from '@tickets/db';
 import { resetDb, seedFixture, testDb, type Fixture } from '../../test/db';
 import { buildApp } from '../../app';
+import { createOutboxWorker } from '../../outbox/worker';
 import { runCommand } from '../run-command';
 import { itemCreate } from './create';
-import { itemComment } from './comment';
+import { commentDelete, itemComment } from './comment';
 
 beforeEach(resetDb);
 afterAll(resetDb);
@@ -195,5 +196,101 @@ describe('a reply', () => {
     await app.close();
     expect(res.statusCode).toBe(422);
     expect(res.json()).toEqual({ error: 'the parent comment is on another item' });
+  });
+});
+
+describe('deleting a comment', () => {
+  const remove = (actorId: number, id: number) => runCommand(testDb, commentDelete, envelope(actorId), { id });
+
+  async function boardComments(fx: Fixture, itemId: number) {
+    const app = buildApp({ db: testDb });
+    const res = await app.inject({ method: 'GET', url: `/api/projects/${fx.projectKey}/board` });
+    await app.close();
+    const board = res.json() as { items: Array<{ id: number; comments: Array<{ id: number; body: string }> }> };
+    return board.items.find((candidate) => candidate.id === itemId)!.comments;
+  }
+
+  it('marks it deleted, by its author, and records comment.deleted', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const note = await comment(fx, { itemId: item.id, body: 'oops' });
+    expect(await remove(fx.actorId, note.id)).toEqual({ id: note.id });
+    expect((await row(note.id)).deletedAt).not.toBeNull();
+    const kinds = (await testDb.select().from(events).where(eq(events.aggregateId, item.id)).orderBy(events.id)).map((e) => e.kind);
+    expect(kinds).toEqual(['item.created', 'comment.added', 'comment.deleted']);
+  });
+
+  it("refuses anyone but its author, and changes nothing", async () => {
+    const fx = await seedFixture();
+    const other = await ensureUser(testDb, { name: 'someone else', kind: 'human' });
+    const item = await createItem(fx);
+    const note = await comment(fx, { itemId: item.id, body: 'mine' });
+    await expect(remove(other, note.id))
+      .rejects.toMatchObject({ statusCode: 403, message: 'only its author can delete a comment' });
+    expect((await row(note.id)).deletedAt).toBeNull();
+    expect(await testDb.select().from(events).where(eq(events.kind, 'comment.deleted'))).toHaveLength(0);
+  });
+
+  it('answers 404 for a comment that is gone or never was', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const note = await comment(fx, { itemId: item.id, body: 'once' });
+    await remove(fx.actorId, note.id);
+    await expect(remove(fx.actorId, note.id)).rejects.toMatchObject({ statusCode: 404, message: 'comment not found' });
+    await expect(remove(fx.actorId, 999_999)).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it('takes it off the board and keeps the replies under it', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const thread = await comment(fx, { itemId: item.id, body: 'why?', quote: 'this part' });
+    const reply = await comment(fx, { itemId: item.id, body: 'because' });
+    const answer = await comment(fx, { itemId: item.id, body: 'that is why', parentId: thread.id });
+    await remove(fx.actorId, thread.id);
+    const shown = await boardComments(fx, item.id);
+    expect(shown.map((c) => c.id).sort()).toEqual([reply.id, answer.id].sort());
+    expect(shown.find((c) => c.id === answer.id)).toMatchObject({ parentId: thread.id, quote: 'this part', nth: 0 });
+  });
+
+  it('takes no more replies under a deleted comment', async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const thread = await comment(fx, { itemId: item.id, body: 'gone soon' });
+    await remove(fx.actorId, thread.id);
+    await expect(comment(fx, { itemId: item.id, body: 'late', parentId: thread.id }))
+      .rejects.toMatchObject({ statusCode: 404, message: 'parent comment not found' });
+  });
+
+  it("keeps its comment.added entry in the item's activity", async () => {
+    const fx = await seedFixture();
+    const item = await createItem(fx);
+    const note = await comment(fx, { itemId: item.id, body: 'said and unsaid' });
+    await remove(fx.actorId, note.id);
+    await createOutboxWorker(testDb).drainOnce();
+    const app = buildApp({ db: testDb });
+    const res = await app.inject({ method: 'GET', url: `/api/items/${item.id}/activity` });
+    await app.close();
+    const feed = res.json() as Array<{ kind: string; summary: Record<string, unknown> }>;
+    expect(feed.map((entry) => entry.kind)).toEqual(['item.created', 'comment.added', 'comment.deleted']);
+    expect(feed[1]!.summary).toEqual({ commentId: note.id, excerpt: 'said and unsaid' });
+  });
+
+  it('goes through DELETE /api/comments/:id', async () => {
+    const fx = await seedFixture();
+    const other = await ensureUser(testDb, { name: 'someone else', kind: 'human' });
+    const item = await createItem(fx);
+    const note = await comment(fx, { itemId: item.id, body: 'via http' });
+    const app = buildApp({ db: testDb });
+    const refused = await app.inject({ method: 'DELETE', url: `/api/comments/${note.id}`, payload: envelope(other) });
+    const done = await app.inject({ method: 'DELETE', url: `/api/comments/${note.id}`, payload: envelope(fx.actorId) });
+    const again = await app.inject({ method: 'DELETE', url: `/api/comments/${note.id}`, payload: envelope(fx.actorId) });
+    const bare = await app.inject({ method: 'DELETE', url: `/api/comments/${note.id}` });
+    await app.close();
+    expect(refused.statusCode).toBe(403);
+    expect(done.statusCode).toBe(200);
+    expect(done.json()).toEqual({ id: note.id });
+    expect(again.statusCode).toBe(404);
+    expect(bare.statusCode).toBe(400);
+    expect(await boardComments(fx, item.id)).toEqual([]);
   });
 });

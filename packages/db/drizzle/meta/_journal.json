@@ -29,6 +29,13 @@
       "when": 1791839569037,
       "tag": "0003_comment_quotes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791839807206,
+      "tag": "0004_comment_deleted_at",
+      "breakpoints": true
     }
   ]
 }

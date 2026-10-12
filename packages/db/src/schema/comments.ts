@@ -27,6 +27,9 @@ export const comments = recordsSchema.table(
     // comment that starts a thread; its replies carry the same pair.
     quote: text('quote'),
     nth: integer('nth'),
+    // Its author deleted it: it leaves every list and read, and its
+    // comment.added event stays. Replies under it stay too.
+    deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'string' }),
   },
   (t) => [
     index('comments_item').on(t.itemId),
