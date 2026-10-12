@@ -28,6 +28,11 @@ export const commentAdded = defineEvent({
   kind: 'comment.added', aggregateType: 'item', version: 1,
   payload: v.object({ commentId: v.number(), body: v.string() }),
 });
+// The comment leaves the screens; its comment.added event stays.
+export const commentDeleted = defineEvent({
+  kind: 'comment.deleted', aggregateType: 'item', version: 1,
+  payload: v.object({ commentId: v.number() }),
+});
 export const itemLinked = defineEvent({
   kind: 'item.linked', aggregateType: 'item', version: 1,
   payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number() }),

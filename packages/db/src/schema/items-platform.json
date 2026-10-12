@@ -1782,6 +1782,13 @@
           "title": "Place",
           "description": "Which place of the quote, from 0, when the description has it more than once; null without a quote.",
           "nullable": true
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "title": "Deleted at",
+          "description": "When its author deleted it; null = shown. Its event and its replies stay.",
+          "nullable": true
         }
       ],
       "constraints": [
