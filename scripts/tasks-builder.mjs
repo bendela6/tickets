@@ -12,9 +12,11 @@
 // not done, a feature without a plan included (it's planned in what it waits on). Done means
 // `done: true` on a ticket, status Done on a feature, every feature Done on an epic; a cancelled
 // blocker isn't done.
-import { readAll, tell } from './tasks-lib.mjs';
+import { readAll, readAllOrNull, tell } from './tasks-lib.mjs';
 
 const POLL_MS = 5_000;
+/** How soon a read that didn't parse is tried again. */
+const RETRY_MS = 500;
 const BEAT_MS = 20_000;
 
 export function readiness(docs) {
@@ -91,7 +93,7 @@ const keyOf = (r) =>
 const [command] = process.argv.slice(2);
 if (command === 'ready') print(readiness(await readAll()));
 else if (command === 'wait') {
-  const start = keyOf(readiness(await readAll()));
+  let start; // what the first read found
   let beat = 0;
   let warned = false;
   for (;;) {
@@ -102,7 +104,13 @@ else if (command === 'wait') {
       });
       beat = Date.now();
     }
-    const now = readiness(await readAll());
+    const docs = await readAllOrNull();
+    if (!docs) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
+      continue;
+    }
+    const now = readiness(docs);
+    start ??= keyOf(now);
     if (keyOf(now) !== start) {
       print(now);
       break;

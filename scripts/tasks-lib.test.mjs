@@ -1,6 +1,7 @@
-// tasks-lib.mjs: the lock that makes the viewer, the planner and the builder take turns.
+// tasks-lib.mjs: the lock that makes the viewer, the planner and the builder take turns, and
+// write(), which a reader never catches half done.
 import assert from 'node:assert/strict';
-import { access, mkdir, readFile, unlink, utimes, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, unlink, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { after, beforeEach, test } from 'node:test';
 import { LIB, code, plan, put, sleep, tasksDir, viewer } from './tasks-testing.mjs';
@@ -124,4 +125,41 @@ test("a writer whose lock was taken over doesn't write, nor let the new holder's
 test('locked() hands back what its act returns', async () => {
   assert.equal(await locked(FILE, async () => 42), 42);
   assert.equal(await exists(LOCK), false);
+});
+
+// write(): the whole file or none of it.
+
+test('a reader looping during writes never sees a partial file', async () => {
+  // A child writes, by turns, a small plan and one about the size of tickets.json (~500 KB),
+  // while this process reads the file as fast as it can.
+  const writer = `
+    import { write } from ${JSON.stringify(LIB)};
+    const small = ${JSON.stringify(plan())};
+    const big = structuredClone(small);
+    big.epics[0].features[0].plan = Array.from({ length: 2500 }, (_, i) => ({
+      id: 'TT-1.' + (i + 1), title: 'Test ticket ' + i, description: 'x'.repeat(120), done: false,
+    }));
+    for (let i = 0; i < 30; i++) await write('test.json', i % 2 ? small : big);
+  `;
+  let writing = true;
+  const written = code(writer).finally(() => (writing = false));
+  const sizes = new Set();
+  let reads = 0;
+  const failures = [];
+  while (writing) {
+    try {
+      const doc = JSON.parse(await readFile(join(dir, FILE), 'utf8'));
+      sizes.add(doc.epics[0].features[0].plan.length);
+      reads++;
+    } catch (error) {
+      failures.push(error.code ?? error.message);
+    }
+  }
+  const { code: exit, stderr } = await written;
+  assert.equal(exit, 0, stderr);
+  assert.deepEqual(failures, [], 'every read got a whole file');
+  assert.ok(reads > 30, `it read while the writes went on (${reads} reads)`);
+  assert.deepEqual([...sizes].sort(), [1, 2500], 'and saw both versions');
+  const left = (await readdir(join(dir, '.runtime'))).filter((f) => f.endsWith('.tmp'));
+  assert.deepEqual(left, [], 'no .tmp left behind');
 });
