@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "tasks": "node scripts/tasks-view.mjs",
     "tasks:check": "node scripts/tasks-check.mjs",
+    "test:tasks": "node --test scripts/tasks-*.test.mjs",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

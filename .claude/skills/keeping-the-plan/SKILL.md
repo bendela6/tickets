@@ -94,7 +94,7 @@ await edit('TK-11', (feature) => {
 });
 ```
 
-- `edit` reads the file that holds the id, calls your function, and writes the file back through prettier, unless the function returns `false`. It handles epics (`'TK/E4'`), features, tickets and subtickets.
+- `edit` reads the file that holds the id, calls your function, and writes the file back through prettier, unless the function returns `false`. It handles epics (`'TK/E4'`), features, tickets and subtickets. It holds the file's lock (`tasks/.runtime/<file>.lock`) from the read to the write, so the viewer and the builder wait their turn; keep your function quick, since a lock held 30 seconds is taken over and that edit then throws instead of writing.
 - `reply(text, note?)` makes your note (`by: "claude"`); given the note it answers, it keeps that note's `quote`.
 - `put(item, fields)` sets keys in the schema's order. Setting a key to `undefined` removes it.
 - Check inside `edit` that what you're acting on is unchanged. If the user changed it meanwhile, skip it: the next wait brings it back.

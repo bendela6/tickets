@@ -77,7 +77,7 @@ Report in chat in two lines: what's built, where it is, and what's waiting on th
 
 The user (through the viewer), the planner and you all write these files.
 
-- **One edit at a time:** each edit is one read-modify-write through `edit(id, fn)` and `put` in `scripts/tasks-lib.mjs`. Never write from a copy read earlier, and never rewrite a whole file.
+- **One edit at a time:** each edit is one read-modify-write through `edit(id, fn)` and `put` in `scripts/tasks-lib.mjs`, which holds the file's lock from the read to the write so the viewer and the planner wait their turn (keep `fn` quick: a lock held 30 seconds is taken over, and that edit throws instead of writing). Never write from a copy read earlier, and never rewrite a whole file.
 - **Yours to write:** only build state: `status`, `statusNote`, `done`, and the plans you write for approved features without one.
 - **Never change:** `approved`, `cancelled`, `chosen`, `openChoices` or `notes`, and never renumber ids.
 - **After every edit**, run `pnpm tasks:check`.

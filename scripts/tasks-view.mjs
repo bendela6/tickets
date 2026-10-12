@@ -4,7 +4,8 @@
 // with its `file`), which the page reads every two seconds, so an edit shows
 // without a reload. `POST /edit` is the page's buttons: approve or cancel an
 // item (or every item under it), add or delete a note, answer an open
-// question. It writes the file back through prettier. `/agents` is what each
+// question. It writes the file back through prettier, holding the file's lock
+// (tasks-lib.mjs's `edit`) as the planner and the builder do. `/agents` is what each
 // agent (the planner, the builder, every worker it dispatched) last said it's
 // doing, posted to `POST /agents` (scripts/tasks-agents.mjs) and shown in the
 // page's corner and on the cards it works on; it's kept in
@@ -13,7 +14,7 @@
 
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { DIR, files, find, leaves, put, read, readAll, write } from './tasks-lib.mjs';
+import { DIR, edit as editItem, leaves, put, readAll } from './tasks-lib.mjs';
 
 const PORT = Number(process.env.PORT ?? 4741);
 const ORIGINS = [`http://127.0.0.1:${PORT}`, `http://localhost:${PORT}`];
@@ -158,17 +159,11 @@ function apply(item, edit) {
   }
 }
 
+/** One edit, through the lib's `edit`, which holds the file's lock from the read to the write. */
 async function edit(request) {
   if (typeof request.id !== 'string') throw new Error('Send the id of the item.');
-  for (const file of await files()) {
-    const doc = await read(file);
-    const item = find(doc, request.id);
-    if (!item) continue;
-    const changed = apply(item, request);
-    if (changed) await write(file, doc);
-    return { file, changed };
-  }
-  throw new Error(`No ${request.id} in tasks/.`);
+  const { file, result } = await editItem(request.id, (item) => apply(item, request));
+  return { file, changed: result };
 }
 
 async function body(request) {

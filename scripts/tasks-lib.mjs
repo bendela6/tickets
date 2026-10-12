@@ -4,11 +4,18 @@
 //
 // A session editing the plan can use it too: `edit('TK-11', (item, doc) => …)` reads the file
 // that holds TK-11, hands over the item, and writes the file back through prettier.
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { link, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
+import { resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as prettier from 'prettier';
 
-export const DIR = fileURLToPath(new URL('../tasks/', import.meta.url));
+/** tasks/ beside these scripts; `TASKS_DIR` points them at another folder (the tests' own). */
+export const DIR = process.env.TASKS_DIR
+  ? resolve(process.env.TASKS_DIR) + sep
+  : fileURLToPath(new URL('../tasks/', import.meta.url));
+/** What the scripts keep for themselves, which git ignores: the locks, what the agents said. */
+export const RUNTIME = DIR + '.runtime' + sep;
 
 /** tasks/*.json but the schema: tickets' own first, then the rest by name. */
 export async function files() {
@@ -42,19 +49,112 @@ export function find(doc, id) {
 
 /**
  * Reads the file holding `id`, calls `change(item, doc)`, and writes the file back unless it
- * returns false (or 0). Read, change and write happen at once, so an edit made meanwhile in the
- * viewer isn't lost; check in `change` that what you decided on is still there.
+ * returns false (or 0). It holds the file's lock from the read to the write, so the viewer, the
+ * planner and the builder take turns and none loses another's edit; check in `change` that what
+ * you decided on is still there. Keep `change` quick: a lock held 30 seconds is taken over, and
+ * an edit whose lock was taken over throws instead of writing.
  */
 export async function edit(id, change) {
   for (const file of await files()) {
-    const doc = await read(file);
-    const item = find(doc, id);
-    if (!item) continue;
-    const result = await change(item, doc);
-    if (result !== false && result !== 0) await write(file, doc);
-    return { file, result };
+    const done = await locked(file, async (held) => {
+      const doc = await read(file);
+      const item = find(doc, id);
+      if (!item) return undefined;
+      const result = await change(item, doc);
+      if (result !== false && result !== 0) {
+        await held.check();
+        await write(file, doc);
+      }
+      return { file, result };
+    });
+    if (done) return done;
   }
   throw new Error(`No ${id} in tasks/.`);
+}
+
+/** A lock older than this was left by a writer that died holding it, and is taken over. */
+export const STALE_MS = 30_000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Windows refuses a rename or delete while another process has the file open: try again. */
+const BUSY = new Set(['EPERM', 'EACCES', 'EBUSY']);
+async function patiently(act, ms = 10_000) {
+  const until = Date.now() + ms;
+  for (let wait = 5; ; wait = Math.min(wait * 2, 100)) {
+    try {
+      return await act();
+    } catch (error) {
+      if (!BUSY.has(error.code) || Date.now() > until) throw error;
+      await sleep(wait);
+    }
+  }
+}
+
+/** How long ago the file was last written: null when it's gone, 0 while Windows won't say. */
+async function ageOf(path) {
+  try {
+    return Date.now() - (await stat(path)).mtimeMs;
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    if (BUSY.has(error.code)) return 0;
+    throw error;
+  }
+}
+
+/**
+ * Runs `act(held)` holding `file`'s lock, `tasks/.runtime/<file>.lock`, and lets it go after,
+ * also when `act` throws. The lock is a file made exclusively, holding a token of its own; a
+ * writer that finds it waits its turn, and takes it over once it is 30 seconds old (its writer
+ * died holding it). `held.check()` throws if that happened to this one meanwhile, so a writer
+ * that held it too long doesn't write over the one that took it over.
+ */
+export async function locked(file, act) {
+  const path = `${RUNTIME}${file}.lock`;
+  const token = `${process.pid}-${randomUUID()}`;
+  await mkdir(RUNTIME, { recursive: true });
+  const until = Date.now() + 2 * STALE_MS;
+  for (;;) {
+    try {
+      await writeFile(path, token, { flag: 'wx' });
+      break;
+    } catch (error) {
+      // EEXIST: someone holds it. On Windows a lock being deleted can't be made again until
+      // it's gone (EPERM), which is the same wait.
+      if (error.code !== 'EEXIST' && !BUSY.has(error.code)) throw error;
+    }
+    const age = await ageOf(path);
+    if (age !== null && age >= STALE_MS) await takeOver(path);
+    else if (Date.now() > until) throw new Error(`${file} stayed locked; try again.`);
+    else await sleep(age === null ? 1 : 10 + Math.random() * 40);
+  }
+  const mine = async () => (await readFile(path, 'utf8').catch(() => null)) === token;
+  const held = {
+    async check() {
+      if (!(await mine()))
+        throw new Error(`${file}'s lock was taken over after ${STALE_MS / 1000} s; not written.`);
+    },
+  };
+  try {
+    return await act(held);
+  } finally {
+    if (await mine()) await patiently(() => unlink(path)).catch(() => {});
+  }
+}
+
+/** Removes a stale lock, moving it aside first so that two writers can't both take it over. */
+async function takeOver(path) {
+  const aside = `${path}.${process.pid}-${randomUUID()}.stale`;
+  try {
+    await rename(path, aside);
+  } catch {
+    // gone, another writer moved it first, or Windows refused: try for the lock again
+    return sleep(10);
+  }
+  // Between the look at its age and the move, another writer may have taken it over and made
+  // a fresh lock; if what was moved is fresh, it's theirs: put it back.
+  const age = await ageOf(aside);
+  if (age !== null && age < STALE_MS) await link(aside, path).catch(() => {});
+  await patiently(() => unlink(aside)).catch(() => {});
 }
 
 /** The items under one that keep their own approval: those without children. */
