@@ -310,3 +310,97 @@ test('disables option/edge actions when there is no current user', () => {
     screen.getByRole('button', { name: 'Remove transition To do → In progress' }),
   ).toBeDisabled();
 });
+
+// A shared status set two types take parts of, as the plan scheme does (TK-80.1):
+// Feature takes Planning..Cancelled plus the archived Shelved, Ticket takes
+// To do, Done and Cancelled — its allowlist written out of option order.
+function makeSharedSetBoard(): Board {
+  const option = (id: number, value: string, label: string, position: number, kind: Board['options'][number]['kind'], archivedAt: string | null = null) => ({
+    id, optionSetId: 300, value, label, position, kind, config: {}, archivedAt,
+  });
+  return makeBoard({
+    types: [
+      { id: 1, schemeId: 5, key: 'feature', label: 'Feature', position: 1, config: {}, archivedAt: null },
+      { id: 2, schemeId: 5, key: 'ticket', label: 'Ticket', position: 2, config: {}, archivedAt: null },
+    ],
+    placements: [
+      { itemTypeId: 1, fieldId: 20, position: 1, required: true, configOverride: { allowedOptionIds: [410, 412, 413, 414, 415] } },
+      { itemTypeId: 2, fieldId: 20, position: 1, required: true, configOverride: { allowedOptionIds: [413, 411, 414] } },
+    ],
+    options: [
+      option(410, 'planning', 'Planning', 1, 'todo'),
+      option(411, 'todo', 'To do', 2, 'todo'),
+      option(412, 'in-progress', 'In progress', 3, 'active'),
+      option(413, 'done', 'Done', 4, 'done'),
+      option(414, 'cancelled', 'Cancelled', 5, 'dropped'),
+      option(415, 'shelved', 'Shelved', 6, 'dropped', '2026-01-02T00:00:00.000Z'),
+    ],
+    transitions: [],
+  });
+}
+
+function listedStatuses(): string[] {
+  const optionsRegion = screen.getByRole('region', { name: 'Options' });
+  return within(optionsRegion)
+    .getAllByRole('button', { name: /^Edit / })
+    .map((button) => (button.getAttribute('aria-label') ?? '').replace(/^Edit /, ''));
+}
+
+test("shows only the statuses a type takes from a shared set, its archived one included", () => {
+  renderTab(makeSharedSetBoard());
+
+  expect(listedStatuses()).toEqual(['Planning', 'In progress', 'Done', 'Cancelled', 'Shelved']);
+  const optionsRegion = screen.getByRole('region', { name: 'Options' });
+  expect(within(optionsRegion).queryByText('To do')).not.toBeInTheDocument();
+  expect(within(optionsRegion).getByRole('button', { name: 'Restore Shelved' })).toBeInTheDocument();
+  expect(within(optionsRegion).getByText('5 options · 1 archived')).toBeInTheDocument();
+});
+
+test("shows another type's own statuses in option order when it is picked", async () => {
+  renderTab(makeSharedSetBoard());
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Ticket' }));
+
+  expect(listedStatuses()).toEqual(['To do', 'Done', 'Cancelled']);
+  const optionsRegion = screen.getByRole('region', { name: 'Options' });
+  expect(within(optionsRegion).queryByText('Planning')).not.toBeInTheDocument();
+  expect(within(optionsRegion).queryByText('In progress')).not.toBeInTheDocument();
+  expect(within(optionsRegion).queryByText('Shelved')).not.toBeInTheDocument();
+  expect(within(optionsRegion).getByText('3 options')).toBeInTheDocument();
+});
+
+test("offers only the type's own statuses as the ends of a new edge", async () => {
+  renderTab(makeSharedSetBoard());
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Ticket' }));
+  const transitionsRegion = screen.getByRole('region', { name: 'Transitions' });
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'To option' }));
+
+  const offered = (await screen.findAllByRole('option')).map((option) => option.textContent);
+  expect(offered).toEqual(['To do', 'Done', 'Cancelled']);
+});
+
+test("adding an option to a type that takes only some statuses adds it to that type's statuses too", async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('{"id":420}') })
+    .mockResolvedValue({ ok: true, text: () => Promise.resolve('{}') });
+  vi.stubGlobal('fetch', fetchMock);
+  renderTab(makeSharedSetBoard());
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Ticket' }));
+  await userEvent.click(screen.getByRole('button', { name: '+ Add option' }));
+  await userEvent.type(screen.getByRole('textbox', { name: 'Label' }), 'Blocked');
+  await userEvent.click(screen.getByRole('button', { name: 'Create option' }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  const [createUrl, createInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(createUrl).toBe('/api/fields/20/options');
+  expect(createInit.method).toBe('POST');
+  const [placeUrl, placeInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+  expect(placeUrl).toBe('/api/types/2/fields/20/placement');
+  expect(placeInit.method).toBe('PATCH');
+  const { commandId, ...rest } = JSON.parse(String(placeInit.body)) as Record<string, unknown>;
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({ actorId: 7, allowedOptionIds: [413, 411, 414, 420] });
+});
