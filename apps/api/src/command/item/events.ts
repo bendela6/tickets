@@ -31,7 +31,7 @@ export const commentAdded = defineEvent({
 });
 export const itemLinked = defineEvent({
   kind: 'item.linked', aggregateType: 'item', version: 1,
-  payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number() }),
+  payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number(), why: v.optional(v.string()) }),
 });
 export const itemUnlinked = defineEvent({
   kind: 'item.unlinked', aggregateType: 'item', version: 1,

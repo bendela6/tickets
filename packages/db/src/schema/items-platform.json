@@ -2033,6 +2033,13 @@
           "nullable": false
         },
         {
+          "name": "why",
+          "type": "text",
+          "title": "Why",
+          "description": "Why the link is there; required on a plan's blocker (why the target waits on the source).",
+          "nullable": true
+        },
+        {
           "name": "created_at",
           "type": "timestamp with time zone",
           "title": "Created at",

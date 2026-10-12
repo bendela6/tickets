@@ -20,7 +20,9 @@ const STATUS_OPTIONS = [
   { value: 'cancelled',   label: 'Cancelled',   kind: 'dropped' as const },
 ];
 
-const FEATURE_STATUSES = ['not-planned', 'planning', 'planned', 'designed', 'in-progress', 'done', 'cancelled'];
+const PLAN_TYPES = ['epic', 'feature', 'ticket', 'subticket'];
+
+const FEATURE_STATUSES =['not-planned', 'planning', 'planned', 'designed', 'in-progress', 'done', 'cancelled'];
 const TICKET_STATUSES = ['todo', 'done', 'cancelled'];
 
 // The repositories a plan's `where` may name: the `repo` enum of
@@ -126,8 +128,15 @@ export const planScheme: SchemeDef = {
   // at its type's first todo option: Not planned for a feature, To do for the
   // rest.
   transitions: [],
-  // Blockers (`blocks` with a why) are TK-80.5's.
-  linkTypes: [],
+  // Blockers: every type owns a `blocks` link type that targets every type, so
+  // any plan item, an epic too, may wait on any other. As the software
+  // scheme's, the source blocks the target: the plans' `X.blockedBy: [{ id: Y,
+  // why }]` is a link from Y to X whose why is why X waits on Y. The API
+  // requires the why and keeps the plans' rules on them (item.link).
+  linkTypes: PLAN_TYPES.map((ownerTypeKey) => ({
+    key: 'blocks', label: 'Blocks', inverseLabel: 'Blocked by', directional: true,
+    ownerTypeKey, targetTypeKeys: PLAN_TYPES,
+  })),
   defaultView: {
     name: 'All items',
     columns: [

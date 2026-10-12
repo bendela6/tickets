@@ -43,7 +43,8 @@ export interface View { id: number; projectId: number; name: string; config: Rec
 export interface ItemTypeChildType { parentTypeId: number; childTypeId: number; }
 
 export interface Comment { id: number; itemId: number; authorId: number; parentId: number | null; body: string; createdAt: string; }
-export interface ItemLink { id: number; linkTypeId: number; sourceItemId: number; targetItemId: number; createdAt: string; }
+// why: why the link is there; on a plan's blocker, why the target waits on the source.
+export interface ItemLink { id: number; linkTypeId: number; sourceItemId: number; targetItemId: number; why?: string | null; createdAt: string; }
 
 export interface Item {
   // key: the item's name wherever it is written (TIX-90, TK/E14, TK-80.3),
@@ -84,7 +85,7 @@ export interface PatchItemInput { itemId: number; actorId: number; expectedUpdat
 export interface CreatedItem { id: number; number: number; key: string; typeId: number; parentId: number | null; createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string; }
 export interface PatchItemResult { id: number; updatedAt: string; }
 export interface CreateCommentInput { itemId: number; actorId: number; body: string; parentId?: number | null; }
-export interface CreateLinkInput { actorId: number; linkTypeKey: string; sourceItemId: number; targetItemId: number; }
+export interface CreateLinkInput { actorId: number; linkTypeKey: string; sourceItemId: number; targetItemId: number; why?: string; }
 export interface DeleteLinkInput { linkId: number; actorId: number; }
 export interface CreateUserInput { actorId: number; name: string; kind?: UserKind; }
 export interface CreateProjectInput { actorId: number; key: string; name: string; itemPrefix: string; }

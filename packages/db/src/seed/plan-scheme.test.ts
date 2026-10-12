@@ -2,7 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 import { createDbClient, type Db } from '../client';
 import {
-  fields, itemTypeChildTypes, itemTypeFields, itemTypes, optionSets, options, optionTransitions,
+  fields, itemTypeChildTypes, itemTypeFields, itemTypes, linkTypeTargetTypes, linkTypes, optionSets, options,
+  optionTransitions, schemes,
 } from '../schema';
 import { planScheme } from './plan-scheme';
 import { deleteSeededScheme, seedScheme, type SeededScheme } from './seed-scheme';
@@ -120,5 +121,22 @@ describe('the plan scheme (runs against tickets_test — see test/setup-env.ts)'
     const ticketFields = ['title*', 'description', 'status', 'where', 'repos', 'assignee'];
     expect(await placed('ticket')).toEqual(ticketFields);
     expect(await placed('subticket')).toEqual(ticketFields);
+  });
+
+  it('says its projects are plan projects', async () => {
+    const [row] = await db.select().from(schemes).where(eq(schemes.id, seeded.schemeId));
+    expect(row!.config).toEqual({ plan: true });
+  });
+
+  it('lets every level wait on every level: each type owns a blocks link that targets them all', async () => {
+    const typeIds = [...seeded.typeIdByKey.values()];
+    const owned = await db.select().from(linkTypes).where(inArray(linkTypes.itemTypeId, typeIds));
+    expect(owned.map((l) => [typeKey(l.itemTypeId), l.key, l.label, l.inverseLabel, l.directional]).sort()).toEqual(
+      ['epic', 'feature', 'subticket', 'ticket'].map((t) => [t, 'blocks', 'Blocks', 'Blocked by', true]),
+    );
+    for (const link of owned) {
+      const targets = await db.select().from(linkTypeTargetTypes).where(eq(linkTypeTargetTypes.linkTypeId, link.id));
+      expect(targets.map((t) => typeKey(t.targetTypeId)).sort()).toEqual(['epic', 'feature', 'subticket', 'ticket']);
+    }
   });
 });

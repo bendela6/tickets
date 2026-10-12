@@ -1,15 +1,19 @@
 import * as v from 'valibot';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { itemLinks, items } from '@tickets/db';
 import { HttpError } from '../../errors';
 import { defineCommand } from '../registry';
 import { loadSchemeVocab } from '../../vocab/load-scheme-vocab';
+import { checkPlanBlocker } from './blockers';
 import { itemLinked, itemUnlinked } from './events';
 
 export const itemLinkInput = v.object({
   sourceItemId: v.pipe(v.number(), v.integer()),
   targetItemId: v.pipe(v.number(), v.integer()),
   linkTypeKey: v.pipe(v.string(), v.minLength(1)),
+  // Why the link is there. A plan's blocker needs one: why the target waits
+  // on the source.
+  why: v.optional(v.nullable(v.string())),
 });
 
 export const itemLink = defineCommand({
@@ -17,7 +21,6 @@ export const itemLink = defineCommand({
   input: itemLinkInput,
   aggregate: (input) => ({ type: 'item', id: input.sourceItemId }),
   async handler(tx, input, ctx) {
-    if (input.sourceItemId === input.targetItemId) throw new HttpError(422, 'an item cannot link to itself');
     const rows = await tx.select().from(items).where(eq(items.id, input.sourceItemId));
     const source = rows[0];
     if (!source) throw new HttpError(404, 'source item not found');
@@ -32,11 +35,26 @@ export const itemLink = defineCommand({
     if (allowedTargets && !allowedTargets.has(target.typeId)) {
       throw new HttpError(422, `"${input.linkTypeKey}" cannot target this item type`);
     }
+    const why = input.why?.trim() || null;
+    if (vocab.plan && linkType.key === 'blocks') {
+      // One plan blocker written at a time, so two can't close a cycle between them.
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('plan-blockers'))`);
+      await checkPlanBlocker(tx, { item: target, blocker: source });
+      if (why === null) {
+        throw new HttpError(422, `a blocker says why: why does ${target.key} wait on ${source.key}?`);
+      }
+    } else if (input.sourceItemId === input.targetItemId) {
+      throw new HttpError(422, 'an item cannot link to itself');
+    }
     const inserted = await tx
       .insert(itemLinks)
-      .values({ linkTypeId: linkType.id, sourceItemId: input.sourceItemId, targetItemId: input.targetItemId })
+      .values({ linkTypeId: linkType.id, sourceItemId: input.sourceItemId, targetItemId: input.targetItemId, why })
       .returning();
-    await ctx.emit(itemLinked, { linkTypeKey: input.linkTypeKey, targetItemId: input.targetItemId });
+    await ctx.emit(itemLinked, {
+      linkTypeKey: input.linkTypeKey,
+      targetItemId: input.targetItemId,
+      ...(why !== null ? { why } : {}),
+    });
     return { id: inserted[0]!.id };
   },
 });
