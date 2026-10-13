@@ -3,10 +3,9 @@
 //
 // This is the model's table of contents, so it belongs beside the model's other
 // navigation rather than in the canvas toolbar — on /schema it is rendered into
-// the app shell's mode panel, under the database picker. That is why every
-// context read here is the null-tolerant variant: the same panel component
-// mounts on routes where no <DiagramProvider> exists, and this must render
-// nothing there instead of throwing.
+// the page's outline panel, under the database picker. Every context read here
+// is the null-tolerant variant all the same: rendered where no
+// <DiagramProvider> exists, it renders nothing instead of throwing.
 
 import { useCallback, useId, useMemo, useState } from 'react';
 
@@ -35,15 +34,12 @@ export function Outline() {
   const ui = useDiagramUiOrNull();
   const actions = useDiagramActionsOrNull();
 
-  // app-shell.tsx builds the mode panel ONCE and renders that same element in
-  // two places — the desktop column (CSS-hidden below `md`, but still
-  // MOUNTED) and the mobile drawer `<aside>` (mounted only while open). Each
-  // location instantiates its own <Outline/>, so on /schema at a width where
-  // both are mounted, two trees exist in the DOM at once. A literal idPrefix
-  // would give them identical row ids, and `aria-activedescendant` resolves
-  // by id to the FIRST match in document order — the hidden desktop copy —
-  // leaving the visible (mobile) tree's roving focus pointing at an element
-  // nobody can see. `useId()` gives every mounted instance its own prefix.
+  // Two outlines can be mounted at once: a host may render its panel in more
+  // than one place, as the old frame did, docked and in its phone drawer. A
+  // literal idPrefix would give them identical row ids, and
+  // `aria-activedescendant` resolves by id to the FIRST match in document
+  // order, leaving the other tree's roving focus pointing at an element nobody
+  // can see. `useId()` gives every mounted instance its own prefix.
   const uid = useId();
 
   const [query, setQuery] = useState('');
