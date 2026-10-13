@@ -1,0 +1,171 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import { render, screen, within } from '@testing-library/react';
+import { afterEach, expect, test, vi } from 'vitest';
+import type { Board, Item, Project } from '../../api/types';
+import { rootRoute } from '../../routes/root-route';
+
+const createdAt = '2026-01-01T00:00:00.000Z';
+
+function project(id: number, key: string, name: string, itemPrefix: string): Project {
+  return {
+    id,
+    key,
+    name,
+    schemeId: 1,
+    itemPrefix,
+    createdAt,
+    repositoryUrl: null,
+    defaultBranch: null,
+  };
+}
+
+function item(id: number, status: string, parentId: number | null = null): Item {
+  return {
+    id,
+    number: id,
+    key: `K-${id}`,
+    typeId: 1,
+    parentId,
+    createdBy: 7,
+    archivedAt: null,
+    createdAt,
+    updatedAt: createdAt,
+    values: { status, title: `Item ${id}` },
+    comments: [],
+    links: [],
+  } as Item;
+}
+
+// A board with a workflow status, and the items given.
+function board(of: Project, items: Item[]): Board {
+  return {
+    project: of,
+    users: [],
+    types: [
+      { id: 1, schemeId: 1, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null },
+    ],
+    fields: [
+      {
+        id: 10,
+        schemeId: 1,
+        key: 'status',
+        label: 'Status',
+        type: 'option',
+        config: { workflow: true },
+        optionSetId: 100,
+        archivedAt: null,
+      },
+    ],
+    placements: [{ itemTypeId: 1, fieldId: 10, position: 1, required: true, configOverride: null }],
+    options: [
+      {
+        id: 1000,
+        optionSetId: 100,
+        value: 'backlog',
+        label: 'Backlog',
+        position: 1,
+        kind: 'todo',
+        config: {},
+        archivedAt: null,
+      },
+    ],
+    transitions: [],
+    linkTypes: [],
+    targetTypes: [],
+    views: [],
+    childTypes: [],
+    items,
+  };
+}
+
+const TICKETS = project(1, 'tk', 'Tickets', 'TK');
+const GATEWAY = project(2, 'gw', 'Gateway', 'GW');
+const BOARDS: Record<string, Board> = {
+  tk: board(TICKETS, [item(1, 'backlog'), item(2, 'backlog'), item(3, 'backlog', 1)]),
+  gw: board(GATEWAY, [item(4, 'backlog')]),
+};
+
+/**
+ * Mounts the REAL root route, so the REAL frame and its sidebar, on a memory
+ * history at `path`, over a page that says only where it is. The projects and
+ * their boards are the fixtures above; anything else reads as an empty list.
+ */
+function renderFrame(path = '/') {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) => {
+      const boardKey = /^\/api\/projects\/([^/]+)\/board$/.exec(url)?.[1];
+      const body =
+        url === '/api/projects'
+          ? { data: [TICKETS, GATEWAY] }
+          : boardKey
+            ? BOARDS[boardKey]
+            : { data: [] };
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
+    }),
+  );
+  const page = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '$',
+    component: () => <p>page</p>,
+  });
+  const home = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <p>home</p>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([home, page]),
+    history: createMemoryHistory({ initialEntries: [path] }),
+  });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+  return router;
+}
+
+const sidebar = () => screen.findByRole('complementary', { name: 'Navigation' });
+
+/**
+ * A sidebar row by its label, once it shows `count` at its end. The count
+ * is part of the link's text, so the label alone is matched as its start.
+ */
+async function row(nav: HTMLElement, label: string, count?: string) {
+  const link = await within(nav).findByRole('link', { name: new RegExp(`^${label}`) });
+  if (count !== undefined) {
+    expect(await within(link).findByText(count)).toBeInTheDocument();
+  }
+  return link;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  localStorage.clear();
+});
+
+test('leads with Home, counting the projects, lit on the home page', async () => {
+  renderFrame('/');
+  const nav = await sidebar();
+  const home = await row(nav, 'Home', '2');
+  expect(home).toHaveAttribute('href', '/');
+  expect(home).toHaveAttribute('aria-current', 'page');
+});
+
+test("counts every project's items on All items", async () => {
+  renderFrame('/all');
+  const nav = await sidebar();
+  // Two in Tickets, one of them with a subitem, and one in Gateway.
+  const all = await row(nav, 'All items', '4');
+  expect(all).toHaveAttribute('href', '/all');
+  expect(all).toHaveAttribute('aria-current', 'page');
+  expect(await row(nav, 'Home', '2')).not.toHaveAttribute('aria-current');
+});
