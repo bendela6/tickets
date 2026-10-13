@@ -193,3 +193,12 @@ test('"New project" on the Projects section opens the new project dialog', async
   await userEvent.click(within(nav).getByRole('button', { name: 'New project' }));
   expect(await screen.findByRole('dialog', { name: 'New project' })).toBeInTheDocument();
 });
+
+test('links Schema under System, lit on the schema page', async () => {
+  renderFrame('/schema');
+  const nav = await sidebar();
+  expect(within(nav).getByRole('button', { name: /^System/ })).toBeInTheDocument();
+  const schema = await row(nav, 'Schema');
+  expect(schema).toHaveAttribute('href', '/schema');
+  expect(schema).toHaveAttribute('aria-current', 'page');
+});
