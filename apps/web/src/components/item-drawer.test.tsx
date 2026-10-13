@@ -76,7 +76,7 @@ function makeBoard(): Board {
     options: [
       { id: 1000, optionSetId: 100, value: 'backlog', label: 'Backlog', position: 1, kind: 'todo', config: {}, archivedAt: null },
       { id: 1001, optionSetId: 100, value: 'in-review', label: 'In review', position: 2, kind: 'active', config: {}, archivedAt: null },
-      { id: 2000, optionSetId: 200, value: 'p0', label: 'P0 · critical', position: 1, kind: null, config: { color: '#a03028' }, archivedAt: null },
+      { id: 2000, optionSetId: 200, value: 'p0', label: 'P0 · critical', position: 1, kind: null, config: { color: 'red' }, archivedAt: null },
     ],
     transitions: [],
     linkTypes: [
