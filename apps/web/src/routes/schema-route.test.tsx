@@ -103,8 +103,35 @@ function renderSchemaRoute({
 }
 
 describe('/schema inside the app shell', () => {
+  const realMatchMedia = window.matchMedia;
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    window.matchMedia = realMatchMedia;
+    localStorage.clear();
+  });
+
+  it('on a phone, opens the outline from the header as an overlay', async () => {
+    // Every media query the frame and the panel ask answers "narrow".
+    window.matchMedia = ((media: string) => ({
+      matches: true,
+      media,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
+    renderSchemaRoute();
+    const open = await screen.findByRole('button', { name: 'Outline' });
+    // Shut until asked for: on a phone the panel would cover the diagram.
+    expect(screen.queryByRole('button', { name: /^Database:/ })).not.toBeInTheDocument();
+    // Nothing of the panel's own is pinned over the frame's top bar.
+    expect(screen.queryByRole('button', { name: 'Show Schema outline' })).not.toBeInTheDocument();
+    fireEvent.click(open);
+    expect(await screen.findByRole('dialog', { name: 'Schema outline' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Database: tickets' })).toBeInTheDocument();
   });
 
   it('mounts inside the frame, so the sidebar is there to leave it by', async () => {
@@ -114,20 +141,37 @@ describe('/schema inside the app shell', () => {
     expect(await screen.findByRole('complementary', { name: 'Navigation' })).toBeInTheDocument();
   });
 
-  it('shows the schema panel with its database dropdown', async () => {
+  it('is a page of its own, titled Schema', async () => {
     renderSchemaRoute();
-    expect(await screen.findByText('SCHEMA')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Schema' })).toBeInTheDocument();
+    expect(await screen.findByText('2 tables')).toBeInTheDocument();
+  });
+
+  it('shows the outline panel with its database dropdown', async () => {
+    renderSchemaRoute();
+    const panel = await screen.findByRole('complementary', { name: 'Schema outline' });
     // By its aria-label, not its text. The outline below it lists a table
     // ALSO called `tickets`, so `name: 'tickets'` matches that row instead and
     // the assertion passes without the dropdown existing at all.
-    expect(await screen.findByRole('button', { name: 'Database: tickets' })).toBeInTheDocument();
+    expect(
+      await within(panel).findByRole('button', { name: 'Database: tickets' }),
+    ).toBeInTheDocument();
   });
 
-  it('renders the outline in the schema panel, under the database picker', async () => {
+  it('hides the outline panel to a rail and brings it back', async () => {
+    renderSchemaRoute();
+    await screen.findByRole('complementary', { name: 'Schema outline' });
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Schema outline' }));
+    expect(screen.queryByRole('complementary', { name: 'Schema outline' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Schema outline' }));
+    expect(screen.getByRole('complementary', { name: 'Schema outline' })).toBeInTheDocument();
+  });
+
+  it('renders the outline in the outline panel, under the database picker', async () => {
     // The groups → tables tree sits beside the canvas, which only works
     // because schemaRoute wraps both in the diagram provider.
     renderSchemaRoute();
-    const panel = (await screen.findByText('SCHEMA')).closest('div')!.parentElement!;
+    const panel = await screen.findByRole('complementary', { name: 'Schema outline' });
     expect(
       await within(panel).findByRole('textbox', { name: 'Filter tables' }),
     ).toBeInTheDocument();
