@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
+import { Button, Card, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 
@@ -172,64 +172,66 @@ function NewFieldComposer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-16 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
-      <div className="mb-12 font-sans text-13/19 font-600 text-gray-12">New field</div>
-      <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-12">
-        <div className="flex flex-col gap-5">
-          <FieldLabel htmlFor="new-field-label">Label</FieldLabel>
-          <Input
-            id="new-field-label"
-            autoFocus
-            value={label}
-            placeholder="e.g. Severity"
-            onChange={(next) => {
-              setLabel(next);
-              if (!keyTouched) {
-                setKey(slugify(next, '_'));
-              }
-            }}
-          />
+    <Card padding={4} className="mb-16">
+      <form onSubmit={submit}>
+        <div className="mb-12 font-sans text-13/19 font-600 text-gray-12">New field</div>
+        <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-12">
+          <div className="flex flex-col gap-5">
+            <FieldLabel htmlFor="new-field-label">Label</FieldLabel>
+            <Input
+              id="new-field-label"
+              autoFocus
+              value={label}
+              placeholder="e.g. Severity"
+              onChange={(next) => {
+                setLabel(next);
+                if (!keyTouched) {
+                  setKey(slugify(next, '_'));
+                }
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-5">
+            <FieldLabel htmlFor="new-field-key">Key</FieldLabel>
+            <Input
+              id="new-field-key"
+              value={key}
+              placeholder="severity"
+              onChange={(next) => {
+                setKeyTouched(true);
+                setKey(next);
+              }}
+              className="font-mono text-13"
+            />
+          </div>
+          <div className="flex flex-col gap-5">
+            <FieldLabel id="new-field-type">Type</FieldLabel>
+            <Combobox
+              options={FIELD_TYPES.map((candidate) => ({ value: candidate, label: candidate }))}
+              value={type}
+              onChange={(next) => setType((next as FieldType | null) ?? 'string')}
+            />
+          </div>
         </div>
-        <div className="flex flex-col gap-5">
-          <FieldLabel htmlFor="new-field-key">Key</FieldLabel>
-          <Input
-            id="new-field-key"
-            value={key}
-            placeholder="severity"
-            onChange={(next) => {
-              setKeyTouched(true);
-              setKey(next);
-            }}
-            className="font-mono text-13"
-          />
+        {createField.isError ? (
+          <p className="m-0 mt-10 font-sans text-12/17 text-red-9">{(createField.error as Error).message}</p>
+        ) : null}
+        <div className="mt-14 flex items-center justify-end gap-8">
+          <Button size="sm" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            variant="solid"
+            loading={createField.isPending}
+            disabled={disabled || label.trim().length === 0 || key.trim().length === 0}
+          >
+            Create field
+          </Button>
         </div>
-        <div className="flex flex-col gap-5">
-          <FieldLabel id="new-field-type">Type</FieldLabel>
-          <Combobox
-            options={FIELD_TYPES.map((candidate) => ({ value: candidate, label: candidate }))}
-            value={type}
-            onChange={(next) => setType((next as FieldType | null) ?? 'string')}
-          />
-        </div>
-      </div>
-      {createField.isError ? (
-        <p className="m-0 mt-10 font-sans text-12/17 text-red-9">{(createField.error as Error).message}</p>
-      ) : null}
-      <div className="mt-14 flex items-center justify-end gap-8">
-        <Button size="sm" variant="ghost" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          variant="solid"
-          loading={createField.isPending}
-          disabled={disabled || label.trim().length === 0 || key.trim().length === 0}
-        >
-          Create field
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Card>
   );
 }
 
@@ -300,11 +302,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
 
           {activeTypeId !== null ? (
             <>
-              <div
-                role="region"
-                aria-label="Placements"
-                className="mb-16 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
-              >
+              <Card role="region" aria-label="Placements" className="mb-16">
                 <div
                   className={cn(
                     'grid h-34 items-center border-b-1 border-gray-6 bg-gray-1 px-10 font-sans text-11 font-500 uppercase tracking-wider text-gray-11',
@@ -337,7 +335,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                 {placements.length === 0 ? (
                   <ScreenState className="px-12 py-20" title="No fields placed on this type yet." />
                 ) : null}
-              </div>
+              </Card>
 
               <div className="mb-20 flex items-center gap-8">
                 <Combobox
@@ -379,11 +377,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
 
       <div className="mt-8">
         <h2 className="mb-8 font-sans text-13/19 font-600 text-gray-12">Field library</h2>
-        <div
-          role="region"
-          aria-label="Field library"
-          className="overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
-        >
+        <Card role="region" aria-label="Field library">
           {sortedFields.map((field) => {
             const placedCount = board.placements.filter((placement) => placement.fieldId === field.id).length;
             return (
@@ -418,7 +412,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
           {sortedFields.length === 0 ? (
             <ScreenState className="px-12 py-20" title="No fields yet." />
           ) : null}
-        </div>
+        </Card>
       </div>
     </section>
   );

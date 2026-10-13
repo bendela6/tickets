@@ -5,7 +5,7 @@ import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, cn, Icon, Pill, RelativeDate } from '@bh/ui';
+import { Avatar, Card, cn, Icon, Pill, RelativeDate } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';
@@ -222,8 +222,10 @@ export function KanbanView({
     const hasFooter = assigneeUser !== undefined || due !== null || progress.total > 0;
 
     return (
-      <div
+      <Card
         key={ticket.id}
+        interactive
+        padding={3}
         role="button"
         tabIndex={0}
         draggable={userId !== null}
@@ -244,7 +246,7 @@ export function KanbanView({
         }}
         onDragEnd={() => setDraggingId(null)}
         className={cn(
-          'flex shrink-0 cursor-pointer flex-col gap-8 rounded-12 border-1 border-gray-6 bg-surface-raised px-13 py-11 text-left shadow-sm',
+          'flex shrink-0 flex-col gap-8 text-left',
           draggingId === ticket.id && 'opacity-40',
         )}
       >
@@ -286,7 +288,7 @@ export function KanbanView({
             ) : null}
           </div>
         ) : null}
-      </div>
+      </Card>
     );
   };
 
