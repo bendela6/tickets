@@ -180,6 +180,7 @@ describe('deleteProjects (requires a freshly migrated tickets_test)', () => {
       projectId,
       typeId: id.task!,
       number,
+      key: `DEL${suffix}-${projectId}-${number}`,
       createdBy: id.alice!,
       createdAt: AT,
       updatedAt: AT,
