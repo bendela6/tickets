@@ -2,7 +2,16 @@ import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
-import { cn, Icon, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
+import {
+  cn,
+  focusRing,
+  Icon,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
+} from '@bh/ui';
 
 export type ToolbarVariant = 'full' | 'compact';
 
@@ -432,6 +441,9 @@ function applyTextColor(editor: Editor, value: string | null) {
 // Text color row: a small inline swatch row appears in a Radix submenu
 // rather than a separate dedicated color picker — accent / danger /
 // warning / success / default, matching the app's status-kind palette.
+// Each swatch is a menu item, so the arrow keys reach it and Enter picks it;
+// its colour is its fill, so the highlighted one rings instead (Radix focuses
+// whichever item is highlighted, by pointer or by key).
 function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
     <DropdownMenu.Sub>
@@ -449,12 +461,14 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
           className="z-50 flex items-center gap-6 rounded-8 border-1 border-gray-6 bg-surface-raised p-6 shadow-lg"
         >
           {COLOR_SWATCHES.map((swatch) => (
-            <button
+            <MenuItem
               key={swatch.id}
-              type="button"
               aria-label={swatch.label}
-              onClick={() => onPick(swatch.value)}
-              className="h-22 w-22 flex-none rounded-full border-1 border-gray-6"
+              onSelect={() => onPick(swatch.value)}
+              className={cn(
+                'size-22 flex-none rounded-full border-1 border-gray-6 p-0',
+                focusRing('indigo', 'focus'),
+              )}
               style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
             />
           ))}
