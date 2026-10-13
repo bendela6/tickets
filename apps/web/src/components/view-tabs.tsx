@@ -24,39 +24,52 @@ export function ViewTabs({
   const createView = useCreateView();
   const { userId } = useCurrentUser();
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState('');
+  // The name being created, which the field shows while the request is out.
+  const [creating, setCreating] = useState('');
 
   const views = [...board.views].sort((left, right) => left.id - right.id);
   const active = views.find((view) => view.id === activeViewId) ?? null;
 
+  const create = (next: string) => {
+    const name = next.trim();
+    if (name.length === 0 || userId === null) {
+      return;
+    }
+    setCreating(name);
+    // A failure is toasted by MutationErrorToasts.
+    createView.mutate(
+      { projectKey, actorId: userId, name },
+      {
+        onSuccess: (created) => {
+          setAdding(false);
+          void navigate({
+            to: '/p/$projectKey/v/$viewId',
+            params: { projectKey, viewId: String(created.id) },
+          });
+        },
+        onSettled: () => setCreating(''),
+      },
+    );
+  };
+
+  // bh's Input holds the name as a draft (`commit="leave"`): Enter or leaving
+  // the field creates the view, Escape drops the name, and leaving closes the
+  // field either way.
   const newView = adding ? (
     <Input
       size="xs"
       autoFocus
       placeholder="view name"
       aria-label="New view name"
-      value={draft}
+      commit="leave"
+      value={creating}
       disabled={userId === null}
       className="w-144"
+      onChange={create}
       onBlur={() => setAdding(false)}
-      onChange={(next) => setDraft(next)}
       onKeyDown={(event) => {
-        if (event.key === 'Enter' && draft.trim().length > 0 && userId !== null) {
-          // A failure is toasted by MutationErrorToasts.
-          createView.mutate(
-            { projectKey, actorId: userId, name: draft.trim() },
-            {
-              onSuccess: (created) => {
-                setAdding(false);
-                setDraft('');
-                void navigate({
-                  to: '/p/$projectKey/v/$viewId',
-                  params: { projectKey, viewId: String(created.id) },
-                });
-              },
-            },
-          );
-        }
+        // The Input has already created on Enter and dropped the name on
+        // Escape; this only closes the field.
         if (event.key === 'Escape') {
           setAdding(false);
         }
