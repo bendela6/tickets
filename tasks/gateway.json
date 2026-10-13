@@ -1257,7 +1257,8 @@
           "id": "GW-17",
           "title": "Add made secrets of a given shape to the stack form's Make",
           "description": "Make makes 16 random bytes as 32 hex digits, which no one types or sees. Some secrets need another shape: Rauthy's encryption key is a key id, `/`, then 32 random bytes in base64 (AU-1.8). Make takes a shape, so the gateway makes those too.",
-          "status": "In progress",
+          "status": "Done",
+          "statusNote": "On gateway branch `gw-17`, cut from main at 4090454, in `../gateway-wt-gw-17`. GW-17.1 (70dfaad): `make` takes `true` (16 bytes as hex, as before) or `{bytes: 16–64, encoding?: 'hex' | 'base64' | 'base64url', prefix?}`, for stack and shared variables, made by one `madeValue()`; a bad shape answers 400 naming its part. Rauthy's key is `{bytes: 32, encoding: 'base64', prefix: 'k1/'}`. GW-17.2 (42073fb): the web had no Make, so the stack form's variables get Make beside the value, with \"16 bytes, hex\" or a custom shape, checked as the API checks it, and a made secret shows only as kept. The shared variables page has no Make yet. Merged into the gateway's main (42073fb), which deploys it.",
           "where": [
             {
               "repo": "gateway",
@@ -1283,7 +1284,7 @@
                   "part": "apps/api"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1296,7 +1297,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "GW-17.1",
@@ -1309,7 +1310,7 @@
               "id": "GW-17.3",
               "title": "Merge GW-17 into main, which deploys the gateway",
               "description": "Your go: a push to the gateway's `main` deploys it, and a gateway deploy replaces the deployer itself, through `gateway-update`.",
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "GW-17.2",
