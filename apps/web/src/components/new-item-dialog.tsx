@@ -12,11 +12,11 @@ import type {
 } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { typePill } from '../domain/status';
+import { statusChoices } from '../domain/status-choices';
 import { FieldWidget } from '../registry/field-widget';
 import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
-import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { nextKey } from '../utils/next-key';
@@ -175,11 +175,6 @@ export function NewItemDialog({
   const defaultStatusValue =
     presetOption?.value ?? initialOption?.value ?? entryStatuses[0]?.value ?? null;
   const effectiveStatusValue = statusValue ?? defaultStatusValue;
-  const statusOptions = typeStatusOptions.map((option) => ({
-    key: option.value,
-    label: option.label,
-    kind: option.kind ?? 'todo',
-  }));
 
   const reset = () => {
     setPickedTypeId(null);
@@ -470,9 +465,11 @@ export function NewItemDialog({
             <footer className="flex items-center gap-10 border-t-1 border-gray-6 bg-surface-inset px-20 py-14">
               {workflowField ? (
                 <div className="w-192 shrink-0">
-                  <StatusSelect
-                    statuses={statusOptions}
-                    legalTargets={entryStatuses.map((status) => status.value)}
+                  <Combobox
+                    aria-label="Status"
+                    searchable={false}
+                    placeholder="Set status…"
+                    {...statusChoices(typeStatusOptions, entryStatuses, null, effectiveStatusValue)}
                     value={effectiveStatusValue}
                     onChange={setStatusValue}
                   />

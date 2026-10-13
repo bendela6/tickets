@@ -5,10 +5,10 @@ import type { Board, Item, StatusKind } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE } from '../domain/status';
+import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { cn, Icon, Progress, SectionHeader } from '@bh/ui';
+import { cn, Combobox, Icon, Progress, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
-import { StatusSelect } from '../ui/status-select';
 import { childProgress } from '../utils/child-progress';
 import { nextKey } from '../utils/next-key';
 import type { BoardIndexes } from '../utils/index-board';
@@ -88,19 +88,11 @@ export function DetailChildren({
             wf && typeof rawStatus === 'string' ? indexes.optionByValue(wf, rawStatus) : undefined;
           const kind = option?.kind ?? 'todo';
           const settled = kind === 'done' || kind === 'dropped';
-          const childStatusOptions = wf
-            ? indexes
-                .optionsForField(child.typeId, wf)
-                .filter((candidate) => !candidate.archivedAt)
-                .map((candidate) => ({
-                  key: candidate.value,
-                  label: candidate.label,
-                  kind: candidate.kind ?? 'todo',
-                }))
+          const childStatuses = wf
+            ? indexes.optionsForField(child.typeId, wf).filter((candidate) => !candidate.archivedAt)
             : [];
-          const legalKeys = wf
-            ? legalStatusTargets(board, indexes, child, child.typeId).map((option_) => option_.value)
-            : [];
+          const legal = wf ? legalStatusTargets(board, indexes, child, child.typeId) : [];
+          const statusValue = typeof rawStatus === 'string' ? rawStatus : null;
           return (
             <div
               key={child.id}
@@ -120,14 +112,20 @@ export function DetailChildren({
                 {String(child.values['title'] ?? '')}
               </span>
               <span className="shrink-0" onClick={(event) => event.stopPropagation()}>
-                <StatusSelect
+                <Combobox
                   size="xs"
-                  className="w-auto"
-                  statuses={childStatusOptions}
-                  legalTargets={legalKeys}
-                  value={typeof rawStatus === 'string' ? rawStatus : null}
+                  className="w-160"
+                  aria-label={`Status of ${child.key}`}
+                  searchable={false}
+                  placeholder="Set status…"
+                  {...statusChoices(childStatuses, legal, statusValue)}
+                  value={statusValue}
                   disabled={userId === null || !wf}
-                  onChange={(next) => setChildStatus(child, next)}
+                  onChange={(next) => {
+                    if (next !== null) {
+                      setChildStatus(child, next);
+                    }
+                  }}
                 />
               </span>
             </div>

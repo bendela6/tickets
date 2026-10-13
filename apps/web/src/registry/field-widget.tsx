@@ -56,7 +56,7 @@ function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): Op
 // refined by fields.config.format/multiple. Controlled: (value, onChange).
 // The workflow field (config.workflow===true) is just an option field here —
 // its color source is kindColor instead of the option's own; the kind-grouped
-// picker with legal-target narrowing (StatusSelect + legalStatusTargets)
+// picker with legal-target narrowing (statusChoices + legalStatusTargets)
 // lives in the callers that own status transitions (drawer header, board
 // status cell), not in this generic widget.
 export function FieldWidget({

@@ -5,14 +5,14 @@ import type { Board, Field, Item, StatusKind } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { useProjects } from '../../api/use-projects';
 import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
+import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
+import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
 import { ItemKey } from '../item-key';
 import { avatarFor } from '../../domain/actor';
-import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
 import { compareTicketsBy } from '../../utils/compare-tickets';
 import { evaluateFilters } from '../../utils/evaluate-filters';
@@ -132,21 +132,22 @@ function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: Item }) {
     return null;
   }
   const raw = ticket.values[workflowField.key];
+  const value = typeof raw === 'string' ? raw : null;
   const statuses = entry.indexes
     .optionsForField(ticket.typeId, workflowField)
-    .filter((option) => !option.archivedAt)
-    .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
+    .filter((option) => !option.archivedAt);
+  const legal = legalStatusTargets(entry.board, entry.indexes, ticket, ticket.typeId);
   return (
-    <StatusSelect
+    <Combobox
       size="xs"
-      statuses={statuses}
-      value={typeof raw === 'string' ? raw : null}
-      legalTargets={legalStatusTargets(entry.board, entry.indexes, ticket, ticket.typeId).map(
-        (option) => option.value,
-      )}
+      aria-label={`Status of ${ticket.key}`}
+      searchable={false}
+      placeholder="Set status…"
+      {...statusChoices(statuses, legal, value)}
+      value={value}
       disabled={userId === null}
       onChange={(next) => {
-        if (userId === null || next === raw) {
+        if (userId === null || next === null || next === raw) {
           return;
         }
         patch.mutate(

@@ -4,10 +4,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
+import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, DrawerControls, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
+import { Button, cn, Combobox, DrawerControls, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
 import { ItemKey } from './item-key';
-import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { DetailActivity } from './detail-activity';
@@ -174,15 +174,13 @@ export function ItemDetail({
     );
   };
 
-  const legalStatusOptions = legalStatusTargets(board, indexes, item, item.typeId);
-  const statusOptions = legalStatusOptions.map((option) => ({
-    key: option.value,
-    label: option.label,
-    kind: option.kind ?? 'todo',
-  }));
-  const legalKeys = legalStatusOptions.map((option) => option.value);
-  const setStatus = (next: string) => {
-    if (userId === null || !workflowField) {
+  const statusValue = typeof rawStatus === 'string' ? rawStatus : null;
+  const statuses = workflowField
+    ? indexes.optionsForField(item.typeId, workflowField).filter((option) => !option.archivedAt)
+    : [];
+  const legalStatuses = legalStatusTargets(board, indexes, item, item.typeId);
+  const setStatus = (next: string | null) => {
+    if (userId === null || !workflowField || next === null) {
       return;
     }
     patch.mutate(
@@ -268,12 +266,14 @@ export function ItemDetail({
           <ItemKey itemKey={item.key} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
-            <StatusSelect
+            <Combobox
               size="xs"
-              className="w-auto"
-              statuses={statusOptions}
-              legalTargets={legalKeys}
-              value={typeof rawStatus === 'string' ? rawStatus : null}
+              className="w-176"
+              aria-label="Status"
+              searchable={false}
+              placeholder="Set status…"
+              {...statusChoices(statuses, legalStatuses, statusValue)}
+              value={statusValue}
               disabled={userId === null}
               onChange={setStatus}
             />

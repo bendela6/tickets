@@ -282,7 +282,7 @@ test('inline status edit PATCHes /api/items/:id with a commandId envelope', asyn
     </QueryClientProvider>,
   );
   await screen.findByText('CORE-1');
-  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(screen.getByRole('combobox', { name: 'Status of CORE-1' }));
   await userEvent.click(await screen.findByRole('option', { name: /doing/i }));
 
   await waitFor(() => {
