@@ -9,7 +9,7 @@ import {
   useUpdatePlacement,
 } from '../../api/use-admin';
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
-import { DEFAULT_OPTION_COLOR, hexToOptionColor } from '../../registry/option-color';
+import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import {
   Button,
@@ -303,7 +303,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   const toOptions: ComboOption[] = activeOptions.map((option) => ({
     value: String(option.id),
     label: option.label,
-    color: hexToOptionColor(option.config.color),
+    color: option.config.color ?? 'gray',
   }));
   const fromOptions: ComboOption[] = [{ value: ENTRY, label: 'Entry — new item' }, ...toOptions];
 
