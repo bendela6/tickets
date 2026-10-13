@@ -1,0 +1,275 @@
+{
+  "$schema": "./tasks.schema.json",
+  "repo": "bh",
+  "prefix": "BH",
+  "intro": [
+    "bh's own list, moved here from `../bh/tasks.md` on 2026-10-12 with its numbers as ids (task 16 is BH-16). bh's list had no statuses: each was checked against bh's code and history on 2026-10-12. More bh work is planned from tickets' side: TK-1, TK-2, TK-7, TK-9 and E9 to E12 in `tickets.json`."
+  ],
+  "epics": [
+    {
+      "id": "E1",
+      "title": "Redesign the docs site's pages and blocks",
+      "description": "The example panel, the page layout, and the Props, variants and typography blocks of bh's docs site (`apps/docs`).",
+      "features": [
+        {
+          "id": "BH-1",
+          "title": "Replace the example panel's \"Show all lines\" toggle with a scrolling code area",
+          "description": "Replace the \"Show all ${n} lines\" toggle with a scrollable code area: keep the collapsed height, but let the content scroll instead of expanding.",
+          "status": "Done",
+          "statusNote": "195df76: the example block's code pane scrolls",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/example/example-panel.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-2",
+          "title": "Add a fullscreen view to the example panel",
+          "status": "Done",
+          "statusNote": "195df76",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/example/example-panel.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-3",
+          "title": "Make the page content full width instead of `max-w-800`",
+          "description": "Make the page content full width instead of the current fixed width (`max-w-800`).",
+          "status": "Done",
+          "statusNote": "195df76",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/page/doc-page.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-6",
+          "title": "Move Props to the end of every component page",
+          "description": "Today the pages run intro → Import → Props → Examples → Keyboard → When to use; make it intro → Import → Examples → Keyboard → When to use → Props. Reorder the `body` of every `*.doc.yaml` (e.g. `packages/web/ui/src/library/primitives/components/button/button.doc.yaml`), re-run `pnpm docs:sync`, and update the tests that assert the order (`apps/docs/src/pages/yaml-page.test.ts:40`).",
+          "status": "Done",
+          "statusNote": "195df76 reorders 97 `*.doc.yaml` files; Props is last",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs, @bh/ui, @bh/form"
+            }
+          ]
+        },
+        {
+          "id": "BH-7",
+          "title": "Redesign the Props section",
+          "status": "Done",
+          "statusNote": "195df76",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/blocks/props-block.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-8",
+          "title": "Redesign the `variants` block to be compact, informative and clear",
+          "status": "Done",
+          "statusNote": "195df76",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/blocks/variants-block.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-9",
+          "title": "Give the example panel's result pane a larger default minimum height",
+          "description": "So small examples don't look tiny, overridable per example. It was `min-h-140` when no `height` was set, and `height` fixed the height rather than setting a minimum.",
+          "status": "Done",
+          "statusNote": "195df76 adds `MIN_HEIGHT`",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/example/example-panel.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-10",
+          "title": "Redesign the example block and rename it from `example`",
+          "description": "Rethink how it looks, and rename it from `example` to something else. `code` is already taken by the plain code block (`- code: import { Button } from '@bh/ui'`). The rename touches 272 `- example:` entries in 91 `*.doc.yaml` files. BH-1, BH-2 and BH-9 are about the same block, so do them as part of this redesign.",
+          "status": "Done",
+          "statusNote": "195df76: the block is `demo` now",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs, @bh/ui, @bh/form"
+            }
+          ]
+        },
+        {
+          "id": "BH-11",
+          "title": "Add more space between doc page sections, and a divider between some",
+          "description": "Today an `h2` has `mt-48` and an `h3` has `mt-32`.",
+          "status": "Done",
+          "statusNote": "195df76",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/page/elements.tsx`, `apps/docs/src/page/doc-section.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-12",
+          "title": "Show the 6 role tones by default in examples and the `variants` block",
+          "description": "Don't always show every color. Default to the 6 role tones, and make it configurable: `roles` (default), `hues`, or `all`. The groups already exist as `ROLES`, `HUES` and `TONE_NAMES` in `packages/web/ui/src/style/generated/colors.ts`. Goes with BH-8.",
+          "status": "Done",
+          "statusNote": "195df76: a `tones` option, `roles` by default",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/blocks/variants-block.tsx`)"
+            }
+          ]
+        },
+        {
+          "id": "BH-13",
+          "title": "Fix typography samples cut off with \"…\" when the line fits",
+          "description": "The sample is capped at `max-w-320` and `truncate`d regardless of the space available. Let it use the column's width, and only truncate when it really doesn't fit (or wrap instead).",
+          "status": "Done",
+          "statusNote": "195df76 drops the `max-w-320 truncate`",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs (`apps/docs/src/blocks/tokens-block.tsx:189`)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "title": "Simplify `@bh/form`'s setup and examples",
+      "features": [
+        {
+          "id": "BH-4",
+          "title": "Replace the `registry` prop on every form with a global form provider",
+          "description": "A provider that supplies the registry once.",
+          "status": "Done",
+          "statusNote": "195df76: `FormProvider`",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/form"
+            }
+          ]
+        },
+        {
+          "id": "BH-5",
+          "title": "Format every field call in the form examples one key per line",
+          "description": "Some field calls were inline (`b.text({ name: 'name', label: 'Name', config: {} })`), others broken over lines (~40 vs ~30 across `packages/web/form/docs/examples/*.tsx` and the code blocks in `packages/web/form/docs/*.md`).",
+          "status": "Done",
+          "statusNote": "checked 2026-10-12: no inline field call is left in the examples or the docs; the commit isn't traced",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/form (`docs/examples`, `docs/*.md`)"
+            }
+          ],
+          "chosen": "Break every field call one key per line; keep small inner objects (`options` items, `when`, `config`) inline when they fit."
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "title": "Let each app choose its fonts",
+      "features": [
+        {
+          "id": "BH-14",
+          "title": "Load fonts from Google Fonts and let each app choose its own",
+          "description": "Load them from Google Fonts instead of the `@fontsource/ibm-plex-*` imports, and let each app choose its fonts.",
+          "status": "In progress",
+          "statusNote": "195df76 drops the `@fontsource` imports for Google Fonts; the token stacks still name IBM Plex, so an app can't choose yet",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs, @bh/ui, @bh/markdown"
+            }
+          ],
+          "today": [
+            "the docs app imported five `@fontsource` stylesheets in `apps/docs/src/main.tsx` and `apps/docs/src/iframe/main.tsx` (gone in 195df76);",
+            "the token font stacks name IBM Plex directly in `packages/web/ui/src/style/generated/typography.ts` (generated), so an app can't swap them;",
+            "`lifecycle/layout.ts:65` (a markdown block) assumes IBM Plex Mono's character width;",
+            "the setup page documented the `@fontsource` imports (`apps/docs/content/getting-started/styles-and-fonts.doc.yaml`; no longer)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "title": "Move markdown's blocks into their own package",
+      "features": [
+        {
+          "id": "BH-15",
+          "title": "Move the markdown blocks into a package any app can use",
+          "description": "Decide which of the docs-app blocks are general enough to move and which stay site-specific.",
+          "status": "Done",
+          "statusNote": "195df76: `@bh/markdown`",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/markdown, @bh/ui, docs"
+            }
+          ],
+          "today": [
+            "8 general blocks (api, badge, callout, code, erd, keyboard, lifecycle, transcript) lived inside `@bh/ui`, exported as `markdownBlocks` (`packages/web/ui/src/library/markdown/blocks/index.ts`);",
+            "6 blocks (example, panel, props, ref, tokens, variants) lived only in the docs app (`apps/docs/src/blocks`), combined with the others in `registry.ts`."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "title": "Add `LogView` to bh",
+      "features": [
+        {
+          "id": "BH-16",
+          "title": "Add `LogView`, a log viewer for any app's logs",
+          "description": "A log viewer in `@bh/ui` for any app's logs. It knows nothing of the app: the app says which lines start a section, and at which level, and adds highlight rules of its own. Planned and built as the gateway's GW-13.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "GW-13",
+              "why": "planned and built as GW-13's tickets"
+            }
+          ],
+          "statusNote": "planned as GW-13",
+          "approved": true,
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/ui, docs"
+            }
+          ],
+          "design": {
+            "text": "https://claude.ai/artifact/373FqCFMX7MWWu3U33K7Nf (done, running, failed, service logs, dark, anatomy).",
+            "items": [
+              "Sections nested to any depth, each folding, with its time and duration; the last and any failed one open, the rest folded.",
+              "Highlights by default: timestamps dimmed; errors red, warnings orange (a wash on the line), successes green; ANSI colors drawn in bh's hues, never shown as codes; a Readable / Raw switch for JSON lines.",
+              "A multi-line entry (a stack trace) folds under its first line, for logs with no sections.",
+              "Follows the end while lines arrive, unless the reader scrolled up (\"jump to the end\"). No scroll box of its own: the toolbar and the section being read stick to the top of the page.",
+              "Find marks matches and opens the folds that hold them; keys ↑ ↓ → ← Enter.",
+              "Tests (sections, ANSI parsing, following, thousands of lines staying fast) and a docs page."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

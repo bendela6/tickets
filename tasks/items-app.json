@@ -1,0 +1,228 @@
+{
+  "$schema": "./tasks.schema.json",
+  "repo": "items-app",
+  "prefix": "IA",
+  "intro": [
+    "items-app's list, started on 2026-10-13 from what its older APP tickets left open (TK-85.6). Its prefix is IA, not APP, so its ids never read as the older tickets'.",
+    "items-app is items-core's consumer client: an Expo 54 / React Native 0.81 app for iOS, Android and web (React Navigation, NativeWind, TanStack Query), signing in with Firebase Auth and calling the consumer API through an orval client that items-core's `pnpm app:sync` regenerates.",
+    "It runs as a dev client against a local or cloud gateway. A version tag ships iOS to TestFlight through GitHub Actions and Fastlane, with secrets from Doppler (last release v1.0.11, 2026-07-28); the Android Play upload is manual-only.",
+    "`origin/develop` was last updated 2026-09-03. Shared detection and the AI assistant sit on branches not merged into it. Home, alerts, onboarding and recommendations still show mocks, and every environment uses the dev Firebase project `bnw-items-dev`."
+  ],
+  "epics": [
+    {
+      "id": "E1",
+      "title": "Take on what the older APP tickets left open",
+      "description": "What the older APP (items-app) project left open and still worth doing, carried over by the planner on 2026-10-13 (TK-85.6) from the backup taken before it left tickets' database (TK-85.1). Each item names its older ticket; approve or cancel each as any item. What was done, already planned or stale stays in the backup only, with each verdict in `tickets-backups/2026-10-13-older-projects/TRIAGE.md`.",
+      "features": [
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IA-1.1",
+              "title": "Load the product preview and detail from the products API, and drop the mock fallback",
+              "description": "`PreviewScreen` finds the product with `findMockProduct` (`features/add-flow/screens/PreviewScreen.tsx:17`). `ProductDetailSheet` falls back to `findMockProductDto` when no stored product is passed (`ProductDetailSheet.tsx:27`), as when it opens from Home's Latest row (`HomeScreen.tsx:77`). `GET /api/products/{id}` already exists and is in the generated client, so this is app-only work. Swap both call sites to the generated hook. Then delete the `mockPrototype.ts` exports nothing uses: `MOCK_BAGS`, `findMockBag`, `MOCK_RECOMMENDATIONS`, `FILTER_COUNTS`, and the pools left unused (`MOCK_LATEST_ITEMS`, `MOCK_LIBRARY_ITEMS`, `MOCK_LOW_STOCK`). Rename `features/profile/screens/_mocks.ts`, which only holds the `ProfileRow` type. Older ticket: APP-16.",
+              "done": false
+            },
+            {
+              "id": "IA-1.2",
+              "title": "Add a consumer alerts API for price drops and restocks on the user's items",
+              "description": "The alerts sheet renders `MOCK_PRICE_DROPS` and `MOCK_RESTOCKED` (`features/add-flow/components/ProductAlertsSheet.tsx:61-70`). items-core already records the data: `products.product_sku_price_history` and `product_sku_availability_history` are written on change (`services/products/src/utils/write-price-history-on-change.ts`, `write-availability-history-on-change.ts`), but the consumer API exposes neither. Add an endpoint scoped to the caller's items and bags, such as `GET /api/alerts?tab=drops|restocked`. It joins the SKUs in `items.user_items` and `items.bag_items` to the history and shapes each row for the alert cards (brand, name, price, was, caption, image). Then wire the sheet to it. Decide while building: plain query endpoints, or new producers for the live activity feed (`GET /api/activities` and `unread-count`). That feed's only producers today are `itemAdded`, `bagItemAdded` and `bagUserAdded` (`services/activities/src/activities/activity-writer.ts`), and producers would give unread badges for free. Older ticket: APP-13.",
+              "done": false
+            },
+            {
+              "id": "IA-1.3",
+              "title": "Add a Home summary endpoint and show its counts on Home",
+              "description": "Home's header (date, drops, low stock today) and its stat pills come from `MOCK_HOME_SUMMARY` and `ALERT_TABS` (`features/home/screens/HomeScreen.tsx:110-117`), and so do the alerts sheet's tabs. Add `GET /api/home/summary`, or fold it into the alerts API. It returns total price-drop savings, the restocked count, the new-in count and low stock today, from the same user-scoped queries as the alerts API. It waits on the alerts API ticket, which defines those queries. Older ticket: APP-14.",
+              "done": false
+            },
+            {
+              "id": "IA-1.4",
+              "title": "Define \"New in\" for a user and add its endpoint",
+              "description": "The alerts sheet's New In tab renders `MOCK_NEW_IN` (`ProductAlertsSheet.tsx:62`). items-core has only `products.created_at`: nothing says what is \"new for this user\", and users can't follow brands. Needs your decision first. The candidates: new SKUs from brands the user already owns items from, new products on sites the user shops, or recently scraped products that match their bags. Then add the endpoint and feed its count into the Home summary. Older ticket: APP-15.",
+              "done": false
+            },
+            {
+              "id": "IA-1.5",
+              "title": "Store the onboarding picks and add a brands list endpoint",
+              "description": "The onboarding pickers render `ONBOARDING_CATEGORIES`, `ONBOARDING_STYLES` and `ONBOARDING_BRANDS`, and the picks never leave screen state (`features/onboarding/screens/BrandsScreen.tsx:19`). `users.users` holds only id, name, avatar, email and the device token. Add a consumer `GET /api/brands` from `products.brands` for the brands picker; it could also feed the browser's hard-coded `POPULAR_STORES`. Categories and styles can stay client-side. Add a preferences table to the users schema (such as `users.user_preferences`: userId, kind, value) with a PATCH endpoint, and make the three onboarding screens save their picks. Recommendations need it to use stated preferences. Older ticket: APP-17.",
+              "done": false
+            },
+            {
+              "id": "IA-1.6",
+              "title": "Build the \"For you\" recommendations backend",
+              "description": "`MOCK_FOR_YOU` fills Home's For you row (`HomeScreen.tsx:93`) and the preview sheet's You might also like (`ProductPreviewSheet.tsx:74`). items-core has no recommendation code. Needs your decision on the approach. Roughly by effort: brand affinity from the user's items, co-occurrence across bags, content similarity from scraped attributes, or embeddings. Stored onboarding preferences would cover new users. Older ticket: APP-19.",
+              "done": false
+            },
+            {
+              "id": "IA-1.7",
+              "title": "Add avatar upload to the profile, and store or remove username and bio",
+              "description": "The photo picker is a stub: a \"coming soon\" toast (`features/profile/screens/ProfileEditScreen.tsx:101`). `users.avatar` exists and `PATCH /api/auth/profile` takes an avatar URL, but items-core has no upload path. Add an upload endpoint that returns a public URL; a GCS bucket in the bob-and-weave infra is the natural home. The app picks an image (expo-image-picker, not installed yet), uploads it, then PATCHes the URL. The username and bio fields (`ProfileEditScreen.tsx:120-142`) have no backend: the users table has neither column, and PATCH takes only name and avatar. Needs your decision: add the columns with a unique username, or remove the fields. Older ticket: APP-18.",
+              "done": false
+            }
+          ],
+          "id": "IA-1",
+          "title": "Replace the app's mock data with real data from items-core",
+          "description": "Home, the alerts sheet, the product preview, onboarding and the profile still render prototype mocks from `src/app/shared/data/mockPrototype.ts`. Each ticket swaps one mock for real data. Where no consumer endpoint exists, it adds one in items-core's `apps/gateway/src/consumer-glue`, then runs items-core's `pnpm app:sync` to regenerate the app's client. Older ticket: APP-41.",
+          "where": [
+            {
+              "repo": "items-app",
+              "part": "src/app/shared/data/mockPrototype.ts, src/app/features (home, add-flow, onboarding, profile)"
+            },
+            {
+              "repo": "items-core",
+              "part": "apps/gateway/src/consumer-glue, services/products, services/users, services/activities"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IA-2.1",
+              "title": "Fix Google sign-in failing with `auth/argument-error` when run on web",
+              "description": "On web, Continue with Google fails with `Firebase: Error (auth/argument-error)` on Login and SignupOptions (seen 2026-07-04). The suspected cause, a missing `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, is fixed: the dev config's `.env` has it now. Check that the popup opens on both screens. If it still fails, look further: the web path (`src/app/services/firebase-auth/social-auth.web.ts`) uses the Firebase JS SDK's `signInWithPopup`, which doesn't read that variable. Older ticket: APP-26.",
+              "done": false
+            },
+            {
+              "id": "IA-2.2",
+              "title": "Add the Apple sign-in nonce and move to `OAuthProvider('apple.com')`",
+              "description": "This must land before Apple sign-in ships. `signInWithApple` (`src/app/services/firebase-auth/social-auth.ts:42-58`) sends no nonce, so an identity token could be replayed. Generate a raw nonce, pass its SHA-256 to `AppleAuthentication.signInAsync({ nonce })`, and pass the raw nonce to the Firebase credential. It also uses `AppleAuthProvider`, deprecated in RNFirebase v25; switch to `OAuthProvider('apple.com')`. Older ticket: APP-34.",
+              "done": false
+            },
+            {
+              "id": "IA-2.3",
+              "title": "Show readable messages when sign-in fails, instead of raw Firebase errors",
+              "description": "Users see raw strings such as `[auth/invalid-credential] Firebase: Error (auth/invalid-credential).`. `LoginEmailScreen.tsx:144`, `SignupEmailScreen` and `SocialAuthButtons.tsx:36` print `useAuth().error.message`. Map the common codes to i18n copy: `auth/invalid-credential`, `auth/user-not-found`, `auth/too-many-requests`, a blocked or closed popup, and network errors. Older ticket: APP-30.",
+              "done": false
+            },
+            {
+              "id": "IA-2.4",
+              "title": "Sync the auth translations with the keys the screens use",
+              "description": "This is in the `auth` section of `src/app/shared/i18n/locales/en.json`, and it's cheap while English is the only locale. Add the keys the screens use but the file lacks, so the code fallbacks stop showing: `signIn` and `doNotHaveAccount` (the file has `noAccount`), and today also `createAccountButton` and `onboardingSubtitle`. Make `loginButton` (\"Sign In\") agree with its code fallback, \"Log in\". Remove the unused `continueWithEmail`. Make the signup screens' footer say \"Log in\" like everywhere else: they use `auth.login` (\"Login\") instead of `auth.logIn`. Older ticket: APP-29.",
+              "done": false
+            },
+            {
+              "id": "IA-2.5",
+              "title": "Add a Google account to the Android emulator for testing Google sign-in",
+              "description": "Yours. The emulator `Medium_Phone_API_36.1` has no Google account. So the Google sign-in sheet fails (\"we weren't able to check for accounts connected to your phone number\"), and the app carries on anonymously. Sign in to a Google account in the emulator's settings; this needs a Play services image. Older ticket: APP-25.",
+              "done": false
+            },
+            {
+              "id": "IA-2.6",
+              "title": "Check the restructured login flow on real iOS and Android devices",
+              "description": "Yours, on devices. The 2026-07-04 login rework (a three-button Login screen and a separate LoginEmail page) passed its walkthrough on Expo web only. On devices, check native Apple and Google sign-in from the new Login screen, Skip to MainTabs from `LoginEmailScreen`, and the email form's keyboard on iOS and Android. The checklist is Task 4 of `docs/superpowers/plans/2026-07-02-login-options-screen.md`. Older ticket: APP-32.",
+              "done": false
+            }
+          ],
+          "id": "IA-2",
+          "title": "Fix the sign-in gaps left from the login rework and the Firebase move",
+          "description": "The 2026-07-04 login rework and the move to Firebase Auth left gaps. Google sign-in fails on web, Apple sign-in sends no nonce, failures show raw Firebase errors, and the auth translations lag behind the screens. The native flows were never checked on a device. Older tickets: APP-25, APP-26, APP-29, APP-30, APP-32, APP-34.",
+          "where": [
+            {
+              "repo": "items-app",
+              "part": "src/app/services/firebase-auth, src/app/features/auth, src/app/shared/i18n/locales/en.json"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IA-3.1",
+              "title": "Create a production Firebase project and point the prod Doppler configs at it",
+              "description": "Yours: it needs the Firebase console with billing or owner access. Every environment uses `bnw-items-dev`, including the prod Doppler configs `prd` and `prd_circleci`, by a deliberate July decision. Create `bnw-items-prod`, register the iOS and Android apps (same bundle id and package), and download their `GoogleService-Info.plist` and `google-services.json`. Then replace `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `GOOGLE_SERVICES_JSON_BASE64` and `GOOGLE_SERVICE_INFO_PLIST_BASE64` in the prod configs with the new project's values. items-infrastructure has a dev environment only. Older ticket: APP-39.",
+              "done": false
+            },
+            {
+              "id": "IA-3.2",
+              "title": "Make the web Firebase config follow the app's environment",
+              "description": "`src/app/services/firebase-auth/firebase-web.ts:36-44` hard-codes the web Firebase config to `bnw-items-dev`. iOS and Android pick their config per `APP_ENV` at prebuild, but a production web build would still sign in against the dev project. Move the values into `@shared/environment` as `EXPO_PUBLIC_*` variables (they aren't secrets), or branch on `environment.app.env`. Keep `ensureFirebaseWebApp()` as the one place the web app starts. This is needed before any real web deployment, and the prod values come from the production project. Older ticket: APP-35.",
+              "done": false
+            }
+          ],
+          "id": "IA-3",
+          "title": "Move production off the dev Firebase project",
+          "description": "There is one Firebase project, `bnw-items-dev`, and every environment uses it. Production users sign in to the dev project and write their data into it, and the web build hard-codes the dev config. That was accepted as a stopgap, not for the long term. Older tickets: APP-35, APP-39.",
+          "where": [
+            {
+              "repo": "gcp",
+              "part": "Firebase console: a new bnw-items-prod project"
+            },
+            {
+              "repo": "items-app",
+              "part": "src/app/services/firebase-auth/firebase-web.ts, src/app/shared/environment.ts"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IA-4.1",
+              "title": "Fix Metro crashing on Tailwind's temp folders when Watchman isn't installed",
+              "description": "Yours: an install on the dev machine. On Windows, Metro dies with `ENOENT … watch '…\\node_modules\\tailwindcss_tmp_*\\lib'` (exit 7). NativeWind's Tailwind makes short-lived temp folders in `node_modules`, and without Watchman, Metro's fallback watcher trips when they are deleted. Install Watchman (`choco install watchman`; it isn't on this machine's PATH). Then list it in `docs/setup/prerequisites.md`; today only the troubleshooting table in `docs/setup/android.md` mentions it. Older ticket: APP-22.",
+              "done": false
+            },
+            {
+              "id": "IA-4.2",
+              "title": "Update verify-setup.sh to check the signing secrets the build uses",
+              "description": "`scripts/verify-setup.sh:120-130` checks `MATCH_GIT_URL`, `MATCH_GIT_BASIC_AUTHORIZATION`, `MATCH_PASSWORD` and `APP_STORE_CONNECT_KEY_ID`/`ISSUER_ID`/`API_KEY_CONTENT`. Its next steps also say to set up Match certificates, but the build no longer uses Match. The real list (`fastlane/helpers/environment.rb:21-24`, `docs/ios-build.md`) is `BUILD_CERTIFICATE_BASE64`, `BUILD_PROVISION_PROFILE_BASE64`, `APP_STORE_CONNECT_API_KEY_JSON` and `DEVELOPMENT_TEAM_ID`. Then remove the note at `docs/setup/ios.md:17` that says to ignore the stale rows. Older ticket: APP-23.",
+              "done": false
+            },
+            {
+              "id": "IA-4.3",
+              "title": "Write a project skill for running the app on Android",
+              "description": "Getting Android dev running took steps that are only prose in `docs/setup/android.md`. A skill in `.claude/skills/` would let agent sessions run them. Rebuild a stale dev client with `pnpm android` when it crashes with `'RNGestureHandlerModule' could not be found`. Open the dev client at Metro with `items://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081`. Run `adb reverse` for both 3000 (gateway) and 8081 (Metro). `pnpm start-dev` covers part of this, but `scripts/start-dev/steps/connect-android.ts` reverses 3000 only. Older ticket: APP-24.",
+              "done": false
+            },
+            {
+              "id": "IA-4.4",
+              "title": "Delete the dead Auth0 and Sentry secrets from Doppler",
+              "description": "Yours, or with your go-ahead, since it deletes secrets. Nothing in the code has read them since the Auth0 purge; deleting them was put off. The dev config looks clean already: the `.env` it gave on 2026-09-21 has none of them. Check `dev_personal`, `prd` and `prd_circleci`. Delete `EXPO_PUBLIC_AUTH0_AUDIENCE`, `EXPO_PUBLIC_AUTH0_CLIENT_ID`, `EXPO_PUBLIC_AUTH0_DOMAIN`, `EXPO_PUBLIC_SENTRY_DSN` and `EXPO_PUBLIC_SENTRY_ENABLED` from each, and `SENTRY_DISABLE_AUTO_UPLOAD` from the two prod configs, with `doppler secrets delete … --project items-app --config <config> -y`. Older ticket: APP-31.",
+              "done": false
+            }
+          ],
+          "id": "IA-4",
+          "title": "Update the developer setup's tools, checks and secrets",
+          "description": "The Windows dev setup, the setup check script, the Android run steps and Doppler each still have stale or missing pieces. Older tickets: APP-22, APP-23, APP-24, APP-31.",
+          "where": [
+            {
+              "repo": "items-app",
+              "part": "scripts/verify-setup.sh, docs/setup, .claude/skills"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IA-5.1",
+              "title": "Point items-app's dev config and setup docs at `api.dev.aitems.io`",
+              "description": "items-app reads `EXPO_PUBLIC_API_URL` from Doppler through a git-ignored `.env`, and the local one points at `http://127.0.0.1:3000/api`. `docs/setup/environments.md:38` still says Doppler's dev config points at the deployed items-api, which was removed (`59d37bd`, items-infrastructure). The gateway serves those routes at `https://api.dev.aitems.io/api`. Set the dev and beta Doppler configs to that host, check the app against it, and fix the doc. Older ticket: TASK-286.",
+              "done": false
+            },
+            {
+              "id": "IA-5.2",
+              "title": "Plan how adding a product works on bot-protected stores",
+              "description": "Adding a product by URL works on unprotected stores and fails on Akamai-class bot defenses (H&M is the reference case). The real fix is `_abck` warmup with behavioral signals, not CDP patching: `patchright` works locally but not over CDP, and production needs residential proxies. Its spec and Phase 1 plan (2026-07-12) are in `../items-core-archive/docs-superpowers/`. Workers can already declare a `residential-proxy` capability (`packages/domain/workflow/README.md:686`). Decide: (a) get residential proxies and verify the beta's top stores, or (b) publish a supported-stores list and show a clear in-app message when a store is unsupported. A beta where the main action fails silently is the worst outcome. Older ticket: TASK-289.",
+              "done": false
+            }
+          ],
+          "id": "IA-5",
+          "title": "Make items-app's closed beta work against cloud dev",
+          "description": "Two of MVP.md's closed-beta blockers that no plan holds: the app still points at a local gateway, and adding a product fails on bot-protected stores. Older tickets: TASK-286, TASK-289.",
+          "where": [
+            {
+              "repo": "items-app",
+              "part": "Doppler config, docs/setup"
+            },
+            {
+              "repo": "items-core",
+              "part": "apps/worker, docker/browser"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
