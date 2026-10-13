@@ -1,4 +1,4 @@
-import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs } from '@bh/ui';
+import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs, Tooltip } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
@@ -103,16 +103,18 @@ export function BoardHeader({
               <ColumnChecklist indexes={indexes} config={config} onUpdate={onUpdate} />
             </PopoverContent>
           </Popover>
-          <span title="Density">
-            <Tabs variant="pill" role="group"
-              items={[
-                { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
-                { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
-              ]}
-              value={config.density}
-              onChange={(density) => onUpdate((current) => ({ ...current, density: density as ViewDensity }))}
-            />
-          </span>
+          <Tooltip content="Density">
+            <span>
+              <Tabs variant="pill" role="group"
+                items={[
+                  { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+                  { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+                ]}
+                value={config.density}
+                onChange={(density) => onUpdate((current) => ({ ...current, density: density as ViewDensity }))}
+              />
+            </span>
+          </Tooltip>
         </>
       ) : (
         <>

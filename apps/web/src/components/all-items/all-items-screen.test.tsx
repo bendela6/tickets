@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board, Field, ItemType, Option } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
-import { ToastProvider } from '@bh/ui';
+import { ToastProvider, TooltipProvider } from '@bh/ui';
 import { AllItemsScreen } from './all-items-screen';
 
 const createdAt = '2026-01-01T00:00:00.000Z';
@@ -203,6 +203,7 @@ async function renderScreen() {
         </ToastProvider>
       </CurrentUserProvider>
     </QueryClientProvider>,
+    { wrapper: TooltipProvider },
   );
   // wait until both boards have loaded and grouped
   await screen.findByText('Items Core');
@@ -280,6 +281,7 @@ test('inline status edit PATCHes /api/items/:id with a commandId envelope', asyn
         </ToastProvider>
       </CurrentUserProvider>
     </QueryClientProvider>,
+    { wrapper: TooltipProvider },
   );
   await screen.findByText('CORE-1');
   await userEvent.click(screen.getByRole('combobox', { name: 'Status of CORE-1' }));

@@ -1,6 +1,6 @@
 import type { Item, StatusKind } from '../../api/types';
 import { KIND_ICON, KIND_TONE } from '../../domain/status';
-import { Icon } from '@bh/ui';
+import { Icon, Tooltip } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 const KIND_ORDER: { kind: StatusKind; label: string }[] = [
@@ -38,15 +38,16 @@ export function KpiTiles({
           <span className="font-sans text-12/17 text-gray-11">{label}</span>
         </div>
       ))}
-      <button
-        type="button"
-        title="Hide KPI strip"
-        aria-label="Hide KPI strip"
-        className="flex w-28 cursor-pointer items-center justify-center font-sans text-12/17 text-gray-9 hover:text-gray-12"
-        onClick={onHide}
-      >
-        ×
-      </button>
+      <Tooltip content="Hide KPI strip">
+        <button
+          type="button"
+          aria-label="Hide KPI strip"
+          className="flex w-28 cursor-pointer items-center justify-center font-sans text-12/17 text-gray-9 hover:text-gray-12"
+          onClick={onHide}
+        >
+          ×
+        </button>
+      </Tooltip>
     </div>
   );
 }

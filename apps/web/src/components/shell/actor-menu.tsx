@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCreateUser } from '../../api/use-create-user';
 import { useUsers } from '../../api/use-users';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
+import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Tooltip } from '@bh/ui';
 import { avatarFor } from '../../domain/actor';
 
 // Sidebar footer card: who edits are attributed to. Design 01 §sidebar footer.
@@ -20,26 +20,29 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
   return (
     <>
       <Menu>
-        <MenuTrigger asChild>
-          {compact ? (
-            <button
-              type="button"
-              aria-label={current ? `Acting as ${current.name}` : 'Pick a user'}
-              title={current ? `Acting as ${current.name}` : 'Pick a user'}
-              className="flex size-36 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-surface-inset"
-            >
-              {current ? (
-                <Avatar
-                  name={current.name} {...avatarFor(current.kind === 'agent' ? 'agent' : 'human')}
-                  size="md"
-                />
-              ) : (
-                <span className="inline-flex size-22 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
-                  ?
-                </span>
-              )}
-            </button>
-          ) : (
+        {compact ? (
+          <Tooltip content={current ? `Acting as ${current.name}` : 'Pick a user'} side="right">
+            <MenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={current ? `Acting as ${current.name}` : 'Pick a user'}
+                className="flex size-36 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-surface-inset"
+              >
+                {current ? (
+                  <Avatar
+                    name={current.name} {...avatarFor(current.kind === 'agent' ? 'agent' : 'human')}
+                    size="md"
+                  />
+                ) : (
+                  <span className="inline-flex size-22 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
+                    ?
+                  </span>
+                )}
+              </button>
+            </MenuTrigger>
+          </Tooltip>
+        ) : (
+          <MenuTrigger asChild>
             <button
               type="button"
               className="flex min-w-0 flex-1 cursor-pointer items-center gap-8 rounded-8 border-1 border-gray-6 bg-surface-raised px-8 py-6 text-left hover:border-gray-7"
@@ -64,8 +67,8 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                 ⇅
               </span>
             </button>
-          )}
-        </MenuTrigger>
+          </MenuTrigger>
+        )}
         <MenuContent align="start" side="top">
           {active.map((user) => (
             <MenuItem key={user.id} onSelect={() => setUserId(user.id)}>

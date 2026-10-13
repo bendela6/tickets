@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { TooltipProvider } from '@bh/ui';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildModel, twoZoneRaw } from '../../test/models';
@@ -17,7 +18,7 @@ afterEach(cleanup);
 // URL params, both banned for this module).
 describe('EerDiagram', () => {
   it('loads the given model and mounts the outline, toolbar, viewport, and side panel', () => {
-    const { unmount } = render(<EerDiagram model={buildModel(twoZoneRaw())} />);
+    const { unmount } = render(<EerDiagram model={buildModel(twoZoneRaw())} />, { wrapper: TooltipProvider });
     // The standalone form titles itself from the model and lends the outline a
     // sidebar of its own — on /schema both of those come from the page (its
     // header and its outline panel), which is why this is not what that route renders.

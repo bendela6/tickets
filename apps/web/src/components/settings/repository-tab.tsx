@@ -4,6 +4,7 @@ import { fieldIssues } from '../../api/field-issues';
 import { useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button, Card, FieldError, FieldLabel, Input } from '@bh/ui';
+import { DisabledReason } from '../disabled-reason';
 import type { SettingsTabProps } from './types-tab';
 
 const FIELDS = ['repositoryUrl', 'defaultBranch'] as const;
@@ -133,16 +134,11 @@ export function RepositoryTab({ board }: SettingsTabProps) {
                 saved
               </span>
             ) : null}
-            <Button
-              type="submit"
-              variant="solid"
-              size="sm"
-              disabled={disabled || !dirty}
-              title={disabled ? 'Choose who you are acting as to edit the repository' : undefined}
-              loading={updateProject.isPending}
-            >
-              Save
-            </Button>
+            <DisabledReason reason={disabled ? 'Choose who you are acting as to edit the repository' : undefined}>
+              <Button type="submit" variant="solid" size="sm" disabled={disabled || !dirty} loading={updateProject.isPending}>
+                Save
+              </Button>
+            </DisabledReason>
           </div>
         </form>
       </Card>
