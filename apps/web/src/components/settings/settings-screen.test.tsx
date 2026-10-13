@@ -76,20 +76,22 @@ function mockRoutedFetch(board: Board, forkedSchemeId: number) {
  * Mounts the REAL settings routes under the REAL root route, on a memory
  * history: which tab is on screen is the address's, so it is the route tree
  * that is under test, not SettingsScreen alone. The root route brings the
- * frame and its providers; what the frame reads (the projects, the users) is
- * answered with empty lists here, and every other request goes to the test's
- * own `fetch` mock.
+ * frame, whose sidebar lists the tabs under Settings; what the frame reads is
+ * answered here (one project, CORE, and no users), and every other request
+ * goes to the test's own `fetch` mock.
  */
 function renderSettings({
   path = '/p/CORE/settings/types',
   client,
 }: { path?: string; client?: QueryClient } = {}) {
   const inner = globalThis.fetch;
+  const projects = { data: [{ ...makeBoard().project, key: 'CORE' }] };
   vi.stubGlobal(
     'fetch',
     vi.fn((url: string, init?: RequestInit) => {
       if (url === '/api/projects' || url.startsWith('/api/users')) {
-        return Promise.resolve({ ok: true, text: () => Promise.resolve('{"data":[]}') });
+        const body = url === '/api/projects' ? projects : { data: [] };
+        return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
       }
       return inner(url, init);
     }),
@@ -111,25 +113,31 @@ function renderSettings({
   return { client: qc, router };
 }
 
+/** A settings tab's link, under Settings in the sidebar. */
+async function tabLink(label: string) {
+  const nav = await screen.findByRole('complementary', { name: 'Navigation' });
+  return within(nav).findByRole('link', { name: label });
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
 });
 
-test('renders the five tabs and the scheme banner once the board loads', async () => {
+test('lists the five tabs under Settings and shows the scheme banner once the board loads', async () => {
   mockBoardFetch(makeBoard());
   renderSettings();
 
-  expect(await screen.findByRole('tab', { name: /Types/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Fields/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Workflow/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Links/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Repository/ })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Types' })).toBeInTheDocument();
+  expect(await tabLink('Types')).toHaveAttribute('href', '/p/CORE/settings/types');
+  expect(await tabLink('Fields')).toHaveAttribute('href', '/p/CORE/settings/fields');
+  expect(await tabLink('Workflow')).toHaveAttribute('href', '/p/CORE/settings/workflow');
+  expect(await tabLink('Links')).toHaveAttribute('href', '/p/CORE/settings/links');
+  expect(await tabLink('Repository')).toHaveAttribute('href', '/p/CORE/settings/repository');
 
   expect(screen.getByText(/Editing the shared scheme/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Fork for this project/i })).toBeDisabled();
-
-  expect(screen.getByRole('heading', { name: 'Types' })).toBeInTheDocument();
 });
 
 test('the bare settings address opens the Types tab', async () => {
@@ -140,29 +148,30 @@ test('the bare settings address opens the Types tab', async () => {
   expect(router.state.location.pathname).toBe('/p/CORE/settings/types');
 });
 
-test('each tab opens from its own address', async () => {
+test('each tab opens from its own address, its link lit in the sidebar', async () => {
   mockBoardFetch(makeBoard());
   renderSettings({ path: '/p/CORE/settings/workflow' });
 
   expect(await screen.findByRole('heading', { name: 'Workflow' })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Workflow/ })).toHaveAttribute('aria-selected', 'true');
+  expect(await tabLink('Workflow')).toHaveAttribute('aria-current', 'page');
+  expect(await tabLink('Types')).not.toHaveAttribute('aria-current');
   expect(screen.queryByRole('heading', { name: 'Types' })).not.toBeInTheDocument();
 });
 
-test('switching tabs goes to the tab\'s address and renders its panel', async () => {
+test('following a tab in the sidebar goes to its address and renders its panel', async () => {
   mockBoardFetch(makeBoard());
   const { router } = renderSettings();
 
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
 
-  await userEvent.click(screen.getByRole('tab', { name: /Fields/ }));
+  await userEvent.click(await tabLink('Fields'));
   expect(await screen.findByRole('heading', { name: 'Fields' })).toBeInTheDocument();
   expect(router.state.location.pathname).toBe('/p/CORE/settings/fields');
 
-  await userEvent.click(screen.getByRole('tab', { name: /Workflow/ }));
+  await userEvent.click(await tabLink('Workflow'));
   expect(await screen.findByRole('heading', { name: 'Workflow' })).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
+  await userEvent.click(await tabLink('Links'));
   expect(await screen.findByRole('heading', { name: 'Links' })).toBeInTheDocument();
   expect(router.state.location.pathname).toBe('/p/CORE/settings/links');
 });
@@ -172,17 +181,16 @@ test('switching tabs goes to the tab\'s address and renders its panel', async ()
 test('the Repository tab shows the project\'s repository without the scheme banner', async () => {
   mockBoardFetch(makeBoard());
   renderSettings();
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
 
-  await userEvent.click(screen.getByRole('tab', { name: /Repository/ }));
+  await userEvent.click(await tabLink('Repository'));
   expect(await screen.findByRole('heading', { name: 'Repository' })).toBeInTheDocument();
   expect(screen.getByLabelText('Git link')).toBeInTheDocument();
   expect(screen.queryByText(/Editing the shared scheme/)).not.toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
+  await userEvent.click(await tabLink('Links'));
   expect(await screen.findByText(/Editing the shared scheme/)).toBeInTheDocument();
 });
-
 test('clicking Fork forks the scheme then repoints the project to the forked scheme', async () => {
   localStorage.setItem('tickets-user-id', '7');
   const board = makeBoard();
@@ -190,7 +198,7 @@ test('clicking Fork forks the scheme then repoints the project to the forked sch
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
   renderSettings();
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
 
   const forkButton = screen.getByRole('button', { name: /Fork for this project/i });
   expect(forkButton).not.toBeDisabled();
@@ -226,7 +234,7 @@ test('declining the confirm dialog does not call the fork endpoint', async () =>
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
 
   renderSettings();
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
 
@@ -263,7 +271,7 @@ test('re-seeds the child-type chip editor from a fresh board after the scheme ch
   });
   renderSettings({ client });
 
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
   const epicCardBefore = screen.getByText('epic').closest('section')!;
   expect(
     within(epicCardBefore).getByRole('button', { name: 'Task', hidden: true, pressed: true }),
@@ -315,7 +323,7 @@ test('surfaces a toast and does not throw when the fork request fails', async ()
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
   renderSettings();
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
 
