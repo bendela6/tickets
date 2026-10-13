@@ -23,7 +23,7 @@ function board(): Board {
     options: [
       { id: 1000, optionSetId: 100, value: 'todo', label: 'To do', position: 1, kind: 'todo', config: {}, archivedAt: null },
       { id: 1001, optionSetId: 100, value: 'active', label: 'In Progress', position: 2, kind: 'active', config: {}, archivedAt: null },
-      { id: 2000, optionSetId: 200, value: 'high', label: 'High', position: 1, kind: null, config: { color: '#c25425' }, archivedAt: null },
+      { id: 2000, optionSetId: 200, value: 'high', label: 'High', position: 1, kind: null, config: { color: 'orange' }, archivedAt: null },
     ],
     transitions: [],
     linkTypes: [],

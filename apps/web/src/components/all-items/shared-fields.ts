@@ -1,5 +1,5 @@
 import type { Board, FieldType, Project } from '../../api/types';
-import { hexToOptionColor, kindColor, type OptionColor } from '../../registry/option-color';
+import { kindColor, type OptionColor } from '../../registry/option-color';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type ProjectEntry = { project: Project; board: Board; indexes: BoardIndexes };
@@ -100,7 +100,7 @@ function unionOptions(key: string, type: FieldType, entries: ProjectEntry[]): Sh
         union.set(option.value, {
           value: option.value,
           label: option.label,
-          color: isWorkflow ? kindColor(option.kind) : hexToOptionColor(option.config.color),
+          color: isWorkflow ? kindColor(option.kind) : option.config.color ?? 'gray',
         });
       }
     }

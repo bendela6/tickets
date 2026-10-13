@@ -3,7 +3,6 @@ import { useState, type FormEvent } from 'react';
 import type { Field, FieldType, ItemTypeField } from '../../api/types';
 import { useCreateField, usePlaceField, useUnplaceField, useUpdateField, useUpdatePlacement } from '../../api/use-admin';
 import { typePill } from '../../domain/status';
-import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -66,7 +65,7 @@ function PlacementRow({
   const comboOptions: ComboOption[] = fullOptions.map((option) => ({
     value: String(option.id),
     label: option.label,
-    color: hexToOptionColor(option.config.color),
+    color: option.config.color ?? 'gray',
   }));
 
   function move(direction: -1 | 1) {

@@ -1,3 +1,5 @@
+import type { Hue } from '@bh/ui';
+
 export interface Project {
   id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string;
   /** The git link everyone clones (https, ssh or git@host:path); null when none is set. */
@@ -11,7 +13,8 @@ export interface User { id: number; name: string; email: string | null; kind: Us
 
 export interface ItemType {
   id: number; schemeId: number; key: string; label: string; position: number;
-  config: { color?: string } & Record<string, unknown>;
+  /** color is one of bh's hue names ("purple"), as stored since TK-5.21.1. */
+  config: { color?: Hue } & Record<string, unknown>;
   archivedAt: string | null;
 }
 
@@ -33,7 +36,8 @@ export type StatusKind = 'todo' | 'active' | 'blocked' | 'done' | 'dropped';
 export interface Option {
   id: number; optionSetId: number; value: string; label: string; position: number;
   kind: StatusKind | null;                       // null for non-workflow options
-  config: { color?: string; icon?: string } & Record<string, unknown>;
+  /** color is one of bh's hue names ("purple"), as stored since TK-5.21.1. */
+  config: { color?: Hue; icon?: string } & Record<string, unknown>;
   archivedAt: string | null;
 }
 

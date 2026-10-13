@@ -13,7 +13,7 @@ import type {
 import { useCreateItem } from '../api/use-create-item';
 import { typePill } from '../domain/status';
 import { FieldWidget } from '../registry/field-widget';
-import { hexToOptionColor, type OptionColor } from '../registry/option-color';
+import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
 import { StatusSelect } from '../ui/status-select';
@@ -42,8 +42,8 @@ function rowsForType(indexes: BoardIndexes, type: ItemType): PlacementRow[] {
   });
 }
 
-// 36px icon tile on each type card: type.config.color lands on the nearest
-// Instrument option color; colorless types get the neutral inset/ink-2 pair.
+// 36px icon tile on each type card, in type.config.color's hue; colorless
+// types get the neutral inset/ink-2 pair.
 const iconColorClasses: Record<OptionColor, string> = {
   red: 'bg-red-3 text-red-9',
   orange: 'bg-orange-3 text-orange-9',
@@ -59,13 +59,12 @@ const iconColorClasses: Record<OptionColor, string> = {
 };
 
 function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
-  const colored = typeof type.config.color === 'string' && type.config.color.length > 0;
   return (
     <span
       aria-hidden
       className={cn(
         'flex size-36 shrink-0 items-center justify-center rounded-12',
-        colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
+        type.config.color ? iconColorClasses[type.config.color] : 'bg-surface-inset text-gray-11',
       )}
     >
       {dashed ? (
