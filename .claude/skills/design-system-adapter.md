@@ -14,8 +14,9 @@ here should need to leak back into those skills.
 
 ## designSource
 
-- `docs/design/design-system.html` — the Instrument design spec, exported
-  from the Claude Design project. This is the visual reference/baseline for
+- bh's `docs/design/design-system.html` (`../bh/docs/design/design-system.html`)
+  — the Instrument design spec, exported from the Claude Design project and
+  committed in bh, its own repo. This is the visual reference/baseline for
   every component.
 - `packages/web/ui/styles/generated/*.css` — the `--ins-*` custom properties
   the app actually consumes, one file per token family.
@@ -101,7 +102,7 @@ here should need to leak back into those skills.
     `bg-[#3b82f6]`, a hex in an inline `style=`, or a colour written straight
     into hand-authored CSS.
   - `tokens:check` / `check-design-tokens.mjs` — nothing compares the tokens to
-    `docs/design/design-system.html`. The design file is still the spec of
+    bh's `docs/design/design-system.html`. The design file is still the spec of
     record, but drift from it is now found by eye or not at all.
   - `vocabulary.ts` + its two baselines — bare `border`/`rounded` and arbitrary
     `border-[1.5px]`/`rounded-[7px]` all compile silently.
