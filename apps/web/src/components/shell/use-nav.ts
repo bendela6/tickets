@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { FolderKanban, House, Plus, Rows3 } from 'lucide-react';
+import { Database, FolderKanban, House, Plus, Rows3 } from 'lucide-react';
 import type { NavSection } from '@bh/shell';
 import { useProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
@@ -17,8 +17,8 @@ export interface NavActions {
  * The sidebar, in the order it is drawn. Each destination is a route in
  * ../../router.ts. Home counts the projects it lists, and All items the
  * items across them; Projects lists every project with its own count, and
- * carries "New project". A count shows once every board it sums has loaded,
- * rather than a low one first.
+ * carries "New project"; System holds the database's Schema. A count shows
+ * once every board it sums has loaded, rather than a low one first.
  */
 export function useNav({ onNewProject }: NavActions): readonly NavSection[] {
   const projectsQuery = useProjects();
@@ -57,6 +57,11 @@ export function useNav({ onNewProject }: NavActions): readonly NavSection[] {
         label: 'Projects',
         action: { label: 'New project', icon: Plus, onSelect: onNewProject },
         items: projectItems,
+      },
+      {
+        id: 'system',
+        label: 'System',
+        items: [{ label: 'Schema', path: '/schema', icon: Database }],
       },
     ];
   }, [projectCount, itemCount, projectItems, onNewProject]);
