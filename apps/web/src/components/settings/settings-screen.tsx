@@ -5,6 +5,7 @@ import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button, ScreenState, useToast } from '@bh/ui';
+import { DisabledReason } from '../disabled-reason';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
@@ -109,15 +110,16 @@ export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: S
           }
           actions={
             onScheme ? (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={userId === null || forkScheme.isPending || updateProject.isPending}
-                title={userId === null ? 'Sign in to fork the scheme' : undefined}
-                onClick={handleFork}
-              >
-                Fork for this project
-              </Button>
+              <DisabledReason reason={userId === null ? 'Sign in to fork the scheme' : undefined}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+                  onClick={handleFork}
+                >
+                  Fork for this project
+                </Button>
+              </DisabledReason>
             ) : null
           }
         />

@@ -30,6 +30,7 @@ import {
   ScreenState,
   SegmentedControl,
   Tabs,
+  Tooltip,
 } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
@@ -505,16 +506,17 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             </span>
                           ) : null}
                           <span className="flex-1" />
-                          <button
-                            type="button"
-                            aria-label={`Remove transition ${transitionLabel(t)}`}
-                            title="Remove transition"
-                            disabled={disabled || deleteTransition.isPending}
-                            className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
-                            onClick={() => void removeEdge(t).catch(toasted)}
-                          >
-                            ×
-                          </button>
+                          <Tooltip content="Remove transition">
+                            <button
+                              type="button"
+                              aria-label={`Remove transition ${transitionLabel(t)}`}
+                              disabled={disabled || deleteTransition.isPending}
+                              className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => void removeEdge(t).catch(toasted)}
+                            >
+                              ×
+                            </button>
+                          </Tooltip>
                         </div>
                       );
                     })

@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { TooltipProvider } from '@bh/ui';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DiagramProvider } from '../../state/diagram-provider';
@@ -31,6 +32,7 @@ describe('TopBar', () => {
       <DiagramProvider>
         <TopBar />
       </DiagramProvider>,
+      { wrapper: TooltipProvider },
     );
     expect(screen.getByRole('button', { name: 'Lines: curved' })).toBeInTheDocument();
   });

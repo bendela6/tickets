@@ -2,7 +2,7 @@
 // this whichever row it is drawing, so nesting is TreeRow's guide columns
 // rather than a container this component wraps around its own children.
 
-import { Dot, TreeRow, cn, type TreeRowModel } from '@bh/ui';
+import { Dot, Tooltip, TreeRow, cn, type TreeRowModel } from '@bh/ui';
 import { groupColor } from '../../engine/colors/group-color';
 import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
@@ -54,17 +54,18 @@ export function OutlineRow({
         label={`${g.label}, ${data.count} ${data.count === 1 ? 'table' : 'tables'}`}
         leading={
           zone ? (
-            <button
-              type="button"
-              tabIndex={-1}
-              aria-pressed={!hidden}
-              aria-label={`${hidden ? 'Show' : 'Hide'} ${g.label}`}
-              title={hidden ? `Show ${g.label}` : `Hide ${g.label}`}
-              onClick={() => actions.toggleGroup(g.id)}
-              className="flex h-20 w-16 flex-none items-center justify-center self-center"
-            >
-              {swatch}
-            </button>
+            <Tooltip content={hidden ? `Show ${g.label}` : `Hide ${g.label}`}>
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-pressed={!hidden}
+                aria-label={`${hidden ? 'Show' : 'Hide'} ${g.label}`}
+                onClick={() => actions.toggleGroup(g.id)}
+                className="flex h-20 w-16 flex-none items-center justify-center self-center"
+              >
+                {swatch}
+              </button>
+            </Tooltip>
           ) : (
             <span className="flex h-20 w-16 flex-none items-center justify-center self-center">{swatch}</span>
           )
@@ -101,9 +102,9 @@ export function OutlineRow({
           hidden && 'line-through',
         )}
       >
-        <span className="truncate" title={e.id}>
-          {e.label}
-        </span>
+        <Tooltip content={e.id}>
+          <span className="truncate">{e.label}</span>
+        </Tooltip>
       </TreeRow>
     );
   }

@@ -6,7 +6,7 @@
 // "what am I looking at" lives in the side panel, "how is it drawn" lives
 // here.
 
-import { Button, cn } from '@bh/ui';
+import { Button, cn, Tooltip } from '@bh/ui';
 import { useDiagramActions } from '../../state/diagram-context';
 import { RoutingMenu } from './routing-menu';
 
@@ -21,24 +21,16 @@ export function TopBar() {
       )}
     >
       <RoutingMenu />
-      <Button
-        variant="outline"
-        tone="neutral"
-        size="sm"
-        title="Fit the diagram to the viewport"
-        onClick={() => actions.fit()}
-      >
-        Fit
-      </Button>
-      <Button
-        variant="outline"
-        tone="neutral"
-        size="sm"
-        title="Re-pack entities by group"
-        onClick={() => actions.rearrange()}
-      >
-        Rearrange
-      </Button>
+      <Tooltip content="Fit the diagram to the viewport">
+        <Button variant="outline" tone="neutral" size="sm" onClick={() => actions.fit()}>
+          Fit
+        </Button>
+      </Tooltip>
+      <Tooltip content="Re-pack entities by group">
+        <Button variant="outline" tone="neutral" size="sm" onClick={() => actions.rearrange()}>
+          Rearrange
+        </Button>
+      </Tooltip>
     </header>
   );
 }

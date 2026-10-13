@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, Card, cn, Icon, Pill, RelativeDate } from '@bh/ui';
+import { Avatar, Card, cn, Icon, Pill, RelativeDate, Tooltip } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';
@@ -221,15 +221,13 @@ export function KanbanView({
     const progress = childProgress(ticket, indexes);
     const hasFooter = assigneeUser !== undefined || due !== null || progress.total > 0;
 
-    return (
+    const card = (
       <Card
-        key={ticket.id}
         interactive
         padding={3}
         role="button"
         tabIndex={0}
         draggable={userId !== null}
-        title={userId === null ? 'Pick a user in the header to move items' : undefined}
         onClick={() => onOpenTicket(ticket.key)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -289,6 +287,14 @@ export function KanbanView({
           </div>
         ) : null}
       </Card>
+    );
+    // Without a user to move it as, the card can't be dragged; its tooltip says so.
+    return userId === null ? (
+      <Tooltip key={ticket.id} content="Pick a user in the header to move items">
+        {card}
+      </Tooltip>
+    ) : (
+      <Fragment key={ticket.id}>{card}</Fragment>
     );
   };
 

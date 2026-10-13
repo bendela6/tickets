@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
+import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader, Tooltip } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -147,20 +147,21 @@ export function DetailLinks({
                   <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
                     {String(other.values['title'] ?? '')}
                   </span>
-                  <button
-                    type="button"
-                    aria-label="Remove link"
-                    title="Remove link"
-                    disabled={userId === null || deleteLink.isPending}
-                    className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
-                    onClick={() => {
-                      if (userId !== null) {
-                        deleteLink.mutate({ linkId: link.id, actorId: userId });
-                      }
-                    }}
-                  >
-                    ×
-                  </button>
+                  <Tooltip content="Remove link">
+                    <button
+                      type="button"
+                      aria-label="Remove link"
+                      disabled={userId === null || deleteLink.isPending}
+                      className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
+                      onClick={() => {
+                        if (userId !== null) {
+                          deleteLink.mutate({ linkId: link.id, actorId: userId });
+                        }
+                      }}
+                    >
+                      ×
+                    </button>
+                  </Tooltip>
                 </div>
                 {link.why ? (
                   <p className="m-0 px-11 pb-8 font-sans text-12/17 text-gray-11">{link.why}</p>
