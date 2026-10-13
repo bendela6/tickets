@@ -110,7 +110,7 @@ function makeBoard(): Board {
         label: 'P2',
         position: 1,
         kind: null,
-        config: { color: '#fab219' },
+        config: { color: 'yellow' },
         archivedAt: null,
       },
     ],

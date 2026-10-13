@@ -1,72 +1,10 @@
-import { HUES, PALETTE, type Hue } from '@bh/ui';
+import { HUES, type Hue } from '@bh/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 
+// An option's, a status's or a type's color: one of bh's eleven hues, stored by
+// name in config.color, so it goes to bh's components as it is.
 export type OptionColor = Hue;
-
-// Option/status configs store free-form hex colors; the Instrument palette is
-// eleven named colors. Map by hue (circular distance), falling back to gray
-// for unsaturated or unparseable values, so any stored hex lands on the
-// nearest palette chip.
-const HUE_ANCHORS: { color: OptionColor; hue: number }[] = [
-  { color: 'red', hue: 0 },
-  { color: 'orange', hue: 28 },
-  { color: 'yellow', hue: 48 },
-  { color: 'green', hue: 130 },
-  { color: 'teal', hue: 168 },
-  { color: 'cyan', hue: 194 },
-  { color: 'blue', hue: 220 },
-  { color: 'indigo', hue: 250 },
-  { color: 'purple', hue: 282 },
-  { color: 'pink', hue: 330 },
-  { color: 'red', hue: 360 }, // wrap-around anchor
-];
-
-function parseHex(hex: string): { r: number; g: number; b: number } | null {
-  const match = hex.trim().match(/^#?([0-9a-f]{6})$/i);
-  if (!match?.[1]) {
-    return null;
-  }
-  const value = parseInt(match[1], 16);
-  return { r: (value >> 16) & 0xff, g: (value >> 8) & 0xff, b: value & 0xff };
-}
-
-export function hexToOptionColor(hex: string | undefined | null): OptionColor {
-  const rgb = hex ? parseHex(hex) : null;
-  if (!rgb) {
-    return 'gray';
-  }
-  const r = rgb.r / 255;
-  const g = rgb.g / 255;
-  const b = rgb.b / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-  const lightness = (max + min) / 2;
-  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
-  if (saturation < 0.14 || delta === 0) {
-    return 'gray';
-  }
-  let hue: number;
-  if (max === r) {
-    hue = 60 * (((g - b) / delta) % 6);
-  } else if (max === g) {
-    hue = 60 * ((b - r) / delta + 2);
-  } else {
-    hue = 60 * ((r - g) / delta + 4);
-  }
-  hue = (hue + 360) % 360;
-  let best: OptionColor = 'gray';
-  let bestDistance = Infinity;
-  for (const anchor of HUE_ANCHORS) {
-    const distance = Math.abs(hue - anchor.hue);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      best = anchor.color;
-    }
-  }
-  return best;
-}
 
 // Lifecycle kind -> named palette color. This is the workflow field's swatch
 // source wherever a picker needs an OptionColor (e.g. FieldWidget's combobox
@@ -79,16 +17,6 @@ export function kindColor(kind: StatusKind | null): OptionColor {
   return kind === null ? 'gray' : KIND_TONE[kind];
 }
 
-// The colours a picker offers. Eleven, one per hue, each the ramp's solid fill
-// step — the same colour an option chip renders with. This replaces the old
-// six-entry SWATCHES list, which predated the numbered ramps and held two
-// values (an option-red and an option-indigo) that no longer exist anywhere.
-//
-// Stored rows are unaffected: config.color is a literal hex, so a row saved
-// against the old list keeps rendering its own colour, and hexToOptionColor
-// above still maps it onto the nearest hue for chip tinting.
-export const OPTION_COLOR_CHOICES: { color: OptionColor; hex: string }[] = HUES.map(
-  (color) => ({ color, hex: (PALETTE.light.hue[color]?.['9'] ?? '').toUpperCase() }),
-);
-
-export const DEFAULT_OPTION_HEX = OPTION_COLOR_CHOICES[0]!.hex;
+// The colour a new option or type starts with in the settings tabs' pickers:
+// the first of bh's hues, as when the pickers stored hexes.
+export const DEFAULT_OPTION_COLOR: OptionColor = HUES[0];

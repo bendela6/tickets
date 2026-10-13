@@ -37,8 +37,8 @@ const workflowOptions = (base: number, optionSetId: number): Option[] => [
 ];
 
 const severityOptions = (base: number, optionSetId: number): Option[] => [
-  { id: base, optionSetId, value: 'sev1', label: 'Sev 1', position: 1, kind: null, config: { color: '#a03028' }, archivedAt: null },
-  { id: base + 1, optionSetId, value: 'sev2', label: 'Sev 2', position: 2, kind: null, config: { color: '#a44e14' }, archivedAt: null },
+  { id: base, optionSetId, value: 'sev1', label: 'Sev 1', position: 1, kind: null, config: { color: 'red' }, archivedAt: null },
+  { id: base + 1, optionSetId, value: 'sev2', label: 'Sev 2', position: 2, kind: null, config: { color: 'orange' }, archivedAt: null },
 ];
 
 // Two projects with different prefixes; 'severity' (option) is shared —
@@ -282,7 +282,7 @@ test('inline status edit PATCHes /api/items/:id with a commandId envelope', asyn
     </QueryClientProvider>,
   );
   await screen.findByText('CORE-1');
-  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(screen.getByRole('combobox', { name: 'Status of CORE-1' }));
   await userEvent.click(await screen.findByRole('option', { name: /doing/i }));
 
   await waitFor(() => {

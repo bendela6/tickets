@@ -3,11 +3,11 @@ import { Link } from '@tanstack/react-router';
 import type { Board, Item } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { typePill } from '../../domain/status';
+import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState } from '@bh/ui';
+import { Button, cn, Combobox, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState } from '@bh/ui';
 import { ItemKey } from '../item-key';
-import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
 import { legalStatusTargets } from '../../utils/legal-status-targets';
@@ -54,7 +54,7 @@ function columnWidth(column: ViewColumn, indexes: BoardIndexes): string {
   }
 }
 
-/** Inline status cell: workflow-filtered StatusSelect that PATCHes on pick. */
+/** Inline status cell: the type's statuses, a move the workflow doesn't make disabled; PATCHes on pick. */
 function StatusCell({
   board,
   indexes,
@@ -72,21 +72,22 @@ function StatusCell({
     return null;
   }
   const raw = ticket.values[workflowField.key];
+  const value = typeof raw === 'string' ? raw : null;
   const statuses = indexes
     .optionsForField(ticket.typeId, workflowField)
-    .filter((option) => !option.archivedAt)
-    .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
+    .filter((option) => !option.archivedAt);
+  const legal = legalStatusTargets(board, indexes, ticket, ticket.typeId);
   return (
-    <StatusSelect
+    <Combobox
       size="xs"
-      statuses={statuses}
-      value={typeof raw === 'string' ? raw : null}
-      legalTargets={legalStatusTargets(board, indexes, ticket, ticket.typeId).map(
-        (option) => option.value,
-      )}
+      aria-label={`Status of ${ticket.key}`}
+      searchable={false}
+      placeholder="Set status…"
+      {...statusChoices(statuses, legal, value)}
+      value={value}
       disabled={userId === null}
       onChange={(next) => {
-        if (userId === null || next === raw) {
+        if (userId === null || next === null || next === raw) {
           return;
         }
         patch.mutate(

@@ -2,9 +2,11 @@ import { toasted } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
-import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES } from '../../registry/option-color';
+import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, FieldLabel, Input, Pill, SectionHeader } from '@bh/ui';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
+import { Button, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, SectionHeader } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type SettingsTabProps = {
@@ -12,52 +14,6 @@ export type SettingsTabProps = {
   indexes: BoardIndexes;
   projectKey: string;
 };
-
-function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-+|-+$)/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
-
-function ColorSwatches({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (hex: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="mt-8 flex items-center gap-6">
-      {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
-        <button
-          key={color}
-          type="button"
-          disabled={disabled}
-          aria-label={color}
-          aria-pressed={value === hex}
-          onClick={() => onChange(hex)}
-          className={cn(
-            'size-20 shrink-0 rounded-full border-2 transition-shadow',
-            value === hex ? 'border-gray-12' : 'border-transparent hover:border-gray-9',
-          )}
-          style={{ backgroundColor: hex }}
-        />
-      ))}
-    </div>
-  );
-}
 
 // Toggling a chip PUTs the *whole* new set to /api/types/:id/child-types
 // (type.setChildTypes is a full delete+reinsert replace, not a diff). The
@@ -120,6 +76,7 @@ function TypeForm({
   pending: boolean;
 }) {
   const nameId = `${idPrefix}-name`;
+  const colorId = `${idPrefix}-color`;
   return (
     <div className="max-w-420 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
@@ -130,7 +87,15 @@ function TypeForm({
         value={draft.label}
         onChange={(next) => onChange({ ...draft, label: next })}
       />
-      <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
+      <FieldLabel htmlFor={colorId} className="mt-10">
+        Colour
+      </FieldLabel>
+      <ColorPicker
+        id={colorId}
+        className="mt-4"
+        value={draft.color}
+        onChange={(next) => onChange({ ...draft, color: HUES.find((hue) => hue === next) ?? draft.color })}
+      />
       <div className="mt-12 flex justify-end gap-8">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
@@ -162,10 +127,10 @@ export function TypesTab({ board }: SettingsTabProps) {
   const setChildTypes = useSetChildTypes();
 
   const [creating, setCreating] = useState(false);
-  const [createDraft, setCreateDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_HEX });
+  const [createDraft, setCreateDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_COLOR });
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editDraft, setEditDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_HEX });
+  const [editDraft, setEditDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_COLOR });
 
   // typeId -> locally-selected child type ids, seeded from the board's
   // current item_type_child_types rows so a toggle diffs against what's
@@ -192,7 +157,7 @@ export function TypesTab({ board }: SettingsTabProps) {
   function startCreate() {
     if (disabled) return;
     setEditingId(null);
-    setCreateDraft({ label: '', color: DEFAULT_OPTION_HEX });
+    setCreateDraft({ label: '', color: DEFAULT_OPTION_COLOR });
     setCreating(true);
   }
 
@@ -208,13 +173,13 @@ export function TypesTab({ board }: SettingsTabProps) {
       config: { color: createDraft.color },
     });
     setCreating(false);
-    setCreateDraft({ label: '', color: DEFAULT_OPTION_HEX });
+    setCreateDraft({ label: '', color: DEFAULT_OPTION_COLOR });
   }
 
   function startEdit(type: ItemType) {
     if (disabled) return;
     setCreating(false);
-    setEditDraft({ label: type.label, color: type.config.color ?? DEFAULT_OPTION_HEX });
+    setEditDraft({ label: type.label, color: type.config.color ?? DEFAULT_OPTION_COLOR });
     setEditingId(type.id);
   }
 
@@ -292,13 +257,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                 )}
               >
                 <div className="flex items-center gap-10">
-                  {type.config.color ? (
-                    <span
-                      aria-hidden
-                      className="size-8 shrink-0 rounded-full"
-                      style={{ backgroundColor: type.config.color }}
-                    />
-                  ) : null}
+                  {type.config.color ? <Dot color={`var(--color-${type.config.color}-9)`} /> : null}
                   <span className="truncate font-sans text-13/19 font-600 text-gray-12">{type.label}</span>
                   <span className="shrink-0 font-mono text-12/17 text-gray-9">{type.key}</span>
                   {type.archivedAt ? <ArchChip /> : null}

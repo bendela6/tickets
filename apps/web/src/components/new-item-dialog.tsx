@@ -12,11 +12,11 @@ import type {
 } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { typePill } from '../domain/status';
+import { statusChoices } from '../domain/status-choices';
 import { FieldWidget } from '../registry/field-widget';
-import { hexToOptionColor, type OptionColor } from '../registry/option-color';
+import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
-import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { nextKey } from '../utils/next-key';
@@ -42,8 +42,8 @@ function rowsForType(indexes: BoardIndexes, type: ItemType): PlacementRow[] {
   });
 }
 
-// 36px icon tile on each type card: type.config.color lands on the nearest
-// Instrument option color; colorless types get the neutral inset/ink-2 pair.
+// 36px icon tile on each type card, in type.config.color's hue; colorless
+// types get the neutral inset/ink-2 pair.
 const iconColorClasses: Record<OptionColor, string> = {
   red: 'bg-red-3 text-red-9',
   orange: 'bg-orange-3 text-orange-9',
@@ -59,13 +59,12 @@ const iconColorClasses: Record<OptionColor, string> = {
 };
 
 function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
-  const colored = typeof type.config.color === 'string' && type.config.color.length > 0;
   return (
     <span
       aria-hidden
       className={cn(
         'flex size-36 shrink-0 items-center justify-center rounded-12',
-        colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
+        type.config.color ? iconColorClasses[type.config.color] : 'bg-surface-inset text-gray-11',
       )}
     >
       {dashed ? (
@@ -176,11 +175,6 @@ export function NewItemDialog({
   const defaultStatusValue =
     presetOption?.value ?? initialOption?.value ?? entryStatuses[0]?.value ?? null;
   const effectiveStatusValue = statusValue ?? defaultStatusValue;
-  const statusOptions = typeStatusOptions.map((option) => ({
-    key: option.value,
-    label: option.label,
-    kind: option.kind ?? 'todo',
-  }));
 
   const reset = () => {
     setPickedTypeId(null);
@@ -471,9 +465,11 @@ export function NewItemDialog({
             <footer className="flex items-center gap-10 border-t-1 border-gray-6 bg-surface-inset px-20 py-14">
               {workflowField ? (
                 <div className="w-192 shrink-0">
-                  <StatusSelect
-                    statuses={statusOptions}
-                    legalTargets={entryStatuses.map((status) => status.value)}
+                  <Combobox
+                    aria-label="Status"
+                    searchable={false}
+                    placeholder="Set status…"
+                    {...statusChoices(typeStatusOptions, entryStatuses, null, effectiveStatusValue)}
                     value={effectiveStatusValue}
                     onChange={setStatusValue}
                   />

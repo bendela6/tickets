@@ -3,24 +3,10 @@ import { useState } from 'react';
 import type { ItemType, LinkType } from '../../api/types';
 import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
 import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, SectionHeader } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
-
-function slugify(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-+|-+$)/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
 
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".

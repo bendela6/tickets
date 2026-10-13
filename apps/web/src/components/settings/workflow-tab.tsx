@@ -9,9 +9,25 @@ import {
   useUpdatePlacement,
 } from '../../api/use-admin';
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
-import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES, hexToOptionColor } from '../../registry/option-color';
+import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Icon, Input, Pill, Tabs } from '@bh/ui';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
+import {
+  Button,
+  Checkbox,
+  cn,
+  ColorPicker,
+  Combobox,
+  type Option as ComboOption,
+  Dot,
+  FieldLabel,
+  HUES,
+  Icon,
+  Input,
+  Pill,
+  Tabs,
+} from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
@@ -19,22 +35,6 @@ const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'
 // Combobox value for "starts here" — fromOptionId: null on the wire, meaning
 // this edge is a creation/entry move rather than a move between two options.
 const ENTRY = '__entry__';
-
-function slugify(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-+|-+$)/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
 
 // Dashed pill marking the null-from "entry" edge — the move that happens
 // when an item is created directly into a status, mirrors the design's
@@ -86,36 +86,6 @@ function KindPicker({
   );
 }
 
-function ColorSwatches({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (hex: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-6">
-      {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
-        <button
-          key={color}
-          type="button"
-          disabled={disabled}
-          aria-label={color}
-          aria-pressed={value === hex}
-          onClick={() => onChange(hex)}
-          className={cn(
-            'size-20 shrink-0 rounded-full border-2 transition-shadow',
-            value === hex ? 'border-gray-12' : 'border-transparent hover:border-gray-9',
-          )}
-          style={{ backgroundColor: hex }}
-        />
-      ))}
-    </div>
-  );
-}
-
 type OptionDraft = { label: string; kind: StatusKind; color: string };
 
 function OptionForm({
@@ -138,6 +108,7 @@ function OptionForm({
   valueHint?: string;
 }) {
   const labelId = `${idPrefix}-label`;
+  const colorId = `${idPrefix}-color`;
   return (
     <div className="flex flex-col gap-10 border-t-1 border-gray-6 bg-gray-1 px-16 py-12">
       <div className="flex flex-col gap-5">
@@ -159,8 +130,14 @@ function OptionForm({
         <KindPicker value={draft.kind} onChange={(kind) => onChange({ ...draft, kind })} />
       </div>
       <div className="flex flex-col gap-5">
-        <FieldLabel>Colour</FieldLabel>
-        <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
+        <FieldLabel htmlFor={colorId}>Colour</FieldLabel>
+        <ColorPicker
+          id={colorId}
+          size="xs"
+          className="max-w-280"
+          value={draft.color}
+          onChange={(next) => onChange({ ...draft, color: HUES.find((hue) => hue === next) ?? draft.color })}
+        />
       </div>
       <div className="flex items-center gap-8">
         <Button
@@ -238,15 +215,15 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
 
   // ----- options -----
   const [addingOption, setAddingOption] = useState(false);
-  const [newOption, setNewOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
+  const [newOption, setNewOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_COLOR });
 
   const [editingOptionId, setEditingOptionId] = useState<number | null>(null);
-  const [editOption, setEditOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
+  const [editOption, setEditOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_COLOR });
 
   function startCreateOption() {
     if (disabled) return;
     setEditingOptionId(null);
-    setNewOption({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
+    setNewOption({ label: '', kind: 'todo', color: DEFAULT_OPTION_COLOR });
     setAddingOption(true);
   }
 
@@ -282,7 +259,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
     setEditOption({
       label: option.label,
       kind: (option.kind ?? 'todo') as StatusKind,
-      color: option.config.color ?? DEFAULT_OPTION_HEX,
+      color: option.config.color ?? DEFAULT_OPTION_COLOR,
     });
     setEditingOptionId(option.id);
   }
@@ -312,7 +289,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   const toOptions: ComboOption[] = activeOptions.map((option) => ({
     value: String(option.id),
     label: option.label,
-    color: hexToOptionColor(option.config.color),
+    color: option.config.color ?? 'gray',
   }));
   const fromOptions: ComboOption[] = [{ value: ENTRY, label: 'Entry — new item' }, ...toOptions];
 
@@ -434,13 +411,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           </span>
                           <span className="font-mono text-12/17 text-gray-9">{option.value}</span>
                           <Pill {...statusPill(kind)} label={kind} />
-                          {option.config.color ? (
-                            <span
-                              aria-hidden
-                              className="size-8 shrink-0 rounded-full"
-                              style={{ backgroundColor: option.config.color }}
-                            />
-                          ) : null}
+                          {option.config.color ? <Dot color={`var(--color-${option.config.color}-9)`} /> : null}
                           {archived ? <ArchChip /> : null}
                           <span className="flex-1" />
                           <Button

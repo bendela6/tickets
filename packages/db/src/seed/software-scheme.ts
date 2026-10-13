@@ -81,7 +81,7 @@ export const softwareScheme: SchemeDef = {
   ],
   types: [
     {
-      key: 'epic', label: 'Epic', config: { color: '#8f7ae8' },
+      key: 'epic', label: 'Epic', config: { color: 'indigo' },
       allowedChildTypes: ['task', 'bug', 'spike'],
       placements: [
         { fieldKey: 'title', required: true },
@@ -93,7 +93,7 @@ export const softwareScheme: SchemeDef = {
       ],
     },
     {
-      key: 'task', label: 'Task', config: { color: '#3987e5' },
+      key: 'task', label: 'Task', config: { color: 'blue' },
       allowedChildTypes: ['subtask'],
       placements: [
         { fieldKey: 'title', required: true },
@@ -105,7 +105,7 @@ export const softwareScheme: SchemeDef = {
       ],
     },
     {
-      key: 'bug', label: 'Bug', config: { color: '#d03b3b' },
+      key: 'bug', label: 'Bug', config: { color: 'red' },
       placements: [
         { fieldKey: 'title', required: true },
         { fieldKey: 'description' },
@@ -117,7 +117,7 @@ export const softwareScheme: SchemeDef = {
       ],
     },
     {
-      key: 'spike', label: 'Spike', config: { color: '#e5a339' },
+      key: 'spike', label: 'Spike', config: { color: 'orange' },
       placements: [
         { fieldKey: 'title', required: true },
         { fieldKey: 'description' },
@@ -128,7 +128,7 @@ export const softwareScheme: SchemeDef = {
       ],
     },
     {
-      key: 'subtask', label: 'Subtask', config: { color: '#4aa3a3' },
+      key: 'subtask', label: 'Subtask', config: { color: 'teal' },
       placements: [
         { fieldKey: 'title', required: true },
         { fieldKey: 'description' },

@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
-import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar, cn, Icon, Pill, RelativeDate } from '@bh/ui';
 import { ItemKey } from './item-key';
@@ -254,7 +253,7 @@ export function KanbanView({
           {priorityOption ? (
             <Pill
               label={priorityOption.label}
-              tone={hexToOptionColor(priorityOption.config.color)}
+              tone={priorityOption.config.color ?? 'gray'}
               shape="round"
               className="h-18 px-7 text-10"
             />

@@ -3,8 +3,9 @@ import { useState, type FormEvent } from 'react';
 import type { Field, FieldType, ItemTypeField } from '../../api/types';
 import { useCreateField, usePlaceField, useUnplaceField, useUpdateField, useUpdatePlacement } from '../../api/use-admin';
 import { typePill } from '../../domain/status';
-import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
 import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
@@ -19,22 +20,6 @@ const FIELD_TYPES: FieldType[] = [
   'user',
   'json',
 ];
-
-function slugifyKey(label: string): string {
-  return label
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
 
 // Field | Type | Required | Allowed options | Order | unplace-icon.
 const GRID_COLUMNS = 'grid-cols-[minmax(140px,1.5fr)_88px_84px_minmax(170px,1fr)_60px_32px]';
@@ -66,7 +51,7 @@ function PlacementRow({
   const comboOptions: ComboOption[] = fullOptions.map((option) => ({
     value: String(option.id),
     label: option.label,
-    color: hexToOptionColor(option.config.color),
+    color: option.config.color ?? 'gray',
   }));
 
   function move(direction: -1 | 1) {
@@ -200,7 +185,7 @@ function NewFieldComposer({
             onChange={(next) => {
               setLabel(next);
               if (!keyTouched) {
-                setKey(slugifyKey(next));
+                setKey(slugify(next, '_'));
               }
             }}
           />
