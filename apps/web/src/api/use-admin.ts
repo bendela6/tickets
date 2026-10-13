@@ -102,9 +102,31 @@ export function useForkScheme(options: MutationHookOptions = {}) {
     return apiMutate(`/api/schemes/${sourceSchemeId}/fork`, { method: 'POST', actorId, body });
   }, options);
 }
+export interface UpdateProjectInput {
+  actorId: number;
+  id: number;
+  schemeId?: number;
+  name?: string;
+  /** null clears it, and its branch with it. */
+  repositoryUrl?: string | null;
+  /** null clears it, back to the remote's own default. */
+  defaultBranch?: string | null;
+}
+// The project is answered on the board and on the projects list alike, so
+// both are refetched.
 export function useUpdateProject(options: MutationHookOptions = {}) {
-  return useConfigMutation((i: { actorId: number; id: number; schemeId?: number; name?: string }) => {
-    const { actorId, id, ...body } = i;
-    return apiMutate(`/api/projects/${id}`, { method: 'PATCH', actorId, body });
-  }, options);
+  const qc = useQueryClient();
+  return useMutation({
+    ...options,
+    mutationFn: (i: UpdateProjectInput) => {
+      const { actorId, id, ...body } = i;
+      return apiMutate(`/api/projects/${id}`, { method: 'PATCH', actorId, body });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['board'] }),
+        qc.invalidateQueries({ queryKey: ['projects'] }),
+      ]);
+    },
+  });
 }

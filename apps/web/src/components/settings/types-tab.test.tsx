@@ -13,7 +13,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 function makeBoard(overrides: Partial<Board> = {}): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 5, itemPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 5, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
       { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: '#4E46C6' }, archivedAt: null },

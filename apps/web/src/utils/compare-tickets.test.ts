@@ -11,7 +11,7 @@ import { indexBoard, type BoardIndexes } from './index-board';
  */
 function board(key: string, optionSetId: number, order: string[]): Board {
   return {
-    project: { id: 1, key, name: key, schemeId: 1, itemPrefix: key.toUpperCase(), createdAt: 'x' },
+    project: { id: 1, key, name: key, schemeId: 1, itemPrefix: key.toUpperCase(), createdAt: 'x', repositoryUrl: null, defaultBranch: null },
     types: [{ id: 1, schemeId: 1, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null }],
     fields: [
       {
