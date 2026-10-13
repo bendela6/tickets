@@ -1,8 +1,6 @@
-import type { Board } from '../../api/types';
 import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
-import { ProjectRepository } from './project-repository';
 
 type UpdateConfig = (mutate: (current: ViewConfig) => ViewConfig) => void;
 
@@ -62,21 +60,17 @@ function ColumnChecklist({
 
 // Board screen header per docs/design/03-project-board.html lines 82–97
 // (table mode) and 207–218 (board-mode variant with Columns:/Cards:
-// dropdowns). Density/mode/columns all persist into the view config.
+// dropdowns). Density/mode/columns all persist into the view config. The
+// project's name, its progress and its repository are the page header's
+// (routes/project-route.tsx); this is the view's own row of controls.
 export function BoardHeader({
-  board,
   indexes,
-  ticketCount,
-  donePercent,
   query,
   onQueryChange,
   config,
   onUpdate,
 }: {
-  board: Board;
   indexes: BoardIndexes;
-  ticketCount: number;
-  donePercent: number;
   query: string;
   onQueryChange: (next: string) => void;
   config: ViewConfig;
@@ -88,18 +82,6 @@ export function BoardHeader({
 
   return (
     <div className="mb-14 flex shrink-0 flex-wrap items-center gap-12 gap-y-8">
-      <span className="rounded-6 bg-surface-inset px-7 py-3 font-mono text-12/17 font-500 text-gray-12">
-        {board.project.itemPrefix}
-      </span>
-      <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">
-        {board.project.name}
-      </h1>
-      <span className="font-mono text-12/17 text-gray-9">
-        {ticketCount} items · {donePercent}% done
-      </span>
-      {/* A line of its own under the row: inline, a long link would push the
-          controls onto a second row at desktop widths. */}
-      <ProjectRepository project={board.project} className="order-last basis-full" />
       <span className="flex-1" />
 
       {config.mode === 'table' ? (

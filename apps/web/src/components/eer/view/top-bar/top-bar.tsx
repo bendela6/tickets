@@ -2,8 +2,8 @@
 //
 // Everything that names or filters the model — the title, the search box, the
 // group chips, the edge-kind chips — moved to the outline (view/outline), which
-// on /schema renders in the app shell's mode panel. The split is by question:
-// "what am I looking at" lives in the left sidebar, "how is it drawn" lives
+// on /schema renders in the page's outline panel. The split is by question:
+// "what am I looking at" lives in the side panel, "how is it drawn" lives
 // here.
 
 import { cn } from '@bh/ui';

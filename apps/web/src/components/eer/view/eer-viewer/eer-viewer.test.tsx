@@ -19,8 +19,8 @@ describe('EerDiagram', () => {
   it('loads the given model and mounts the outline, toolbar, viewport, and side panel', () => {
     const { unmount } = render(<EerDiagram model={buildModel(twoZoneRaw())} />);
     // The standalone form titles itself from the model and lends the outline a
-    // sidebar of its own — on /schema both of those come from the app shell
-    // instead, which is why this component is not what that route renders.
+    // sidebar of its own — on /schema both of those come from the page (its
+    // header and its outline panel), which is why this is not what that route renders.
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture' })).toBeInTheDocument();
     expect(screen.getByRole('treeitem', { name: 'Zone One, 1 table' })).toBeInTheDocument();
     expect(screen.getByRole('treeitem', { name: 'users' })).toBeInTheDocument();

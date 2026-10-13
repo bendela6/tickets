@@ -34,8 +34,8 @@ export function useDiagramUi(): DiagramUi {
   return req(useContext(UiContext), 'useDiagramUi');
 }
 // Null-tolerant variants, for UI that renders in a shell OUTSIDE the diagram's
-// own subtree — the app's mode panel hosts <Outline/> on /schema, and the same
-// panel component is also rendered on routes where no <DiagramProvider> exists.
+// own subtree — the schema page's outline panel hosts <Outline/> on /schema, and
+// the same component may be rendered where no <DiagramProvider> exists.
 // Such a component reads all three and bails when any is absent, instead of
 // throwing the way the strict hooks above deliberately do.
 export function useDiagramUiOrNull(): DiagramUi | null {

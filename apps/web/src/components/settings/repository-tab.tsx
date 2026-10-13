@@ -63,8 +63,8 @@ export function RepositoryTab({ board }: SettingsTabProps) {
   const branchError = issues.byField.defaultBranch;
 
   return (
-    <section className="flex min-h-0 flex-col px-24 py-22">
-      <h1 className="m-0 mb-6 font-sans text-20 font-600 text-gray-12">Repository</h1>
+    <section className="flex min-h-0 flex-col">
+      <h2 className="m-0 mb-6 font-sans text-20 font-600 text-gray-12">Repository</h2>
       <p className="mb-16 mt-0 max-w-520 font-sans text-12/17 text-gray-9">
         Where {project.name}'s code lives: its git link, the same for everyone. Each developer's own checkout is
         set on their machine, not here.

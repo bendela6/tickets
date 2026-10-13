@@ -94,6 +94,9 @@ importers:
       '@bh/form':
         specifier: workspace:*
         version: link:../../packages/bh/form
+      '@bh/shell':
+        specifier: workspace:*
+        version: link:../../packages/bh/shell
       '@bh/table':
         specifier: workspace:*
         version: link:../../packages/bh/table
@@ -136,6 +139,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      lucide-react:
+        specifier: ^1.56.0
+        version: 1.56.0(@types/react@19.3.0)(react@19.3.0)
       radix-ui:
         specifier: ^1.6.7
         version: 1.7.0(@types/react-dom@19.2.3(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

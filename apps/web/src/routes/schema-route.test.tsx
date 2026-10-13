@@ -83,7 +83,8 @@ function renderSchemaRoute({
         ? { databases: ['tickets', 'postgres'], current: 'tickets' }
         : url.startsWith('/api/schema')
           ? schema
-          : url.startsWith('/api/users')
+          : // What the frame's sidebar reads: no projects, no users.
+            url.startsWith('/api/users') || url === '/api/projects'
             ? { data: [] }
             : null;
       if (body === null) throw new Error(`unexpected fetch: ${url}`);
@@ -102,38 +103,76 @@ function renderSchemaRoute({
   );
 }
 
-describe('/schema inside the app shell', () => {
+describe('/schema inside the frame', () => {
+  const realMatchMedia = window.matchMedia;
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    window.matchMedia = realMatchMedia;
+    localStorage.clear();
   });
 
-  it('mounts the activity rail, so the route is reachable from every other mode', async () => {
-    // The regression this pins: schemaRoute rendered a bare full-height div
-    // and was never wrapped in AppShell. The rail and mode panel did not mount
-    // at all, so `modeForPath`'s 'schema' branch was unreachable in the real
-    // app and SchemaPanel was dead code.
+  it('on a phone, opens the outline from the header as an overlay', async () => {
+    // Every media query the frame and the panel ask answers "narrow".
+    window.matchMedia = ((media: string) => ({
+      matches: true,
+      media,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
     renderSchemaRoute();
-    expect(await screen.findByLabelText('Schema')).toBeInTheDocument();
-    expect(screen.getByLabelText('Tasks')).toBeInTheDocument();
-  });
-
-  it('shows the schema mode panel with its database dropdown', async () => {
-    // Not just "a panel": the SCHEMA panel. This is what proves modeForPath
-    // resolved 'schema' and ModePanel took that branch.
-    renderSchemaRoute();
-    expect(await screen.findByText('SCHEMA')).toBeInTheDocument();
-    // By its aria-label, not its text. The outline below it lists a table
-    // ALSO called `tickets`, so `name: 'tickets'` matches that row instead and
-    // the assertion passes without the dropdown existing at all.
+    const open = await screen.findByRole('button', { name: 'Outline' });
+    // Shut until asked for: on a phone the panel would cover the diagram.
+    expect(screen.queryByRole('button', { name: /^Database:/ })).not.toBeInTheDocument();
+    // Nothing of the panel's own is pinned over the frame's top bar.
+    expect(screen.queryByRole('button', { name: 'Show Schema outline' })).not.toBeInTheDocument();
+    fireEvent.click(open);
+    expect(await screen.findByRole('dialog', { name: 'Schema outline' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Database: tickets' })).toBeInTheDocument();
   });
 
-  it('renders the outline in the mode panel, under the database picker', async () => {
-    // The groups → tables tree lives in the shell's left panel, which only
-    // works because schemaRoute wraps the WHOLE shell in the diagram provider.
-    // Rendered inside <main> instead, none of this would be here.
+  it('mounts inside the frame, so the sidebar is there to leave it by', async () => {
+    // The root route draws the one frame around every page; a page drawn
+    // outside it would have no way back to the rest of the app.
     renderSchemaRoute();
-    const panel = (await screen.findByText('SCHEMA')).closest('div')!.parentElement!;
+    expect(await screen.findByRole('complementary', { name: 'Navigation' })).toBeInTheDocument();
+  });
+
+  it('is a page of its own, titled Schema', async () => {
+    renderSchemaRoute();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Schema' })).toBeInTheDocument();
+    expect(await screen.findByText('2 tables')).toBeInTheDocument();
+  });
+
+  it('shows the outline panel with its database dropdown', async () => {
+    renderSchemaRoute();
+    const panel = await screen.findByRole('complementary', { name: 'Schema outline' });
+    // By its aria-label, not its text. The outline below it lists a table
+    // ALSO called `tickets`, so `name: 'tickets'` matches that row instead and
+    // the assertion passes without the dropdown existing at all.
+    expect(
+      await within(panel).findByRole('button', { name: 'Database: tickets' }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides the outline panel to a rail and brings it back', async () => {
+    renderSchemaRoute();
+    await screen.findByRole('complementary', { name: 'Schema outline' });
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Schema outline' }));
+    expect(screen.queryByRole('complementary', { name: 'Schema outline' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Schema outline' }));
+    expect(screen.getByRole('complementary', { name: 'Schema outline' })).toBeInTheDocument();
+  });
+
+  it('renders the outline in the outline panel, under the database picker', async () => {
+    // The groups → tables tree sits beside the canvas, which only works
+    // because schemaRoute wraps both in the diagram provider.
+    renderSchemaRoute();
+    const panel = await screen.findByRole('complementary', { name: 'Schema outline' });
     expect(
       await within(panel).findByRole('textbox', { name: 'Filter tables' }),
     ).toBeInTheDocument();
@@ -173,7 +212,6 @@ describe('/schema inside the app shell', () => {
 
   it('reads the selected database from the search param', async () => {
     renderSchemaRoute({ path: '/schema?database=postgres' });
-    await screen.findByLabelText('Schema');
     await waitFor(() =>
       expect(vi.mocked(fetch)).toHaveBeenCalledWith(
         '/api/schema?database=postgres',
@@ -194,8 +232,8 @@ describe('/schema inside the app shell', () => {
     // error, so the error branch and the empty branch both fired and a red
     // "could not be drawn" stacked above the real explanation.
     expect(screen.queryByText('This schema could not be drawn.')).not.toBeInTheDocument();
-    // The shell survives: the crash used to take the rail with it.
-    expect(screen.getByLabelText('Schema')).toBeInTheDocument();
+    // The frame survives: the crash used to take the whole app with it.
+    expect(screen.getByRole('complementary', { name: 'Navigation' })).toBeInTheDocument();
   });
 
   it('says why an edge is missing instead of just not drawing it', async () => {

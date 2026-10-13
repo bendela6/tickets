@@ -4,6 +4,7 @@ import type { ProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { KIND_ICON, KIND_TONE } from '../../domain/status';
+import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Button, Icon, relativeLabel } from '@bh/ui';
 import { NewProjectDialog } from '../shell/new-project-dialog';
 
@@ -104,42 +105,51 @@ export function ProjectsHome() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <div className="px-16 py-20 md:px-32 md:py-28">
-      <div className="mb-22 flex items-baseline gap-14">
-        <h1 className="font-sans text-22 font-600 text-gray-12">Projects</h1>
-        <span className="font-mono text-12/17 text-gray-9">
-          {projectList.length} projects · {totalTickets} items · {openTickets} open
-        </span>
-        <span className="flex-1" />
-        <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
-          ＋ New project
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-16 xl:grid-cols-2">
-        {projectList.map((project) => {
-          const stat = loaded.find((entry) => entry.project.key === project.key);
-          return stat ? (
-            <ProjectCard key={project.id} stats={stat} />
-          ) : (
-            <div
-              key={project.id}
-              className="min-h-150 animate-pulse rounded-12 border-1 border-gray-6 bg-surface-raised"
-            />
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="flex min-h-150 cursor-pointer flex-col items-center justify-center gap-6 rounded-12 border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
-        >
-          <span className="font-sans text-20">＋</span>
-          <span className="font-sans text-13/19 font-500">New project</span>
-          <span className="font-mono text-11">key · name · prefix</span>
-        </button>
-      </div>
+    <Page
+      header={
+        <PageHeader
+          title="Projects"
+          description={
+            <span className="font-mono text-12/17 text-gray-9">
+              {projectList.length} projects · {totalTickets} items · {openTickets} open
+            </span>
+          }
+          actions={
+            <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+              ＋ New project
+            </Button>
+          }
+        />
+      }
+    >
+      <PageBody>
+        {/* Cards in a grid of their own rather than a CardGrid: a project card
+          holds a row of counts that two columns squeeze below xl. */}
+        <div className="grid grid-cols-1 gap-16 xl:grid-cols-2">
+          {projectList.map((project) => {
+            const stat = loaded.find((entry) => entry.project.key === project.key);
+            return stat ? (
+              <ProjectCard key={project.id} stats={stat} />
+            ) : (
+              <div
+                key={project.id}
+                className="min-h-150 animate-pulse rounded-12 border-1 border-gray-6 bg-surface-raised"
+              />
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="flex min-h-150 cursor-pointer flex-col items-center justify-center gap-6 rounded-12 border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
+          >
+            <span className="font-sans text-20">＋</span>
+            <span className="font-sans text-13/19 font-500">New project</span>
+            <span className="font-mono text-11">key · name · prefix</span>
+          </button>
+        </div>
+      </PageBody>
 
       <NewProjectDialog open={creating} onOpenChange={setCreating} />
-    </div>
+    </Page>
   );
 }

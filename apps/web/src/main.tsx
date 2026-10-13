@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './app';
 import { AppErrorBoundary } from './components/app-error-boundary';
+import { STORAGE_KEYS } from './utils/storage-keys';
+import { applyTheme, readStoredTheme } from '@bh/shell';
 import { Button } from '@bh/ui';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
@@ -27,14 +29,9 @@ function AppCrashedFallback() {
   );
 }
 
-const storedTheme = window.localStorage.getItem('tickets-theme');
-
-if (storedTheme === 'light' || storedTheme === 'dark') {
-  document.documentElement.dataset.theme = storedTheme;
-} else {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
-}
+// Stamped before the first render, from what the reader picked last, so the
+// page never paints in the wrong theme; `system` (nothing picked) follows the OS.
+applyTheme(readStoredTheme(STORAGE_KEYS.theme), STORAGE_KEYS.theme);
 
 const queryClient = new QueryClient({
   defaultOptions: {

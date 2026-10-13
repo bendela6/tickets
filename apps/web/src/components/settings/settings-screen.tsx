@@ -1,41 +1,34 @@
 import { OWN_ERROR } from '../../api/mutation-meta';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Tabs, useToast } from '@bh/ui';
+import { Button, useToast } from '@bh/ui';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
 import { RepositoryTab } from './repository-tab';
+import type { SettingsTab } from './settings-tabs';
 import { TypesTab } from './types-tab';
 import { WorkflowTab } from './workflow-tab';
 
-type TabKey = 'types' | 'fields' | 'workflow' | 'links' | 'repository';
+const PROJECTS_CRUMB = { label: 'Projects', path: '/' };
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'types', label: 'Types' },
-  { key: 'fields', label: 'Fields' },
-  { key: 'workflow', label: 'Workflow' },
-  { key: 'links', label: 'Links' },
-  // The project's own, not its scheme's: the scheme banner is left off it.
-  { key: 'repository', label: 'Repository' },
-];
-
-// The schema admin shell per the approved prototype: a scheme banner above a
-// left-rail tab switcher (Types · Fields · Workflow · Links). The four panels
-// are thin placeholders here — Tasks 10-13 fill each in behind its own file.
+// A project's settings page: its header says which scheme the four scheme
+// tabs edit (and offers to fork it), over the tab on screen. Which tab that
+// is is the route's: each is a route of its own (routes/settings-route.tsx),
+// and the sidebar lists them under Settings (components/shell/use-nav.ts).
 //
 // The board payload carries no scheme *name* (only `project.schemeId` — see
 // `apps/web/src/api/types.ts`), so the banner labels the scheme by id rather
 // than inventing a name field that doesn't exist on the wire. Likewise there's
 // no project-count-per-scheme on the board, so the banner doesn't claim a
 // specific N; it says "all projects on this scheme" instead.
-export function SettingsScreen({ projectKey }: { projectKey: string }) {
+export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: SettingsTab }) {
   const boardQuery = useBoard(projectKey);
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
-  const [tab, setTab] = useState<TabKey>('types');
   const { userId } = useCurrentUser();
   const forkScheme = useForkScheme(OWN_ERROR);
   const updateProject = useUpdateProject(OWN_ERROR);
@@ -76,79 +69,82 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
     }
   }
 
-  if (boardQuery.isLoading) {
-    return <p className="px-32 py-28 font-sans text-13/19 text-gray-9">Loading {projectKey} settings…</p>;
-  }
-  if (boardQuery.isError || !board || !indexes) {
+  if (boardQuery.isLoading || boardQuery.isError || !board || !indexes) {
     return (
-      <p className="px-32 py-28 font-sans text-13/19 text-red-9">
-        Could not load project "{projectKey}" — {(boardQuery.error as Error | null)?.message}
-      </p>
+      <Page header={<PageHeader title="Settings" breadcrumb={[PROJECTS_CRUMB]} />}>
+        <PageBody>
+          {boardQuery.isLoading ? (
+            <p className="font-sans text-13/19 text-gray-9">Loading {projectKey} settings…</p>
+          ) : (
+            <p className="font-sans text-13/19 text-red-9">
+              Could not load project "{projectKey}" — {(boardQuery.error as Error | null)?.message}
+            </p>
+          )}
+        </PageBody>
+      </Page>
     );
   }
 
   const tabProps = { board, indexes, projectKey };
+  const onScheme = tab !== 'repository';
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* scheme banner: the four scheme tabs only */}
-      {tab === 'repository' ? null : (
-        <div className="flex flex-none items-center gap-12 border-b-1 border-gray-6 bg-surface-inset px-24 py-12">
-          <p className="m-0 flex-1 font-sans text-13/19 text-gray-11">
-            Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
-            changes affect all projects on this scheme.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={userId === null || forkScheme.isPending || updateProject.isPending}
-            title={userId === null ? 'Sign in to fork the scheme' : undefined}
-            onClick={handleFork}
-          >
-            Fork for this project
-          </Button>
-        </div>
-      )}
-
-      <div className="flex min-h-0 flex-1">
-        <nav
-          aria-label="Settings sections"
-          className="w-212 flex-none overflow-y-auto border-r-1 border-gray-6 bg-gray-1 px-12 py-22"
-        >
-          <Tabs
-            variant="rail"
-            items={TABS.map(({ key, label }) => ({ value: key, label }))}
-            value={tab}
-            onChange={(next) => setTab(next as TabKey)}
-          />
-        </nav>
-
-        <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto">
-          {/*
-            Keyed on the scheme id: each panel seeds local state (chip
-            selections, the selected-type picker, etc.) from the board on
-            mount, keyed by *type* ids. Forking re-inserts every type under
-            fresh ids (see schemeFork in
-            apps/api/src/command/config/scheme.ts) and repoints the project
-            without navigating away, so without this key the panels would
-            keep their stale, now-mismatched selections after the board
-            refetch — silently re-seeding from a scheme that no longer
-            applies. The key forces a clean remount so each panel re-derives
-            its state from the *new* board.
-          */}
-          {tab === 'types' ? (
-            <TypesTab key={board.project.schemeId} {...tabProps} />
-          ) : tab === 'fields' ? (
-            <FieldsTab key={board.project.schemeId} {...tabProps} />
-          ) : tab === 'workflow' ? (
-            <WorkflowTab key={board.project.schemeId} {...tabProps} />
-          ) : tab === 'links' ? (
-            <LinksTab key={board.project.schemeId} {...tabProps} />
-          ) : (
-            <RepositoryTab {...tabProps} />
-          )}
-        </div>
-      </div>
-    </div>
+    <Page
+      header={
+        <PageHeader
+          title="Settings"
+          breadcrumb={[PROJECTS_CRUMB, { label: board.project.name, path: `/p/${projectKey}` }]}
+          description={
+            // The scheme banner, on the four scheme tabs only: the repository
+            // is the project's own.
+            onScheme ? (
+              <>
+                Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
+                changes affect all projects on this scheme.
+              </>
+            ) : undefined
+          }
+          actions={
+            onScheme ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+                title={userId === null ? 'Sign in to fork the scheme' : undefined}
+                onClick={handleFork}
+              >
+                Fork for this project
+              </Button>
+            ) : null
+          }
+        />
+      }
+    >
+      <PageBody>
+        {/*
+          Keyed on the scheme id: each panel seeds local state (chip
+          selections, the selected-type picker, etc.) from the board on
+          mount, keyed by *type* ids. Forking re-inserts every type under
+          fresh ids (see schemeFork in
+          apps/api/src/command/config/scheme.ts) and repoints the project
+          without navigating away, so without this key the panels would
+          keep their stale, now-mismatched selections after the board
+          refetch — silently re-seeding from a scheme that no longer
+          applies. The key forces a clean remount so each panel re-derives
+          its state from the *new* board.
+        */}
+        {tab === 'types' ? (
+          <TypesTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'fields' ? (
+          <FieldsTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'workflow' ? (
+          <WorkflowTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'links' ? (
+          <LinksTab key={board.project.schemeId} {...tabProps} />
+        ) : (
+          <RepositoryTab {...tabProps} />
+        )}
+      </PageBody>
+    </Page>
   );
 }

@@ -16,9 +16,8 @@ function UiGrab() {
 }
 
 describe('Outline', () => {
-  // Load-bearing: SchemaPanel renders this into the app shell's mode panel, and
-  // that panel also mounts on routes with no diagram at all. Throwing there (as
-  // the strict useDiagram* hooks do by design) would take down the whole shell.
+  // Rendered with no diagram above it, it stays quiet: throwing there (as the
+  // strict useDiagram* hooks do by design) would take down the page around it.
   it('renders nothing when there is no diagram provider above it', () => {
     const { container } = render(<Outline />);
     expect(container).toBeEmptyDOMElement();

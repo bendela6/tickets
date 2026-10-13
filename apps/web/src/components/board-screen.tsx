@@ -66,24 +66,10 @@ export function BoardScreen() {
     .sort(compareTickets(indexes, config.sort));
   const openTicket = search.t !== undefined ? (indexes.itemByKey.get(search.t) ?? null) : null;
 
-  const doneCount = topLevel.filter((ticket) => {
-    const workflowField = indexes.workflowField(ticket.typeId);
-    const raw = workflowField ? ticket.values[workflowField.key] : undefined;
-    return (
-      typeof raw === 'string' &&
-      workflowField &&
-      indexes.optionByValue(workflowField, raw)?.kind === 'done'
-    );
-  }).length;
-  const donePercent = topLevel.length > 0 ? Math.round((doneCount / topLevel.length) * 100) : 0;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <BoardHeader
-        board={board}
         indexes={indexes}
-        ticketCount={topLevel.length}
-        donePercent={donePercent}
         query={query}
         onQueryChange={(next) => setSearch({ q: next.length > 0 ? next : undefined })}
         config={config}
