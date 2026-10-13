@@ -1,12 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
-import type { ReactNode } from 'react';
 import type { Board } from '../../api/types';
-import { CurrentUserProvider } from '../../state/current-user-context';
-import { ToastProvider } from '@bh/ui';
-import { SettingsScreen } from './settings-screen';
+import { rootRoute } from '../../routes/root-route';
+import { settingsRouteTree } from '../../routes/settings-route';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -73,20 +72,51 @@ function mockRoutedFetch(board: Board, forkedSchemeId: number) {
   return fetchMock;
 }
 
-function renderWithProviders(node: ReactNode, client?: QueryClient) {
+/**
+ * Mounts the REAL settings routes under the REAL root route, on a memory
+ * history: which tab is on screen is the address's, so it is the route tree
+ * that is under test, not SettingsScreen alone. The root route brings the
+ * frame, whose sidebar lists the tabs under Settings; what the frame reads is
+ * answered here (one project, CORE, and no users), and every other request
+ * goes to the test's own `fetch` mock.
+ */
+function renderSettings({
+  path = '/p/CORE/settings/types',
+  client,
+}: { path?: string; client?: QueryClient } = {}) {
+  const inner = globalThis.fetch;
+  const projects = { data: [{ ...makeBoard().project, key: 'CORE' }] };
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string, init?: RequestInit) => {
+      if (url === '/api/projects' || url.startsWith('/api/users')) {
+        const body = url === '/api/projects' ? projects : { data: [] };
+        return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
+      }
+      return inner(url, init);
+    }),
+  );
   const qc =
     client ??
     new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([settingsRouteTree]),
+    history: createMemoryHistory({ initialEntries: [path] }),
+  });
   render(
     <QueryClientProvider client={qc}>
-      <CurrentUserProvider>
-        <ToastProvider>{node}</ToastProvider>
-      </CurrentUserProvider>
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  return qc;
+  return { client: qc, router };
+}
+
+/** A settings tab's link, under Settings in the sidebar. */
+async function tabLink(label: string) {
+  const nav = await screen.findByRole('complementary', { name: 'Navigation' });
+  return within(nav).findByRole('link', { name: label });
 }
 
 afterEach(() => {
@@ -94,62 +124,81 @@ afterEach(() => {
   localStorage.clear();
 });
 
-test('renders the four tabs and the scheme banner once the board loads', async () => {
+test('lists the five tabs under Settings and shows the scheme banner once the board loads', async () => {
   mockBoardFetch(makeBoard());
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  renderSettings();
 
-  expect(await screen.findByRole('tab', { name: /Types/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Fields/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Workflow/ })).toBeInTheDocument();
-  expect(screen.getByRole('tab', { name: /Links/ })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Types' })).toBeInTheDocument();
+  expect(await tabLink('Types')).toHaveAttribute('href', '/p/CORE/settings/types');
+  expect(await tabLink('Fields')).toHaveAttribute('href', '/p/CORE/settings/fields');
+  expect(await tabLink('Workflow')).toHaveAttribute('href', '/p/CORE/settings/workflow');
+  expect(await tabLink('Links')).toHaveAttribute('href', '/p/CORE/settings/links');
+  expect(await tabLink('Repository')).toHaveAttribute('href', '/p/CORE/settings/repository');
 
   expect(screen.getByText(/Editing the shared scheme/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Fork for this project/i })).toBeDisabled();
-
-  // Types tab is the default panel.
-  expect(screen.getByRole('heading', { name: 'Types' })).toBeInTheDocument();
 });
 
-test('switching tabs renders the corresponding placeholder panel', async () => {
+test('the bare settings address opens the Types tab', async () => {
   mockBoardFetch(makeBoard());
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  const { router } = renderSettings({ path: '/p/CORE/settings' });
 
-  await screen.findByRole('tab', { name: /Types/ });
+  expect(await screen.findByRole('heading', { name: 'Types' })).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe('/p/CORE/settings/types');
+});
 
-  await userEvent.click(screen.getByRole('tab', { name: /Fields/ }));
-  expect(screen.getByRole('heading', { name: 'Fields' })).toBeInTheDocument();
+test('each tab opens from its own address, its link lit in the sidebar', async () => {
+  mockBoardFetch(makeBoard());
+  renderSettings({ path: '/p/CORE/settings/workflow' });
 
-  await userEvent.click(screen.getByRole('tab', { name: /Workflow/ }));
-  expect(screen.getByRole('heading', { name: 'Workflow' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Workflow' })).toBeInTheDocument();
+  expect(await tabLink('Workflow')).toHaveAttribute('aria-current', 'page');
+  expect(await tabLink('Types')).not.toHaveAttribute('aria-current');
+  expect(screen.queryByRole('heading', { name: 'Types' })).not.toBeInTheDocument();
+});
 
-  await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
-  expect(screen.getByRole('heading', { name: 'Links' })).toBeInTheDocument();
+test('following a tab in the sidebar goes to its address and renders its panel', async () => {
+  mockBoardFetch(makeBoard());
+  const { router } = renderSettings();
+
+  await screen.findByRole('heading', { name: 'Types' });
+
+  await userEvent.click(await tabLink('Fields'));
+  expect(await screen.findByRole('heading', { name: 'Fields' })).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe('/p/CORE/settings/fields');
+
+  await userEvent.click(await tabLink('Workflow'));
+  expect(await screen.findByRole('heading', { name: 'Workflow' })).toBeInTheDocument();
+
+  await userEvent.click(await tabLink('Links'));
+  expect(await screen.findByRole('heading', { name: 'Links' })).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe('/p/CORE/settings/links');
 });
 
 // The repository is the project's own, so the banner about the shared scheme
 // is left off its tab, and comes back on the scheme's.
 test('the Repository tab shows the project\'s repository without the scheme banner', async () => {
   mockBoardFetch(makeBoard());
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
-  await screen.findByRole('tab', { name: /Types/ });
+  renderSettings();
+  await screen.findByRole('heading', { name: 'Types' });
 
-  await userEvent.click(screen.getByRole('tab', { name: /Repository/ }));
-  expect(screen.getByRole('heading', { name: 'Repository' })).toBeInTheDocument();
+  await userEvent.click(await tabLink('Repository'));
+  expect(await screen.findByRole('heading', { name: 'Repository' })).toBeInTheDocument();
   expect(screen.getByLabelText('Git link')).toBeInTheDocument();
   expect(screen.queryByText(/Editing the shared scheme/)).not.toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
-  expect(screen.getByText(/Editing the shared scheme/)).toBeInTheDocument();
+  await userEvent.click(await tabLink('Links'));
+  expect(await screen.findByText(/Editing the shared scheme/)).toBeInTheDocument();
 });
-
 test('clicking Fork forks the scheme then repoints the project to the forked scheme', async () => {
   localStorage.setItem('tickets-user-id', '7');
   const board = makeBoard();
   const fetchMock = mockRoutedFetch(board, 42);
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
-  await screen.findByRole('tab', { name: /Types/ });
+  renderSettings();
+  await screen.findByRole('heading', { name: 'Types' });
 
   const forkButton = screen.getByRole('button', { name: /Fork for this project/i });
   expect(forkButton).not.toBeDisabled();
@@ -184,8 +233,8 @@ test('declining the confirm dialog does not call the fork endpoint', async () =>
   const fetchMock = mockRoutedFetch(board, 42);
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
 
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
-  await screen.findByRole('tab', { name: /Types/ });
+  renderSettings();
+  await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
 
@@ -220,9 +269,9 @@ test('re-seeds the child-type chip editor from a fresh board after the scheme ch
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  renderWithProviders(<SettingsScreen projectKey="CORE" />, client);
+  renderSettings({ client });
 
-  await screen.findByRole('tab', { name: /Types/ });
+  await screen.findByRole('heading', { name: 'Types' });
   const epicCardBefore = screen.getByText('epic').closest('section')!;
   expect(
     within(epicCardBefore).getByRole('button', { name: 'Task', hidden: true, pressed: true }),
@@ -273,8 +322,8 @@ test('surfaces a toast and does not throw when the fork request fails', async ()
   vi.stubGlobal('fetch', fetchMock);
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
-  renderWithProviders(<SettingsScreen projectKey="CORE" />);
-  await screen.findByRole('tab', { name: /Types/ });
+  renderSettings();
+  await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
 

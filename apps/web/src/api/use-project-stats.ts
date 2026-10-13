@@ -7,6 +7,11 @@ export interface ProjectStats {
   project: Project;
   counts: Record<StatusKind, number>;
   total: number;
+  /**
+   * Its top-level, unarchived items: what its board and All items count, and
+   * so the count beside it in the sidebar.
+   */
+  items: number;
   /** done / total, 0–100 */
   pct: number;
   /** Item updates per day, oldest→today, for the activity sparkline. */
@@ -33,10 +38,14 @@ function computeStats(project: Project, board: Board): ProjectStats {
   const dayMs = 86_400_000;
   const today = Date.now();
   let lastUpdatedAt: string | null = null;
+  let items = 0;
 
   for (const item of board.items) {
     if (item.archivedAt) {
       continue;
+    }
+    if (item.parentId === null) {
+      items += 1;
     }
     const workflowField = indexes.workflowField(item.typeId);
     const raw = workflowField ? item.values[workflowField.key] : undefined;
@@ -61,6 +70,7 @@ function computeStats(project: Project, board: Board): ProjectStats {
     project,
     counts,
     total,
+    items,
     pct: total > 0 ? Math.round((counts.done / total) * 100) : 0,
     activity,
     lastUpdatedAt,

@@ -289,9 +289,9 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
   const sortedFields = [...board.fields].sort((left, right) => left.label.localeCompare(right.label));
 
   return (
-    <section className="flex min-h-0 flex-col px-24 py-22">
+    <section className="flex min-h-0 flex-col">
       <div className="mb-6 flex items-center gap-12">
-        <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Fields</h1>
+        <h2 className="m-0 font-sans text-20 font-600 text-gray-12">Fields</h2>
         <span className="font-mono text-12/17 text-gray-9">
           {board.fields.length} field{board.fields.length === 1 ? '' : 's'} in this scheme
         </span>

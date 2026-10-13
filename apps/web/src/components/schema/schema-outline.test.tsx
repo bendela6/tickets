@@ -2,7 +2,7 @@ import type React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SchemaPanel } from './schema-panel';
+import { SchemaOutline } from './schema-outline';
 
 const mockNavigate = vi.fn();
 vi.mock('@tanstack/react-router', () => ({
@@ -13,7 +13,7 @@ vi.mock('@tanstack/react-router', () => ({
 const databases = vi.fn();
 vi.mock('../../api/use-schema', () => ({ useDatabases: () => databases() }));
 
-describe('SchemaPanel', () => {
+describe('SchemaOutline', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
   });
@@ -23,7 +23,7 @@ describe('SchemaPanel', () => {
       data: { databases: ['tickets', 'tickets_dev'], current: 'tickets' },
       isLoading: false,
     });
-    render(<SchemaPanel selected={undefined} />);
+    render(<SchemaOutline selected={undefined} />);
     expect(screen.getByRole('button', { name: /tickets/ })).toBeInTheDocument();
   });
 
@@ -32,13 +32,13 @@ describe('SchemaPanel', () => {
       data: { databases: ['tickets', 'tickets_dev'], current: 'tickets' },
       isLoading: false,
     });
-    render(<SchemaPanel selected="tickets_dev" />);
+    render(<SchemaOutline selected="tickets_dev" />);
     expect(screen.getByRole('button', { name: /tickets_dev/ })).toBeInTheDocument();
   });
 
   it('renders nothing selectable while loading', () => {
     databases.mockReturnValue({ data: undefined, isLoading: true });
-    render(<SchemaPanel selected={undefined} />);
+    render(<SchemaOutline selected={undefined} />);
     expect(screen.queryByRole('button')).toBeNull();
   });
 
@@ -54,7 +54,7 @@ describe('SchemaPanel', () => {
       data: { databases: ['tickets', 'tickets_dev'], current: 'tickets' },
       isLoading: false,
     });
-    render(<SchemaPanel selected={undefined} />);
+    render(<SchemaOutline selected={undefined} />);
     await userEvent.click(screen.getByRole('button', { name: 'Database: tickets' }));
     await userEvent.click(await screen.findByRole('button', { name: 'tickets_dev' }));
     expect(mockNavigate).toHaveBeenCalledWith({
@@ -70,7 +70,7 @@ describe('SchemaPanel', () => {
     });
     // Start on a non-default selection so the click genuinely changes
     // something, rather than choosing the value already shown.
-    render(<SchemaPanel selected="tickets_dev" />);
+    render(<SchemaOutline selected="tickets_dev" />);
     await userEvent.click(screen.getByRole('button', { name: 'Database: tickets_dev' }));
     await userEvent.click(await screen.findByRole('button', { name: 'tickets' }));
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/schema', search: {} });

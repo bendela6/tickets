@@ -366,9 +366,9 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   }
 
   return (
-    <section className="flex min-h-0 flex-col px-24 py-22">
+    <section className="flex min-h-0 flex-col">
       <div className="mb-6 flex items-center gap-12">
-        <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Workflow</h1>
+        <h2 className="m-0 font-sans text-20 font-600 text-gray-12">Workflow</h2>
         <span className="font-mono text-12/17 text-gray-9">{projectKey}</span>
       </div>
       <p className="mb-16 mt-0 font-sans text-12/17 text-gray-9">
