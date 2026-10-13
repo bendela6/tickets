@@ -43,7 +43,7 @@ body:
   - |
     - For a list of commands, use [Menu](/components/overlays/menu): its
       items are menu items, moved between with the arrow keys.
-    - To pick a value from options, use [Select](/components/inputs/select)
-      or [Combobox](/components/inputs/combobox).
+    - To pick a value from options, use [Combobox](/components/inputs/combobox),
+      with search or [without](/components/inputs/combobox#without-search).
   - h2: Props
   - props: Dropdown

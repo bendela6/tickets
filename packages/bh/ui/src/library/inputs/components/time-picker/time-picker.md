@@ -1,7 +1,7 @@
 ---
 title: TimePicker
 summary: Picks a time of day from a list, or typed, and holds it as HH:MM.
-related: [DatePicker, DurationInput, Select]
+related: [DatePicker, DurationInput, Combobox]
 ---
 
 [//]: # 'written from time-picker.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -123,12 +123,19 @@ export function DisabledAndReadOnly() {
 
 ## Keyboard and accessibility
 
-| Key                | Does                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `Enter` or `Space` | On the field, opens the list with focus in the time field. On a listed time, picks it. |
-| `Enter`            | In the time field, commits the typed time if it is a time of day.                      |
-| `Tab`              | Moves from the time field through the listed times.                                    |
-| `Esc`              | Closes the list.                                                                       |
+| Key                      | Does                                                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Enter` or `Space`       | On the field, opens the list with focus in the time field. On a listed time, picks it.                                                                      |
+| `ArrowDown` or `ArrowUp` | In the time field, moves the cursor to the next or previous listed time and writes it into the field. From an empty field, starts at the first or the last. |
+| `Home` or `End`          | In the time field, moves the cursor to the first or the last listed time.                                                                                   |
+| `Enter`                  | In the time field, commits the time it shows, typed or under the cursor, if it is a time of day.                                                            |
+| `Tab`                    | Moves from the time field through the listed times.                                                                                                         |
+| `Esc`                    | Closes the list.                                                                                                                                            |
+
+The list opens with the cursor on the chosen time, so Enter straight away
+keeps the value. The cursor is the listed time the field holds: typing a
+listed time moves it there, and a time typed between two rows has none
+until an arrow steps to a neighbour.
 
 The trigger is a `button` with `role="combobox"`, `aria-haspopup="listbox"`
 and `aria-expanded`. Name it with a `<label for>` pointing at `id`, or,
@@ -137,8 +144,10 @@ where no label can point at it, with `aria-label`. `tone="danger"` sets
 
 The times are a `listbox` named by `label`, "Times" by default, and each
 is an `option`; the picked one has `aria-selected`. The time field is
-named "Enter a time", and its message for an entry that is not a time has
-`role="alert"`.
+named "Enter a time". It keeps focus while the cursor moves, points at the
+list with `aria-controls` and at the time under the cursor with
+`aria-activedescendant`, and its message for an entry that is not a time
+has `role="alert"`.
 
 A read-only trigger sets `aria-disabled`, since ARIA allows no
 `aria-readonly` on a button, and stays in the tab order.

@@ -3,7 +3,7 @@ import { Table, sortRows, useTable, type Column } from '@bh/table';
 import { Button } from '../primitives/components/button';
 import { Icon } from '../primitives/components/icon';
 import { Input } from '../inputs/components/input';
-import { Select } from '../inputs/components/select';
+import { Combobox } from '../inputs/components/combobox';
 import { rowHeightFor } from './parts/metrics';
 import { tableRender } from './table-render';
 import { ActionsColumn } from './columns/actions-column';
@@ -189,7 +189,8 @@ function DemoFilterInput({ label }: { label: string }) {
 function DemoFilterSelect() {
   const [value, setValue] = useState<string | null>('');
   return (
-    <Select
+    <Combobox
+      searchable={false}
       size="xs"
       className="w-full"
       aria-label="Filter status"

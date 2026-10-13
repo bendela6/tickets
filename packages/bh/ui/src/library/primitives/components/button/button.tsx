@@ -33,10 +33,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   className?: string;
 };
 
-// Per-variant fill/text/border + hover + focus halo, matching design-system.html
-// §06 Buttons. Solid gets a 1px inset app-colored ring inside the 3px accent
-// halo (design: `0 0 0 3px var(--acs), 0 0 0 1px var(--bg) inset`); outline
-// swaps its border to accent on focus.
+// Per-variant fill/text/border + hover + focus halo, matching the design spec,
+// docs/design/design-system.html §06 Buttons. Solid gets a 1px inset
+// app-colored ring inside the 3px accent halo
+// (design: `0 0 0 3px var(--acs), 0 0 0 1px var(--bg) inset`); outline swaps
+// its border to accent on focus.
 //
 // Each option is written once and expanded over `SCALE` — the axis names the
 // `scale` prop and owns its domain, so this file never restates which ramps

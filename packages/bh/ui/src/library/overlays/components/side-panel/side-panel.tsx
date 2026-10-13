@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { cn } from '../../../../style/cn';
 import { Drawer } from '../drawer';
 import { Icon } from '../../../primitives/components/icon';
@@ -9,6 +9,7 @@ import {
   type PanelBreakpoint,
   type PanelSide,
 } from '../../parts/panel';
+import { useRestoreFocus } from '../../parts/restore-focus';
 
 /**
  * What a shut panel leaves behind: a thin rail to reopen it from, a floating
@@ -65,11 +66,13 @@ const TOGGLE =
 // collapsedTo="edge" and the narrow overlay. Fixed, so a shut panel costs the
 // content no horizontal space.
 function ReopenButton({
+  ref,
   label,
   side,
   expanded,
   onClick,
 }: {
+  ref: Ref<HTMLButtonElement>;
   label: string;
   side: PanelSide;
   expanded: boolean;
@@ -77,6 +80,7 @@ function ReopenButton({
 }) {
   return (
     <button
+      ref={ref}
       type="button"
       aria-label={`Show ${label}`}
       aria-expanded={expanded}
@@ -157,6 +161,18 @@ export function SidePanel({
     }
   }, [narrow]);
 
+  // Hidden from its own button, the panel takes focus away with it. The hook
+  // gives focus back to what opened the panel, such as a button elsewhere on
+  // the page, or else to the button that brings the panel back. A panel the
+  // page lays out open was opened by nothing, so mounting open does not
+  // count. Below the breakpoint, the Drawer gives focus back by itself.
+  const reopenRef = useRef<HTMLButtonElement>(null);
+  useRestoreFocus({
+    open: !collapsed,
+    rememberOnMount: false,
+    fallback: () => reopenRef.current,
+  });
+
   if (narrow) {
     // Below the breakpoint the panel is an overlay: same children, same label,
     // with radix's focus trap and scroll lock on top.
@@ -164,6 +180,7 @@ export function SidePanel({
       <>
         {collapsedTo === 'none' ? null : (
           <ReopenButton
+            ref={reopenRef}
             label={label}
             side={side}
             expanded={overlayOpen}
@@ -190,10 +207,13 @@ export function SidePanel({
       return null;
     }
     if (collapsedTo === 'edge') {
-      return <ReopenButton label={label} side={side} expanded={false} onClick={open} />;
+      return (
+        <ReopenButton ref={reopenRef} label={label} side={side} expanded={false} onClick={open} />
+      );
     }
     return (
       <button
+        ref={reopenRef}
         type="button"
         aria-label={`Show ${label}`}
         aria-expanded={false}

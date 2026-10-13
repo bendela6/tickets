@@ -7,7 +7,8 @@ body:
 
     Like [Input](/components/inputs/input), it holds no value of its own:
     `onChange` hands back the new string, so `onChange={setNotes}` is the whole
-    handler. `size` sets a minimum height, not a fixed one.
+    handler. With `commit`, what you type is a draft it holds until the field
+    commits. `size` sets a minimum height, not a fixed one.
   - h2: Import
   - code: import { Textarea } from '@bh/ui';
     lang: tsx
@@ -35,11 +36,22 @@ body:
     its fill for a line under the text. `disabled` takes it out of the tab
     order and the submission, and fades it. Neither keeps the resize grip.
   - demo: examples/read-only-and-disabled.tsx
+  - |
+    `commit` says when `onChange` gets what you typed, as on
+    [Input](/components/inputs/input#when-it-commits), but Enter stays a new
+    line: `'leave'` commits on leaving the field or the window, and on
+    Ctrl+Enter (Cmd+Enter on a Mac). Escape puts the value back.
+  - demo: examples/notes-saved-on-leaving.tsx
   - h2: Keyboard and accessibility
   - |
     It is a native `<textarea>`, so typing, Enter for a new line and Tab are
     the browser's. The ref lands on the `<textarea>`. `readOnly` is HTML's
     `readonly`, not `aria-readonly`.
+  - keyboard:
+      - keys: [Ctrl+Enter, Cmd+Enter]
+        does: Commits the draft, when the field holds one.
+      - keys: [Escape]
+        does: Drops the draft, when the field holds one, and puts the value back.
   - h2: When not to use it
   - |
     For one line, use [Input](/components/inputs/input).

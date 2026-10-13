@@ -1,8 +1,16 @@
 import type { InputProps } from '@bh/form';
+import type { Commit } from '../../../inputs/contract';
 import { Input } from '../../../inputs/components/input';
 
 export interface EmailFieldConfig {
   placeholder?: string;
+  /**
+   * When the field hands its value to the form: `'change'` (the default) at
+   * every keystroke, `'leave'` on Enter and on leaving it, `{ after: 800 }` on
+   * those and after a pause in typing.
+   * It wins over the form's own `commit`.
+   */
+  commit?: Commit;
 }
 
 /**
@@ -26,6 +34,8 @@ export function EmailField(p: InputProps<EmailFieldConfig, string>) {
       disabled={p.disabled}
       tone={p.error ? 'danger' : undefined}
       onChange={(next) => p.onChange(next)}
+      commit={p.config.commit ?? p.commit}
+      onDraft={p.onDraft}
       onBlur={p.onBlur}
     />
   );

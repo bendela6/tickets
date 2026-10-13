@@ -1,5 +1,6 @@
 import type { FieldWrapperProps } from '@bh/form';
-import { FieldError } from '../field-error';
+import { Spinner } from '../../../feedback/components/spinner';
+import { FieldMessage } from '../field/field-message';
 import { FieldLabel } from '../field-label';
 
 /**
@@ -38,25 +39,21 @@ export function FieldWrapper({
   configError,
   descriptionId,
   errorId,
+  saving,
   children,
 }: FieldWrapperProps) {
   // A config that failed to load (its options, say) comes first: until it
   // loads, the field cannot be filled in, whatever its own check says. The
   // failure's message is the app's, so it says what failed in its words.
   const problem = configError ? configError.message || 'This field could not be loaded.' : error;
-  // The ids are the form's: it points the input's `aria-describedby` at
-  // whichever of the two lines is drawn.
-  const help =
-    description && !problem ? (
-      <p id={descriptionId} className="text-12/17 text-gray-11 font-sans">
-        {description}
-      </p>
-    ) : null;
-
-  // Shown whenever the form gives one. The form already holds a problem back
-  // until the field has been left or a submit tried, so a `touched` gate here
-  // would only hide it again after a failed submit.
-  const message = problem ? <FieldError id={errorId}>{problem}</FieldError> : null;
+  // A form that saves each field as it commits says so while the save runs.
+  // Under the field, where its problem would go if the save failed.
+  const status = saving ? (
+    <p role="status" className="text-12/17 text-gray-11 flex items-center gap-6 font-sans">
+      <Spinner size="xs" label="" />
+      Saving…
+    </p>
+  ) : null;
 
   return (
     <div className="@container">
@@ -78,8 +75,19 @@ export function FieldWrapper({
         )}
         <div className="@form-labels:flex-1 flex min-w-0 flex-col gap-4">
           {children}
-          {help}
-          {message}
+          {/* The description, or the problem in its place. The ids are the
+              form's: it points the input's `aria-describedby` at whichever
+              of the two is drawn. The problem shows whenever the form gives
+              one: the form already holds it back until the field has been
+              left or a submit tried, so a `touched` gate here would only
+              hide it again after a failed submit. */}
+          <FieldMessage
+            hint={description}
+            error={problem}
+            hintId={descriptionId}
+            errorId={errorId}
+          />
+          {status}
         </div>
       </div>
     </div>

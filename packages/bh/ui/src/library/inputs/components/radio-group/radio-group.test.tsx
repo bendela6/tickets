@@ -132,6 +132,130 @@ describe('RadioGroup', () => {
     expect(radios().every((radio) => !radio.disabled)).toBe(true);
   });
 
+  describe('an option with a line of description', () => {
+    const ORDER = [
+      { value: 'start-first', label: 'Start new first', description: 'No gap; both run a moment' },
+      { value: 'stop-first', label: 'Stop old first', description: 'A short gap; one at a time' },
+      { value: 'auto', label: 'Automatic' },
+    ];
+
+    it('draws the line under the label, in either variant', () => {
+      for (const variant of ['plain', 'card'] as const) {
+        const { unmount } = render(
+          <RadioGroup
+            label="Order"
+            variant={variant}
+            value="auto"
+            options={ORDER}
+            onChange={() => {}}
+          />,
+        );
+        expect(screen.getByText('No gap; both run a moment')).toBeInTheDocument();
+        unmount();
+      }
+    });
+
+    it('is named by its label alone and described by the line', () => {
+      // The <label> around the radio would otherwise name it by all its text,
+      // and a screen reader would read the line as part of the choice's name.
+      render(
+        <RadioGroup
+          label="Order"
+          variant="card"
+          value="auto"
+          options={ORDER}
+          onChange={() => {}}
+        />,
+      );
+      const radio = screen.getByRole('radio', { name: 'Start new first' });
+      expect(radio).toHaveAccessibleDescription('No gap; both run a moment');
+      // An option with nothing to say beside it is named as before.
+      expect(screen.getByRole('radio', { name: 'Automatic' })).not.toHaveAccessibleDescription();
+    });
+
+    it('still picks the option when the line is clicked', async () => {
+      const onChange = vi.fn();
+      render(
+        <RadioGroup
+          label="Order"
+          variant="card"
+          value="auto"
+          options={ORDER}
+          onChange={onChange}
+        />,
+      );
+      await userEvent.click(screen.getByText('A short gap; one at a time'));
+      expect(onChange).toHaveBeenCalledWith('stop-first');
+    });
+
+    it('gives every card in the group the same room, described or not', () => {
+      const { container } = render(
+        <RadioGroup
+          label="Order"
+          variant="card"
+          value="auto"
+          options={ORDER}
+          onChange={() => {}}
+        />,
+      );
+      const cards = [...container.querySelectorAll('label')];
+      expect(cards.map((card) => card.className.includes('py-10'))).toEqual([true, true, true]);
+    });
+
+    it('leaves a group with no descriptions as it was', () => {
+      const { container } = render(
+        <RadioGroup
+          label="Density"
+          variant="card"
+          value="compact"
+          options={DENSITY}
+          onChange={() => {}}
+        />,
+      );
+      expect(container.querySelector('label')).toHaveClass('px-10', 'py-6', 'items-center');
+      expect(screen.getByRole('radio', { name: 'Compact' })).not.toHaveAccessibleDescription();
+    });
+  });
+
+  it('draws an option’s icon before its label, hidden from the name', () => {
+    const { container } = render(
+      <RadioGroup
+        label="Source"
+        variant="card"
+        value="file"
+        options={[
+          { value: 'file', label: 'A file', icon: 'file' },
+          { value: 'folder', label: 'A folder', icon: 'folder' },
+        ]}
+        onChange={() => {}}
+      />,
+    );
+    expect(container.querySelectorAll('label svg')).toHaveLength(2);
+    expect(screen.getByRole('radio', { name: 'A file' })).toBeInTheDocument();
+  });
+
+  it('lays its options in a row, or in a grid of equal columns', () => {
+    const { rerender } = render(
+      <RadioGroup label="Density" value="compact" options={DENSITY} onChange={() => {}} />,
+    );
+    const group = screen.getByRole('radiogroup', { name: 'Density' });
+    expect(group).toHaveClass('flex', 'items-center');
+    rerender(
+      <RadioGroup
+        label="Density"
+        layout="grid"
+        value="compact"
+        options={DENSITY}
+        onChange={() => {}}
+      />,
+    );
+    expect(group).toHaveClass('grid');
+    // A grid's cards stretch to the tallest in their row; centring them would
+    // leave each its own height.
+    expect(group).not.toHaveClass('items-center');
+    expect(group.className).toContain('auto-fit');
+  });
+
   it('a disabled group disables every option, an option can disable only itself', () => {
     const { rerender } = render(
       <RadioGroup

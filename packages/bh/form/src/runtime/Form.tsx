@@ -1,4 +1,4 @@
-import { type ReactNode, useContext } from 'react';
+import { type ReactNode, useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useSelector } from '@tanstack/react-form';
 import { formStore } from '../utils/form-store';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
@@ -8,13 +8,15 @@ import { useForm } from './use-form';
 import { FormContext } from './form-context';
 import { ResolverCacheContext } from '../async/resolver-cache-context';
 import type { ResolverCache } from '../async/resolver-cache';
-import { waitForResolutions } from '../async/wait-for-resolutions';
-import { collectVisibleFields } from './collect-visible-fields';
 import { WalkTree } from './walk-tree';
 import { RegistryContext } from './nested-fields';
 import { useRegistryOf } from './form-provider';
 import { selectFormError } from './select-form-error';
 import type { FormApi } from './use-standalone-form';
+import type { Commit } from '../types/commit';
+import type { Commits, OnCommit } from './commits';
+import { CommitContext } from './commit-context';
+import { useChanged } from './use-changed';
 
 interface CommonProps<I extends InputRegistry, L extends LayoutComponentRegistry> {
   /**
@@ -48,6 +50,19 @@ interface InlineFormProps<
   defaultValues?: Record<string, unknown>;
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
+  /**
+   * Called each time a field commits, with what changed (`{ field, value,
+   * previous }`) and the visible fields' values after it: a form that saves
+   * as you go saves here. While a promise it returns runs, the field shows
+   * it's saving; if it fails, the field keeps the value and shows the error.
+   */
+  onCommit?: OnCommit;
+  /**
+   * When the fields commit: `'change'` (the default) at every keystroke,
+   * `'leave'` on Enter and on leaving the field, `{ after: 800 }` on those
+   * and after a pause. Over the form's own; a field's config may say otherwise.
+   */
+  commit?: Commit;
   /**
    * A check across fields, run on the visible fields' values after each
    * field's own, in place of the form's own. Only without `formApi`: with it,
@@ -100,17 +115,23 @@ function FormInline<I extends InputRegistry, L extends LayoutComponentRegistry>(
   props: InlineFormProps<I, L>,
 ): ReactNode {
   const registry = useRegistryOf(props.registry, '<Form>');
-  const { form, cache } = useForm<I, L>({
+  const { form, cache, commits, commit, submit, reset } = useForm<I, L>({
     form: props.form,
     registry,
     defaultValues: props.defaultValues,
     onSubmit: props.onSubmit,
+    onCommit: props.onCommit,
+    commit: props.commit,
     schema: props.schema,
   });
   return (
     <FormShell<I, L>
       form={form}
       cache={cache}
+      commits={commits}
+      commit={commit}
+      submit={submit}
+      reset={reset}
       config={props.form}
       registry={registry}
       renderFormError={props.renderFormError}
@@ -127,12 +148,16 @@ function FormInline<I extends InputRegistry, L extends LayoutComponentRegistry>(
 function FormWithApi<I extends InputRegistry, L extends LayoutComponentRegistry>(
   props: ApiFormProps<I, L>,
 ): ReactNode {
-  const { form, cache, config } = props.formApi.__internals;
+  const { form, cache, config, commits, commit, submit } = props.formApi.__internals;
   const registry = useRegistryOf(props.registry, '<Form>');
   return (
     <FormShell<I, L>
       form={form}
       cache={cache}
+      commits={commits}
+      commit={commit}
+      submit={submit}
+      reset={props.formApi.reset}
       config={config as unknown as FormConfig<I, L>}
       registry={registry}
       renderFormError={props.renderFormError}
@@ -150,6 +175,12 @@ interface FormShellProps<
   config: FormConfig<I, L>;
   form: unknown;
   cache: ResolverCache;
+  commits: Commits;
+  commit?: Commit;
+  /** Commits the drafts, waits, checks, and calls `onSubmit`. */
+  submit: () => Promise<void>;
+  /** Puts the values back and forgets the drafts. */
+  reset: () => void;
 }
 
 // Shared rendering layer: providers, the actual `<form>` element with the
@@ -159,7 +190,8 @@ interface FormShellProps<
 function FormShell<I extends InputRegistry, L extends LayoutComponentRegistry>(
   props: FormShellProps<I, L>,
 ): ReactNode {
-  const { form, cache } = props;
+  const { form, cache, commits, commit, reset } = props;
+  const scope = useMemo(() => ({ commits, commit, reset }), [commits, commit, reset]);
   const Root = props.registry.root?.Component;
   const tree = (
     <>
@@ -170,27 +202,28 @@ function FormShell<I extends InputRegistry, L extends LayoutComponentRegistry>(
   return (
     <FormContext.Provider value={form as never}>
       <RegistryContext.Provider value={props.registry}>
-        <ResolverCacheContext.Provider value={cache}>
-          <form
-            // The fields' schemas check the values, in their own words: the
-            // browser's checks (a `type="email"` input's, say) would stop a
-            // submit with a bubble of their own before they ran.
-            noValidate
-            onSubmit={async (e) => {
-              e.preventDefault();
-              // Compute the visible-field set at submit time so the gate uses
-              // the latest values — a resolver in a field that just became
-              // hidden mid-flight should not block submission.
-              const values = (form as { state: { values: Record<string, unknown> } }).state.values;
-              const visible = collectVisibleFields(props.config.nodes, values);
-              await waitForResolutions(cache, visible);
-              await (form as { handleSubmit: () => Promise<void> }).handleSubmit();
-            }}
-          >
-            {Root ? <Root>{tree}</Root> : tree}
-            {props.children}
-          </form>
-        </ResolverCacheContext.Provider>
+        <CommitContext.Provider value={scope}>
+          <ResolverCacheContext.Provider value={cache}>
+            <form
+              // The fields' schemas check the values, in their own words: the
+              // browser's checks (a `type="email"` input's, say) would stop a
+              // submit with a bubble of their own before they ran.
+              noValidate
+              onSubmit={async (e) => {
+                e.preventDefault();
+                // The same submit `useStandaloneForm`'s does: drafts commit first,
+                // then it waits for the visible fields' async config (the set
+                // taken now, so a field hidden mid-flight doesn't hold it) and
+                // the commits still saving.
+                await props.submit();
+              }}
+            >
+              <LeaveWarning form={form} commits={commits} />
+              {Root ? <Root>{tree}</Root> : tree}
+              {props.children}
+            </form>
+          </ResolverCacheContext.Provider>
+        </CommitContext.Provider>
       </RegistryContext.Provider>
     </FormContext.Provider>
   );
@@ -215,4 +248,27 @@ function FormErrorSlot(props: { render: (msg: string) => ReactNode }): ReactNode
     return null;
   }
   return <>{props.render(msg)}</>;
+}
+
+/**
+ * Asks before the page is left while the form is dirty, or a field holds a
+ * draft it hasn't committed: what's typed but not submitted would be lost.
+ * A form with no `onSubmit` saves as it goes, and never asks.
+ */
+function LeaveWarning(props: { form: unknown; commits: Commits }): ReactNode {
+  const { commits } = props;
+  const changed = useChanged(props.form, commits);
+  const drafting = useSyncExternalStore(commits.subscribe, commits.hasDrafts);
+  const warn = commits.submits() && (changed || drafting);
+  useEffect(() => {
+    if (!warn) {
+      return;
+    }
+    const ask = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener('beforeunload', ask);
+    return () => window.removeEventListener('beforeunload', ask);
+  }, [warn]);
+  return null;
 }

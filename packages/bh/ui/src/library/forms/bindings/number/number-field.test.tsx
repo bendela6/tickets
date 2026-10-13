@@ -78,4 +78,22 @@ describe('NumberField', () => {
     render(<NumberField {...base} value={null} onChange={vi.fn()} disabled />);
     expect(screen.getByRole('spinbutton')).toBeDisabled();
   });
+  it("clamps what it commits, once, with { commit: 'leave' } in its config", async () => {
+    const onChange = vi.fn();
+    render(
+      <NumberField
+        {...base}
+        config={{ max: 10, commit: 'leave' }}
+        value={null}
+        onChange={onChange}
+      />,
+    );
+
+    await userEvent.type(screen.getByRole('spinbutton'), '99');
+    expect(onChange).not.toHaveBeenCalled();
+
+    await userEvent.tab();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(10);
+  });
 });

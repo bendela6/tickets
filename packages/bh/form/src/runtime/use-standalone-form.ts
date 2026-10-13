@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { useSelector } from '@tanstack/react-form';
 import { formStore } from '../utils/form-store';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
@@ -6,14 +7,26 @@ import type { FormConfig } from '../types/form-config';
 import { useForm } from './use-form';
 import { useRegistryOf } from './form-provider';
 import { selectFormError } from './select-form-error';
-import { collectVisibleFields } from './collect-visible-fields';
-import { waitForResolutions } from '../async/wait-for-resolutions';
 import type { ResolverCache } from '../async/resolver-cache';
+import type { Commit } from '../types/commit';
+import type { Commits, OnCommit } from './commits';
+import { useChanged } from './use-changed';
 
 /** A form held outside `<Form>`: its state, and what a button of its own can do. */
 export interface FormApi {
-  /** Whether any value has changed since the start or the last reset. */
+  /**
+   * Whether the form holds committed values it hasn't submitted: they
+   * differ from what was last submitted, or from where it started. What
+   * "Unsaved changes", a Save button and a warning on leaving the page go by.
+   * Never, in a form with no `onSubmit`: it saves as it goes.
+   */
   isDirty: boolean;
+  /**
+   * Whether a field holds a draft it hasn't committed yet, as while it's
+   * typed in at `commit: 'leave'`. A Save is worth pressing then too: it
+   * commits the draft first.
+   */
+  hasDrafts: boolean;
   /** Whether a submit is checking the values or running `onSubmit`. */
   isSubmitting: boolean;
   /** Whether the last check found no problem; true until a check runs. */
@@ -24,9 +37,13 @@ export interface FormApi {
    * cannot be attributed to a single field). Cleared once validation passes.
    */
   formError: string | undefined;
-  /** Submits as the form's own submit button would: waits, checks, then calls `onSubmit`. */
+  /**
+   * Submits as the form's own submit button would: commits the drafts (a
+   * Save while typing loses nothing), waits for async config and for commits
+   * still saving, checks, then calls `onSubmit`.
+   */
   submit: () => Promise<void>;
-  /** Puts every value back to where it started. */
+  /** Puts every value back to where it started, or to what was last submitted. */
   reset: () => void;
   /** Every value now, hidden fields' too. */
   getValues: () => Record<string, unknown>;
@@ -35,6 +52,9 @@ export interface FormApi {
     form: unknown;
     cache: ResolverCache;
     config: FormConfig<InputRegistry, LayoutComponentRegistry>;
+    commits: Commits;
+    commit?: Commit;
+    submit: () => Promise<void>;
   };
 }
 
@@ -56,6 +76,13 @@ export interface UseStandaloneFormOptions<
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
   /**
+   * Called each time a field commits, with what changed and the visible
+   * fields' values after it. See `<Form onCommit>`.
+   */
+  onCommit?: OnCommit;
+  /** When the fields commit, over the form's own `commit`. See `<Form commit>`. */
+  commit?: Commit;
+  /**
    * Optional cross-field schema run against the visibility-stripped values
    * after per-field validators. See `UseFormOptions['schema']`.
    */
@@ -76,13 +103,14 @@ export function useStandaloneForm<
     registry,
     defaultValues: options.defaultValues,
     onSubmit: options.onSubmit,
+    onCommit: options.onCommit,
+    commit: options.commit,
     schema: options.schema,
   });
   const f = internals.form;
-  const isDirty = useSelector(
-    formStore<{ isDirty: boolean }>(f.store),
-    (s: { isDirty: boolean }) => s.isDirty,
-  );
+  const changed = useChanged(f, internals.commits);
+  const isDirty = options.onSubmit !== undefined && changed;
+  const hasDrafts = useSyncExternalStore(internals.commits.subscribe, internals.commits.hasDrafts);
   const isSubmitting = useSelector(
     formStore<{ isSubmitting: boolean }>(f.store),
     (s: { isSubmitting: boolean }) => s.isSubmitting,
@@ -101,27 +129,22 @@ export function useStandaloneForm<
   );
   return {
     isDirty,
+    hasDrafts,
     isSubmitting,
     isValid,
     formError,
-    // Visibility-aware async-resolver gate: matches the `<form onSubmit>`
-    // gate in `<FormShell>` so an external Save button (the use case this
-    // hook exists for) cannot bypass it. Visible fields are computed at
-    // call-time against the latest values so a field that just became
-    // visible is still gated correctly.
-    submit: async () => {
-      const visible = collectVisibleFields(options.form.nodes, internals.getValues());
-      await waitForResolutions(internals.cache, visible);
-      await f.handleSubmit();
-    },
-    reset: () => {
-      f.reset();
-    },
+    // The same submit `<FormShell>`'s `<form onSubmit>` runs, so an external
+    // Save button (the use case this hook exists for) can't skip a step.
+    submit: internals.submit,
+    reset: internals.reset,
     getValues: () => internals.getValues(),
     __internals: {
       form: f,
       cache: internals.cache,
       config: options.form as unknown as FormConfig<InputRegistry, LayoutComponentRegistry>,
+      commits: internals.commits,
+      commit: internals.commit,
+      submit: internals.submit,
     },
   };
 }

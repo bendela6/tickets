@@ -144,8 +144,8 @@ open, `aria-controls`. A disabled trigger does not open it.
 
 - For a list of commands, use [Menu](../menu/menu.md): its
   items are menu items, moved between with the arrow keys.
-- To pick a value from options, use [Select](../../../inputs/components/select/select.md)
-  or [Combobox](../../../inputs/components/combobox/combobox.md).
+- To pick a value from options, use [Combobox](../../../inputs/components/combobox/combobox.md),
+  with search or [without](../../../inputs/components/combobox/combobox.md#without-search).
 
 ## Props
 

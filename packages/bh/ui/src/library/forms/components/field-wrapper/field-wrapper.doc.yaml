@@ -1,6 +1,6 @@
 title: FieldWrapper
 summary: 'Draws one form field: its label, its control, then its description or its error.'
-related: [FieldLabel, FieldError, Input]
+related: [Field, FieldLabel, FieldError, Input]
 body:
   - |
     Draws one form field: its label, its control, then its description or its
@@ -8,7 +8,8 @@ body:
 
     It is the `field` slot of the registry `@bh/form` draws a form with, so a
     form wraps every field in it. It takes the props the form gives a field,
-    and draws the control it is given as its children.
+    and draws the control it is given as its children. A form laid out by
+    hand uses [Field](/components/forms/field).
   - h2: Import
   - code: import { FieldWrapper } from '@bh/ui';
     lang: tsx
@@ -23,7 +24,9 @@ body:
     [FieldError](/components/forms/field-error), whatever `touched` says.
     A `configError`, a config that failed to load, takes it before an
     `error` does, with its own message. `touched` and `loading` change
-    nothing it draws.
+    nothing it draws. While `saving`, as when a form's `onCommit` saves the
+    field ([Draft, commit and submit](/forms/draft-commit-submit)), it says
+    "Saving…" under the control.
   - demo: examples/with-an-error.tsx
   - |
     Where the label goes depends on the field's own width, not the window's
@@ -35,7 +38,8 @@ body:
   - h2: Keyboard and accessibility
   - |
     The label is a `<label>` for `name`, so it names the control whose `id`
-    is `name`. The error is a `role="alert"`, announced when it appears.
+    is `name`. The error is a `role="alert"`, announced when it appears;
+    "Saving…" is a `role="status"`.
 
     The description takes `descriptionId` and the error `errorId`, and a
     form gives the control `aria-describedby` pointing at whichever is

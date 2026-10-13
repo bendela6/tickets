@@ -1,11 +1,12 @@
 title: FieldError
 summary: A field's error message, in red, announced as an alert.
-related: [FieldLabel, FieldWrapper, Input]
+related: [Field, FieldLabel, FieldWrapper, Input]
 body:
   - |
     A field's error message, in red, announced as an alert.
 
-    It is for a field laid out by hand. In a form drawn by `@bh/form`,
+    It is for a field laid out by hand, and [Field](/components/forms/field)
+    shows it in its hint's place. In a form drawn by `@bh/form`,
     [FieldWrapper](/components/forms/field-wrapper) shows the error for you.
   - h2: Import
   - code: import { FieldError } from '@bh/ui';

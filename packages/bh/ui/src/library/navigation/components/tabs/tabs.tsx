@@ -219,7 +219,12 @@ export function Tabs({
             {item.icon ? <Icon name={item.icon} size={GLYPH[size]} /> : null}
             {item.label}
             {item.badge != null ? (
-              <span className="text-10 text-gray-9 font-mono">{item.badge}</span>
+              <>
+                {/* A space, so the tab is named "Items 2" and not "Items2". A
+                    flex row draws no text that is only blank, so it changes
+                    nothing on screen. */}{' '}
+                <span className="text-10 text-gray-9 font-mono">{item.badge}</span>
+              </>
             ) : null}
           </button>
         );

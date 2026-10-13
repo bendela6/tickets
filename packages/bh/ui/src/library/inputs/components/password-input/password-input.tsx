@@ -1,13 +1,15 @@
 import { forwardRef, useState, type InputHTMLAttributes } from 'react';
 import { focusRing } from '../../../../style';
 import { Input } from '../input';
-import type { ControlProps } from '../../contract';
+import type { CommitProps, ControlProps } from '../../contract';
 
 export type PasswordInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'onChange' | 'size' | 'type'
 > &
-  ControlProps<string>;
+  ControlProps<string> &
+  // `commit` and `onDraft` go to Input, which holds the draft.
+  CommitProps<string>;
 
 /**
  * A secret, with a reveal.

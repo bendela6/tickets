@@ -1,0 +1,13 @@
+{
+  "extends": "@bh/config/tsconfig/react",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@bh/shell": ["../src/index.ts"],
+      "@bh/shell/layout": ["../src/layout/index.ts"]
+    },
+    // As in the package's own tsconfig: @bh/ui's sources use import.meta.glob.
+    "types": ["vite/client"]
+  },
+  "include": ["examples"]
+}

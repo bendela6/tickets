@@ -1,5 +1,6 @@
 import type { InputProps } from '@bh/form';
 import { cn } from '../../../../style';
+import type { Commit } from '../../../inputs/contract';
 import { Input } from '../../../inputs/components/input';
 
 export interface TextFieldConfig {
@@ -7,6 +8,13 @@ export interface TextFieldConfig {
   mono?: boolean;
   /** Static leading affix, e.g. a fixed URL scheme. Not editable. */
   prefix?: string;
+  /**
+   * When the field hands its value to the form: `'change'` (the default) at
+   * every keystroke, `'leave'` on Enter and on leaving it, `{ after: 800 }` on
+   * those and after a pause in typing.
+   * It wins over the form's own `commit`.
+   */
+  commit?: Commit;
 }
 
 export function TextField(p: InputProps<TextFieldConfig, string>) {
@@ -33,6 +41,8 @@ export function TextField(p: InputProps<TextFieldConfig, string>) {
         // and `p.onChange` takes exactly one argument — handing it a second
         // would be passing something the form layer never asked for.
         onChange={(next) => p.onChange(next)}
+        commit={p.config.commit ?? p.commit}
+        onDraft={p.onDraft}
         onBlur={p.onBlur}
         className={cn(p.config.mono && 'text-13 font-mono')}
       />

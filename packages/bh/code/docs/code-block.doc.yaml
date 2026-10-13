@@ -1,0 +1,34 @@
+title: CodeBlock
+summary: Shows a code fragment to read, its lines numbered and coloured by its language.
+order: 2
+related: [CodeEditor, Overview]
+body:
+  - |
+    Shows a code fragment to read, its lines numbered and coloured by its
+    language.
+
+    A strip names its file or its language, with a copy control that copies
+    the code without the numbers. The lines a passage is about can be
+    marked, and the rest recede.
+  - h2: Import
+  - code: import { CodeBlock } from '@bh/code';
+    lang: tsx
+  - h2: Examples
+  - |
+    For a command or two the gutter is noise: `numbers` set to false drops
+    it.
+  - demo: examples/a-command.tsx
+  - |
+    `file` names the strip, and `marked` the lines the passage is about.
+  - demo: examples/the-lines-that-changed.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The code is a `<pre>`, read as text; the line numbers are hidden from
+    screen readers and can't be selected, so a copied selection is the code
+    alone. The copy control is a button, named Copy.
+  - h2: When not to use it
+  - |
+    For code the reader writes, use `CodeEditor`. For a document that holds
+    code, write it in markdown: `@bh/markdown`'s code block draws this.
+  - h2: Props
+  - props: CodeBlock

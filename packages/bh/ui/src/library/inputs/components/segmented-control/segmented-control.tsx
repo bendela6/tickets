@@ -32,8 +32,9 @@ export type SegmentedControlProps = ControlProps<string> & {
 /**
  * An exclusive choice for two to five short options, shown inline.
  *
- * The same decision a Select makes, spent differently: a segmented control
- * trades width for the ability to read every option without opening anything.
+ * The same decision a Combobox without search makes, spent differently: a
+ * segmented control trades width for the ability to read every option without
+ * opening anything.
  * Past about five it stops fitting and stops being scannable, which is why the
  * design bounds it — the type cannot enforce that, but the doc can say it.
  *

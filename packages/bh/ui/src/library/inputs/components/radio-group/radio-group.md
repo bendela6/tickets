@@ -1,7 +1,7 @@
 ---
 title: RadioGroup
 summary: One choice from a few options, every option visible.
-related: [SegmentedControl, Select, CheckboxGroup]
+related: [SegmentedControl, Combobox, CheckboxGroup]
 ---
 
 [//]: # 'written from radio-group.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -68,6 +68,107 @@ export function Cards() {
 }
 ```
 
+An option's `description` is a line under its label, saying what
+choosing it does. With `layout="grid"` the cards sit in equal columns,
+each at least 200 pixels wide, as many as fit, and one under another on
+a phone; each is as tall as the tallest beside it. The options are the
+`Option` every control with a choice takes, and a control with no room
+for the line, as Select, ignores it.
+
+**Described cards**
+
+```tsx
+import { useState } from 'react';
+import { RadioGroup } from '@bh/ui';
+
+const ON_CONFLICT = [
+  { value: 'keep', label: 'Keep both', description: 'The new file is saved beside the old one.' },
+  { value: 'replace', label: 'Replace', description: 'The old file is written over.' },
+  { value: 'ask', label: 'Ask each time', description: 'Nothing changes until you say which.' },
+];
+
+export function DescribedCards() {
+  const [value, setValue] = useState('keep');
+  return (
+    <RadioGroup
+      variant="card"
+      layout="grid"
+      label="When a file is already there"
+      options={ON_CONFLICT}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+```
+
+An option's `icon` goes before its label.
+
+**With icons**
+
+```tsx
+import { useState } from 'react';
+import { RadioGroup, type Option } from '@bh/ui';
+
+const SOURCES: Option[] = [
+  { value: 'file', label: 'A file', icon: 'file', description: 'One file, from this computer.' },
+  {
+    value: 'folder',
+    label: 'A folder',
+    icon: 'folder',
+    description: 'Every file in it, in its own folders.',
+  },
+  {
+    value: 'command',
+    label: 'A command',
+    icon: 'terminal',
+    description: 'What it prints, saved as it runs.',
+  },
+];
+
+export function WithIcons() {
+  const [value, setValue] = useState('folder');
+  return (
+    <RadioGroup
+      variant="card"
+      layout="grid"
+      label="Start from"
+      options={SOURCES}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+```
+
+A plain group draws the line too. Stack its options with `flex-col`
+through `className` so each line has room.
+
+**Described plain**
+
+```tsx
+import { useState } from 'react';
+import { RadioGroup } from '@bh/ui';
+
+const COPIES = [
+  { value: 'all', label: 'Every version', description: 'Uses the most space.' },
+  { value: 'last', label: 'The last ten', description: 'Older ones are removed each night.' },
+];
+
+export function DescribedPlain() {
+  const [value, setValue] = useState('last');
+  return (
+    <RadioGroup
+      label="Versions kept"
+      className="flex-col items-start gap-12"
+      options={COPIES}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+```
+
 `size` sets the circle, 14, 16 or 20 pixels, the type, and the space
 between options.
 
@@ -106,8 +207,8 @@ export function Sizes() {
 }
 ```
 
-The options sit in a row. Add `flex-wrap` through `className` to let a
-long row wrap.
+By default the options sit in a row. Add `flex-wrap` through
+`className` to let a long row wrap.
 
 **Many options**
 
@@ -174,14 +275,17 @@ The radios are native and share one `name`, so the browser treats them
 as one choice with one tab stop. The `<fieldset>` has
 `role="radiogroup"` and is named by its legend, which is visually
 hidden; `id` goes on it. `readOnly` sets `aria-readonly` on the group.
+An option with a `description` is named by its label alone and
+described by the line, so a screen reader reads the choice, then what it
+does. An icon is hidden from it.
 
 ## When not to use it
 
 - For two to five short options drawn as one control, use
   [SegmentedControl](../segmented-control/segmented-control.md).
 - To keep the options out of sight until asked for, use
-  [Select](../select/select.md): one choice, behind a field that
-  opens.
+  [Combobox without search](../combobox/combobox.md#without-search):
+  one choice, behind a field that opens.
 - For several choices at once, use
   [CheckboxGroup](../checkbox-group/checkbox-group.md).
 
@@ -190,8 +294,9 @@ hidden; `id` goes on it. `readOnly` sets `aria-readonly` on the group.
 | Prop                  | Type                                                                                                                                                                                                        | Default     | Description                                                                                                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `label` (required)    | `string`                                                                                                                                                                                                    |             | The group's name, rendered as its `<legend>`, which only screen readers read.                                                                                                 |
-| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The choices, a radio each, in the order given; a `disabled` option can't be chosen.                                                                                           |
+| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The choices, a radio each, in the order given; a `disabled` option can't be chosen. An option's `icon` goes before its label and its `description` under it.                  |
 | `variant`             | `RadioGroupVariant`: `'plain'`, `'card'`                                                                                                                                                                    | `'plain'`   | How the options are drawn: `plain`, a mark and a label each, or `card`, each a bordered hit area that lights up when chosen.                                                  |
+| `layout`              | `RadioGroupLayout`: `'row'`, `'grid'`                                                                                                                                                                       | `'row'`     | How the options are laid out: `row`, on one line, or `grid`, in equal columns of 200 pixels or more, one on a phone.                                                          |
 | `name`                | `string`                                                                                                                                                                                                    |             | The radios' `name`, generated when left out; pass one for a submitted form whose server expects a particular key.                                                             |
 | `id`                  | `string`                                                                                                                                                                                                    |             | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                           |
 | `aria-describedby`    | `string`                                                                                                                                                                                                    |             | The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |

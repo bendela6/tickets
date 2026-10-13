@@ -92,3 +92,40 @@ test('the ring follows tone, so a row in a danger list does not go indigo', () =
   // The hue, not the rung — the rung is the design's to move.
   expect(classesOf('row')).toMatch(/ring-red-\d/);
 });
+
+test('a disabled row says why, under it and as its description', () => {
+  // The reason is the row's description rather than part of its name, so a
+  // screen reader says the option, then why it can't be picked.
+  render(
+    <OptionRow onPick={() => {}} disabled reason="The workflow doesn't go from Done to To do.">
+      To do
+    </OptionRow>,
+  );
+  const row = screen.getByRole('option', { name: 'To do' });
+  expect(row).toHaveAccessibleDescription("The workflow doesn't go from Done to To do.");
+  expect(screen.getByText("The workflow doesn't go from Done to To do.")).toBeVisible();
+});
+
+test('a row that can be picked shows no reason', () => {
+  render(
+    <OptionRow onPick={() => {}} reason="Left over from when it was disabled.">
+      Doing
+    </OptionRow>,
+  );
+  expect(screen.queryByText('Left over from when it was disabled.')).toBeNull();
+  expect(screen.getByRole('option', { name: 'Doing' })).not.toHaveAttribute('aria-describedby');
+});
+
+test('rows without an id still each point at their own reason', () => {
+  render(
+    <>
+      <OptionRow onPick={() => {}} disabled reason="First reason.">
+        One
+      </OptionRow>
+      <OptionRow onPick={() => {}} disabled reason="Second reason.">
+        Two
+      </OptionRow>
+    </>,
+  );
+  expect(screen.getByRole('option', { name: 'Two' })).toHaveAccessibleDescription('Second reason.');
+});
