@@ -6,7 +6,7 @@ import { projectIndexRoute } from './routes/project-index-route';
 import { projectRoute } from './routes/project-route';
 import { rootRoute } from './routes/root-route';
 import { schemaRoute } from './routes/schema-route';
-import { settingsRoute } from './routes/settings-route';
+import { settingsRouteTree } from './routes/settings-route';
 import { ticketPageRoute } from './routes/ticket-page-route';
 import { viewRoute } from './routes/view-route';
 
@@ -15,7 +15,7 @@ const routeTree = rootRoute.addChildren([
   allItemsRoute,
   itemKeyRoute,
   schemaRoute,
-  settingsRoute,
+  settingsRouteTree,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),
 ]);
 

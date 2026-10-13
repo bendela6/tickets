@@ -1,5 +1,6 @@
 import { OWN_ERROR } from '../../api/mutation-meta';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
@@ -8,34 +9,25 @@ import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
 import { RepositoryTab } from './repository-tab';
+import { SETTINGS_TABS, type SettingsTab } from './settings-tabs';
 import { TypesTab } from './types-tab';
 import { WorkflowTab } from './workflow-tab';
 
-type TabKey = 'types' | 'fields' | 'workflow' | 'links' | 'repository';
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'types', label: 'Types' },
-  { key: 'fields', label: 'Fields' },
-  { key: 'workflow', label: 'Workflow' },
-  { key: 'links', label: 'Links' },
-  // The project's own, not its scheme's: the scheme banner is left off it.
-  { key: 'repository', label: 'Repository' },
-];
-
 // The schema admin shell per the approved prototype: a scheme banner above a
-// left-rail tab switcher (Types · Fields · Workflow · Links). The four panels
-// are thin placeholders here — Tasks 10-13 fill each in behind its own file.
+// left-rail tab switcher (Types · Fields · Workflow · Links · Repository).
+// Which tab is on screen is the route's: each is a route of its own
+// (routes/settings-route.tsx), and the rail navigates between them.
 //
 // The board payload carries no scheme *name* (only `project.schemeId` — see
 // `apps/web/src/api/types.ts`), so the banner labels the scheme by id rather
 // than inventing a name field that doesn't exist on the wire. Likewise there's
 // no project-count-per-scheme on the board, so the banner doesn't claim a
 // specific N; it says "all projects on this scheme" instead.
-export function SettingsScreen({ projectKey }: { projectKey: string }) {
+export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: SettingsTab }) {
+  const navigate = useNavigate();
   const boardQuery = useBoard(projectKey);
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
-  const [tab, setTab] = useState<TabKey>('types');
   const { userId } = useCurrentUser();
   const forkScheme = useForkScheme(OWN_ERROR);
   const updateProject = useUpdateProject(OWN_ERROR);
@@ -117,9 +109,14 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
         >
           <Tabs
             variant="rail"
-            items={TABS.map(({ key, label }) => ({ value: key, label }))}
+            items={SETTINGS_TABS.map(({ tab: value, label }) => ({ value, label }))}
             value={tab}
-            onChange={(next) => setTab(next as TabKey)}
+            onChange={(next) => {
+              void navigate({
+                to: `/p/$projectKey/settings/${next as SettingsTab}`,
+                params: { projectKey },
+              });
+            }}
           />
         </nav>
 
