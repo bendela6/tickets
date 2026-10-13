@@ -362,7 +362,7 @@ test('changing the status select PATCHes the workflow field key', async () => {
   vi.stubGlobal('fetch', fetchMock);
   await renderDrawer();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(screen.getByRole('combobox', { name: 'Status' }));
   await userEvent.click(await screen.findByRole('option', { name: /in review/i }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
