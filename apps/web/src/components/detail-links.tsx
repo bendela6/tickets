@@ -24,6 +24,20 @@ function directionLabel(
   return { text: `← ${linkType.inverseLabel}`, blocked: linkType.key === 'blocks' };
 }
 
+// The item a typed key names on this board: the key as it is, in any case, or
+// a bare number for the item with that number (`131` for TIX-131).
+function findItem(indexes: BoardIndexes, typed: string) {
+  const key = typed.trim();
+  if (/^\d+$/.test(key)) {
+    return indexes.itemByNumber.get(Number(key));
+  }
+  const upper = key.toUpperCase();
+  return (
+    indexes.itemByKey.get(key) ??
+    [...indexes.itemByKey.values()].find((candidate) => candidate.key.toUpperCase() === upper)
+  );
+}
+
 export function DetailLinks({
   board,
   indexes,
@@ -33,16 +47,18 @@ export function DetailLinks({
   board: Board;
   indexes: BoardIndexes;
   item: Item;
-  onOpenItem: (itemNumber: number) => void;
+  onOpenItem: (itemKey: string) => void;
 }) {
   const { userId } = useCurrentUser();
   const createLink = useCreateLink(OWN_ERROR);
   const deleteLink = useDeleteLink();
 
-  const prefix = board.project.itemPrefix;
+  // One entry per key: a plan scheme's types each own their own `blocks`.
+  const seenKeys = new Set<string>();
   const linkTypes = [...board.linkTypes]
     .filter((linkType) => !linkType.archivedAt)
-    .sort((left, right) => left.position - right.position);
+    .sort((left, right) => left.position - right.position)
+    .filter((linkType) => !seenKeys.has(linkType.key) && Boolean(seenKeys.add(linkType.key)));
   // `${key}|out` / `${key}|in` — one combobox entry per legal direction.
   const options: Option[] = linkTypes.flatMap((linkType) =>
     linkType.directional
@@ -55,7 +71,8 @@ export function DetailLinks({
 
   const [adding, setAdding] = useState(false);
   const [choice, setChoice] = useState<string | null>(() => options[0]?.value ?? null);
-  const [numberDraft, setNumberDraft] = useState('');
+  const [keyDraft, setKeyDraft] = useState('');
+  const [whyDraft, setWhyDraft] = useState('');
   const [error, setError] = useState('');
 
   const submit = async () => {
@@ -63,10 +80,9 @@ export function DetailLinks({
     if (choice === null) {
       return;
     }
-    const digits = numberDraft.trim().match(/(\d+)\s*$/)?.[1];
-    const other = digits ? indexes.itemByNumber.get(Number(digits)) : undefined;
+    const other = findItem(indexes, keyDraft);
     if (!other) {
-      setError(`no item #${numberDraft.trim()}`);
+      setError(`no item ${keyDraft.trim()}`);
       return;
     }
     if (userId === null) {
@@ -79,8 +95,10 @@ export function DetailLinks({
         linkTypeKey,
         sourceItemId: direction === 'out' ? item.id : other.id,
         targetItemId: direction === 'out' ? other.id : item.id,
+        ...(whyDraft.trim().length > 0 ? { why: whyDraft.trim() } : {}),
       });
-      setNumberDraft('');
+      setKeyDraft('');
+      setWhyDraft('');
     } catch (linkError) {
       setError((linkError as Error).message);
     }
@@ -115,43 +133,41 @@ export function DetailLinks({
             }
             const chip = directionLabel(linkType, outgoing);
             return (
-              <div
-                key={link.id}
-                className="flex h-34 items-center gap-9 rounded-8 border-1 border-gray-6 px-11 hover:bg-gray-1"
-              >
-                <Pill
-                  tone={chip.blocked ? 'orange' : 'secondary'}
-                  label={chip.text}
-                  className="h-20 rounded-6 text-11/13 tracking-wider"
-                />
-                <button
-                  type="button"
-                  className="shrink-0"
-                  onClick={() => onOpenItem(other.number)}
-                >
-                  <ItemKey
-                    prefix={prefix}
-                    number={other.number}
-                    className="text-11 hover:text-indigo-9"
+              <div key={link.id} className="rounded-8 border-1 border-gray-6 hover:bg-gray-1">
+                <div className="flex h-34 items-center gap-9 px-11">
+                  <Pill
+                    tone={chip.blocked ? 'orange' : 'secondary'}
+                    label={chip.text}
+                    className="h-20 rounded-6 text-11/13 tracking-wider"
                   />
-                </button>
-                <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
-                  {String(other.values['title'] ?? '')}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Remove link"
-                  title="Remove link"
-                  disabled={userId === null || deleteLink.isPending}
-                  className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
-                  onClick={() => {
-                    if (userId !== null) {
-                      deleteLink.mutate({ linkId: link.id, actorId: userId });
-                    }
-                  }}
-                >
-                  ×
-                </button>
+                  <button
+                    type="button"
+                    className="shrink-0"
+                    onClick={() => onOpenItem(other.key)}
+                  >
+                    <ItemKey itemKey={other.key} className="text-11 hover:text-indigo-9" />
+                  </button>
+                  <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
+                    {String(other.values['title'] ?? '')}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Remove link"
+                    title="Remove link"
+                    disabled={userId === null || deleteLink.isPending}
+                    className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
+                    onClick={() => {
+                      if (userId !== null) {
+                        deleteLink.mutate({ linkId: link.id, actorId: userId });
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                {link.why ? (
+                  <p className="m-0 px-11 pb-8 font-sans text-12/17 text-gray-11">{link.why}</p>
+                ) : null}
               </div>
             );
           })
@@ -176,16 +192,25 @@ export function DetailLinks({
           <Input
             size="xs"
             className="w-112"
-            placeholder={`${prefix}-131`}
-            aria-label="Item number"
-            value={numberDraft}
+            placeholder={item.key}
+            aria-label="Item key"
+            value={keyDraft}
             disabled={userId === null}
-            onChange={(next) => setNumberDraft(next)}
+            onChange={(next) => setKeyDraft(next)}
+          />
+          <Input
+            size="xs"
+            className="min-w-160 flex-1"
+            placeholder={board.plan ? 'Why it waits' : 'Why (optional)'}
+            aria-label="Why"
+            value={whyDraft}
+            disabled={userId === null}
+            onChange={(next) => setWhyDraft(next)}
           />
           <Button
             type="submit"
             size="sm"
-            disabled={userId === null || numberDraft.trim().length === 0 || createLink.isPending}
+            disabled={userId === null || keyDraft.trim().length === 0 || createLink.isPending}
           >
             Link
           </Button>

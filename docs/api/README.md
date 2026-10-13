@@ -24,6 +24,7 @@ Postgres; see [database tables](../database.md).
 | [Export project](export-project.md) | `GET /api/projects/:key/export` | Board payload plus every ticket event — canonical JSON dump |
 | [Create ticket](create-ticket.md) | `POST /api/projects/:key/tickets` | Create a ticket; required fields gate creation, status defaults to the initial one |
 | [Update ticket](update-ticket.md) | `PATCH /api/tickets/:id` | Optimistically-locked update of values, parent, or archived state |
+| [Get item by key](get-item-by-key.md) | `GET /api/items/by-key/:key` | One item by its key (`TIX-90`, `TK/E14`, `TK-80.3`), in any project |
 | [List ticket events](list-ticket-events.md) | `GET /api/tickets/:id/events` | Paginated audit trail of one ticket, newest first |
 | [Add comment](add-comment.md) | `POST /api/tickets/:id/comments` | Add a markdown comment to a ticket |
 | [Create link](create-link.md) | `POST /api/links` | Relate two tickets; duplicates → 409, cycles in directional types → 422 |

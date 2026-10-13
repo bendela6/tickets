@@ -1,4 +1,6 @@
-import { createDbClient, ensureSoftwareScheme, ensureUser, seedProject } from '@tickets/db';
+import {
+  createDbClient, ensurePlanScheme, ensureSoftwareScheme, ensureUser, planScheme, seedProject,
+} from '@tickets/db';
 import type { Db } from '@tickets/db';
 
 if (process.env.POSTGRES_DATABASE !== 'tickets_test') {
@@ -49,6 +51,29 @@ export async function seedFixture(): Promise<Fixture> {
   return {
     schemeId: scheme.schemeId,
     projectKey: 'test',
+    projectId: project.id,
+    actorId,
+    typeIdByKey: scheme.typeIdByKey,
+    fieldIdByKey: scheme.fieldIdByKey,
+    optionIdByKey: scheme.optionIdByKey,
+  };
+}
+
+// A project on the plan scheme (epic → feature → ticket → subticket), keyed
+// `plan`. Can sit beside seedFixture's `test` project: the two share a user.
+export async function seedPlanFixture(): Promise<Fixture> {
+  const scheme = await ensurePlanScheme(testDb);
+  const actorId = await ensureUser(testDb, { name: 'tester', kind: 'human' });
+  const { project } = await seedProject(testDb, {
+    key: 'plan',
+    name: 'Plan',
+    itemPrefix: 'PLN',
+    schemeId: scheme.schemeId,
+    view: planScheme.defaultView,
+  });
+  return {
+    schemeId: scheme.schemeId,
+    projectKey: 'plan',
     projectId: project.id,
     actorId,
     typeIdByKey: scheme.typeIdByKey,

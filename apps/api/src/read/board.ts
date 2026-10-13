@@ -24,6 +24,8 @@ export async function buildBoard(db: Db, key: string) {
   const items = await assembleItems(db, vocab);
   return {
     project: vocab.project,
+    // a plan project: keys by the plan, items never move, blockers say why
+    plan: vocab.plan,
     types: vocab.types,
     fields: [...vocab.fieldById.values()],
     placements,

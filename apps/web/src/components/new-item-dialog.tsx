@@ -19,6 +19,7 @@ import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogR
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
+import { nextKey } from '../utils/next-key';
 
 // Subtasks are created from a parent item's Subtasks section (SubtaskQuickCreate
 // below), never from the global picker — the picker shows them as a disabled row.
@@ -249,7 +250,7 @@ export function NewItemDialog({
       onClose();
       void navigate({
         to: '.',
-        search: (previous: Record<string, unknown>) => ({ ...previous, t: created.number }),
+        search: (previous: Record<string, unknown>) => ({ ...previous, t: created.key }),
       });
     } catch (createError) {
       setApiError((createError as Error).message);
@@ -536,7 +537,7 @@ export function SubtaskQuickCreate({
   // Hint only — the server owns numbering; siblings count via the same index
   // the parent detail uses.
   const siblingCount = indexes.childrenByParent.get(parent.id)?.length ?? 0;
-  const nextNumber = board.items.reduce((max, item) => Math.max(max, item.number), 0) + 1;
+  const nextChildKey = nextKey(board, indexes, { typeKey: effectiveTypeKey, parentId: parent.id });
 
   const create = async () => {
     if (userId === null || title.trim().length === 0 || createItem.isPending) {
@@ -585,7 +586,7 @@ export function SubtaskQuickCreate({
         className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-14 text-gray-12 outline-none placeholder:text-gray-9"
       />
       <span aria-hidden className="hidden shrink-0 font-mono text-10 text-gray-9 sm:inline">
-        ↵ creates {board.project.itemPrefix}-{nextNumber}
+        ↵ creates {nextChildKey}
       </span>
       <Combobox
         size="xs"

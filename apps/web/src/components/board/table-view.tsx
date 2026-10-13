@@ -132,8 +132,8 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
       onClick={(event) => event.stopPropagation()}
     >
       <Link
-        to="/p/$projectKey/t/$number"
-        params={{ projectKey, number: String(ticket.number) }}
+        to="/p/$projectKey/t/$itemKey"
+        params={{ projectKey, itemKey: ticket.key }}
         title="Open item page"
         className={actionClasses}
       >
@@ -196,7 +196,7 @@ export function TableView({
   filterCount: number;
   totalCount: number;
   onUpdate: UpdateConfig;
-  onOpenTicket: (ticketNumber: number) => void;
+  onOpenTicket: (itemKey: string) => void;
   onClearFilters: () => void;
   onNewTicket: () => void;
 }) {
@@ -236,7 +236,7 @@ export function TableView({
     if (column.source === 'number') {
       return (
         <span key={key} className="px-12">
-          <ItemKey prefix={board.project.itemPrefix} number={ticket.number} />
+          <ItemKey itemKey={ticket.key} />
         </span>
       );
     }
@@ -334,7 +334,7 @@ export function TableView({
           <div
             key={ticket.id}
             role="row"
-            onClick={() => onOpenTicket(ticket.number)}
+            onClick={() => onOpenTicket(ticket.key)}
             className={cn(
               'group relative grid min-w-680 shrink-0 cursor-pointer items-center border-b-1 border-gray-6 px-4 hover:bg-gray-1',
               config.density === 'compact' ? 'h-32' : 'h-42',

@@ -1337,6 +1337,13 @@
           "nullable": false
         },
         {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "The item's name wherever it is written: PREFIX-number, or a plan's PREFIX/E<n>, PREFIX-<n>, parent key .<n>. Set once, never changed. (unique)",
+          "nullable": false
+        },
+        {
           "name": "created_by",
           "type": "integer",
           "title": "Created by",
@@ -1424,6 +1431,15 @@
           "columns": [
             "project_id",
             "number"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "u2",
+          "kind": "unique",
+          "name": "items_key_unique",
+          "columns": [
+            "key"
           ],
           "nullsNotDistinct": false
         }
@@ -2062,6 +2078,13 @@
           "title": "Target item",
           "description": "To item.",
           "nullable": false
+        },
+        {
+          "name": "why",
+          "type": "text",
+          "title": "Why",
+          "description": "Why the link is there; required on a plan's blocker (why the target waits on the source).",
+          "nullable": true
         },
         {
           "name": "created_at",

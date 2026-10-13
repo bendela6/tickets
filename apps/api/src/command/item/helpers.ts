@@ -1,6 +1,6 @@
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
-import { comments, itemTypeChildTypes, itemValues, items } from '@tickets/db';
+import { comments, events, itemTypeChildTypes, itemValues, items } from '@tickets/db';
 import { HttpError } from '../../errors';
 import type { SchemeVocab } from '../../vocab/load-scheme-vocab';
 
@@ -122,4 +122,65 @@ export async function runTransitionGuard(
       if (rows.length === 0) throw new HttpError(422, `set "${guard.requiresField}" before this transition`);
     }
   }
+}
+
+// Restore: the status a cancelled item goes back to. The item's status must be
+// of kind dropped (Cancelled, Won't fix); it returns to the `from` of the
+// change that dropped it, walking back past a move from one dropped status to
+// another. An item whose history has no such change (it was made cancelled)
+// returns to its type's initial status.
+export async function statusToRestore(
+  tx: DbExecutor,
+  vocab: SchemeVocab,
+  input: { itemId: number; typeId: number; field: { id: number; key: string } },
+): Promise<string> {
+  const rows = await tx
+    .select()
+    .from(itemValues)
+    .where(and(eq(itemValues.itemId, input.itemId), eq(itemValues.fieldId, input.field.id)));
+  const current = rows[0]?.optionId != null ? vocab.optionById.get(rows[0].optionId) : undefined;
+  if (current?.kind !== 'dropped') {
+    throw new HttpError(
+      422,
+      `only a cancelled item can be restored: its ${input.field.key} is ${current ? `"${current.label}"` : 'unset'}`,
+    );
+  }
+  const dropped = new Set(
+    (vocab.optionsByFieldId.get(input.field.id) ?? []).filter((o) => o.kind === 'dropped').map((o) => o.value),
+  );
+  for (const change of await statusChain(tx, { itemId: input.itemId, fieldKey: input.field.key, current: current.value })) {
+    if (change.from === null) break;
+    if (!dropped.has(change.from)) return change.from;
+  }
+  const initial = vocab.initialOption(input.typeId);
+  if (!initial) throw new HttpError(422, `there is no ${input.field.key} to restore to`);
+  return initial.value;
+}
+
+export type StatusChange = { from: string | null; to: string; commandId: string; causedBy: number | null };
+
+// The changes of a field that led to its current value, newest first: the
+// item.field_changed events whose `to` is the value the next one moved from.
+// It ends where the history doesn't lead here, or at a change from no value.
+export async function statusChain(
+  tx: DbExecutor,
+  input: { itemId: number; fieldKey: string; current: string },
+): Promise<StatusChange[]> {
+  const changes = await tx
+    .select({ payload: events.payload, commandId: events.commandId, causedBy: events.causedBy })
+    .from(events)
+    .where(and(eq(events.aggregateType, 'item'), eq(events.aggregateId, input.itemId), eq(events.kind, 'item.field_changed')))
+    .orderBy(desc(events.seq));
+  const chain: StatusChange[] = [];
+  let into = input.current;
+  for (const { payload, commandId, causedBy } of changes) {
+    const change = payload as { fieldKey?: unknown; from?: unknown; to?: unknown };
+    if (change.fieldKey !== input.fieldKey) continue;
+    if (change.to !== into) break; // history doesn't lead here
+    const from = typeof change.from === 'string' ? change.from : null;
+    chain.push({ from, to: into, commandId, causedBy });
+    if (from === null) break;
+    into = from;
+  }
+  return chain;
 }

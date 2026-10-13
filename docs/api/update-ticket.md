@@ -22,8 +22,10 @@ Body (**strict** — unknown keys are rejected):
   actorId: number;                   // int — attributed in the audit trail
   expectedUpdatedAt: string;         // the exact updatedAt you last read
   values?: Record<string, unknown>;  // field key → new value; null clears the field
-  parentId?: number | null;          // move under a parent / null to detach
+  parentId?: number | null;          // move under a parent / null to detach (never a plan item's)
   archived?: boolean;                // true archives, false unarchives
+  restoreStatus?: boolean;           // true: a cancelled item goes back to the status it had
+                                     // before it was cancelled (its type's first, if made so)
 }
 ```
 
@@ -49,7 +51,7 @@ the new rows inserted, which is what keeps single-selects single.
 | `400` | Invalid id; body fails validation or has unknown keys; unknown/archived field key; wrong value type; attempt to clear the status field |
 | `404` | Ticket not found |
 | `409` | `expectedUpdatedAt` no longer matches — refetch and retry |
-| `422` | Status change not in the workflow graph (message names the illegal move); depth-1 hierarchy violations (parent is a child, ticket already has children, self-parent) |
+| `422` | a plan item moved to another parent or off its own (`TK-80.3 never moves to another parent, since its key says where it sits: cancel it and write it anew under the other`); `restoreStatus` on an item whose status isn't of kind dropped; status change not in the workflow graph (message names the illegal move); depth-1 hierarchy violations (parent is a child, ticket already has children, self-parent) |
 
 ## Database
 

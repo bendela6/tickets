@@ -15,13 +15,11 @@ import { RichTextView } from './rich-text/rich-text-view';
 export function DetailComments({
   indexes,
   item,
-  prefix,
   onOpenItem,
 }: {
   indexes: BoardIndexes;
   item: Item;
-  prefix: string;
-  onOpenItem?: (number: number) => void;
+  onOpenItem?: (itemKey: string) => void;
 }) {
   const { userId } = useCurrentUser();
   const createComment = useCreateComment(OWN_ERROR);
@@ -33,13 +31,10 @@ export function DetailComments({
   );
   const me = userId !== null ? indexes.userById.get(userId) : undefined;
 
+  // A #ref chip's label is the item's key.
   const handleOpenTicket = (label: string) => {
-    if (!onOpenItem) {
-      return;
-    }
-    const n = Number(label.split('-').at(-1));
-    if (Number.isFinite(n)) {
-      onOpenItem(n);
+    if (onOpenItem && indexes.itemByKey.has(label)) {
+      onOpenItem(label);
     }
   };
 
@@ -100,7 +95,7 @@ export function DetailComments({
             value=""
             disabled={userId === null}
             features="compact"
-            suggestions={boardSuggestions(indexes, prefix)}
+            suggestions={boardSuggestions(indexes)}
             placeholder={userId === null ? 'Pick a user in the header to comment' : 'Comment…'}
             composer={{
               onSubmit: (body) => void submit(body),
