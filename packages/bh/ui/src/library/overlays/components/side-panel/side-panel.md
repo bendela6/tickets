@@ -160,8 +160,15 @@ width in pixels. The button that hides it is named "Hide" and the
 label, and the one that brings it back "Show" and the label, each with
 `aria-expanded`.
 
+Hidden while focus is inside it, the panel gives focus back to what
+opened it, like the page's own button that sets `open`, or else to the
+button that brings it back. A panel the page lays out open was opened
+by nothing, so hiding it sends focus to that button. Dialog's
+[`useRestoreFocus`](../dialog/dialog.md#userestorefocus) does
+this.
+
 Below `overlayBelow`, it is a Drawer: a `dialog` named by `label`, which
-holds focus while it is open.
+holds focus while it is open, and gives it back as a Drawer does.
 
 ## When not to use it
 

@@ -8,6 +8,8 @@ export interface RadioFieldConfig {
   options?: Option[];
   /** `plain` is a list of marks; `card` makes the whole row the target. */
   variant?: 'plain' | 'card';
+  /** `row` keeps the options on one line; `grid` gives each an equal column, for cards with a line of description. */
+  layout?: 'row' | 'grid';
   /**
    * The group's accessible name. The primitive requires one because a
    * `<fieldset>` cannot be named from outside — `for` points at a form control
@@ -35,6 +37,7 @@ export function RadioField(p: InputProps<RadioFieldConfig, string>) {
         label={p.config.label ?? p.label ?? p.name}
         options={p.config.options ?? []}
         variant={p.config.variant}
+        layout={p.config.layout}
         // A radio group HAS a selection or has none; the primitive takes a
         // plain string, and '' is the spelling for "nothing chosen".
         value={p.value ?? ''}

@@ -2,7 +2,7 @@
 title: FieldLabel
 summary: "A field's caption: a label in uppercase, with a mark when the field is
   required."
-related: [FieldError, FieldWrapper, Input]
+related: [Field, FieldError, FieldWrapper, Input]
 ---
 
 [//]: # 'written from field-label.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -12,7 +12,8 @@ related: [FieldError, FieldWrapper, Input]
 A field's caption: a `<label>` in uppercase, with a mark when the field is
 required.
 
-It is for a field laid out by hand. In a form drawn by `@bh/form`,
+It is for a field laid out by hand, and [Field](../field/field.md)
+draws it with the control and a hint. In a form drawn by `@bh/form`,
 [FieldWrapper](../field-wrapper/field-wrapper.md) draws it for you.
 
 ## Import

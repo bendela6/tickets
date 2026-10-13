@@ -1,0 +1,104 @@
+title: Navigation data
+summary: Describe the app's nav as sections of destinations, with counts, dots, statuses and pages of their own.
+order: 2
+related: [AppShell, Sidebar parts]
+body:
+  - |
+    Describe the app's nav as sections of destinations, with counts, dots,
+    statuses and pages of their own.
+
+    The list is the app's. The package only says what a section and a
+    destination are, and draws each one twice: as a row in the expanded
+    sidebar, and as an icon in the rail.
+  - h2: Import
+  - code: import type { NavItem, NavLeaf, NavSection, NavSectionAction, NavStatus } from '@bh/shell';
+    lang: tsx
+  - h2: Sections and destinations
+  - |
+    `sections` is a list of `NavSection`s, drawn in order. A section has:
+
+    - **`id`**: a stable key. Whether the section is open is remembered under
+      `<storagePrefix>:group:<id>`, so its label is free to change.
+    - **`label`**: its header, which opens and shuts it. Shut, the header
+      shows how many rows it hides. The leading section can leave it out: its
+      rows sit above the first header, with nothing to toggle.
+    - **`action`**: a button at the right of the header, as `+` for "New
+      arrival" beside Collection below: a `label`, which names it and is its
+      tooltip, an `icon` from `lucide-react`, and `onSelect`. Pressing it
+      leaves the section open or shut. The leading section has no header to
+      carry one, and the rail shows none.
+    - **`items`**: its destinations, each a `NavItem`.
+
+    A destination has a `label`, a `path`, and an `icon` from `lucide-react`.
+    It may also carry:
+
+    - **`count`**: a number or a string at the end of its row, as `18,402`.
+    - **`dot`**: a red dot, for something that wants attention.
+    - **`status`**: `up`, `warn`, `down` or `unknown`, drawn as a still dot in
+      green, orange, red or gray, and said in words to a screen reader: "Up",
+      "Up, with warnings", "Down", "Not checked yet".
+    - **`children`**: pages of its own, each a `NavLeaf` with a `label`, a
+      `path` and a `count` of its own.
+  - demo: examples/a-library.tsx
+    width: tablet
+    height: 600
+  - h2: Which destination is lit
+  - |
+    A destination is lit while the path on screen is its path or under it:
+    `/books` is lit on `/books` and on `/books/42`, but not on `/bookshops`.
+    `/` is lit on `/` alone, or it would be lit on every page. The lit row
+    takes an indigo fill and a bar on its left edge, in the rows and the
+    rail alike, and its link says `aria-current="page"`. `isCurrentPath` is
+    the test.
+  - h2: Destinations with pages
+  - |
+    A destination with `children` opens to show its pages under it. It opens
+    by itself while one of them is on screen, and shuts when the reader
+    leaves. Its chevron opens or shuts it by hand without navigating, and
+    that choice stands until the reader moves in or out of it.
+
+    Exactly one page is lit: of the pages the path on screen is at or under,
+    the one with the longest path (`currentLeaf`). So a first page can share
+    the destination's path, as All titles does at `/catalogue`, beside New
+    arrivals at `/catalogue/new`. The destination's own row stays lit while
+    any of its pages is on screen, but `aria-current` is on the page's link
+    alone.
+  - h2: At rail width
+  - |
+    Collapsed, every destination is an icon, named by a tooltip, with a short
+    rule between sections. A section shut in the expanded sidebar still shows
+    all its icons, since the rail has no headers to open it by. A status sits
+    on the icon's corner, and so does the attention dot of a destination
+    without pages.
+
+    A destination with pages opens a menu of them, headed by its label, and
+    picking one goes there. The menu lists the pages' labels, without their
+    counts.
+  - keyboard:
+      - keys: [Enter, Space]
+        does: On the icon of a destination with pages, opens its menu.
+      - keys: [↑, ↓]
+        does: Moves through the menu's pages.
+      - keys: [Enter]
+        does: Goes to the page.
+      - keys: [Esc]
+        does: Closes the menu.
+  - h2: Rules
+  - |
+    - A destination is lit on its path and on every path under it; `/` on
+      itself alone.
+    - Of a destination's pages, one is lit: the longest path that matches.
+    - Every destination is reachable at rail width, in a shut section or
+      behind a menu.
+    - A section's open state is kept under its `id`: a new id forgets it, a
+      new label does not.
+    - The status dot never moves: a pulsing dot on every row would set the
+      whole sidebar moving.
+  - h2: Reference
+  - ref: NavSection
+  - ref: NavSectionAction
+  - ref: NavItem
+  - ref: NavLeaf
+  - ref: NavStatus
+  - ref: isCurrentPath
+  - ref: currentLeaf

@@ -1,6 +1,6 @@
 title: ColorPicker
 summary: Picks one of the eleven colour scales.
-related: [Pill, IconPicker, Select]
+related: [Pill, IconPicker, Combobox]
 body:
   - |
     Picks one of the eleven colour scales.

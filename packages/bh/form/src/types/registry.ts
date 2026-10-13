@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { FormAction } from './action-node';
+import type { Commit } from './commit';
 
 /** What a form gives the input it draws for a field. */
 export interface InputProps<TConfigResolved, TValue> {
@@ -13,13 +14,27 @@ export interface InputProps<TConfigResolved, TValue> {
   label?: string;
   /** The field's value. Undefined only when neither the field nor its input has a default. */
   value: TValue;
-  /** Sets the field's value. Takes the new value alone. */
+  /** Commits the field's value: it joins the form's values, and `onCommit` runs. Takes the new value alone. */
   onChange: (next: TValue) => void;
+  /**
+   * When the field commits, as the form says: pass it to a control that holds
+   * a draft (`commit` on `Input`). A field's own config may say otherwise.
+   * Undefined when the form says nothing: commit at every change.
+   */
+  commit?: Commit;
+  /**
+   * Tells the form what's typed before it commits, at every keystroke: a
+   * Save while the field is being typed in commits it first, and
+   * `useFieldDraft` reads it. A control with no draft needn't call it.
+   */
+  onDraft?: (draft: TValue) => void;
+  /** Whether the field's last commit is still being saved by the form's `onCommit`. */
+  saving?: boolean;
   /** Call it when focus leaves the input: the form checks its values then. */
   onBlur: () => void;
   /** The field's config, with every async key resolved; one still loading is left out. */
   config: TConfigResolved;
-  /** The field's problem, once the field has been left or a submit tried. */
+  /** The field's problem, once the field has been left or a submit tried, or why its last commit failed to save. */
   error?: string;
   /** Whether the form is submitting, when every input takes no changes. */
   disabled?: boolean;
@@ -86,7 +101,10 @@ export interface FieldWrapperProps {
   description?: string;
   /** Whether the field is required, from its definition. */
   required: boolean;
-  /** The field's validation message, once the field has been left or a submit tried. */
+  /**
+   * The field's problem: its validation message, once the field has been
+   * left or a submit tried, or why its last commit failed to save.
+   */
   error?: string;
   /** The id for the element that holds `description`, which the input is described by. */
   descriptionId?: string;
@@ -101,6 +119,8 @@ export interface FieldWrapperProps {
   loading: boolean;
   /** Why the field's config failed to resolve, if it did. */
   configError?: Error;
+  /** Whether the field's last commit is still being saved by the form's `onCommit`. */
+  saving?: boolean;
   /** The field's input, drawn from the registry. */
   children: ReactNode;
 }

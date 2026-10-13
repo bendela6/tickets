@@ -1,0 +1,160 @@
+title: Sidebar parts
+summary: The pieces AppShell is built from, for an app that assembles a frame of its own.
+order: 3
+related: [AppShell, Navigation data]
+body:
+  - |
+    The pieces AppShell is built from, for an app that assembles a frame of
+    its own.
+
+    `AppShell` is a `Sidebar` docked beside `<main>` on a wide screen, and on
+    a phone a `TopBar` with a `Drawer` that holds the same `Sidebar`. Each
+    part is exported, and so are the classes they share. An app that wants
+    the frame as it is uses `AppShell`, which keeps the parts in step.
+  - h2: Import
+  - code: |
+      import { NavGroup, NavRow, RailNav, Sidebar, TopBar } from '@bh/shell';
+    lang: tsx
+  - h2: The sidebar
+  - |
+    `Sidebar` draws one column in either of its states: rows about 240
+    pixels wide, which the reader can drag between 180 and 400, or a
+    48-pixel rail of icons. Both keep one rhythm, the brand row, the search,
+    the nav that scrolls and the footer, so collapsing moves nothing but the
+    labels.
+
+    It keeps its width and its open sections under `storagePrefix`, and
+    nothing else: whether it is collapsed and the path on screen are the
+    caller's to hold and pass.
+  - demo: examples/two-states.tsx
+    width: tablet
+    height: 420
+  - |
+    Here `currentPath` is fixed at `/books`, and `collapsed` is held in
+    state, so it is forgotten on a reload. `AppShell` passes the router's
+    path and remembers `collapsed` under `<storagePrefix>:collapsed`. A frame
+    of your own reads the path the same way:
+  - code: |
+      import { useState, type ReactNode } from 'react';
+      import { useRouterState } from '@tanstack/react-router';
+      import { Sidebar, type NavSection, type ShellBrand } from '@bh/shell';
+
+      interface FrameProps {
+        sections: readonly NavSection[];
+        brand: ShellBrand;
+        children: ReactNode;
+      }
+
+      export function Frame({ sections, brand, children }: FrameProps) {
+        const currentPath = useRouterState({ select: (state) => state.location.pathname });
+        const [collapsed, setCollapsed] = useState(false);
+        return (
+          <div className="bg-gray-1 text-gray-12 flex h-dvh">
+            <Sidebar
+              sections={sections}
+              brand={brand}
+              storagePrefix="bookshop-nav"
+              currentPath={currentPath}
+              collapsed={collapsed}
+              onToggleCollapsed={() => setCollapsed(!collapsed)}
+              onExpand={() => setCollapsed(false)}
+            />
+            <main className="min-w-0 flex-1 overflow-auto">{children}</main>
+          </div>
+        );
+      }
+    lang: tsx
+    file: src/app/frame.tsx
+  - |
+    `inDrawer` is the sidebar inside a drawer: it fills the drawer's width,
+    has no edge to drag, and its top row's control, named Close navigation,
+    calls `onToggleCollapsed` to close it.
+  - h2: The parts
+  - |
+    - **`BrandRow`**: the 44-pixel top row. Expanded, the mark, the name and
+      the control that collapses the sidebar. Collapsed, the mark is the
+      control that expands it, so a sidebar at rail width can always be
+      opened again.
+    - **`NavSearch`**: the search field, or with `onSearch` the button to the
+      app's search, or at rail width a search icon.
+    - **`NavGroup`**: one section of the expanded sidebar, its header and its
+      rows. The header is a toggle and, with the section's `action`, a ghost
+      icon button after it, as "New order" beside Shop above.
+    - **`NavRow`**: one destination, a 42-pixel link with its icon, label,
+      count and dots. It runs edge to edge, so the lit fill reaches the
+      sidebar's border, and its focus ring is drawn inside it.
+    - **`NavBranch`**: a destination with pages: its row, its chevron, and a
+      `NavLeafRow` for each page, indented under the label, 32 pixels tall,
+      with no icon.
+    - **`RailNav`**: every destination as an icon, sections split by a rule.
+      `RailMenu` is a destination with pages there, whose icon opens a menu.
+    - **`TopBar`**: the phone's 48-pixel bar: the menu button, the brand, a
+      search button with `onSearch`, and `end`.
+    - **`NavStatusDot`**: a status as a 6-pixel dot and words for a screen
+      reader. `NAV_STATUS` holds each status's colour and words.
+    - **`ActiveBar`**: the 3-pixel bar on the lit row's left edge.
+  - h2: The search shortcut
+  - |
+    The shortcut has one owner at a time. Without `onSearch`, `NavSearch`
+    binds it, and it expands the sidebar and focuses the field. With
+    `onSearch`, the field leaves it alone and `AppShell` binds it, since on a
+    phone the field is only there while the drawer is open. A frame of your
+    own that passes `onSearch` binds the shortcut itself:
+    `isAppleShortcutPlatform` says whether it is ⌘K or Ctrl K, and
+    `shortcutLabel` is the hint the field shows.
+  - h2: Shared classes
+  - |
+    `NAV_STYLES` holds the classes the rows, the rail and the controls share,
+    so a part of your own matches them:
+
+    - **`focusRing`**: drawn inside the element, since a ring outside a row
+      that runs edge to edge would be cut off.
+    - **`active`**: the lit row's fill and text.
+    - **`resting`**: a row that is not lit.
+    - **`control`**: a control beside the rows, like the collapse button, a
+      rung quieter than a row.
+
+    `EXACT_MATCH` is the `activeOptions` a destination with pages, and each
+    of its pages, hands its `Link`. By default the router marks a link active
+    on every path under it, and the destination, its first page and the page
+    on screen would each say they are the page.
+  - h2: Rules
+  - |
+    - The parts draw, and the caller holds the state: whether the sidebar is
+      collapsed, the path on screen, and whether the drawer is open.
+    - The sidebar remembers only its width (`<storagePrefix>:width`) and its
+      open sections (`<storagePrefix>:group:<id>`).
+    - At rail width, every destination is reachable, and the mark expands
+      the sidebar.
+    - The search shortcut has one owner: the field without `onSearch`, the
+      frame with it.
+  - h2: Reference
+  - h3: Sidebar
+  - props: Sidebar
+  - h3: BrandRow
+  - props: BrandRow
+  - h3: NavSearch
+  - props: NavSearch
+  - h3: NavGroup
+  - props: NavGroup
+  - h3: NavRow
+  - props: NavRow
+  - h3: NavBranch
+  - props: NavBranch
+  - h3: NavLeafRow
+  - props: NavLeafRow
+  - h3: RailNav
+  - props: RailNav
+  - h3: RailMenu
+  - props: RailMenu
+  - h3: TopBar
+  - props: TopBar
+  - h3: NavStatusDot
+  - props: NavStatusDot
+  - h3: Values and helpers
+  - ref: ActiveBar
+  - ref: NAV_STYLES
+  - ref: NAV_STATUS
+  - ref: EXACT_MATCH
+  - ref: isAppleShortcutPlatform
+  - ref: shortcutLabel

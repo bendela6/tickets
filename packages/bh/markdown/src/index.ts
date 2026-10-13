@@ -15,8 +15,22 @@ export {
 } from './validate';
 
 // Drawn with @bh/ui: the blocks a page may use, the error card a host hands
-// `DocView`, the highlighter code is coloured by, and Prose.
+// `DocView`, and Prose.
 export * from './blocks';
 export { BlockErrorCard } from './error-card';
-export * from './highlight';
 export { Prose } from './prose';
+
+// The highlighter code is coloured by lives in @bh/code, with CodeBlock (from
+// './blocks'). It is exported here too, as it was before @bh/code, so an app
+// switches its imports when it likes.
+export {
+  grammarFor,
+  highlightLines,
+  isBlankLine,
+  LANGUAGES,
+  SYNTAX_CLASSES,
+  SYNTAX_HIGHLIGHTER,
+  SYNTAX_TAGS,
+  type Grammar,
+  type SyntaxRole,
+} from '@bh/code';

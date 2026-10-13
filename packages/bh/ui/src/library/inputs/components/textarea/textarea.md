@@ -12,7 +12,8 @@ Several lines of text.
 
 Like [Input](../input/input.md), it holds no value of its own:
 `onChange` hands back the new string, so `onChange={setNotes}` is the whole
-handler. `size` sets a minimum height, not a fixed one.
+handler. With `commit`, what you type is a draft it holds until the field
+commits. `size` sets a minimum height, not a fixed one.
 
 ## Import
 
@@ -144,11 +145,49 @@ export function ReadOnlyAndDisabled() {
 }
 ```
 
+`commit` says when `onChange` gets what you typed, as on
+[Input](../input/input.md#when-it-commits), but Enter stays a new
+line: `'leave'` commits on leaving the field or the window, and on
+Ctrl+Enter (Cmd+Enter on a Mac). Escape puts the value back.
+
+**Notes saved on leaving**
+
+```tsx
+import { useState } from 'react';
+import { Textarea } from '@bh/ui';
+
+export function NotesSavedOnLeaving() {
+  const [notes, setNotes] = useState('Bring the floor plans.');
+  const [saves, setSaves] = useState(0);
+  return (
+    <div className="flex w-320 flex-col gap-6">
+      <Textarea
+        aria-label="Notes"
+        value={notes}
+        commit="leave"
+        onChange={(next) => {
+          setNotes(next);
+          setSaves((count) => count + 1);
+        }}
+      />
+      <p className="text-12/17 text-gray-11 font-sans">
+        Saved {saves} {saves === 1 ? 'time' : 'times'}. Enter is a new line; Ctrl+Enter saves.
+      </p>
+    </div>
+  );
+}
+```
+
 ## Keyboard and accessibility
 
 It is a native `<textarea>`, so typing, Enter for a new line and Tab are
 the browser's. The ref lands on the `<textarea>`. `readOnly` is HTML's
 `readonly`, not `aria-readonly`.
+
+| Key                         | Does                                                                |
+| --------------------------- | ------------------------------------------------------------------- |
+| `Ctrl+Enter` or `Cmd+Enter` | Commits the draft, when the field holds one.                        |
+| `Escape`                    | Drops the draft, when the field holds one, and puts the value back. |
 
 ## When not to use it
 
@@ -156,17 +195,19 @@ For one line, use [Input](../input/input.md).
 
 ## Props
 
-| Prop                  | Type                                                                                                                                                                                                        | Default | Description                                                                                                                                                                                                                                   |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | `string`                                                                                                                                                                                                    |         | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                                                           |
-| `aria-describedby`    | `string`                                                                                                                                                                                                    |         | Identifies the element (or elements) that describes the object. The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |
-| `value` (required)    | `string`                                                                                                                                                                                                    |         | The value shown. The control holds none of its own: it reports changes through `onChange`.                                                                                                                                                    |
-| `onChange` (required) | `(value: string, event?: SyntheticEvent) => void`                                                                                                                                                           |         | The new value — and, second, the event that produced it where one exists.                                                                                                                                                                     |
-| `size`                | `ControlSize`: `'xs'`, `'md'`, `'lg'`                                                                                                                                                                       | `'md'`  | The control's size: a field's height, padding, radius and type move together, at 30, 38 or 46 pixels.                                                                                                                                         |
-| `tone`                | `Tone`: `'primary'`, `'secondary'`, `'success'`, `'warning'`, `'danger'`, `'neutral'`, `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'` |         | The role or scale it is coloured from.                                                                                                                                                                                                        |
-| `disabled`            | `boolean`                                                                                                                                                                                                   |         | Not applicable: removed from the tab order and from form submission.                                                                                                                                                                          |
-| `readOnly`            | `boolean`                                                                                                                                                                                                   |         | Not editable, but still focusable and still submitted.                                                                                                                                                                                        |
-| `className`           | `string`                                                                                                                                                                                                    |         | Added to the control's own classes.                                                                                                                                                                                                           |
-| `ref`                 | `Ref<HTMLTextAreaElement>`                                                                                                                                                                                  |         | Forwarded to the `<textarea>`.                                                                                                                                                                                                                |
+| Prop                  | Type                                                                                                                                                                                                        | Default    | Description                                                                                                                                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                  | `string`                                                                                                                                                                                                    |            | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                                                           |
+| `aria-describedby`    | `string`                                                                                                                                                                                                    |            | Identifies the element (or elements) that describes the object. The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |
+| `value` (required)    | `string`                                                                                                                                                                                                    |            | The value shown. The control holds none of its own: it reports changes through `onChange`.                                                                                                                                                    |
+| `onChange` (required) | `(value: string, event?: SyntheticEvent) => void`                                                                                                                                                           |            | The new value — and, second, the event that produced it where one exists.                                                                                                                                                                     |
+| `size`                | `ControlSize`: `'xs'`, `'md'`, `'lg'`                                                                                                                                                                       | `'md'`     | The control's size: a field's height, padding, radius and type move together, at 30, 38 or 46 pixels.                                                                                                                                         |
+| `tone`                | `Tone`: `'primary'`, `'secondary'`, `'success'`, `'warning'`, `'danger'`, `'neutral'`, `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'` |            | The role or scale it is coloured from.                                                                                                                                                                                                        |
+| `disabled`            | `boolean`                                                                                                                                                                                                   |            | Not applicable: removed from the tab order and from form submission.                                                                                                                                                                          |
+| `readOnly`            | `boolean`                                                                                                                                                                                                   |            | Not editable, but still focusable and still submitted.                                                                                                                                                                                        |
+| `className`           | `string`                                                                                                                                                                                                    |            | Added to the control's own classes.                                                                                                                                                                                                           |
+| `commit`              | `Commit`                                                                                                                                                                                                    | `'change'` | When `onChange` gets what you typed: `'change'` at every keystroke; `'leave'` on Enter and on leaving the field or the window; `{ after: 800 }` on those and after 800 ms without typing.                                                     |
+| `onDraft`             | `(draft: string) => void`                                                                                                                                                                                   |            | What's in the field, at every keystroke, before it commits: for a count, a preview, or a button that waits for some text. At `'change'` it's what `onChange` gets.                                                                            |
+| `ref`                 | `Ref<HTMLTextAreaElement>`                                                                                                                                                                                  |            | Forwarded to the `<textarea>`.                                                                                                                                                                                                                |
 
 Also every `<textarea>` attribute (`TextareaHTMLAttributes<HTMLTextAreaElement>`), passed through.

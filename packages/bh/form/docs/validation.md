@@ -2,7 +2,7 @@
 title: Validation and valibot
 summary: Check each field's value with a schema, check the fields against each
   other, and build a whole form from a valibot schema.
-order: 7
+order: 8
 related: [Rendering and submitting, Building a form, Visibility]
 ---
 

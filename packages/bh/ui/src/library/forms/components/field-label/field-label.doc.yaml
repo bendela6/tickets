@@ -1,12 +1,13 @@
 title: FieldLabel
 summary: "A field's caption: a label in uppercase, with a mark when the field is required."
-related: [FieldError, FieldWrapper, Input]
+related: [Field, FieldError, FieldWrapper, Input]
 body:
   - |
     A field's caption: a `<label>` in uppercase, with a mark when the field is
     required.
 
-    It is for a field laid out by hand. In a form drawn by `@bh/form`,
+    It is for a field laid out by hand, and [Field](/components/forms/field)
+    draws it with the control and a hint. In a form drawn by `@bh/form`,
     [FieldWrapper](/components/forms/field-wrapper) draws it for you.
   - h2: Import
   - code: import { FieldLabel } from '@bh/ui';

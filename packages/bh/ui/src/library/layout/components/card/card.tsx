@@ -1,4 +1,4 @@
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../../../style';
 import type { Gap } from '../stack';
 
@@ -65,9 +65,47 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   );
 });
 
-/** Header band with the dividing rule. Carries its own padding — see Card. */
-export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('border-gray-6 border-b-1 px-16 py-12', className)} {...rest} />;
+type CardHeaderProps = HTMLAttributes<HTMLDivElement> & {
+  /** The header's content: a CardTitle, as a rule. */
+  children?: ReactNode;
+  /**
+   * At the right end of the title's line, in small grey type unless it sets
+   * its own: a figure, a link, a range picker.
+   */
+  aside?: ReactNode;
+};
+
+/**
+ * Header band with the dividing rule. Carries its own padding — see Card.
+ *
+ * With an `aside` the band becomes a row: the children (a CardTitle, as a
+ * rule) on the left, the aside pushed to the right, both on the title's
+ * baseline. Without one it stays a plain block, so a header that stacks a
+ * title over a line of its own keeps doing so. The aside's box is a block,
+ * not a flex row, because flex would drop the spaces between an aside's
+ * words and the links among them.
+ */
+export function CardHeader({ aside, className, children, ...rest }: CardHeaderProps) {
+  // `false` too, so `aside={ready && …}` draws no empty box while it waits.
+  if (aside == null || aside === false) {
+    return (
+      <div className={cn('border-gray-6 border-b-1 px-16 py-12', className)} {...rest}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={cn(
+        'border-gray-6 flex min-w-0 items-baseline gap-8 border-b-1 px-16 py-12',
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+      <div className="text-11/15 text-gray-11 ml-auto min-w-0">{aside}</div>
+    </div>
+  );
 }
 
 /** The header's heading. Always an h3, so a card inside a page section lands

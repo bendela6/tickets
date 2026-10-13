@@ -13,9 +13,10 @@ writes the block reference a model reads before it writes a document
 The engine draws plain HTML, or the host's own elements. Beside it are the
 blocks drawn with `@bh/ui` (`markdownBlocks`: callout, code, keyboard, badge,
 transcript, api, erd and lifecycle), the error card a host hands `DocView`,
-the highlighter that colours code, and `Prose` for text the app didn't
-write, so an app showing documents and the docs site share one engine and
-one look. It came from docs-renderer's
+and `Prose` for text the app didn't write, so an app showing documents and
+the docs site share one engine and one look. Its code block is `@bh/code`'s
+`CodeBlock`, which it exports, with the highlighter that colours code, as it
+did before `@bh/code`. It came from docs-renderer's
 `@docs/core`; its schemas are any Standard Schema, so valibot's work as they
 are.
 
@@ -31,8 +32,9 @@ shows them at `/markdown/overview`, and a page for every block at
 
 ## Layer
 
-Built on `@bh/ui`, which draws the blocks and Prose; an app that takes it
-takes `ui` and what `ui` needs. It depends on `yaml`, mdast's markdown and
-GFM parsers, `@standard-schema/spec`, the `@lezer` grammars and `valibot`,
-with `react` and `tailwindcss` as peers. An app imports
-`@bh/markdown/styles.css` after `@bh/ui/tokens.css`.
+Built on `@bh/ui`, which draws the blocks and Prose, and `@bh/code`, which
+draws and colours their code; an app that takes it takes `ui`, `code` and what
+they need. It depends on `yaml`, mdast's markdown and GFM parsers,
+`@standard-schema/spec` and `valibot`, with `react` and `tailwindcss` as
+peers. An app imports `@bh/markdown/styles.css` after `@bh/ui/tokens.css`; it
+imports `@bh/code`'s sheet itself.

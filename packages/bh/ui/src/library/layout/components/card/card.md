@@ -1,7 +1,7 @@
 ---
 title: Card
 summary: A raised surface with a border, for a panel of content.
-related: [SectionHeader, Stack, Row]
+related: [CardState, Figures, Meter, SectionHeader, Stack]
 ---
 
 [//]: # 'written from card.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -43,6 +43,49 @@ export function WithHeader() {
         </p>
       </CardBody>
     </Card>
+  );
+}
+```
+
+`aside` sets something at the right end of the title's line: a figure,
+a link, a range picker. It takes small grey type unless it sets its own,
+and keeps the spaces between its words and links. Without one, the header
+is a plain block.
+
+**With an aside**
+
+```tsx
+import { Card, CardBody, CardHeader, CardTitle } from '@bh/ui';
+
+export function WithAnAside() {
+  return (
+    <div className="flex w-320 flex-col gap-12">
+      <Card>
+        <CardHeader aside="4 cores · up 3 d 4 h">
+          <CardTitle>Machine</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <p className="text-13/19 text-gray-11">The aside is small grey type by default.</p>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader
+          aside={
+            <>
+              12 of 14 running ·{' '}
+              <a href="#all" className="text-gray-12 underline-offset-2 hover:underline">
+                See all
+              </a>
+            </>
+          }
+        >
+          <CardTitle>Services</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <p className="text-13/19 text-gray-11">Words and a link keep their spaces.</p>
+        </CardBody>
+      </Card>
+    </div>
   );
 }
 ```
@@ -132,9 +175,11 @@ Also every `<div>` attribute (`HTMLAttributes<HTMLDivElement>`), passed through.
 
 ### CardHeader
 
-| Prop        | Type     | Default | Description               |
-| ----------- | -------- | ------- | ------------------------- |
-| `className` | `string` |         | Added to its own classes. |
+| Prop        | Type        | Default | Description                                                                                                        |
+| ----------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `children`  | `ReactNode` |         | The header's content: a CardTitle, as a rule.                                                                      |
+| `aside`     | `ReactNode` |         | At the right end of the title's line, in small grey type unless it sets its own: a figure, a link, a range picker. |
+| `className` | `string`    |         | Added to its own classes.                                                                                          |
 
 Also every `<div>` attribute (`HTMLAttributes<HTMLDivElement>`), passed through.
 

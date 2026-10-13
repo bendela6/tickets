@@ -30,11 +30,12 @@ body:
     - **`errorCard`** draws a block that couldn't be drawn, given a `title`
       and its `reasons`.
 
-    The package has one for each, drawn with `@bh/ui`: `CodeBlock`, and
+    There is one for each: `@bh/code`'s `CodeBlock`, and this package's
     `BlockErrorCard`. Keep the map in a constant: every block reads it from
     the page's context, which changes with it.
   - code: |
-      import { BlockErrorCard, CodeBlock, type MarkdownElements } from '@bh/markdown';
+      import { CodeBlock } from '@bh/code';
+      import { BlockErrorCard, type MarkdownElements } from '@bh/markdown';
 
       export const ELEMENTS: MarkdownElements = {
         h2: ({ id, children }) => (

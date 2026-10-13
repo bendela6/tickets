@@ -73,9 +73,8 @@ interface DropdownProps {
  * panel. It is deliberately content-agnostic — it knows nothing about options,
  * selection or commands — so an account menu off an Avatar, a filter off a
  * Pill, or any one-off panel is a trigger and a body. The input controls do
- * not use it: Combobox and MultiCombobox build on Popover, and Select and the
- * pickers on Popup, since each draws its own trigger as a field and holds its
- * own state.
+ * not use it: Combobox and MultiCombobox build on Popover, and the pickers on
+ * Popup, since each draws its own trigger as a field and holds its own state.
  *
  * Open state defaults to uncontrolled and escalates to controlled the moment
  * `open` is passed, so the common case carries no state in the caller.

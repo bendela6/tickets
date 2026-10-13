@@ -1,7 +1,7 @@
 ---
 title: FieldError
 summary: A field's error message, in red, announced as an alert.
-related: [FieldLabel, FieldWrapper, Input]
+related: [Field, FieldLabel, FieldWrapper, Input]
 ---
 
 [//]: # 'written from field-error.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -10,7 +10,8 @@ related: [FieldLabel, FieldWrapper, Input]
 
 A field's error message, in red, announced as an alert.
 
-It is for a field laid out by hand. In a form drawn by `@bh/form`,
+It is for a field laid out by hand, and [Field](../field/field.md)
+shows it in its hint's place. In a form drawn by `@bh/form`,
 [FieldWrapper](../field-wrapper/field-wrapper.md) shows the error for you.
 
 ## Import

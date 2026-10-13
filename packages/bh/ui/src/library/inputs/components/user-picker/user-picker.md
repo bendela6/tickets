@@ -80,6 +80,41 @@ export function SeveralPeople() {
 }
 ```
 
+A `disabled` person stays in the list, and neither the cursor nor a
+click can pick them; their `disabledReason` says why, under the greyed
+row.
+
+**Disabled with a reason**
+
+```tsx
+import { useId, useState } from 'react';
+import { FieldLabel, UserPicker, type Person } from '@bh/ui';
+
+const PEOPLE: Person[] = [
+  { id: 'mira', name: 'Mira Okafor', detail: '@mira' },
+  {
+    id: 'tomas',
+    name: 'Tomas Reyes',
+    detail: '@tomas',
+    disabled: true,
+    disabledReason: 'Away until Monday.',
+  },
+  { id: 'lena', name: 'Lena Varga', detail: '@lena' },
+  { id: 'owen', name: 'Owen Pryce', detail: '@owen' },
+];
+
+export function DisabledWithAReason() {
+  const id = useId();
+  const [owner, setOwner] = useState<string[]>(['mira']);
+  return (
+    <div className="flex w-256 flex-col gap-6">
+      <FieldLabel htmlFor={id}>Owner</FieldLabel>
+      <UserPicker id={id} people={PEOPLE} value={owner} onChange={setOwner} />
+    </div>
+  );
+}
+```
+
 `size` steps the field's height, padding, radius and type, and its avatars
 with it.
 
@@ -174,7 +209,8 @@ export function DisabledAndReadOnly() {
 | Key                      | Does                                                                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `Enter` or `Space`       | On the field, opens the list, with the focus in its search box.                                                                       |
-| `ArrowDown` or `ArrowUp` | Moves the cursor to the next or previous person.                                                                                      |
+| `ArrowDown` or `ArrowUp` | Moves the cursor to the next or previous person, stepping over one who can't be picked.                                               |
+| `Home` or `End`          | Moves the cursor to the first or last person who can be picked.                                                                       |
 | `Enter`                  | In the list, picks the person under the cursor. One person closes the list; with `multiple`, it toggles them and the list stays open. |
 | `Escape`                 | Closes the list.                                                                                                                      |
 
@@ -184,8 +220,13 @@ list is a `listbox` named by `label`, "People" by default, and
 `aria-multiselectable` with `multiple`. Focus stays in the search box,
 which points at the list with `aria-controls` and at the person under
 the cursor with `aria-activedescendant`, so a screen reader follows the
-cursor. `readOnly` sets `aria-disabled`, and `tone="danger"` sets
-`aria-invalid`.
+cursor, which opens on the first person chosen. A disabled person's
+`disabledReason` is their row's description, through
+`aria-describedby`. `readOnly` sets `aria-disabled`, and
+`tone="danger"` sets `aria-invalid`.
+
+The list is the one [Combobox](../combobox/combobox.md) opens, so its
+keys, and the way a search is shown, are the same.
 
 ## Props
 
@@ -212,8 +253,10 @@ interface Person
 
 Someone a UserPicker offers.
 
-| Member            | Type     | Default | Description                                                                                         |
-| ----------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `id` (required)   | `string` |         | What `value` holds for this person.                                                                 |
-| `name` (required) | `string` |         | Shown in the list, and on the field when only this person is chosen; the avatar takes its initials. |
-| `detail`          | `string` |         | Secondary line in the list — a handle, a team, a role.                                              |
+| Member            | Type      | Default | Description                                                                                                                                    |
+| ----------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id` (required)   | `string`  |         | What `value` holds for this person.                                                                                                            |
+| `name` (required) | `string`  |         | Shown in the list, and on the field when only this person is chosen; the avatar takes its initials.                                            |
+| `detail`          | `string`  |         | Secondary line in the list — a handle, a team, a role.                                                                                         |
+| `disabled`        | `boolean` |         | Shown, but neither the cursor nor a click can pick them.                                                                                       |
+| `disabledReason`  | `string`  |         | Why a `disabled` person can't be picked, e.g. "Away until Monday." The list prints it under the greyed row and makes it the row's description. |

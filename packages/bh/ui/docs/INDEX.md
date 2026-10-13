@@ -28,10 +28,14 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [Pill](../src/library/primitives/components/pill/pill.md): A compact label for one fact: a status, a type, a count.
 - [RelativeDate](../src/library/primitives/components/relative-date/relative-date.md): Shows a date as days from now: today, in 3 days, 2 days ago.
 - [StatusDot](../src/library/primitives/components/status-dot/status-dot.md): Shows whether something is running right now.
+- [TextLink](../src/library/primitives/components/text-link/text-link.md): A link in a line of text: its strongest gray, underlined under the pointer.
 
 ## Layout
 
 - [Card](../src/library/layout/components/card/card.md): A raised surface with a border, for a panel of content.
+- [Disclosure](../src/library/layout/components/disclosure/disclosure.md): A row that folds what follows it: a chevron, a title, and a summary while folded.
+- [Figures](../src/library/layout/components/figures/figures.md): A list of figures, a row each: what it is, a note on what it counts, and how much.
+- [FoldCard](../src/library/layout/components/fold-card/fold-card.md): A Card whose header folds it: a chevron, the title, and a summary while folded.
 - [Row](../src/library/layout/components/row/row.md): Lays its children out side by side, with a gap between them.
 - [SectionHeader](../src/library/layout/components/section-header/section-header.md): A section's caption row: an uppercase title, an optional count, and an action on the right.
 - [Stack](../src/library/layout/components/stack/stack.md): Lays its children out in a column, with a gap between them.
@@ -46,7 +50,7 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [Checkbox](../src/library/inputs/components/checkbox/checkbox.md): One yes-or-no choice, with an optional label beside the box.
 - [CheckboxGroup](../src/library/inputs/components/checkbox-group/checkbox-group.md): Several independent choices, all visible, held as one array of values.
 - [ColorPicker](../src/library/inputs/components/color-picker/color-picker.md): Picks one of the eleven colour scales.
-- [Combobox](../src/library/inputs/components/combobox/combobox.md): One choice from a list with a search box, shown as plain text.
+- [Combobox](../src/library/inputs/components/combobox/combobox.md): One choice from a list, with a search box or without, shown as plain text.
 - [DatePicker](../src/library/inputs/components/date-picker/date-picker.md): Picks one day, from a calendar or typed, and holds it as an ISO string.
 - [DateRangePicker](../src/library/inputs/components/date-range-picker/date-range-picker.md): Picks a span of days, or of months, and holds its two ends as ISO strings.
 - [DurationInput](../src/library/inputs/components/duration-input/duration-input.md): A length of time, typed as text and held in minutes.
@@ -62,7 +66,6 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [Rating](../src/library/inputs/components/rating/rating.md): A small fixed scale, picked by clicking one of a row of marks.
 - [SearchInput](../src/library/inputs/components/search-input/search-input.md): A search field, with a clear button once there is something to clear.
 - [SegmentedControl](../src/library/inputs/components/segmented-control/segmented-control.md): An exclusive choice among two to five short options, shown inline.
-- [Select](../src/library/inputs/components/select/select.md): One choice from a short list, shown as plain text.
 - [Slider](../src/library/inputs/components/slider/slider.md): Picks one number between a minimum and a maximum.
 - [Switch](../src/library/inputs/components/switch/switch.md): Turns one setting on or off, and can show that a save is in flight.
 - [TagInput](../src/library/inputs/components/tag-input/tag-input.md): Turns free text into tags, for values that don't exist until someone types them.
@@ -73,6 +76,7 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 
 ## Fields
 
+- [Field](../src/library/forms/components/field/field.md): A field laid out by hand: its label, its control, then a hint or an error, stacked.
 - [FieldError](../src/library/forms/components/field-error/field-error.md): A field's error message, in red, announced as an alert.
 - [FieldLabel](../src/library/forms/components/field-label/field-label.md): A field's caption: a label in uppercase, with a mark when the field is required.
 - [FieldWrapper](../src/library/forms/components/field-wrapper/field-wrapper.md): Draws one form field: its label, its control, then its description or its error.
@@ -90,6 +94,8 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 
 ## Feedback
 
+- [CardState](../src/library/feedback/components/card-state/card-state.md): A loading card in its four states: waiting, failed, empty, and its content.
+- [Meter](../src/library/feedback/components/meter/meter.md): A share of a whole as a bar: its name, its percent, a caption, and a tone for how full it is.
 - [Progress](../src/library/feedback/components/progress/progress.md): A bar showing how far along something is, as a percentage.
 - [ScreenState](../src/library/feedback/components/screen-state/screen-state.md): What a screen shows in place of its content: empty, not found, or an error.
 - [Spinner](../src/library/feedback/components/spinner/spinner.md): A mark that moves while something loads.

@@ -1,7 +1,8 @@
-import { forwardRef, useRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
+import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { Button } from '../../../primitives/components/button';
 import { cn } from '../../../../style/cn';
+import { useRestoreFocus } from '../../parts/restore-focus';
 
 /** A dialog's root: it holds whether the dialog is open. Radix's `Dialog.Root`. */
 export const DialogRoot = RadixDialog.Root;
@@ -14,9 +15,13 @@ type DialogContentProps = ComponentPropsWithoutRef<typeof RadixDialog.Content>;
 
 /** The dialog's window, centred over a dim that covers the page, in a portal. */
 export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(function DialogContent(
-  { className, children, ...rest },
+  { className, children, onFocus, onCloseAutoFocus, ...rest },
   ref,
 ) {
+  // Radix gives focus back only to a DialogTrigger, and a dialog is often
+  // opened by `open` from a row or a menu instead. The hook gives it back to
+  // whatever opened it, and leaves the trigger as Radix's own fallback.
+  const restoreFocus = useRestoreFocus();
   return (
     <RadixDialog.Portal>
       <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" />
@@ -28,6 +33,14 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
           'font-sans',
           className,
         )}
+        onFocus={(event) => {
+          restoreFocus.onFocus(event);
+          onFocus?.(event);
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          restoreFocus.onCloseAutoFocus(event);
+        }}
         {...rest}
       >
         {children}
@@ -100,25 +113,12 @@ export function ConfirmDialog({
   destructive,
   onConfirm,
 }: ConfirmDialogProps) {
-  // `open` opens it, so there is no DialogTrigger for Radix to hand focus back
-  // to. It keeps what had focus as it opened, and returns focus there instead;
-  // to nothing if that has left the page, as a row the confirm deleted has.
-  const opener = useRef<HTMLElement | null>(null);
+  // `open` opens it, so there is no DialogTrigger. DialogContent gives focus
+  // back to whatever had it as it opened, or near there if the confirm
+  // deleted it, as it does a row.
   return (
     <DialogRoot open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={() => {
-          opener.current =
-            document.activeElement instanceof HTMLElement ? document.activeElement : null;
-        }}
-        onCloseAutoFocus={(event) => {
-          if (opener.current?.isConnected) {
-            event.preventDefault();
-            opener.current.focus();
-          }
-          opener.current = null;
-        }}
-      >
+      <DialogContent>
         <DialogTitle>{title}</DialogTitle>
         {body ? <DialogDescription>{body}</DialogDescription> : null}
         <div className="mt-16 flex justify-end gap-8">

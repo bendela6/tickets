@@ -265,22 +265,24 @@ interface FormConfig<R extends InputRegistry, L extends LayoutComponentRegistry 
 
 A form, as data: its tree of fields, layouts and buttons, in the order they are drawn.
 
-| Member             | Type                      | Default | Description                                                                                                    |
-| ------------------ | ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
-| `defaultValues`    | `Record<string, unknown>` |         | Values to start at, by field name, over each field's own default. `<Form defaultValues>` wins over these.      |
-| `schema`           | `StandardSchemaV1`        |         | A check across fields, run on the visible fields' values after each field's own. `<Form schema>` wins over it. |
-| `nodes` (required) | `LayoutNode<R, L>[]`      |         | The top-level nodes.                                                                                           |
+| Member             | Type                      | Default | Description                                                                                                                                                                                                                                             |
+| ------------------ | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultValues`    | `Record<string, unknown>` |         | Values to start at, by field name, over each field's own default. `<Form defaultValues>` wins over these.                                                                                                                                               |
+| `schema`           | `StandardSchemaV1`        |         | A check across fields, run on the visible fields' values after each field's own. `<Form schema>` wins over it.                                                                                                                                          |
+| `commit`           | `Commit`                  |         | When its fields hand their values to the form: `'change'` (the default) at every keystroke, `'leave'` on Enter and on leaving the field, `{ after: 800 }` on those and after a pause. A field's config may say otherwise; `<Form commit>` wins over it. |
+| `nodes` (required) | `LayoutNode<R, L>[]`      |         | The top-level nodes.                                                                                                                                                                                                                                    |
 
 ```ts
 interface FormOptions
 ```
 
-What a form knows of itself beside its nodes: where it starts, and its check across fields.
+What a form knows of itself beside its nodes: where it starts, its check across fields, and when its fields commit.
 
-| Member          | Type                      | Default | Description                                                                                                    |
-| --------------- | ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
-| `defaultValues` | `Record<string, unknown>` |         | Values to start at, by field name, over each field's own default. `<Form defaultValues>` wins over these.      |
-| `schema`        | `StandardSchemaV1`        |         | A check across fields, run on the visible fields' values after each field's own. `<Form schema>` wins over it. |
+| Member          | Type                      | Default | Description                                                                                                                                                                                                                                             |
+| --------------- | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultValues` | `Record<string, unknown>` |         | Values to start at, by field name, over each field's own default. `<Form defaultValues>` wins over these.                                                                                                                                               |
+| `schema`        | `StandardSchemaV1`        |         | A check across fields, run on the visible fields' values after each field's own. `<Form schema>` wins over it.                                                                                                                                          |
+| `commit`        | `Commit`                  |         | When its fields hand their values to the form: `'change'` (the default) at every keystroke, `'leave'` on Enter and on leaving the field, `{ after: 800 }` on those and after a pause. A field's config may say otherwise; `<Form commit>` wins over it. |
 
 ```ts
 type FieldNode<R extends InputRegistry> = …

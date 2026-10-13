@@ -1,0 +1,38 @@
+title: CardState
+summary: 'A loading card in its four states: waiting, failed, empty, and its content.'
+related: [Card, ScreenState, Spinner]
+body:
+  - |
+    A loading card in its four states: waiting, failed, empty, and its
+    content.
+
+    It goes in a `CardBody`, around what the card shows once its answer has
+    come, so every card waits, fails and comes up empty the same way. It
+    works outside a card too, around anything that loads.
+  - h2: Import
+  - code: import { CardState } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `isLoading` shows a spinner until the first answer. `error` shows its
+    message under "Could not load": anything thrown is taken, as a query
+    library hands it over, and one that isn't an `Error` says the request
+    failed. `isEmpty` shows `emptyText`, "Nothing here." unless it says
+    otherwise. With none of them, the content shows, in a column 16 pixels
+    apart.
+
+    An error shows over the spinner, so a failed answer that is being retried
+    still says it failed.
+  - demo: examples/its-four-states.tsx
+  - |
+    A partial answer, where one source did not reply, is still the content:
+    the numbers that came show, with the note last. `gap` spaces the column
+    in steps of 4 pixels, 4 (16 pixels) by default.
+  - demo: examples/a-partial-answer.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The spinner sits in a `status` region and is named "Loading". The error
+    and the empty line are plain text, read in place: neither is announced
+    when it appears.
+  - h2: Props
+  - props: CardState

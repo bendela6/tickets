@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { Combobox } from './combobox';
-import type { Option } from '../../contract';
+import type { Option, OptionGroup } from '../../contract';
 
 const OPTIONS: Option[] = [
   { value: 'p0', label: 'P0 · critical', color: 'red' },
@@ -37,10 +37,8 @@ test('shows the selected label on the trigger', () => {
 
 test('searchable={false} drops the search box but still lists every option', async () => {
   render(<Combobox options={OPTIONS} value={null} onChange={() => {}} searchable={false} />);
-  await userEvent.click(screen.getByRole('button'));
+  await userEvent.click(screen.getByRole('combobox'));
   expect(await screen.findAllByRole('option')).toHaveLength(3);
-  // The trigger keeps role=button; only the list's own search input was a
-  // combobox, so its absence is what proves the box is gone.
   expect(screen.queryByRole('searchbox')).toBeNull();
 });
 
@@ -50,11 +48,22 @@ test('searchable={false} keeps the keyboard model the search box used to own', a
   // instead of moving the selection.
   const onChange = vi.fn();
   render(<Combobox options={OPTIONS} value={null} onChange={onChange} searchable={false} />);
-  await userEvent.click(screen.getByRole('button'));
+  await userEvent.click(screen.getByRole('combobox'));
   const list = await screen.findByRole('listbox');
   expect(list).toHaveFocus();
   await userEvent.keyboard('{ArrowDown}{Enter}');
   expect(onChange).toHaveBeenCalledWith('p1');
+});
+
+test('with a search box the field stays a button, named by what it shows', () => {
+  // The searching field can't take role=combobox until its call sites are
+  // labelled: a combobox takes no name from its content. See the component.
+  render(<Combobox options={OPTIONS} value="p0" onChange={() => {}} />);
+  expect(screen.getByRole('button', { name: 'P0 · critical' })).toHaveAttribute(
+    'aria-haspopup',
+    'dialog',
+  );
+  expect(screen.queryByRole('combobox')).toBeNull();
 });
 
 test('has no clear affordance — a single select is changed by picking, not emptied', () => {
@@ -172,4 +181,373 @@ test('tone danger is what announces invalid, as on every field', () => {
     />,
   );
   expect(container.querySelector('button')).toHaveAttribute('aria-invalid', 'true');
+});
+
+// Statuses in an order that is NOT their groups' order, so a list that shows
+// them as they came gets every grouped assertion below wrong.
+const STATUSES: Option[] = [
+  { value: 'dropped', label: 'Dropped', disabled: true, disabledReason: 'Only a lead drops work.' },
+  { value: 'done', label: 'Done' },
+  { value: 'doing', label: 'Doing' },
+  { value: 'todo', label: 'To do' },
+  {
+    value: 'review',
+    label: 'In review',
+    disabled: true,
+    disabledReason: "The workflow doesn't go from Doing to In review.",
+  },
+  { value: 'stray', label: 'Stray' },
+];
+const KIND: Record<string, string> = {
+  todo: 'not-started',
+  doing: 'started',
+  review: 'started',
+  dropped: 'finished',
+  done: 'finished',
+  stray: 'unlisted',
+};
+const KINDS: OptionGroup[] = [
+  { key: 'not-started', label: 'Not started' },
+  { key: 'started', label: 'Started' },
+  { key: 'blocked', label: 'Blocked' },
+  { key: 'finished', label: 'Finished' },
+];
+
+function Statuses({ onChange = () => {} }: { onChange?: (value: string | null) => void }) {
+  return (
+    <Combobox
+      options={STATUSES}
+      value={null}
+      onChange={onChange}
+      placeholder="Status"
+      groupOf={(option) => KIND[option.value] ?? ''}
+      groups={KINDS}
+    />
+  );
+}
+
+test('groups show under a heading each, in the order of `groups`', async () => {
+  // "Blocked" has no options, so it has no heading either.
+  render(<Statuses />);
+  await userEvent.click(screen.getByRole('button', { name: 'Status' }));
+  const headings = ['Not started', 'Started', 'Finished'];
+  expect(await screen.findAllByRole('group')).toEqual(
+    headings.map((name) => screen.getByRole('group', { name })),
+  );
+  const started = within(screen.getByRole('group', { name: 'Started' })).getAllByRole('option');
+  expect(started.map((option) => option.textContent)).toEqual(['Doing', 'In review']);
+});
+
+test('the arrows step over disabled rows from one group into the next', async () => {
+  // To do, Doing, [In review], [Dropped], Done: two disabled rows sit either
+  // side of the line between Started and Finished.
+  const onChange = vi.fn();
+  render(<Statuses onChange={onChange} />);
+  await userEvent.click(screen.getByRole('button', { name: 'Status' }));
+  await screen.findByRole('searchbox');
+  await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('done');
+});
+
+test('a disabled option says why, and a screen reader reads it with the option', async () => {
+  render(<Statuses />);
+  await userEvent.click(screen.getByRole('button', { name: 'Status' }));
+  expect(await screen.findByRole('option', { name: 'Dropped' })).toHaveAccessibleDescription(
+    'Only a lead drops work.',
+  );
+});
+
+// Without search the Combobox is a select. What `Select` guaranteed, before it
+// went, it guarantees here.
+
+const TYPES: Option[] = [
+  { value: 'task', label: 'Task', color: 'blue' },
+  { value: 'bug', label: 'Bug', color: 'red' },
+  { value: 'chore', label: 'Chore' },
+  { value: 'spike', label: 'Spike', disabled: true },
+];
+
+function Select(props: Partial<Parameters<typeof Combobox>[0]>) {
+  return (
+    <Combobox options={TYPES} value={null} onChange={() => {}} {...props} searchable={false} />
+  );
+}
+
+const openSelect = async () => userEvent.click(screen.getByRole('combobox'));
+
+test('without search, the field is a combobox whose popup is a listbox', async () => {
+  render(<Select aria-label="Type" />);
+  const field = screen.getByRole('combobox', { name: 'Type' });
+  expect(field).toHaveAttribute('aria-haspopup', 'listbox');
+  expect(field).toHaveAttribute('aria-expanded', 'false');
+  await openSelect();
+  expect(field).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('without search, the value is PLAIN TEXT, never a chip', () => {
+  // A chip says "one of several things I am holding" about a control that
+  // holds exactly one.
+  render(<Select value="task" />);
+  const field = screen.getByRole('combobox');
+  expect(field).toHaveTextContent('Task');
+  expect(field.querySelector('[data-chip]')).toBeNull();
+  expect(field.className).not.toMatch(/bg-blue-\d/);
+});
+
+test('without search, a coloured option keeps its dot on the field, because that is data', () => {
+  const { container } = render(<Select value="task" />);
+  expect(container.querySelector('.bg-blue-9')).not.toBeNull();
+});
+
+test('without search, an uncoloured option draws no dot', () => {
+  const { container } = render(<Select value="chore" />);
+  expect(container.querySelector('[class*="rounded-full"]')).toBeNull();
+});
+
+test('without search, the placeholder stands in for an empty value', () => {
+  render(<Select placeholder="Choose a type" />);
+  expect(screen.getByRole('combobox')).toHaveTextContent('Choose a type');
+});
+
+test('without search, picking commits and closes', async () => {
+  const onChange = vi.fn();
+  render(<Select onChange={onChange} />);
+  await openSelect();
+  await userEvent.click(screen.getByRole('option', { name: 'Bug' }));
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('bug');
+  expect(screen.queryByRole('listbox')).toBeNull();
+});
+
+test('without search, the cursor opens on the chosen row, so Enter changes nothing', async () => {
+  // Opening onto row 0 would mean Enter silently moved the value to whatever
+  // happened to be first.
+  const onChange = vi.fn();
+  render(<Select value="chore" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('chore');
+});
+
+test('without search, with nothing chosen, the cursor opens on the first row that can be picked', async () => {
+  // Not on row 0 when row 0 is disabled: Enter there would do nothing at all.
+  const onChange = vi.fn();
+  render(
+    <Select
+      options={[
+        { value: 'spike', label: 'Spike', disabled: true },
+        { value: 'task', label: 'Task' },
+      ]}
+      onChange={onChange}
+    />,
+  );
+  await openSelect();
+  await userEvent.keyboard('{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('task');
+});
+
+test('without search, the cursor steps over a disabled row rather than resting on it', async () => {
+  const onChange = vi.fn();
+  render(<Select value="chore" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+  // 'spike' is disabled and is the only row below 'chore', so the cursor holds.
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('chore');
+});
+
+test('without search, a disabled option refuses the pointer too', async () => {
+  const onChange = vi.fn();
+  render(<Select onChange={onChange} />);
+  await openSelect();
+  await userEvent.click(screen.getByRole('option', { name: 'Spike' }));
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+test('without search, Enter, Space and the arrows open the list from the field', async () => {
+  for (const key of ['{Enter}', ' ', '{ArrowDown}', '{ArrowUp}']) {
+    const { unmount } = render(<Select value="bug" />);
+    screen.getByRole('combobox').focus();
+    await userEvent.keyboard(key);
+    // Opened at the chosen row, with the focus in the list so the keys work.
+    const list = await screen.findByRole('listbox');
+    expect(list).toHaveFocus();
+    const current = document.getElementById(list.getAttribute('aria-activedescendant') ?? '');
+    expect(current).toHaveTextContent('Bug');
+    unmount();
+  }
+});
+
+test('without search, Space picks in the list as Enter does', async () => {
+  const onChange = vi.fn();
+  render(<Select value="task" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('{ArrowDown} ');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('bug');
+});
+
+test('without search, typing in the list jumps to the option that starts with it', async () => {
+  const onChange = vi.fn();
+  render(<Select value="task" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('c{Enter}');
+  expect(onChange).toHaveBeenLastCalledWith('chore');
+});
+
+test('without search, typing on the closed field opens the list at the option it starts', async () => {
+  // As a native select: the field need not be opened first.
+  const onChange = vi.fn();
+  render(<Select value="task" onChange={onChange} />);
+  screen.getByRole('combobox').focus();
+  await userEvent.keyboard('b');
+  expect(await screen.findByRole('listbox')).toHaveFocus();
+  await userEvent.keyboard('{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('bug');
+});
+
+test('without search, keys typed one after another on the closed field make one search', async () => {
+  // "ch" is Chore. Were the "h" a search of its own it would find nothing,
+  // and the cursor would stay on Cat, where "c" alone stopped.
+  const onChange = vi.fn();
+  render(
+    <Select
+      options={[
+        { value: 'cat', label: 'Cat' },
+        { value: 'chore', label: 'Chore' },
+      ]}
+      onChange={onChange}
+    />,
+  );
+  screen.getByRole('combobox').focus();
+  await userEvent.keyboard('ch{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('chore');
+});
+
+test('without search, read-only keeps the tab stop, refuses to open and drops the chevron', async () => {
+  const { container } = render(<Select value="task" readOnly />);
+  const field = screen.getByRole('combobox');
+  await userEvent.tab();
+  expect(field).toHaveFocus();
+  await userEvent.click(field);
+  await userEvent.keyboard('{ArrowDown}b');
+  expect(screen.queryByRole('listbox')).toBeNull();
+  expect(field).not.toBeDisabled();
+  expect(field).toHaveAttribute('aria-disabled', 'true');
+  // A chevron promises a list that will not open.
+  expect(container.querySelector('svg')).toBeNull();
+});
+
+test('without search, tone danger is what announces invalid — there is no invalid prop', () => {
+  const { rerender } = render(<Select value="task" />);
+  expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-invalid');
+  rerender(<Select value="task" tone="danger" />);
+  expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('without search, an empty list says so rather than opening onto nothing', async () => {
+  render(<Select options={[]} />);
+  await openSelect();
+  expect(screen.getByText('Nothing to pick')).toBeInTheDocument();
+});
+
+function GroupedSelect({
+  value = null,
+  onChange = () => {},
+}: {
+  value?: string | null;
+  onChange?: (value: string | null) => void;
+}) {
+  return (
+    <Select
+      aria-label="Status"
+      options={STATUSES}
+      value={value}
+      onChange={onChange}
+      groupOf={(option) => KIND[option.value] ?? ''}
+      groups={KINDS}
+    />
+  );
+}
+
+test('without search, groups show under a heading each, in the order of `groups`', async () => {
+  // "Blocked" has no options, so it has no heading either; "Stray" is in a
+  // group `groups` doesn't list, so it isn't shown.
+  render(<GroupedSelect />);
+  await openSelect();
+  const headings = ['Not started', 'Started', 'Finished'];
+  expect(screen.getAllByRole('group')).toEqual(
+    headings.map((name) => screen.getByRole('group', { name })),
+  );
+  const started = within(screen.getByRole('group', { name: 'Started' })).getAllByRole('option');
+  expect(started.map((option) => option.textContent)).toEqual(['Doing', 'In review']);
+  expect(screen.queryByRole('option', { name: 'Stray' })).toBeNull();
+});
+
+test('without search, the arrows step over disabled rows from one group into the next', async () => {
+  // To do, Doing, [In review], [Dropped], Done: two disabled rows sit either
+  // side of the line between Started and Finished.
+  const onChange = vi.fn();
+  render(<GroupedSelect value="doing" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('done');
+});
+
+test('without search, Home and End go to the ends of the list as it is shown', async () => {
+  const onChange = vi.fn();
+  render(<GroupedSelect value="doing" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('{End}{Enter}');
+  expect(onChange).toHaveBeenLastCalledWith('done');
+  await openSelect();
+  await userEvent.keyboard('{Home}{Enter}');
+  expect(onChange).toHaveBeenLastCalledWith('todo');
+});
+
+test('without search, typing skips a disabled option and keeps the order the groups give', async () => {
+  // "d" from Doing: Dropped is disabled, so it is Done, under Finished.
+  const onChange = vi.fn();
+  render(<GroupedSelect value="doing" onChange={onChange} />);
+  await openSelect();
+  await userEvent.keyboard('d{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith('done');
+});
+
+test('without search, a disabled option says why, and a screen reader reads it with the option', async () => {
+  render(<GroupedSelect value="doing" />);
+  await openSelect();
+  const review = screen.getByRole('option', { name: 'In review' });
+  expect(review).toHaveAccessibleDescription("The workflow doesn't go from Doing to In review.");
+  expect(screen.getByText("The workflow doesn't go from Doing to In review.")).toBeVisible();
+});
+
+test('without search, the field names its value even when the list leaves its group out', () => {
+  render(<GroupedSelect value="stray" />);
+  expect(screen.getByRole('combobox')).toHaveTextContent('Stray');
+});
+
+test('without search, two on one page keep their own option ids', async () => {
+  // `Select` named its options from their values alone, so two on one page
+  // shared ids, and the second list's cursor named a row of the first. Only
+  // one popover is open at a time, so the ids are gathered as each list opens:
+  // together they must still be unique.
+  render(
+    <>
+      <Select />
+      <Select />
+    </>,
+  );
+  const ids: string[] = [];
+  for (const field of screen.getAllByRole('combobox')) {
+    await userEvent.click(field);
+    const list = await screen.findByRole('listbox');
+    await userEvent.keyboard('{ArrowDown}');
+    const options = within(list).getAllByRole('option');
+    ids.push(...options.map((option) => option.id));
+    // The cursor names a row of this list, not the same row of the other one.
+    const current = document.getElementById(list.getAttribute('aria-activedescendant') ?? '');
+    expect(list).toContainElement(current);
+    expect(current).toHaveTextContent('Bug');
+    await userEvent.keyboard('{Escape}');
+  }
+  expect(ids).toHaveLength(TYPES.length * 2);
+  expect(new Set(ids).size).toBe(ids.length);
 });

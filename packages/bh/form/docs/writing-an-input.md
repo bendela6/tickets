@@ -1,7 +1,7 @@
 ---
 title: Writing an input
 summary: Make a control of your own into a kind any form can name.
-order: 9
+order: 10
 related: [The registry, Instrument's bindings, Building a form]
 ---
 
@@ -100,7 +100,14 @@ takes a `prefix` and starts at `''`, and anything else is a type error.
 - **`value`**: drawn as given. It holds no value of its own, and it
   defaults an undefined one, which a registry with no `defaultValue` for
   it can give.
-- **`onChange`**: called with the new value alone, not an event.
+- **`onChange`**: called with the new value alone, not an event. It
+  commits the value: it joins the form's values, and `onCommit` runs.
+- **`commit`**: when the form's fields commit. An input that holds a
+  draft until then passes it on (`commit` on `@bh/ui`'s text controls),
+  and calls **`onDraft`** with the draft as it's typed, so a Save
+  commits it first. An input with no draft ignores both.
+- **`saving`**: the field's last commit is being saved by `onCommit`;
+  the wrapper draws it too.
 - **`onBlur`**: called when focus leaves it, which checks the form.
 - **`error`**: drawn as invalid, `tone="danger"` in `@bh/ui`; the
   wrapper draws the message.
@@ -172,7 +179,8 @@ export function OneItem(p: InputProps<{ item: FormConfig<InputRegistry> }, Item 
 ## Rules
 
 - An input is controlled: what it shows is `value`, and what it changes
-  goes through `onChange`.
+  goes through `onChange`. The one thing it may hold is a draft while
+  it's typed in, before the field commits.
 - A kind's `defaultValue` is a value its input can hold: it is what a
   field starts at, and what a list's new item holds.
 - A kind's name is stored with every form that names it.
@@ -187,19 +195,22 @@ interface InputProps<TConfigResolved, TValue>
 
 What a form gives the input it draws for a field.
 
-| Member                | Type                     | Default | Description                                                                                                                                                               |
-| --------------------- | ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name` (required)     | `string`                 |         | The field's name: put it on the focusable element as its `id`, which the field's label names.                                                                             |
-| `label`               | `string`                 |         | The field's label, from its definition. The wrapper draws it; an input whose element a `<label for>` cannot name (a group, a slider drawn on a div) names itself with it. |
-| `value` (required)    | `TValue`                 |         | The field's value. Undefined only when neither the field nor its input has a default.                                                                                     |
-| `onChange` (required) | `(next: TValue) => void` |         | Sets the field's value. Takes the new value alone.                                                                                                                        |
-| `onBlur` (required)   | `() => void`             |         | Call it when focus leaves the input: the form checks its values then.                                                                                                     |
-| `config` (required)   | `TConfigResolved`        |         | The field's config, with every async key resolved; one still loading is left out.                                                                                         |
-| `error`               | `string`                 |         | The field's problem, once the field has been left or a submit tried.                                                                                                      |
-| `disabled`            | `boolean`                |         | Whether the form is submitting, when every input takes no changes.                                                                                                        |
-| `loading` (required)  | `boolean`                |         | Whether the field's async config is still loading.                                                                                                                        |
-| `configError`         | `Error`                  |         | Why the field's async config failed to load, if it did.                                                                                                                   |
-| `describedBy`         | `string`                 |         | The id of what describes the field now, its problem or else its help: put it on the focusable element as `aria-describedby`.                                              |
+| Member                | Type                      | Default | Description                                                                                                                                                                                                    |
+| --------------------- | ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name` (required)     | `string`                  |         | The field's name: put it on the focusable element as its `id`, which the field's label names.                                                                                                                  |
+| `label`               | `string`                  |         | The field's label, from its definition. The wrapper draws it; an input whose element a `<label for>` cannot name (a group, a slider drawn on a div) names itself with it.                                      |
+| `value` (required)    | `TValue`                  |         | The field's value. Undefined only when neither the field nor its input has a default.                                                                                                                          |
+| `onChange` (required) | `(next: TValue) => void`  |         | Commits the field's value: it joins the form's values, and `onCommit` runs. Takes the new value alone.                                                                                                         |
+| `commit`              | `Commit`                  |         | When the field commits, as the form says: pass it to a control that holds a draft (`commit` on `Input`). A field's own config may say otherwise. Undefined when the form says nothing: commit at every change. |
+| `onDraft`             | `(draft: TValue) => void` |         | Tells the form what's typed before it commits, at every keystroke: a Save while the field is being typed in commits it first, and `useFieldDraft` reads it. A control with no draft needn't call it.           |
+| `saving`              | `boolean`                 |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                                                                                                 |
+| `onBlur` (required)   | `() => void`              |         | Call it when focus leaves the input: the form checks its values then.                                                                                                                                          |
+| `config` (required)   | `TConfigResolved`         |         | The field's config, with every async key resolved; one still loading is left out.                                                                                                                              |
+| `error`               | `string`                  |         | The field's problem, once the field has been left or a submit tried, or why its last commit failed to save.                                                                                                    |
+| `disabled`            | `boolean`                 |         | Whether the form is submitting, when every input takes no changes.                                                                                                                                             |
+| `loading` (required)  | `boolean`                 |         | Whether the field's async config is still loading.                                                                                                                                                             |
+| `configError`         | `Error`                   |         | Why the field's async config failed to load, if it did.                                                                                                                                                        |
+| `describedBy`         | `string`                  |         | The id of what describes the field now, its problem or else its help: put it on the focusable element as `aria-describedby`.                                                                                   |
 
 ```ts
 interface InputDefinition<TConfigResolved, TValue>

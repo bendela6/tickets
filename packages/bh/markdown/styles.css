@@ -1,3 +1,7 @@
+/* The code blocks are @bh/code's, so its classes come with these. An import
+   comes before every other rule. */
+@import '@bh/code/styles.css';
+
 /* @bh/markdown's sources for the consuming app's Tailwind scan: the blocks,
    the error card and Prose are styled here. A class used only inside this
    package is otherwise missing from the app's stylesheet, and the symptom is

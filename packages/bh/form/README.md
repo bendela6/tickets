@@ -15,7 +15,7 @@ and `RootWrapper`.
 
 ## Docs
 
-The Forms guide is in [`docs/`](docs/INDEX.md): nine pages, from a first form
+The Forms guide is in [`docs/`](docs/INDEX.md): ten pages, from a first form
 to writing an input, with the package's rules and its reference. Each page is a
 `.doc.yaml` with its `.md` copy beside it; an app reads them in its copy of
 the package, `packages/bh/form/docs/`. The docs site (`pnpm docs:dev` in bh) shows

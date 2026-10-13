@@ -33,12 +33,23 @@ body:
     keeps the steppers, fades them with the field, and takes it out of the
     tab order and the submission.
   - demo: examples/read-only-and-disabled.tsx
+  - |
+    `commit` says when `onChange` gets the number, as on
+    [Input](/components/inputs/input#when-it-commits). Leaving the whole
+    control commits: moving between the field and its steppers is still
+    editing, so a run of clicks commits once. A click on a stepper puts the
+    caret in the field.
+  - demo: examples/an-estimate-saved-on-leaving.tsx
   - h2: Keyboard and accessibility
   - keyboard:
       - keys: [ArrowUp, ArrowDown]
         does: Steps the value by `step`, as the browser's number field does.
       - keys: [Tab]
         does: Moves on to the next field. The steppers are not tab stops.
+      - keys: [Enter]
+        does: Commits the draft, when the field holds one.
+      - keys: [Escape]
+        does: Drops the draft, when the field holds one, and puts the value back.
   - |
     The field is an `<input type="number">` with the role `spinbutton`, and
     the ref lands on it. The steppers are buttons named "Increment" and

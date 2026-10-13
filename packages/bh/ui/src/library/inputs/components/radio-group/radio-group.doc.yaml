@@ -1,6 +1,6 @@
 title: RadioGroup
 summary: One choice from a few options, every option visible.
-related: [SegmentedControl, Select, CheckboxGroup]
+related: [SegmentedControl, Combobox, CheckboxGroup]
 body:
   - |
     One choice from a few options, every option visible.
@@ -24,12 +24,27 @@ body:
     and fill as well as the dot.
   - demo: examples/cards.tsx
   - |
+    An option's `description` is a line under its label, saying what
+    choosing it does. With `layout="grid"` the cards sit in equal columns,
+    each at least 200 pixels wide, as many as fit, and one under another on
+    a phone; each is as tall as the tallest beside it. The options are the
+    `Option` every control with a choice takes, and a control with no room
+    for the line, as Select, ignores it.
+  - demo: examples/described-cards.tsx
+  - |
+    An option's `icon` goes before its label.
+  - demo: examples/with-icons.tsx
+  - |
+    A plain group draws the line too. Stack its options with `flex-col`
+    through `className` so each line has room.
+  - demo: examples/described-plain.tsx
+  - |
     `size` sets the circle, 14, 16 or 20 pixels, the type, and the space
     between options.
   - demo: examples/sizes.tsx
   - |
-    The options sit in a row. Add `flex-wrap` through `className` to let a
-    long row wrap.
+    By default the options sit in a row. Add `flex-wrap` through
+    `className` to let a long row wrap.
   - demo: examples/many-options.tsx
   - |
     From the top: editable, read-only and disabled. An option's own
@@ -50,13 +65,16 @@ body:
     as one choice with one tab stop. The `<fieldset>` has
     `role="radiogroup"` and is named by its legend, which is visually
     hidden; `id` goes on it. `readOnly` sets `aria-readonly` on the group.
+    An option with a `description` is named by its label alone and
+    described by the line, so a screen reader reads the choice, then what it
+    does. An icon is hidden from it.
   - h2: When not to use it
   - |
     - For two to five short options drawn as one control, use
       [SegmentedControl](/components/inputs/segmented-control).
     - To keep the options out of sight until asked for, use
-      [Select](/components/inputs/select): one choice, behind a field that
-      opens.
+      [Combobox without search](/components/inputs/combobox#without-search):
+      one choice, behind a field that opens.
     - For several choices at once, use
       [CheckboxGroup](/components/inputs/checkbox-group).
   - h2: Props

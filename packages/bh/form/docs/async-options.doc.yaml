@@ -1,6 +1,6 @@
 title: Async options
 summary: Load a field's options, or any of its config, from elsewhere, and load them again when the fields they depend on change.
-order: 6
+order: 7
 related: [Visibility, Rendering and submitting, Building a form]
 body:
   - |

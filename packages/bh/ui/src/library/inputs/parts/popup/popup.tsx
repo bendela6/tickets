@@ -20,6 +20,13 @@ export const popupClass = 'z-50 rounded-6 border-1 border-gray-6 bg-surface-rais
 /** 4px below the trigger — the design's number, kept next to the class it pairs with. */
 export const POPUP_OFFSET = 4;
 
+/**
+ * The trigger's width, as Radix measures it: right for a select's list, which
+ * belongs at its field's width. One literal, so a control that renders its own
+ * popover content matches `Popup`'s.
+ */
+export const triggerWidthClass = 'w-[var(--radix-popover-trigger-width)]';
+
 interface PopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -57,11 +64,7 @@ export function Popup({
       <PopoverContent
         align="start"
         sideOffset={POPUP_OFFSET}
-        className={cn(
-          popupClass,
-          matchTriggerWidth && 'w-[var(--radix-popover-trigger-width)]',
-          className,
-        )}
+        className={cn(popupClass, matchTriggerWidth && triggerWidthClass, className)}
       >
         {children}
       </PopoverContent>
