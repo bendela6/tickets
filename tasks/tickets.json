@@ -192,7 +192,7 @@
           "title": "Add submenus, option groups, and draft and commit states to bh",
           "description": "Each of these is generic, or is built twice already (tickets and gateway), so it belongs in bh (`@bh/ui`, and `@bh/form` for the form's half of TK-2.5). `FilterBar` and the number cards (`Stat`, now `Card`) were here too; they're planned on their own now (TK-75, TK-76).",
           "status": "In progress",
-          "statusNote": "TK-2.1.1 (1de1198), TK-2.1.2 (1f89047) and TK-2.1.4 (bd6143e, the Menu page's submenu demo, seen in the browser) on bh branch `tk-2`, cut from bh's main, in `../bh-wt-tk-2`. TK-2.2 is there too: TK-2.2.1 (45b9de9), TK-2.2.2 (3ab0d45), TK-2.2.3 (976197d) and TK-2.2.4 (0e3d834 tests, a6ba5a8 docs), seen in the browser; each group is a `group` its heading names, and a disabled option's reason sits under its greyed row as its description. Escape closes the whole menu, back to the menu's own trigger; ← closes just the submenu, back to its row. TK-2.1.3 is in tickets, where the editor still is: tickets branch `tk-2` (b7d2d71a), in `../tickets-wt-tk-2`; it keeps its own Radix submenu until bh's `MenuSub` reaches tickets' copy, and wasn't seen in the browser (the local API kept losing its Postgres connections). TK-2.5 on the same bh branch `tk-2`, after `tk-7`, `tk-44` and `tk-59` were cut from it: TK-2.5.1 (792d353) `useInlineEdit`, inside `@bh/ui`, not exported; TK-2.5.2 (af0e595) `commit` (`'change'`, `'leave'` or `{ after: ms }`) and `onDraft` on `Input`, `Textarea` (Ctrl+Enter commits) and `NumberInput`; TK-2.5.3 (fd0b804) their tests and `commit` demos; TK-2.5.4 (21fc962) `onCommit` beside `onSubmit` in `@bh/form`, a field showing it's saving and keeping your value on a failed save, dirty meaning committed but not submitted, and Save committing a draft first. Left: a nested field's draft isn't seen by Save until you leave it.",
+          "statusNote": "TK-2.1.1 (1de1198), TK-2.1.2 (1f89047) and TK-2.1.4 (bd6143e, the Menu page's submenu demo, seen in the browser) on bh branch `tk-2`, cut from bh's main, in `../bh-wt-tk-2`. TK-2.2 is there too: TK-2.2.1 (45b9de9), TK-2.2.2 (3ab0d45), TK-2.2.3 (976197d) and TK-2.2.4 (0e3d834 tests, a6ba5a8 docs), seen in the browser; each group is a `group` its heading names, and a disabled option's reason sits under its greyed row as its description. Escape closes the whole menu, back to the menu's own trigger; ← closes just the submenu, back to its row. TK-2.1.3 is in tickets, where the editor still is: tickets branch `tk-2` (b7d2d71a), in `../tickets-wt-tk-2`; it keeps its own Radix submenu until bh's `MenuSub` reaches tickets' copy, and wasn't seen in the browser (the local API kept losing its Postgres connections). TK-2.5 on the same bh branch `tk-2`, after `tk-7`, `tk-44` and `tk-59` were cut from it: TK-2.5.1 (792d353) `useInlineEdit`, inside `@bh/ui`, not exported; TK-2.5.2 (af0e595) `commit` (`'change'`, `'leave'` or `{ after: ms }`) and `onDraft` on `Input`, `Textarea` (Ctrl+Enter commits) and `NumberInput`; TK-2.5.3 (fd0b804) their tests and `commit` demos; TK-2.5.4 (21fc962) `onCommit` beside `onSubmit` in `@bh/form`, a field showing it's saving and keeping your value on a failed save, dirty meaning committed but not submitted, and Save committing a draft first. Left: a nested field's draft isn't seen by Save until you leave it. Merged: tickets' `tk-2` into main (9972a344), bh's `tk-2` into bh's main (19946c7), released as bh 2.0.0.",
           "where": [
             {
               "repo": "bh",
@@ -360,7 +360,7 @@
                   "part": "@bh/form"
                 }
               ],
-              "done": false,
+              "done": true,
               "subtickets": [
                 {
                   "id": "TK-2.5.1",
@@ -433,7 +433,7 @@
                   "part": "main"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-2.2",
@@ -449,7 +449,7 @@
                   "id": "TK-2.7.1",
                   "title": "Merge TK-1 and TK-2 into bh's main",
                   "description": "With your yes. `FilterBar` (TK-75) and the configurable `Card` (TK-76) go in a later version unless they are ready.",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
@@ -601,13 +601,14 @@
           "id": "TK-3",
           "title": "Update tickets to bh's next version and add `@bh/shell`",
           "description": "tickets gets the release, with `@bh/shell` added to its copies.",
-          "status": "Planned",
+          "status": "Done",
           "blockedBy": [
             {
               "id": "TK-2.7",
               "why": "the bh version with TK-1's and TK-2's parts"
             }
           ],
+          "statusNote": "TK-3.2 on tickets branch `tk-3` (9ff43ffb), in `../tickets-wt-tk-3`: `apps/web/vite.config.ts` dedupes `react`, `react-dom` and `@tanstack/react-router`, as gateway does; the bundle is unchanged until `@bh/shell` arrives. `apps/web/vitest.config.ts` doesn't inherit it, so tests rendering `@bh/shell` may need the same. TK-3.1 is yours, on the bh page: bh's version is 2.0.0 (6ad435a), a major. TK-3.1 (2026-10-13): bh 2.0.0 with `@bh/shell` is pull request #2 (https://github.com/bendela6/tickets/pull/2), branch `bh-2.0.0` (3d8553d6), made by the gateway's bh page, its checks passed; not merged, since main deploys. Its delivery is now a pull request, not a push to main, and its packages include `shell`. TK-4 and TK-5 build on `bh-2.0.0` with tk-3's TK-3.2, not on main.",
           "where": [
             {
               "repo": "live gateway",
@@ -630,7 +631,7 @@
                   "part": "bh page"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -643,7 +644,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
@@ -652,13 +653,14 @@
           "id": "TK-4",
           "title": "Replace tickets' frame with `@bh/shell`'s",
           "description": "tickets' own rail and panels go; bh's sidebar, phone layout and pages take their place.",
-          "status": "Planned",
+          "status": "In progress",
           "blockedBy": [
             {
               "id": "TK-3",
               "why": "needs `@bh/shell` in tickets' copy of bh"
             }
           ],
+          "statusNote": "Being built on tickets branch `tk-4`, in `../tickets-wt-tk-4`, cut from `bh-2.0.0` (pull request #2) with `tk-3` merged in (2a19662a).",
           "where": [
             {
               "repo": "tickets",
@@ -848,13 +850,14 @@
           "id": "TK-5",
           "title": "Replace tickets' hand-built parts with bh's",
           "description": "Wherever tickets draws something bh has, it uses bh's.",
-          "status": "Planned",
+          "status": "In progress",
           "blockedBy": [
             {
               "id": "TK-3",
               "why": "needs bh's next version in tickets' copy"
             }
           ],
+          "statusNote": "TK-5.21, TK-5.10, TK-5.7 and TK-5.9.1 being built on tickets branch `tk-5`, in `../tickets-wt-tk-5`, cut from the same base as `tk-4` (2a19662a), beside TK-4. The parts on the pages TK-4 moves (TK-5.1, 5.2, 5.3, 5.5, 5.9.2, 5.13, 5.14) follow once TK-4 is built, on `tk-5` rebased onto `tk-4`.",
           "where": [
             {
               "repo": "tickets",
@@ -1303,7 +1306,7 @@
           "title": "Delete the icon studio",
           "description": "The dev tool that tunes the logo and writes the favicons goes; the logo and the favicons stay.",
           "status": "Done",
-          "statusNote": "TK-6.1 on branch `tk-6` (6313e0d2), in `../tickets-wt-tk-6`, not merged. TK-6.2: you deleted `apps/eer`'s ignored leftovers from tickets' checkout (nothing tracked there).",
+          "statusNote": "TK-6.1 on branch `tk-6` (6313e0d2), in `../tickets-wt-tk-6`, merged into main (43d9eded). TK-6.2: you deleted `apps/eer`'s ignored leftovers from tickets' checkout (nothing tracked there).",
           "where": [
             {
               "repo": "tickets",
@@ -6396,7 +6399,7 @@
           "description": "What items-core keeps from before bh was its own repository.",
           "status": "In progress",
           "waitingOn": ["your choice on the two lint rules (below), for TK-66.2"],
-          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 waits on the question about the two lint rules.",
+          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 waits on the question about the two lint rules. Merged: tickets' `tk-66` into main (61fa1a9f).",
           "where": [
             {
               "repo": "items-core",
@@ -8178,7 +8181,7 @@
           "title": "Add a plan scheme to tickets: epics, features, tickets and subtickets",
           "description": "The plans' shape in tickets' database: their four levels as types, their fields, ids that never change, approval as the gate to build, blockers with a why, and the rules `pnpm tasks:check` enforces today, kept by the API on every write. The direction of all of E14 is decided: the tickets app takes over (Chosen).",
           "status": "In progress",
-          "statusNote": "On tickets branch `tk-80`, cut from main, in `../tickets-wt-tk-80`, with migrations 0003 (item keys) and 0004 (a link's why); renumber at merge, since `tk-82` and `tk-92` add theirs. TK-80.1 (440ce980): the `plan` scheme: epic, feature, ticket and subticket, each type taking its own statuses, no transitions, the plans' fields, `repos` kept in step with `where`, `assignee` for `byYou`, and restore (`restoreStatus: true`). TK-80.2 (9655d115): `parent-rollup` cancels a parent whose children are all cancelled. TK-80.3 (269689d0): `records.items.key`, unique, backfilled as `PREFIX-number` (the migration stops, naming them, if two projects share a prefix); a plan project's keys are `TK/E14`, `TK-80` and `TK-80.3`, a plan item never moves to another parent, `GET /api/items/by-key/:key`, and the web's item URLs use keys (old ones redirect); the MCP server isn't ported. TK-80.5 (40cf27c0): `blocks` links between any plan items, with a required why and the plans' checks, each refused with tasks-check's message. TK-80.8 (c0463748): a parent the rollup closed reopens when a child is restored, reopened, added or moved; one closed by hand stays. TK-80.9 and TK-80.10 on `tk-80-ui`, cut from `tk-80` at 9655d115, in `../tickets-wt-tk-80-ui`: the Workflow tab lists each type's own statuses, in every scheme (e922e6d7), and the Types tab offers a type its own type (5569dc54). Left: approval (TK-80.4, waiting on sign-in), the rules on writes (TK-80.6) and the read model (TK-80.7).",
+          "statusNote": "On tickets branch `tk-80`, cut from main, in `../tickets-wt-tk-80`, with migrations 0003 (item keys) and 0004 (a link's why); renumber at merge, since `tk-82` and `tk-92` add theirs. TK-80.1 (440ce980): the `plan` scheme: epic, feature, ticket and subticket, each type taking its own statuses, no transitions, the plans' fields, `repos` kept in step with `where`, `assignee` for `byYou`, and restore (`restoreStatus: true`). TK-80.2 (9655d115): `parent-rollup` cancels a parent whose children are all cancelled. TK-80.3 (269689d0): `records.items.key`, unique, backfilled as `PREFIX-number` (the migration stops, naming them, if two projects share a prefix); a plan project's keys are `TK/E14`, `TK-80` and `TK-80.3`, a plan item never moves to another parent, `GET /api/items/by-key/:key`, and the web's item URLs use keys (old ones redirect); the MCP server isn't ported. TK-80.5 (40cf27c0): `blocks` links between any plan items, with a required why and the plans' checks, each refused with tasks-check's message. TK-80.8 (c0463748): a parent the rollup closed reopens when a child is restored, reopened, added or moved; one closed by hand stays. TK-80.9 and TK-80.10 on `tk-80-ui`, cut from `tk-80` at 9655d115, in `../tickets-wt-tk-80-ui`: the Workflow tab lists each type's own statuses, in every scheme (e922e6d7), and the Types tab offers a type its own type (5569dc54). Left: approval (TK-80.4, waiting on sign-in), the rules on writes (TK-80.6) and the read model (TK-80.7). Merged: `tk-80` (b9e0c447) and `tk-80-ui` (1cce5872) into main, its migrations renumbered 0006 and 0007.",
           "notes": [
             {
               "at": "2026-10-12T15:04:53.697Z",
@@ -8719,7 +8722,7 @@
           "title": "Add notes on a fragment, replies and read marks to tickets' comments",
           "description": "The plans' notes become tickets' comments: the user's words on an item, the planner's replies, which of them the planner has read, and notes on a fragment of a description.",
           "status": "In progress",
-          "statusNote": "On tickets branch `tk-82`, cut from main, in `../tickets-wt-tk-82`, with migrations 0003 and 0004 (renumber them if another branch's migration merges first). TK-82.1 (78c0f2e2): `quote` and `nth` on a comment that starts a thread; a reply takes its thread's. TK-82.2 (d529b727): a reply under a comment on another item answers 422. TK-82.4 (7763fa74): `DELETE /api/comments/:id`, by its author only; the comment leaves the board, its `comment.added` stays and a `comment.deleted` event is added, and its replies stay. Not built yet: read marks (TK-82.3), waiting on TK-81.1.",
+          "statusNote": "On tickets branch `tk-82`, cut from main, in `../tickets-wt-tk-82`, with migrations 0003 and 0004 (renumber them if another branch's migration merges first). TK-82.1 (78c0f2e2): `quote` and `nth` on a comment that starts a thread; a reply takes its thread's. TK-82.2 (d529b727): a reply under a comment on another item answers 422. TK-82.4 (7763fa74): `DELETE /api/comments/:id`, by its author only; the comment leaves the board, its `comment.added` stays and a `comment.deleted` event is added, and its replies stay. Not built yet: read marks (TK-82.3), waiting on TK-81.1. Merged: `tk-82` into main (219da5a5), its migrations 0003 and 0004.",
           "where": [
             {
               "repo": "tickets",
@@ -8936,7 +8939,7 @@
           "title": "Move `tasks/*.json` into tickets' database, and back out as the same JSON",
           "description": "An importer that keeps every id, note and answer, and an export of the same shape, so `pnpm tasks:check` and the viewer can read the database while the switch is made. The older projects (TIX, GW, TASK and APP) are backed up, what is still to do in them is written into the plans, and then they leave the database.",
           "status": "In progress",
-          "statusNote": "On tickets branch `tk-85`, cut from main, in `../tickets-wt-tk-85`. TK-85.1 (18ee8959): `db:export` writes a project as JSON, read-only; the older projects are backed up from live (2026-10-12 21:19 UTC) in the gateway's `/srv/appdata/tickets-backups/` and in `Projects/tickets-backups/2026-10-13-older-projects/` (with `SUMMARY.md`). Open of all items: TIX 98 of 182, GW 19 of 131, TASK 62 of 296, APP 27 of 41. TK-85.7 (d055bb2a): `db:delete-project --backup <export.json> --yes <key>` deletes a project and every row it owns, in one transaction, only when every row is in the backup unchanged; it refuses the production database without a separate flag, and refuses links in from other projects. Done on `tickets_dev`: TIX, GW, TASK and APP gone (6,165 rows), after exporting dev's own copies, which differed from live, beside the backup (`…-dev-*.json`). DEMO and PLAN remain. TK-85.8 (live) waits on TK-85.6, and needs a fresh export if live changed since the backup.",
+          "statusNote": "On tickets branch `tk-85`, cut from main, in `../tickets-wt-tk-85`. TK-85.1 (18ee8959): `db:export` writes a project as JSON, read-only; the older projects are backed up from live (2026-10-12 21:19 UTC) in the gateway's `/srv/appdata/tickets-backups/` and in `Projects/tickets-backups/2026-10-13-older-projects/` (with `SUMMARY.md`). Open of all items: TIX 98 of 182, GW 19 of 131, TASK 62 of 296, APP 27 of 41. TK-85.7 (d055bb2a): `db:delete-project --backup <export.json> --yes <key>` deletes a project and every row it owns, in one transaction, only when every row is in the backup unchanged; it refuses the production database without a separate flag, and refuses links in from other projects. Done on `tickets_dev`: TIX, GW, TASK and APP gone (6,165 rows), after exporting dev's own copies, which differed from live, beside the backup (`…-dev-*.json`). DEMO and PLAN remain. TK-85.8 (live) waits on TK-85.6, and needs a fresh export if live changed since the backup. Merged: `tk-85` into main (232ad905).",
           "notes": [
             {
               "at": "2026-10-12T15:18:23.924Z",
@@ -9152,7 +9155,7 @@
           "title": "Add a repository to each project: its git link, and where each developer has it checked out",
           "description": "Each project is one repository (tickets, gateway, items-core, bh, …) and says where it lives: a GitHub link, or any git URL, for everyone, and a local folder for whoever works on it on their machine. tickets will run for several developers, on the gateway first and later on GCP, so a server can't know your folders the way this machine's scripts do today (your answer on TK-85).",
           "status": "In progress",
-          "statusNote": "On tickets branch `tk-92`, cut from main, in `../tickets-wt-tk-92`. TK-92.1 (4d31486e), with migration 0003 (renumber at merge; `tk-82` has a 0003 too): `repository_url` and `default_branch` on `core.projects`, both optional; `PATCH /api/projects/:id` takes them, refusing a local folder, a link with a password in it, or a bad branch name, each at its field; Settings has a Repository tab, and the project page shows the link. TK-92.2 (d044b92c): `node scripts/tickets-repos.mjs set|get|list|remove <PREFIX>` keeps `~/.config/tickets/repos.json` (or `TICKETS_REPOS_FILE`), mapping a project's prefix to this machine's checkout, after checking one of its remotes is the project's git link (from `TICKETS_API_URL`, default 127.0.0.1:4600); `folderOf(prefix)` is what sessions import, and says why when there's no folder. Not built yet: the builder switch (TK-92.3), waiting on TK-86.5.",
+          "statusNote": "On tickets branch `tk-92`, cut from main, in `../tickets-wt-tk-92`. TK-92.1 (4d31486e), with migration 0003 (renumber at merge; `tk-82` has a 0003 too): `repository_url` and `default_branch` on `core.projects`, both optional; `PATCH /api/projects/:id` takes them, refusing a local folder, a link with a password in it, or a bad branch name, each at its field; Settings has a Repository tab, and the project page shows the link. TK-92.2 (d044b92c): `node scripts/tickets-repos.mjs set|get|list|remove <PREFIX>` keeps `~/.config/tickets/repos.json` (or `TICKETS_REPOS_FILE`), mapping a project's prefix to this machine's checkout, after checking one of its remotes is the project's git link (from `TICKETS_API_URL`, default 127.0.0.1:4600); `folderOf(prefix)` is what sessions import, and says why when there's no folder. Not built yet: the builder switch (TK-92.3), waiting on TK-86.5. Merged: `tk-92` into main (65bea879), its migration 0005.",
           "notes": [
             {
               "at": "2026-10-12T15:31:23.225Z",
