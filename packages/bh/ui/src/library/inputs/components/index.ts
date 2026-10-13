@@ -12,7 +12,6 @@ export * from './checkbox';
 export * from './checkbox-group';
 export * from './switch';
 export * from './combobox';
-export * from './select';
 export * from './segmented-control';
 export * from './radio-group';
 export * from './multi-combobox';

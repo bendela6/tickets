@@ -11,6 +11,7 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [The registry](../docs/registry.md): Choose the inputs, layouts, wrappers and button a form is drawn with.
 - [Building a form](../docs/building-a-form.md): Write a form's fields, layouts and buttons with the builder, typed by your registry, or as plain data.
 - [Rendering and submitting](../docs/rendering-and-submitting.md): Draw a form, start it with values, take what it submits, and submit it from a button outside it.
+- [Draft, commit and submit](../docs/draft-commit-submit.md): Hold what's typed as a draft, save each field as it commits with onCommit, send the whole form on Save with onSubmit, or both.
 - [Visibility](../docs/visibility.md): Show a field, or a whole layout, only while other fields hold certain values, with when.
 - [Async options](../docs/async-options.md): Load a field's options, or any of its config, from elsewhere, and load them again when the fields they depend on change.
 - [Validation and valibot](../docs/validation.md): Check each field's value with a schema, check the fields against each other, and build a whole form from a valibot schema.

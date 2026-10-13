@@ -1,6 +1,6 @@
 title: Writing an input
 summary: Make a control of your own into a kind any form can name.
-order: 9
+order: 10
 related: [The registry, Instrument's bindings, Building a form]
 body:
   - |
@@ -27,7 +27,14 @@ body:
     - **`value`**: drawn as given. It holds no value of its own, and it
       defaults an undefined one, which a registry with no `defaultValue` for
       it can give.
-    - **`onChange`**: called with the new value alone, not an event.
+    - **`onChange`**: called with the new value alone, not an event. It
+      commits the value: it joins the form's values, and `onCommit` runs.
+    - **`commit`**: when the form's fields commit. An input that holds a
+      draft until then passes it on (`commit` on `@bh/ui`'s text controls),
+      and calls **`onDraft`** with the draft as it's typed, so a Save
+      commits it first. An input with no draft ignores both.
+    - **`saving`**: the field's last commit is being saved by `onCommit`;
+      the wrapper draws it too.
     - **`onBlur`**: called when focus leaves it, which checks the form.
     - **`error`**: drawn as invalid, `tone="danger"` in `@bh/ui`; the
       wrapper draws the message.
@@ -94,7 +101,8 @@ body:
   - h2: Rules
   - |
     - An input is controlled: what it shows is `value`, and what it changes
-      goes through `onChange`.
+      goes through `onChange`. The one thing it may hold is a draft while
+      it's typed in, before the field commits.
     - A kind's `defaultValue` is a value its input can hold: it is what a
       field starts at, and what a list's new item holds.
     - A kind's name is stored with every form that names it.

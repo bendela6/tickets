@@ -1,0 +1,47 @@
+{
+  "name": "@bh/shell",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./layout": "./src/layout/index.ts",
+    "./styles.css": "./styles.css"
+  },
+  "scripts": {
+    "check:circular": "bh-madge src",
+    "lint": "bh-lint src/ docs/examples/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bh/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@bh/config": "workspace:*",
+    "@tanstack/react-router": "^1.170.38",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^29.1.1",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.170.0",
+    "lucide-react": "^1.22.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.3.0"
+  },
+  "sideEffects": false
+}

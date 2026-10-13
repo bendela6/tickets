@@ -104,9 +104,10 @@ export type ToggleChipsProps = ControlProps<string[]> & {
  * away: status pills in a filter bar.
  *
  * The inline sibling of `MultiCombobox`, the way `SegmentedControl` is the
- * inline sibling of `Select` — the same value, spent differently. Each chip is
- * a toggle button (`aria-pressed`) in a labelled group, so a screen reader
- * hears "Failed, toggle button, pressed" rather than a list of links.
+ * inline sibling of `Combobox` without search — the same value, spent
+ * differently. Each chip is a toggle button (`aria-pressed`) in a labelled
+ * group, so a screen reader hears "Failed, toggle button, pressed" rather
+ * than a list of links.
  */
 export function ToggleChips({
   id,

@@ -2,7 +2,7 @@
 title: Instrument's bindings
 summary: The inputs, layouts, wrappers and button @bh/ui registers, what each
   kind holds, and what its config takes.
-order: 8
+order: 9
 related: [The registry, Writing an input, FieldWrapper]
 ---
 
@@ -31,10 +31,10 @@ what the form holds for it, and empty is where a field of it starts.
 
 | Kind             | Control                                                                                           | Value                              | Empty          | Config                                     |
 | ---------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------- | -------------- | ------------------------------------------ |
-| `text`           | [Input](../../ui/src/library/inputs/components/input/input.md)                                    | `string`                           | `''`           | `placeholder`, `mono`, `prefix`            |
-| `email`          | [Input](../../ui/src/library/inputs/components/input/input.md), `type="email"`                    | `string`                           | `''`           | `placeholder`                              |
-| `textarea`       | [Textarea](../../ui/src/library/inputs/components/textarea/textarea.md)                           | `string`                           | `''`           | `rows`, `placeholder`                      |
-| `number`         | [NumberInput](../../ui/src/library/inputs/components/number-input/number-input.md)                | `number \| null`                   | `null`         | `min`, `max`, `step`, `suffix`             |
+| `text`           | [Input](../../ui/src/library/inputs/components/input/input.md)                                    | `string`                           | `''`           | `placeholder`, `mono`, `prefix`, `commit`  |
+| `email`          | [Input](../../ui/src/library/inputs/components/input/input.md), `type="email"`                    | `string`                           | `''`           | `placeholder`, `commit`                    |
+| `textarea`       | [Textarea](../../ui/src/library/inputs/components/textarea/textarea.md)                           | `string`                           | `''`           | `rows`, `placeholder`, `commit`            |
+| `number`         | [NumberInput](../../ui/src/library/inputs/components/number-input/number-input.md)                | `number \| null`                   | `null`         | `min`, `max`, `step`, `suffix`, `commit`   |
 | `select`         | [Combobox](../../ui/src/library/inputs/components/combobox/combobox.md)                           | `string \| null`                   | `null`         | `options`, `placeholder`                   |
 | `multi-select`   | [MultiCombobox](../../ui/src/library/inputs/components/multi-combobox/multi-combobox.md)          | `string[]`                         | `[]`           | `options`, `placeholder`, `maxChips`       |
 | `radio`          | [RadioGroup](../../ui/src/library/inputs/components/radio-group/radio-group.md)                   | `string`                           | `''`           | `options`, `variant`, `label`              |
@@ -50,7 +50,7 @@ what the form holds for it, and empty is where a field of it starts.
 | `range`          | [RangeSlider](../../ui/src/library/inputs/components/range-slider/range-slider.md)                | `[number, number]`                 | `[0, 100]`     | `min`, `max`, `step`, `label`              |
 | `rating`         | [Rating](../../ui/src/library/inputs/components/rating/rating.md)                                 | `number`, `0` unrated              | `0`            | `max`, `label`, `showValue`                |
 | `tags`           | [TagInput](../../ui/src/library/inputs/components/tag-input/tag-input.md)                         | `string[]`                         | `[]`           | `suggestions`, `placeholder`               |
-| `password`       | [PasswordInput](../../ui/src/library/inputs/components/password-input/password-input.md)          | `string`                           | `''`           | `placeholder`                              |
+| `password`       | [PasswordInput](../../ui/src/library/inputs/components/password-input/password-input.md)          | `string`                           | `''`           | `placeholder`, `commit`                    |
 | `pin`            | [PinInput](../../ui/src/library/inputs/components/pin-input/pin-input.md)                         | `string`, the whole code           | `''`           | `length`                                   |
 | `color`          | [ColorPicker](../../ui/src/library/inputs/components/color-picker/color-picker.md)                | `string \| null`, a hue's name     | `null`         | `placeholder`, `label`                     |
 | `icon`           | [IconPicker](../../ui/src/library/inputs/components/icon-picker/icon-picker.md)                   | `string \| null`, an icon's name   | `null`         | `placeholder`, `icons`                     |
@@ -63,6 +63,13 @@ what the form holds for it, and empty is where a field of it starts.
 `select`, `multi-select`, `radio`, `segmented`, `checkbox-group` and
 `user` are disabled while their config [loads](async-options.md).
 `InputKind` names every kind, and `ValueOfKind` what each one holds.
+
+`commit`, in the config of `text`, `email`, `password`, `textarea` and
+`number`, says when the field hands what you type to the form:
+`'change'` (the default) at every keystroke, `'leave'` on Enter and on
+leaving the field, `{ after: 800 }` on those and after a pause. Until
+then the field holds a draft, and the form's value is the last one
+committed.
 
 A `<label for>` names one element, and `radio`, `segmented`,
 `checkbox-group`, `rating`, `slider` and `range` are drawn as groups or
@@ -245,19 +252,20 @@ selected" has exactly one spelling.
 | `list` (required)           | `Record<string, unknown>[]`        |         | Each item an object of its own fields' values.                                                                                                |
 | `object` (required)         | `Record<string, unknown> \| null`  |         | Null until a field in it is given a value.                                                                                                    |
 
-| Prop                  | Type        | Default | Description                                                                                                              |
-| --------------------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                   |
-| `label`               | `string`    |         | The field's label, from its definition.                                                                                  |
-| `description`         | `string`    |         | Help text for the field, from its definition.                                                                            |
-| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                      |
-| `error`               | `string`    |         | The field's validation message, once the field has been left or a submit tried.                                          |
-| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                        |
-| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place. |
-| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                               |
-| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                |
-| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                     |
-| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                              |
+| Prop                  | Type        | Default | Description                                                                                                                         |
+| --------------------- | ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                              |
+| `label`               | `string`    |         | The field's label, from its definition.                                                                                             |
+| `description`         | `string`    |         | Help text for the field, from its definition.                                                                                       |
+| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                                 |
+| `error`               | `string`    |         | The field's problem: its validation message, once the field has been left or a submit tried, or why its last commit failed to save. |
+| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                                   |
+| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place.            |
+| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                                          |
+| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                           |
+| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                                |
+| `saving`              | `boolean`   |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                      |
+| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                                         |
 
 | Prop                  | Type        | Default | Description                                   |
 | --------------------- | ----------- | ------- | --------------------------------------------- |

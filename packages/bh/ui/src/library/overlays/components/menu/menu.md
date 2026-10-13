@@ -17,7 +17,16 @@ closes the menu.
 ## Import
 
 ```tsx
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@bh/ui';
+import {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
+} from '@bh/ui';
 ```
 
 ## Examples
@@ -107,21 +116,88 @@ export function IconTrigger() {
 }
 ```
 
+A `MenuSub` is a row that opens a second menu beside it: a
+`MenuSubTrigger`, drawn as an item with a chevron at its end and lit
+while its submenu is open, and a `MenuSubContent`, the submenu itself,
+which holds `MenuItem`s like any menu. Hovering the row opens it, and so
+do → and Enter; ← closes it and comes back to the row. Choosing an item
+in it closes the whole menu. A `disabled` row is dimmed, opens nothing,
+and the arrow keys pass over it.
+
+**A submenu**
+
+```tsx
+import { useState } from 'react';
+import {
+  Button,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
+} from '@bh/ui';
+
+const COLOURS = ['Accent', 'Danger', 'Warning', 'Success', 'Default'];
+
+export function ASubmenu() {
+  const [chosen, setChosen] = useState('nothing yet');
+  return (
+    <div className="flex items-center gap-12">
+      <Menu>
+        <MenuTrigger asChild>
+          <Button chevron>Format</Button>
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem onSelect={() => setChosen('Bold')}>Bold</MenuItem>
+          <MenuItem onSelect={() => setChosen('Italic')}>Italic</MenuItem>
+          <MenuSeparator />
+          <MenuSub>
+            <MenuSubTrigger>Text colour</MenuSubTrigger>
+            <MenuSubContent>
+              {COLOURS.map((colour) => {
+                return (
+                  <MenuItem key={colour} onSelect={() => setChosen(colour)}>
+                    {colour}
+                  </MenuItem>
+                );
+              })}
+            </MenuSubContent>
+          </MenuSub>
+          <MenuSub>
+            <MenuSubTrigger disabled>Highlight</MenuSubTrigger>
+            <MenuSubContent>
+              <MenuItem>Yellow</MenuItem>
+            </MenuSubContent>
+          </MenuSub>
+        </MenuContent>
+      </Menu>
+      <span className="text-13 text-gray-11">Chose {chosen}</span>
+    </div>
+  );
+}
+```
+
 ## Keyboard and accessibility
 
-| Key                | Does                                                                      |
-| ------------------ | ------------------------------------------------------------------------- |
-| `Enter` or `Space` | On the trigger, opens the menu on its first item. On an item, chooses it. |
-| `↓`                | On the trigger, opens the menu. In it, moves to the next item.            |
-| `↑`                | Moves to the previous item.                                               |
-| `Home` or `End`    | Moves to the first or the last item.                                      |
-| `Esc`              | Closes the menu and returns focus to the trigger.                         |
+| Key                | Does                                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `Enter` or `Space` | On the trigger, opens the menu on its first item. On an item, chooses it. On a submenu's row, opens it on its first item. |
+| `↓`                | On the trigger, opens the menu. In it, moves to the next item.                                                            |
+| `↑`                | Moves to the previous item.                                                                                               |
+| `Home` or `End`    | Moves to the first or the last item.                                                                                      |
+| `→`                | On a submenu's row, opens the submenu on its first item.                                                                  |
+| `←`                | In a submenu, closes it and returns focus to its row.                                                                     |
+| `Esc`              | Closes the menu, any submenu with it, and returns focus to the trigger.                                                   |
 
 Typing a letter moves to the next item that starts with it.
 
 `MenuContent` has the `menu` role, labelled by its trigger; each item is
 a `menuitem`, and `MenuSeparator` a `separator`. The trigger gets
-`aria-haspopup="menu"` and `aria-expanded`. While the menu is open, the
+`aria-haspopup="menu"` and `aria-expanded`, and so does a submenu's row,
+a `menuitem` whose `MenuSubContent` is a `menu` of its own. While the menu is open, the
 page behind is hidden from assistive technology and takes no pointer
 events.
 
@@ -133,8 +209,8 @@ For a panel of anything other than commands, a form or a picker, use
 
 ## Props
 
-`Menu` and `MenuTrigger` are Radix's DropdownMenu parts as they are, so
-their props are Radix's.
+`Menu`, `MenuTrigger` and `MenuSub` are Radix's DropdownMenu parts as
+they are, so their props are Radix's.
 
 ### Menu
 
@@ -181,3 +257,35 @@ Also every `<div>` attribute (`MenuItemImplProps<HTMLDivElement>`), passed throu
 | Prop        | Type     | Default | Description                   |
 | ----------- | -------- | ------- | ----------------------------- |
 | `className` | `string` |         | Classes merged onto the line. |
+
+### MenuSub
+
+Radix's `DropdownMenu.Sub` as it is: it holds whether the submenu is
+open.
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+
+Also every element attribute (`DropdownMenuSubProps`), passed through.
+
+### MenuSubTrigger
+
+| Prop        | Type                  | Default | Description               |
+| ----------- | --------------------- | ------- | ------------------------- |
+| `className` | `string`              |         | Added to its own classes. |
+| `children`  | `ReactNode`           |         |                           |
+| `ref`       | `Ref<HTMLDivElement>` |         | Forwarded to the `<div>`. |
+
+Also every `<div>` attribute (`MenuItemImplProps<HTMLDivElement>`), passed through.
+
+### MenuSubContent
+
+It opens 4 pixels from its row, its first item level with the row.
+
+| Prop        | Type                  | Default | Description               |
+| ----------- | --------------------- | ------- | ------------------------- |
+| `className` | `string`              |         | Added to its own classes. |
+| `children`  | `ReactNode`           |         |                           |
+| `ref`       | `Ref<HTMLDivElement>` |         | Forwarded to the `<div>`. |
+
+Also every `<div>` attribute (`MenuContentImplProps<HTMLDivElement>`), passed through.

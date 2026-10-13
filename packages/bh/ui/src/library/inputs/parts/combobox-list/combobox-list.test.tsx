@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import axe from 'axe-core';
 import { expect, test, vi } from 'vitest';
 import { ComboboxList } from './combobox-list';
-import type { Option } from '../../contract';
+import type { Option, OptionGroup } from '../../contract';
 
 const OPTIONS: Option[] = [
   { value: 'a', label: 'Alpha' },
@@ -38,6 +39,114 @@ test('arrowing back up skips it too, and stops rather than wrapping', async () =
   render(list({ onPick }));
   await userEvent.keyboard('{ArrowDown}{ArrowUp}{ArrowUp}{Enter}');
   expect(onPick).toHaveBeenCalledExactlyOnceWith('a');
+});
+
+const FRUITS: Option[] = [
+  { value: 'apple', label: 'Apple', disabled: true },
+  { value: 'banana', label: 'Banana' },
+  { value: 'blueberry', label: 'Blueberry' },
+  { value: 'cherry', label: 'Cherry' },
+  { value: 'damson', label: 'Damson', disabled: true },
+];
+
+test('the cursor opens on the chosen row, or on the first that can be picked', async () => {
+  const onPick = vi.fn();
+  const { unmount } = render(list({ options: FRUITS, onPick, isSelected: (v) => v === 'cherry' }));
+  await userEvent.keyboard('{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('cherry');
+  unmount();
+
+  render(list({ options: FRUITS, onPick }));
+  await userEvent.keyboard('{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('banana');
+});
+
+test('Home and End go to the first and last rows that can be picked', async () => {
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick }));
+  await userEvent.keyboard('{End}{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('cherry');
+  await userEvent.keyboard('{Home}{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('banana');
+});
+
+test('Home and End drive the list from the search box too', async () => {
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick, searchable: true }));
+  await userEvent.keyboard('{End}{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('cherry');
+});
+
+test('a query moves the cursor to the first row it leaves that can be picked', async () => {
+  // "a" leaves Apple first, which is disabled; Enter there would do nothing.
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick, searchable: true }));
+  await userEvent.type(screen.getByRole('searchbox'), 'a{Enter}');
+  expect(onPick).toHaveBeenCalledExactlyOnceWith('banana');
+});
+
+test('without search, typing jumps to the first option that starts with it', async () => {
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick }));
+  await userEvent.keyboard('ch{Enter}');
+  expect(onPick).toHaveBeenCalledExactlyOnceWith('cherry');
+});
+
+test('without search, one letter again and again steps through the options it starts', async () => {
+  // As on a native select, from the row under the cursor: the cursor opens on
+  // Banana, so "b" goes on to Blueberry and "bb" comes back round to Banana.
+  // Were "bb" a search for "bb", it would find nothing.
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick }));
+  await userEvent.keyboard('b{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('blueberry');
+  await userEvent.keyboard('b{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('banana');
+});
+
+test('without search, typing never lands on a disabled option', async () => {
+  // Damson is the only "d", and disabled, so the cursor holds where it was.
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick }));
+  await userEvent.keyboard('d{Enter}');
+  expect(onPick).toHaveBeenCalledExactlyOnceWith('banana');
+});
+
+test('without search, a pause starts the typeahead over', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  try {
+    const onPick = vi.fn();
+    render(list({ options: FRUITS, onPick }));
+    await userEvent.keyboard('c');
+    vi.setSystemTime(Date.now() + 2000);
+    // After the pause "b" is a search of its own, not "cb".
+    await userEvent.keyboard('b{Enter}');
+    expect(onPick).toHaveBeenCalledExactlyOnceWith('banana');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('without search, Space picks, but inside a typeahead it is part of the label', async () => {
+  const options: Option[] = [
+    { value: 'in', label: 'In' },
+    { value: 'review', label: 'In review' },
+  ];
+  const onPick = vi.fn();
+  render(list({ options, onPick }));
+  await userEvent.keyboard(' ');
+  expect(onPick).toHaveBeenLastCalledWith('in');
+  await userEvent.keyboard('in r{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('review');
+});
+
+test('the key that opened the list starts its typeahead', async () => {
+  // Typed on the closed field: the list opens on the match, and the next key
+  // goes on from it.
+  const onPick = vi.fn();
+  render(list({ options: FRUITS, onPick, openedWith: 'b' }));
+  await userEvent.keyboard('l{Enter}');
+  expect(onPick).toHaveBeenCalledExactlyOnceWith('blueberry');
 });
 
 test('an empty option set says so, rather than blaming a filter', async () => {
@@ -186,4 +295,104 @@ test('a list searched elsewhere reports each keystroke and shows its options unf
   expect(onQueryChange).toHaveBeenLastCalledWith('zz');
   expect(screen.getByRole('option', { name: /alpha/i })).toBeInTheDocument();
   expect(screen.getByRole('option', { name: /gamma/i })).toBeInTheDocument();
+});
+
+// Statuses in an order that is NOT their groups' order, so a list that shows
+// them as they came gets every grouped assertion below wrong.
+const STATUSES: Option[] = [
+  { value: 'dropped', label: 'Dropped', disabled: true, disabledReason: 'Only a lead drops work.' },
+  { value: 'done', label: 'Done' },
+  { value: 'doing', label: 'Doing' },
+  { value: 'todo', label: 'To do' },
+  {
+    value: 'review',
+    label: 'In review',
+    disabled: true,
+    disabledReason: "The workflow doesn't go from Doing to In review.",
+  },
+  { value: 'stray', label: 'Stray' },
+];
+const KIND: Record<string, string> = {
+  todo: 'not-started',
+  doing: 'started',
+  review: 'started',
+  dropped: 'finished',
+  done: 'finished',
+  stray: 'unlisted',
+};
+const KINDS: OptionGroup[] = [
+  { key: 'not-started', label: 'Not started' },
+  { key: 'started', label: 'Started' },
+  { key: 'blocked', label: 'Blocked' },
+  { key: 'finished', label: 'Finished' },
+];
+const kindOf = (option: Option) => KIND[option.value] ?? 'unlisted';
+
+/** Each group's name and its options' names, top to bottom. */
+function shownGroups() {
+  return screen.getAllByRole('group').map((group) => {
+    const name = group.getAttribute('aria-labelledby');
+    const heading = name ? document.getElementById(name)?.textContent : undefined;
+    const options = within(group)
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    return [heading, options];
+  });
+}
+
+test('groups show under a heading each, in the order of `groups`', () => {
+  // "Blocked" has no options, so it has no heading; "Stray" is in a group
+  // `groups` doesn't list, so it isn't shown.
+  render(list({ options: STATUSES, groupOf: kindOf, groups: KINDS }));
+  expect(shownGroups()).toEqual([
+    ['Not started', ['To do']],
+    ['Started', ['Doing', 'In review']],
+    ['Finished', ['Dropped', 'Done']],
+  ]);
+  expect(screen.getByRole('group', { name: 'Started' })).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'Stray' })).toBeNull();
+});
+
+test('a search that empties a group takes its heading too', async () => {
+  render(list({ options: STATUSES, groupOf: kindOf, groups: KINDS, searchable: true }));
+  await userEvent.type(screen.getByRole('searchbox'), 'do');
+  expect(shownGroups()).toEqual([
+    ['Not started', ['To do']],
+    ['Started', ['Doing']],
+    ['Finished', ['Done']],
+  ]);
+  await userEvent.type(screen.getByRole('searchbox'), 'ne');
+  expect(shownGroups()).toEqual([['Finished', ['Done']]]);
+});
+
+test('the arrows step over disabled rows from one group into the next', async () => {
+  // To do, Doing, [In review], [Dropped], Done: two disabled rows sit either
+  // side of the line between Started and Finished.
+  const onPick = vi.fn();
+  render(list({ options: STATUSES, groupOf: kindOf, groups: KINDS, onPick }));
+  await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+  expect(onPick).toHaveBeenCalledExactlyOnceWith('done');
+  await userEvent.keyboard('{ArrowUp}{Enter}');
+  expect(onPick).toHaveBeenLastCalledWith('doing');
+});
+
+test('a disabled option says why, and a screen reader reads it with the option', () => {
+  render(list({ options: STATUSES, groupOf: kindOf, groups: KINDS }));
+  const review = screen.getByRole('option', { name: 'In review' });
+  expect(review).toHaveAccessibleDescription("The workflow doesn't go from Doing to In review.");
+  expect(screen.getByText("The workflow doesn't go from Doing to In review.")).toBeVisible();
+});
+
+test('a grouped list is a listbox of groups of options, as axe reads it', async () => {
+  // A list item can't be a group, and one left between the listbox and its
+  // options breaks the chain a screen reader follows from option to list.
+  const { container } = render(list({ options: STATUSES, groupOf: kindOf, groups: KINDS }));
+  const results = await axe.run(container, {
+    runOnly: {
+      type: 'rule',
+      values: ['aria-allowed-role', 'aria-required-children', 'aria-required-parent', 'listitem'],
+    },
+  });
+  const detail = results.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.html}`));
+  expect(detail).toEqual([]);
 });

@@ -1,14 +1,15 @@
 title: Combobox
-summary: One choice from a list with a search box, shown as plain text.
-related: [Select, MultiCombobox, UserPicker]
+summary: One choice from a list, with a search box or without, shown as plain text.
+related: [MultiCombobox, UserPicker, SegmentedControl, RadioGroup]
 body:
   - |
-    One choice from a list with a search box.
+    One choice from a list: with a search box for a long list, or without one,
+    as a select, for a short one.
 
     `value` is `string | null`, since a single choice can always be empty.
     There is no clear button: a value is changed by picking another. The
-    field shows the chosen label as plain text, with a dot before it when the
-    option has a `color`.
+    field shows the chosen label as plain text, never a chip, with a dot
+    before it when the option has a `color`, because the colour is data.
   - h2: Import
   - code: import { Combobox } from '@bh/ui';
     lang: tsx
@@ -19,43 +20,101 @@ body:
     of the whole are left.
   - demo: examples/searching.tsx
   - |
-    `searchable={false}` drops the search box, for a short, fixed set. The
-    list takes the focus instead, and the keys stay the same.
-  - demo: examples/without-search.tsx
-  - |
     An option's `color` puts a dot before the label on the field, and draws
     the option as a pill in the list.
   - demo: examples/coloured-options.tsx
+  - |
+    `groupOf` says which group an option is in, and `groups` names the groups
+    in the order the list shows them. Each group gets a heading, and a group
+    with no options gets none, so a search that empties a group takes its
+    heading too. An option whose group isn't in `groups` isn't in the list,
+    though the field still shows it when it's the value.
+  - demo: examples/grouped-options.tsx
+  - |
+    A `disabled` option's `disabledReason` says why it can't be picked. The
+    list prints it under the greyed option, so the reader doesn't have to
+    guess.
+  - demo: examples/disabled-with-a-reason.tsx
   - |
     `size` steps the height, padding, radius and type together: 30, 38 and 46
     pixels.
   - demo: examples/sizes.tsx
   - |
     `disabled` dims the field and takes it out of the tab order. `readOnly`
-    keeps the tab stop and the value at full contrast, and refuses to open.
+    keeps the tab stop and the value at full contrast, drops the chevron, and
+    refuses to open.
   - demo: examples/disabled-and-read-only.tsx
+  - |
+    There is no `invalid` prop: `tone="danger"` colours the field and sets
+    `aria-invalid`. Here it holds until a city is picked.
+    [Tones](/foundations/tones) has what a tone does to a field.
+  - demo: examples/danger.tsx
+  - h2: Without search
+  - |
+    `searchable={false}` makes it a select, for a short, fixed set: over a
+    few options a search box is noise, and it costs a keystroke to reach the
+    list. The list opens at the field's width, takes the focus itself, and
+    puts the cursor on the chosen option, so Enter straight away keeps the
+    value. The arrows open it as well as Enter and Space, and typing jumps to
+    the first option whose label starts with what was typed, as on a native
+    select. Typing on the closed field opens the list there.
+  - demo: examples/without-search.tsx
+  - |
+    Groups and disabled reasons are the same list's, so they work as they do
+    with search. Here, typing "b" goes to Blueberry: Blackberry can't be
+    picked, so typing steps over it as the arrows do.
+  - demo: examples/grouped-without-search.tsx
+  - |
+    With no visible label to point at it, such as a filter under a column
+    header, `aria-label` names the field.
+  - demo: examples/without-a-label.tsx
   - h2: Keyboard and accessibility
   - keyboard:
       - keys: [Enter, Space]
         does: On the field, opens the list.
       - keys: [ArrowDown, ArrowUp]
-        does: Moves the cursor to the next or previous option, stepping over disabled ones.
+        does: Without search, on the field, opens the list too. In the list, moves the cursor to the next or previous option, stepping over disabled ones and from one group into the next.
+      - keys: [Home, End]
+        does: In the list, moves the cursor to the first or last option that can be picked. In the search box they move the cursor, not the caret.
       - keys: [Enter]
         does: In the list, picks the option under the cursor and closes it.
+      - keys: [Space]
+        does: Without search, in the list, picks the option under the cursor, as Enter does. In the middle of typing a label, it is part of the label.
+      - keys: [A–Z, 0–9]
+        does: Without search, moves the cursor to the first option whose label starts with what was typed, and the same letter again moves on to the next. A pause of a second starts over. On the closed field, opens the list there.
       - keys: [Escape]
         does: Closes the list.
   - |
-    The field is a plain `button`, named by what it shows, the chosen label or
-    the placeholder, unless a `<label htmlFor>` with its `id` names it. In the
-    open list, the search box is a `searchbox` whose `aria-activedescendant`
-    points at the option under the cursor in the `listbox`; with
-    `searchable={false}`, the listbox points at it itself.
+    With a search box, the field is a plain `button`, named by what it shows,
+    the chosen label or the placeholder, unless a `<label htmlFor>` with its
+    `id` names it. In the open list, the search box is a `searchbox` whose
+    `aria-activedescendant` points at the option under the cursor in the
+    `listbox`.
+
+    Without search, the field is a `button` with `role="combobox"` and
+    `aria-haspopup="listbox"`, and `aria-expanded` says whether the list is
+    open. A combobox isn't named by what it shows: name it with a
+    `<label htmlFor>` and `id`, or with `aria-label` where no visible label
+    points at it. The listbox takes the focus, and its own
+    `aria-activedescendant` points at the option under the cursor.
+
+    `aria-selected` marks the chosen option. With `groups`, each group is a
+    `group` that its heading names, so a screen reader says which group the
+    cursor has moved into. A disabled option's `disabledReason` is its
+    description, through `aria-describedby`. The cursor steps over disabled
+    options, so a screen reader comes to the reason when it reads through
+    the list, not as the cursor moves.
 
     `readOnly` sets `aria-disabled` rather than `disabled`, so the field keeps
     its tab stop.
   - h2: When not to use it
   - |
-    - For a short list that needs no search, use [Select](/components/inputs/select).
+    - To show a few short options at once, use
+      [SegmentedControl](/components/inputs/segmented-control) or
+      [RadioGroup](/components/inputs/radio-group).
     - For several values, use [MultiCombobox](/components/inputs/multi-combobox).
+    - To pick a person, use [UserPicker](/components/inputs/user-picker).
   - h2: Props
   - props: Combobox
+  - ref: Option
+  - ref: OptionGroup

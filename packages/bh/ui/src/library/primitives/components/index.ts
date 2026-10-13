@@ -7,3 +7,4 @@ export * from './json-viewer';
 export * from './pill';
 export * from './relative-date';
 export * from './status-dot';
+export * from './text-link';

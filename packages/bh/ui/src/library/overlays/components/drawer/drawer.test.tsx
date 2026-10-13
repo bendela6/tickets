@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
+import { ConfirmDialog } from '../dialog';
 import { Drawer, DrawerControls } from './drawer';
 
 // One test swaps matchMedia to fake a phone; put the setup stub back after each
@@ -231,6 +232,124 @@ describe('Drawer', () => {
     expect(document.body.style.pointerEvents).toBe('none');
     await userEvent.keyboard('{Escape}');
     expect(document.body.style.pointerEvents).toBe('');
+  });
+
+  it('closes on Escape and returns focus to the trigger', async () => {
+    const user = userEvent.setup();
+    render(<Host />);
+    const trigger = screen.getByRole('button', { name: 'Open it' });
+    await user.click(trigger);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it('returns focus to the opener when its content takes focus with autoFocus', async () => {
+    function AutoFocusHost() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Search
+          </button>
+          <Drawer open={open} onOpenChange={setOpen} label="Search">
+            <input aria-label="Query" autoFocus />
+          </Drawer>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<AutoFocusHost />);
+    const opener = screen.getByRole('button', { name: 'Search' });
+    await user.click(opener);
+    expect(screen.getByRole('textbox', { name: 'Query' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(opener).toHaveFocus();
+  });
+
+  // Rows in a list that takes focus, as a grid or a listbox does; each row
+  // opens the drawer, which can delete the row or archive it.
+  function RowsHost() {
+    const [rows, setRows] = useState(['CORE-1', 'CORE-2']);
+    const [archived, setArchived] = useState<string[]>([]);
+    const [open, setOpen] = useState<string | null>(null);
+    return (
+      <>
+        <ul aria-label="Items" tabIndex={-1}>
+          {rows.map((row) => {
+            return (
+              <li key={row}>
+                <button
+                  type="button"
+                  disabled={archived.includes(row)}
+                  onClick={() => setOpen(row)}
+                >
+                  {row}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <Drawer open={open !== null} onOpenChange={() => setOpen(null)} label="Detail">
+          <DrawerControls />
+          <button type="button" onClick={() => setRows(rows.filter((row) => row !== open))}>
+            Delete item
+          </button>
+          <button type="button" onClick={() => setArchived([...archived, open ?? ''])}>
+            Archive item
+          </button>
+        </Drawer>
+      </>
+    );
+  }
+
+  it.each([
+    ['has left the page', 'Delete item'],
+    ['can no longer take focus', 'Archive item'],
+  ])('gives focus to the nearest container of the opener when it %s', async (_why, action) => {
+    const user = userEvent.setup();
+    render(<RowsHost />);
+    await user.click(screen.getByRole('button', { name: 'CORE-1' }));
+    await user.click(screen.getByRole('button', { name: action }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('list', { name: 'Items' })).toHaveFocus());
+  });
+
+  it('takes focus back from a dialog opened inside it, then gives it to its own opener', async () => {
+    function NestedHost() {
+      const [open, setOpen] = useState(false);
+      const [asking, setAsking] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open it
+          </button>
+          <Drawer open={open} onOpenChange={setOpen} label="Detail">
+            <DrawerControls />
+            <button type="button" onClick={() => setAsking(true)}>
+              Archive
+            </button>
+            <ConfirmDialog
+              open={asking}
+              onOpenChange={setAsking}
+              title="Archive it?"
+              onConfirm={() => {}}
+            />
+          </Drawer>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<NestedHost />);
+    await user.click(screen.getByRole('button', { name: 'Open it' }));
+    const archive = screen.getByRole('button', { name: 'Archive' });
+    await user.click(archive);
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('dialog', { name: 'Detail' })).toBeInTheDocument();
+    expect(archive).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('button', { name: 'Open it' })).toHaveFocus();
   });
 
   it('refuses to render controls outside a Drawer', () => {

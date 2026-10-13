@@ -1,0 +1,6 @@
+/* @bh/code's sources for the consuming app's Tailwind scan: the code block,
+   the editor and the syntax colours are styled here. A class used only inside
+   this package is otherwise missing from the app's stylesheet, and the
+   symptom is a correct DOM with no styles. Import it after @bh/ui/tokens.css
+   (@bh/markdown's sheet imports it for an app that takes markdown). */
+@source './src';

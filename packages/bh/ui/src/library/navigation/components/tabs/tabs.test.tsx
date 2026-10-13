@@ -38,6 +38,10 @@ describe('Tabs', () => {
     render(<Tabs items={items} value="board" onChange={() => {}} />);
     expect(screen.getByText('128')).toBeTruthy();
   });
+  it('names a tab with its badge a word apart', () => {
+    render(<Tabs items={items} value="board" onChange={() => {}} />);
+    expect(screen.getByRole('tab', { name: 'Table 128' })).toBeTruthy();
+  });
   it('renders a numeric 0 badge instead of swallowing it, and renders no badge element when absent', () => {
     const zeroItems = [
       { value: 'board', label: 'Board', badge: 0 },

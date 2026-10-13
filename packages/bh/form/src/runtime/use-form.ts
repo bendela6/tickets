@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useForm as useTanstackForm } from '@tanstack/react-form';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormConfig } from '../types/form-config';
@@ -6,6 +6,9 @@ import type { FormRegistry, InputRegistry, LayoutComponentRegistry } from '../ty
 import { collectFields } from './collect-fields';
 import { collectVisibleFields } from './collect-visible-fields';
 import { createResolverCache } from '../async/resolver-cache';
+import { waitForResolutions } from '../async/wait-for-resolutions';
+import type { Commit } from '../types/commit';
+import { createCommits, type OnCommit } from './commits';
 
 /** `useForm`'s options, which `<Form>` passes from its props. */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -22,6 +25,14 @@ export interface UseFormOptions<R extends InputRegistry, L extends LayoutCompone
   defaultValues?: Record<string, unknown>;
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
+  /**
+   * Called each time a field commits, with what changed and the visible
+   * fields' values after it. A promise marks the field saving while it runs,
+   * and its failure is the field's problem.
+   */
+  onCommit?: OnCommit;
+  /** When the fields commit, over the form's own `commit`; a field's config may say otherwise. */
+  commit?: Commit;
   /**
    * Optional cross-field schema run against the visibility-stripped values
    * after per-field validators, in place of the form's own. Single-segment-path
@@ -99,6 +110,11 @@ export function useForm<R extends InputRegistry, L extends LayoutComponentRegist
     return { ...out, ...formDefaults, ...options.defaultValues };
   }, [fields, inputs, formDefaults, options.defaultValues]);
   const formSchema = options.schema ?? options.form.schema;
+
+  // What the commits read when they run, which is after the render that
+  // made them: the newest options and the newest form.
+  const latest = useRef({ options, fields });
+  latest.current = { options, fields };
 
   // Form-level validator: walks the live tree, evaluates `when` against current
   // values to know which fields are visible, and runs each visible field's
@@ -235,17 +251,69 @@ export function useForm<R extends InputRegistry, L extends LayoutComponentRegist
           stripped[k] = v;
         }
       }
-      await options.onSubmit?.(stripped);
+      const onSubmit = latest.current.options.onSubmit;
+      if (onSubmit) {
+        await onSubmit(stripped);
+        // Submitted: dirty is measured from here now.
+        commits.submitted(value);
+      }
     },
   });
+
+  const [commits] = useState(() => {
+    return createCommits({
+      values: () => form.state.values,
+      visibleValues: () => {
+        const values = form.state.values;
+        const visible = collectVisibleFields(latest.current.options.form.nodes, values);
+        return Object.fromEntries(Object.entries(values).filter(([name]) => visible.has(name)));
+      },
+      setValue: (name, value) => form.setFieldValue(name, value),
+      validate: (name) => latest.current.fields.get(name)?.validate,
+      onCommit: () => latest.current.options.onCommit,
+      submits: () => latest.current.options.onSubmit !== undefined,
+    });
+  });
+
+  /**
+   * Submits as the form's own button does: the drafts commit first, so a Save
+   * while typing loses nothing; then it waits for the visible fields' async
+   * config and for the commits still saving, and stops if one of those failed;
+   * then it checks the values and calls `onSubmit`.
+   */
+  const submit = async () => {
+    commits.flush();
+    const nodes = latest.current.options.form.nodes;
+    await waitForResolutions(cache, collectVisibleFields(nodes, form.state.values));
+    await commits.settled();
+    if (commits.failedIn(collectVisibleFields(nodes, form.state.values))) {
+      return;
+    }
+    await form.handleSubmit();
+  };
+
+  /** Puts every value back where it started, or to what was last submitted, and forgets the drafts. */
+  const reset = () => {
+    commits.clear();
+    form.reset();
+    const submitted = commits.baseline();
+    if (submitted) {
+      for (const [name, value] of Object.entries(submitted)) {
+        form.setFieldValue(name, value, { dontUpdateMeta: true, dontValidate: true });
+      }
+    }
+  };
 
   return {
     form,
     fields,
     cache,
+    commits,
+    /** When the fields commit: the form's `commit` option, else the form's own. */
+    commit: options.commit ?? options.form.commit,
     getValues: () => form.state.values,
     setFieldValue: (name: string, value: unknown) => form.setFieldValue(name, value),
-    submit: () => form.handleSubmit(),
-    reset: () => form.reset(),
+    submit,
+    reset,
   };
 }

@@ -1,7 +1,7 @@
 ---
 title: SegmentedControl
 summary: An exclusive choice among two to five short options, shown inline.
-related: [RadioGroup, Select, ToggleChips]
+related: [RadioGroup, Combobox, ToggleChips]
 ---
 
 [//]: # 'written from segmented-control.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -190,7 +190,7 @@ and takes the segments out of the tab order.
 ## When not to use it
 
 - Past about five options the row stops fitting: use
-  [Select](../select/select.md).
+  [Combobox without search](../combobox/combobox.md#without-search).
 - For several choices at once, use
   [ToggleChips](../toggle-chips/toggle-chips.md).
 

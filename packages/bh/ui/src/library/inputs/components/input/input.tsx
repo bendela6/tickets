@@ -1,7 +1,20 @@
-import { forwardRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from 'react';
+import {
+  forwardRef,
+  type ChangeEvent,
+  type FocusEvent,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { cn } from '../../../../style';
 import { fieldClass, fieldState } from '../../parts/field';
-import { readOnlyFieldClass, type ControlProps, disabledTreatment } from '../../contract';
+import {
+  readOnlyFieldClass,
+  type CommitProps,
+  type ControlProps,
+  disabledTreatment,
+} from '../../contract';
+import { useInlineEdit } from '../../parts/inline-edit/use-inline-edit';
 
 /**
  * The single-line text control, on the shared control contract.
@@ -17,7 +30,8 @@ import { readOnlyFieldClass, type ControlProps, disabledTreatment } from '../../
 // Not exported, matching Textarea and NumberInput — and `@bh/form` already
 // exports an unrelated `InputProps` that this package's barrel re-exports past.
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'size'> &
-  ControlProps<string> & {
+  ControlProps<string> &
+  CommitProps<string> & {
     /** Content pinned inside the field, before the text — an icon, a currency mark. */
     leading?: ReactNode;
     /** Content pinned inside the field, after the text — a unit, a shortcut hint,
@@ -48,19 +62,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     leading,
     trailing,
     showCount,
+    commit = 'change',
+    onDraft,
+    onKeyDown,
+    onBlur,
     className,
     ...rest
   },
   ref,
 ) {
   const field = fieldState(tone);
+  // At `'change'` this passes every keystroke straight through; otherwise it
+  // holds the draft and calls `onChange` when the field commits.
+  const edit = useInlineEdit({ value, onCommit: onChange, commit, onDraft });
   const invalid = field.invalid || undefined;
 
   const { maxLength } = rest;
   const counter =
     showCount && maxLength !== undefined ? (
       <span aria-hidden className="text-11 text-gray-10 shrink-0 font-mono tabular-nums">
-        {value.length}/{maxLength}
+        {edit.draft.length}/{maxLength}
       </span>
     ) : null;
   // A counter is trailing content, so it takes the adorned path — otherwise the
@@ -79,11 +100,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // cannot drift from the bare one — the bug this component would otherwise
   // grow is a `readOnly` that works until someone adds a trailing icon.
   const control = {
-    value,
+    value: edit.draft,
     // The contract's onChange takes the value. Unwrapping the event here is the
     // only translation this component owes the DOM, and the event goes second
     // for the few call sites that read modifier keys off it.
-    onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value, event),
+    onChange: (event: ChangeEvent<HTMLInputElement>) => edit.change(event.target.value, event),
+    // Enter commits and Escape puts the value back, before the caller's own
+    // handler sees the key; leaving commits before the caller's blur, so a
+    // form checks the value it was just handed.
+    onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => {
+      edit.onKeyDown(event);
+      onKeyDown?.(event);
+    },
+    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      edit.onBlur(event);
+      onBlur?.(event);
+    },
     disabled,
     // An <input> is one of the elements HTML's `readonly` actually reaches
     // (unlike checkbox, radio and range), so the real attribute does the

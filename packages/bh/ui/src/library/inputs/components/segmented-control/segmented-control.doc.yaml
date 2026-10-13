@@ -1,6 +1,6 @@
 title: SegmentedControl
 summary: An exclusive choice among two to five short options, shown inline.
-related: [RadioGroup, Select, ToggleChips]
+related: [RadioGroup, Combobox, ToggleChips]
 body:
   - |
     An exclusive choice among two to five short options, shown inline.
@@ -49,7 +49,7 @@ body:
   - h2: When not to use it
   - |
     - Past about five options the row stops fitting: use
-      [Select](/components/inputs/select).
+      [Combobox without search](/components/inputs/combobox#without-search).
     - For several choices at once, use
       [ToggleChips](/components/inputs/toggle-chips).
   - h2: Props

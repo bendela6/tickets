@@ -1,8 +1,14 @@
-import { forwardRef } from 'react';
+import { forwardRef, useRef } from 'react';
 import { cn } from '../../../../style';
 import { fieldClass, fieldState } from '../../parts/field';
 import { Icon } from '../../../primitives/components/icon';
-import { readOnlyFieldClass, type ControlProps, disabledTreatment } from '../../contract';
+import {
+  readOnlyFieldClass,
+  type CommitProps,
+  type ControlProps,
+  disabledTreatment,
+} from '../../contract';
+import { useInlineEdit } from '../../parts/inline-edit/use-inline-edit';
 
 /**
  * The shared control contract at `T = number | null`, plus the four props only
@@ -12,22 +18,23 @@ import { readOnlyFieldClass, type ControlProps, disabledTreatment } from '../../
  * estimate of 0 are different facts, and the field has to be able to hold the
  * first without inventing the second.
  */
-type NumberInputProps = ControlProps<number | null> & {
-  /** The lowest value the steppers go to. At it, the down step is dimmed. */
-  min?: number;
-  /** The highest value the steppers go to. At it, the up step is dimmed. */
-  max?: number;
-  /** How far one press of a stepper moves the value. */
-  step?: number;
-  /** Shown while the field is empty. */
-  placeholder?: string;
-  /**
-   * The accessible name, for a control with no visible label to point at it —
-   * a filter under a column header, where the header is the only caption. A
-   * control that has a `<label htmlFor>` should use that instead.
-   */
-  'aria-label'?: string;
-};
+type NumberInputProps = ControlProps<number | null> &
+  CommitProps<number | null> & {
+    /** The lowest value the steppers go to. At it, the down step is dimmed. */
+    min?: number;
+    /** The highest value the steppers go to. At it, the up step is dimmed. */
+    max?: number;
+    /** How far one press of a stepper moves the value. */
+    step?: number;
+    /** Shown while the field is empty. */
+    placeholder?: string;
+    /**
+     * The accessible name, for a control with no visible label to point at it —
+     * a filter under a column header, where the header is the only caption. A
+     * control that has a `<label htmlFor>` should use that instead.
+     */
+    'aria-label'?: string;
+  };
 
 function clamp(value: number, min?: number, max?: number) {
   let next = value;
@@ -56,11 +63,23 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
     readOnly,
     placeholder,
     'aria-label': ariaLabel,
+    commit = 'change',
+    onDraft,
     className,
   },
   ref,
 ) {
   const field = fieldState(tone);
+  // Typing and stepping both move the draft; at `'change'` every move
+  // commits, as it always has. `onChange` gets the value alone.
+  const edit = useInlineEdit<number | null>({
+    value,
+    onCommit: (next: number | null) => onChange(next),
+    commit,
+    onDraft,
+  });
+  const shown = edit.draft;
+  const input = useRef<HTMLInputElement | null>(null);
 
   // Neither state may move the value, so neither gets the stepper's hover
   // affordance either. They are NOT the same treatment otherwise: disabled
@@ -73,8 +92,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
     if (inert) {
       return;
     }
-    const base = value ?? 0;
-    onChange(clamp(base + delta, min, max));
+    const base = shown ?? 0;
+    edit.change(clamp(base + delta, min, max));
+    // A run of clicks is one edit: the field holds focus through it, so
+    // leaving the control commits it once. Clicking a button doesn't focus it
+    // everywhere (Safari), so the field takes focus itself.
+    if (commit !== 'change') {
+      input.current?.focus();
+    }
   }
 
   /**
@@ -87,8 +112,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
    * the floor of yet, and dimming both arrows on an empty field would suggest
    * the control is broken rather than empty.
    */
-  const atFloor = value !== null && min !== undefined && value <= min;
-  const atCeiling = value !== null && max !== undefined && value >= max;
+  const atFloor = shown !== null && min !== undefined && shown <= min;
+  const atCeiling = shown !== null && max !== undefined && shown >= max;
 
   const stepper = cn(
     'flex flex-1 items-center px-6 text-gray-9',
@@ -97,6 +122,13 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
 
   return (
     <div
+      // Leaving the whole control commits: moving between the field and its
+      // steppers is still editing.
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          edit.onBlur(event);
+        }
+      }}
       className={fieldClass({
         size,
         state: field.state,
@@ -124,7 +156,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
       })}
     >
       <input
-        ref={ref}
+        ref={(node) => {
+          input.current = node;
+          if (typeof ref === 'function') {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+        }}
         id={id}
         aria-describedby={ariaDescribedBy}
         aria-label={ariaLabel}
@@ -132,7 +171,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
         type="number"
         role="spinbutton"
         inputMode="numeric"
-        value={value ?? ''}
+        value={shown ?? ''}
         min={min}
         max={max}
         step={step}
@@ -144,8 +183,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
         placeholder={placeholder}
         onChange={(event) => {
           const raw = event.target.value;
-          onChange(raw === '' ? null : Number(raw));
+          edit.change(raw === '' ? null : Number(raw));
         }}
+        // Enter commits; Escape puts the value back.
+        onKeyDown={(event) => edit.onKeyDown(event)}
         className={cn(
           // Grows rather than sitting at a fixed 64px, which is what pushes the
           // stepper column to the right edge instead of leaving it wherever a

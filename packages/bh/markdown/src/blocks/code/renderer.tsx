@@ -1,7 +1,6 @@
+import { CodeBlock, LANGUAGES } from '@bh/code';
 import { fenced } from '../../page';
 import type { Renderer } from '../../registry';
-import { LANGUAGES } from '../../highlight';
-import { CodeBlock } from './code-block';
 import { codeExamples } from './examples';
 import { parseRanges } from './ranges';
 

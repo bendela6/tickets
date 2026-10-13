@@ -61,6 +61,42 @@ export function Loading() {
 }
 ```
 
+`commit` and `onDraft` are [Input](../input/input.md#when-it-commits)'s.
+`{ after: 300 }` searches once the typing pauses, rather than at every
+keystroke; the clear button answers to what's in the field.
+
+**Search after a pause**
+
+```tsx
+import { useState } from 'react';
+import { SearchInput } from '@bh/ui';
+
+const CITIES = ['Lisbon', 'Lima', 'Lyon', 'Tbilisi', 'Tallinn', 'Turin'];
+
+export function SearchAfterAPause() {
+  const [query, setQuery] = useState('');
+  const [searches, setSearches] = useState(0);
+  const found = CITIES.filter((city) => city.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <div className="flex w-256 flex-col gap-8">
+      <SearchInput
+        aria-label="Search cities"
+        value={query}
+        commit={{ after: 300 }}
+        onChange={(next) => {
+          setQuery(next);
+          setSearches((count) => count + 1);
+        }}
+      />
+      <p className="text-12/17 text-gray-11 font-sans">
+        {found.length > 0 ? found.join(', ') : 'No city'} ({searches}{' '}
+        {searches === 1 ? 'search' : 'searches'})
+      </p>
+    </div>
+  );
+}
+```
+
 `size` is [Input](../input/input.md)'s: 30, 38 and 46 pixels.
 
 **Sizes**
@@ -134,6 +170,8 @@ To pick one option from a list, searching it as you type, use
 | `disabled`            | `boolean`                                                                                                                                                                                                   |         | Not applicable: removed from the tab order and from form submission.                                                                                                                                                                          |
 | `readOnly`            | `boolean`                                                                                                                                                                                                   |         | Not editable, but still focusable and still submitted.                                                                                                                                                                                        |
 | `className`           | `string`                                                                                                                                                                                                    |         | Added to the control's own classes.                                                                                                                                                                                                           |
+| `commit`              | `Commit`                                                                                                                                                                                                    |         | When `onChange` gets what you typed: `'change'` at every keystroke; `'leave'` on Enter and on leaving the field or the window; `{ after: 800 }` on those and after 800 ms without typing.                                                     |
+| `onDraft`             | `(draft: string) => void`                                                                                                                                                                                   |         | What's in the field, at every keystroke, before it commits: for a count, a preview, or a button that waits for some text. At `'change'` it's what `onChange` gets.                                                                            |
 | `ref`                 | `Ref<HTMLInputElement>`                                                                                                                                                                                     |         | Forwarded to the `<input>`.                                                                                                                                                                                                                   |
 
 Also every `<input>` attribute (`InputHTMLAttributes<HTMLInputElement>`), passed through.

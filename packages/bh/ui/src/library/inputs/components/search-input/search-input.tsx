@@ -1,15 +1,16 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useState, type InputHTMLAttributes } from 'react';
 import { cn, focusRing } from '../../../../style';
 import { Icon } from '../../../primitives/components/icon';
 import { Spinner } from '../../../feedback/components/spinner';
 import { Input } from '../input';
-import type { ControlProps } from '../../contract';
+import type { CommitProps, ControlProps } from '../../contract';
 
 export type SearchInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'onChange' | 'size' | 'type'
 > &
-  ControlProps<string> & {
+  ControlProps<string> &
+  CommitProps<string> & {
     /** Results are in flight. The trailing gutter carries a spinner. */
     loading?: boolean;
     /** Keyboard hint shown while empty — `⌘K`. Dropped as soon as there is a
@@ -36,20 +37,42 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
     disabled,
     readOnly,
     placeholder = 'Search…',
+    onDraft,
     className,
     ...rest
   },
   ref,
 ) {
+  // What's typed but not yet committed, when `commit` holds a draft: the
+  // trailing slot answers to the text in the field, not to the last commit.
+  // Null while the field shows `value`.
+  const [draft, setDraft] = useState<string | null>(null);
+  // One the value has caught up with is no draft, as in Input's own.
+  if (draft !== null && draft === value) {
+    setDraft(null);
+  }
+  const text = draft ?? value;
+  const committed: typeof onChange = (next, event) => {
+    setDraft(null);
+    onChange(next, event);
+  };
+  const drafted = (next: string) => {
+    setDraft(next === value ? null : next);
+    onDraft?.(next);
+  };
+
   const trailing = loading ? (
     <Spinner size="xs" className="text-gray-9 shrink-0" />
-  ) : value ? (
+  ) : text ? (
     <button
       type="button"
       tabIndex={-1}
       aria-label="Clear search"
       disabled={Boolean(disabled) || Boolean(readOnly)}
-      onClick={() => onChange('')}
+      onClick={() => {
+        setDraft(null);
+        onChange('');
+      }}
       className={[
         'rounded-3 text-gray-9 hover:text-gray-12 shrink-0 p-2',
         focusRing('indigo', 'focus-visible', 'inward'),
@@ -72,7 +95,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       // the rule reaches down to the native input the pseudo-element is on.
       type="search"
       value={value}
-      onChange={onChange}
+      onChange={committed}
+      onDraft={drafted}
       disabled={disabled}
       readOnly={readOnly}
       placeholder={placeholder}

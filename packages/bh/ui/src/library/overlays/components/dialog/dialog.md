@@ -135,9 +135,15 @@ technology and takes no pointer events, and a click on the dim closes
 it.
 
 Opening moves focus to the first control inside; in `ConfirmDialog`,
-the cancel button. Closing returns focus to `DialogTrigger`.
-`ConfirmDialog` has none, since `open` opens it, so it returns focus to
-whatever had it as it opened, unless that has left the page.
+the cancel button. Closing gives focus back to whatever had it as the
+dialog opened: `DialogTrigger`, or the row or button that set `open`,
+which is how `ConfirmDialog` always opens. If that has left the page or
+can no longer take focus, focus goes to `DialogTrigger`, then to the
+nearest thing still on the page that held it, like the drawer a dialog
+was opened from. If something else has focus by then, it keeps it.
+
+[`useRestoreFocus`](#userestorefocus) does this, for Drawer and
+SidePanel too, and for a surface of your own.
 
 ## When not to use it
 
@@ -209,3 +215,38 @@ Also every `<button>` attribute (`ButtonHTMLAttributes<HTMLButtonElement>`), pas
 | `cancelLabel`             | `string`                  | `'Cancel'`  | The cancel button's label.                                                       |
 | `destructive`             | `boolean`                 |             | Paints the confirm button in the `danger` tone instead of `primary`.             |
 | `onConfirm` (required)    | `() => void`              |             | Called when the confirm button is pressed, before the dialog closes.             |
+
+### useRestoreFocus
+
+```ts
+useRestoreFocus(options?: RestoreFocusOptions): RestoreFocus
+```
+
+Gives focus back to what had it when a surface opened, once the surface
+closes: to the opener if it is still on the page and takes focus, else to
+`fallback`, else to the nearest thing still on the page that held the
+opener. It does nothing when something already has focus by then.
+
+Without `open`, Radix runs the surface: hand `onFocus` and
+`onCloseAutoFocus` to its Content. With `open`, the hook runs it by
+itself. Dialog and Drawer are the first kind, SidePanel the second.
+
+| Parameter                 | Type                                     | Default | Description                                                                                                                                                                                                                                                                        |
+| ------------------------- | ---------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `options`                 | `RestoreFocusOptions`                    | `{}`    |                                                                                                                                                                                                                                                                                    |
+| `options.open`            | `boolean`                                |         | Whether the surface is open, for a surface Radix does not run. The hook then remembers what has focus as it turns true, and gives focus back as it turns false or the surface unmounts open. Leave it out for a Radix surface, and hand its Content the handlers the hook returns. |
+| `options.rememberOnMount` | `boolean`                                | `true`  | Whether a surface that mounts already open was opened by what had focus then: true for one a click renders, like a drawer a row mounts; false for a panel the page lays out open, which nothing opened. Only with `open`.                                                          |
+| `options.fallback`        | `() => HTMLElement \| null \| undefined` |         | Where focus goes when the opener has left the page or can no longer take it: the surface's own way back, like the button that reopens it. Asked as the surface closes, so it can be an element the close rendered.                                                                 |
+
+Returns `RestoreFocus`.
+
+```ts
+interface RestoreFocus
+```
+
+What `useRestoreFocus` returns: the two handlers a Radix surface hands its Content.
+
+| Member                        | Type                          | Default | Description                                                                             |
+| ----------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `onFocus` (required)          | `(event: FocusEvent) => void` |         | The Content's `onFocus`: the first time focus enters, remembers where it came from.     |
+| `onCloseAutoFocus` (required) | `(event: Event) => void`      |         | The Content's `onCloseAutoFocus`: once the content has left the page, gives focus back. |

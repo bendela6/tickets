@@ -46,6 +46,39 @@ describe('Card', () => {
     expect(screen.getByTestId('b').className).toContain('mt-16');
   });
 
+  it('puts the aside after the title, in the same row', () => {
+    render(
+      <CardHeader data-testid="h" aside={<a href="#all">See all</a>}>
+        <CardTitle>Files</CardTitle>
+      </CardHeader>,
+    );
+    const header = screen.getByTestId('h');
+    const [title, aside] = Array.from(header.children);
+    expect(title).toBe(screen.getByRole('heading', { name: 'Files' }));
+    expect(aside).toContainElement(screen.getByRole('link', { name: 'See all' }));
+    expect(header.className).toContain('flex');
+  });
+
+  // A header without an aside stays a block: one that stacks its title over a
+  // line of its own must not turn into a row because the prop exists.
+  it('stays a block without an aside, or with a false one', () => {
+    render(
+      <>
+        <CardHeader data-testid="none">
+          <CardTitle>Files</CardTitle>
+        </CardHeader>
+        <CardHeader data-testid="false" aside={false}>
+          <CardTitle>Files</CardTitle>
+        </CardHeader>
+      </>,
+    );
+    for (const id of ['none', 'false']) {
+      const header = screen.getByTestId(id);
+      expect(header.className).not.toContain('flex');
+      expect(header.children).toHaveLength(1);
+    }
+  });
+
   it('forwards unknown props to the underlying div', () => {
     render(<Card data-testid="c" role="region" aria-label="Summary" />);
     expect(screen.getByTestId('c')).toHaveAccessibleName('Summary');

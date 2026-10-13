@@ -1,0 +1,39 @@
+title: FoldCard
+summary: 'A Card whose header folds it: a chevron, the title, and a summary while folded.'
+related: [Card, Disclosure]
+body:
+  - |
+    A Card whose header folds it: a chevron, the title, and a summary while
+    folded.
+
+    Open, it is a [Card](/components/layout/card) with a header over a body,
+    the same padding, rule and type. Folded, the header is the whole card,
+    and the summary says what is in it.
+  - h2: Import
+  - code: import { FoldCard } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    With no `open`, the card holds its own state and starts folded;
+    `defaultOpen` starts it open. A click anywhere on the header opens it.
+  - demo: examples/folded.tsx
+  - |
+    Pass `open` and `onOpenChange` to hold the state yourself. A summary
+    made from the content keeps the folded card saying what it holds.
+  - demo: examples/controlled.tsx
+  - |
+    The body pads by 16 pixels, as a `CardBody` does. `padding={0}` lets
+    content run to the edges: a list with its own rules, or a table.
+  - demo: examples/to-the-edges.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: Opens or folds the card.
+  - |
+    The header is a `<button>` inside an `h3`, so the card is a heading to
+    jump to, as a card's `CardTitle` is. The button has `aria-expanded`, and
+    `aria-controls` pointing at the body while it is drawn; it is named by
+    the title and described by the summary. The body is drawn only while
+    open, so state inside it belongs in the caller.
+  - h2: Props
+  - props: FoldCard

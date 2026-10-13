@@ -131,12 +131,53 @@ export function ReadOnlyAndDisabled() {
 }
 ```
 
+`commit` says when `onChange` gets the number, as on
+[Input](../input/input.md#when-it-commits). Leaving the whole
+control commits: moving between the field and its steppers is still
+editing, so a run of clicks commits once. A click on a stepper puts the
+caret in the field.
+
+**An estimate saved on leaving**
+
+```tsx
+import { useState } from 'react';
+import { NumberInput } from '@bh/ui';
+
+export function AnEstimateSavedOnLeaving() {
+  const [hours, setHours] = useState<number | null>(3);
+  const [draft, setDraft] = useState<number | null>(hours);
+  const [saves, setSaves] = useState(0);
+  return (
+    <div className="flex w-256 flex-col gap-6">
+      <NumberInput
+        aria-label="Estimate, in hours"
+        value={hours}
+        min={0}
+        commit="leave"
+        onDraft={setDraft}
+        onChange={(next) => {
+          setHours(next);
+          setSaves((count) => count + 1);
+        }}
+      />
+      <p className="text-12/17 text-gray-11 font-sans">
+        Draft <span className="text-gray-12 font-mono">{draft ?? 'empty'}</span>, saved{' '}
+        <span className="text-gray-12 font-mono">{hours ?? 'empty'}</span>, {saves}{' '}
+        {saves === 1 ? 'save' : 'saves'}
+      </p>
+    </div>
+  );
+}
+```
+
 ## Keyboard and accessibility
 
-| Key                      | Does                                                           |
-| ------------------------ | -------------------------------------------------------------- |
-| `ArrowUp` or `ArrowDown` | Steps the value by `step`, as the browser's number field does. |
-| `Tab`                    | Moves on to the next field. The steppers are not tab stops.    |
+| Key                      | Does                                                                |
+| ------------------------ | ------------------------------------------------------------------- |
+| `ArrowUp` or `ArrowDown` | Steps the value by `step`, as the browser's number field does.      |
+| `Tab`                    | Moves on to the next field. The steppers are not tab stops.         |
+| `Enter`                  | Commits the draft, when the field holds one.                        |
+| `Escape`                 | Drops the draft, when the field holds one, and puts the value back. |
 
 The field is an `<input type="number">` with the role `spinbutton`, and
 the ref lands on it. The steppers are buttons named "Increment" and
@@ -154,20 +195,22 @@ a `<label htmlFor>` pointing at its `id`.
 
 ## Props
 
-| Prop                  | Type                                                                                                                                                                                                        | Default | Description                                                                                                                                                                                                     |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `min`                 | `number`                                                                                                                                                                                                    |         | The lowest value the steppers go to. At it, the down step is dimmed.                                                                                                                                            |
-| `max`                 | `number`                                                                                                                                                                                                    |         | The highest value the steppers go to. At it, the up step is dimmed.                                                                                                                                             |
-| `step`                | `number`                                                                                                                                                                                                    | `1`     | How far one press of a stepper moves the value.                                                                                                                                                                 |
-| `placeholder`         | `string`                                                                                                                                                                                                    |         | Shown while the field is empty.                                                                                                                                                                                 |
-| `aria-label`          | `string`                                                                                                                                                                                                    |         | The accessible name, for a control with no visible label to point at it — a filter under a column header, where the header is the only caption. A control that has a `<label htmlFor>` should use that instead. |
-| `id`                  | `string`                                                                                                                                                                                                    |         | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                             |
-| `aria-describedby`    | `string`                                                                                                                                                                                                    |         | The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws.                                   |
-| `value` (required)    | `number \| null`                                                                                                                                                                                            |         | The value shown. The control holds none of its own: it reports changes through `onChange`.                                                                                                                      |
-| `onChange` (required) | `(value: number \| null, event?: SyntheticEvent) => void`                                                                                                                                                   |         | The new value — and, second, the event that produced it where one exists.                                                                                                                                       |
-| `size`                | `ControlSize`: `'xs'`, `'md'`, `'lg'`                                                                                                                                                                       | `'md'`  | The control's size: a field's height, padding, radius and type move together, at 30, 38 or 46 pixels.                                                                                                           |
-| `tone`                | `Tone`: `'primary'`, `'secondary'`, `'success'`, `'warning'`, `'danger'`, `'neutral'`, `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'` |         | The role or scale it is coloured from.                                                                                                                                                                          |
-| `disabled`            | `boolean`                                                                                                                                                                                                   |         | Not applicable: removed from the tab order and from form submission.                                                                                                                                            |
-| `readOnly`            | `boolean`                                                                                                                                                                                                   |         | Not editable, but still focusable and still submitted.                                                                                                                                                          |
-| `className`           | `string`                                                                                                                                                                                                    |         | Added to the control's own classes.                                                                                                                                                                             |
-| `ref`                 | `Ref<HTMLInputElement>`                                                                                                                                                                                     |         | Forwarded to the `<input>`.                                                                                                                                                                                     |
+| Prop                  | Type                                                                                                                                                                                                        | Default    | Description                                                                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `min`                 | `number`                                                                                                                                                                                                    |            | The lowest value the steppers go to. At it, the down step is dimmed.                                                                                                                                            |
+| `max`                 | `number`                                                                                                                                                                                                    |            | The highest value the steppers go to. At it, the up step is dimmed.                                                                                                                                             |
+| `step`                | `number`                                                                                                                                                                                                    | `1`        | How far one press of a stepper moves the value.                                                                                                                                                                 |
+| `placeholder`         | `string`                                                                                                                                                                                                    |            | Shown while the field is empty.                                                                                                                                                                                 |
+| `aria-label`          | `string`                                                                                                                                                                                                    |            | The accessible name, for a control with no visible label to point at it — a filter under a column header, where the header is the only caption. A control that has a `<label htmlFor>` should use that instead. |
+| `id`                  | `string`                                                                                                                                                                                                    |            | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                             |
+| `aria-describedby`    | `string`                                                                                                                                                                                                    |            | The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws.                                   |
+| `value` (required)    | `number \| null`                                                                                                                                                                                            |            | The value shown. The control holds none of its own: it reports changes through `onChange`.                                                                                                                      |
+| `onChange` (required) | `(value: number \| null, event?: SyntheticEvent) => void`                                                                                                                                                   |            | The new value — and, second, the event that produced it where one exists.                                                                                                                                       |
+| `size`                | `ControlSize`: `'xs'`, `'md'`, `'lg'`                                                                                                                                                                       | `'md'`     | The control's size: a field's height, padding, radius and type move together, at 30, 38 or 46 pixels.                                                                                                           |
+| `tone`                | `Tone`: `'primary'`, `'secondary'`, `'success'`, `'warning'`, `'danger'`, `'neutral'`, `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'` |            | The role or scale it is coloured from.                                                                                                                                                                          |
+| `disabled`            | `boolean`                                                                                                                                                                                                   |            | Not applicable: removed from the tab order and from form submission.                                                                                                                                            |
+| `readOnly`            | `boolean`                                                                                                                                                                                                   |            | Not editable, but still focusable and still submitted.                                                                                                                                                          |
+| `className`           | `string`                                                                                                                                                                                                    |            | Added to the control's own classes.                                                                                                                                                                             |
+| `commit`              | `Commit`                                                                                                                                                                                                    | `'change'` | When `onChange` gets what you typed: `'change'` at every keystroke; `'leave'` on Enter and on leaving the field or the window; `{ after: 800 }` on those and after 800 ms without typing.                       |
+| `onDraft`             | `(draft: number \| null) => void`                                                                                                                                                                           |            | What's in the field, at every keystroke, before it commits: for a count, a preview, or a button that waits for some text. At `'change'` it's what `onChange` gets.                                              |
+| `ref`                 | `Ref<HTMLInputElement>`                                                                                                                                                                                     |            | Forwarded to the `<input>`.                                                                                                                                                                                     |

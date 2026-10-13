@@ -72,6 +72,81 @@ test('the trigger is monospace, and the placeholder is not', () => {
   expect(screen.getByText('No time').className).not.toContain('font-mono');
 });
 
+describe('the cursor', () => {
+  const field = () => screen.getByLabelText('Enter a time');
+  /** The listed time the time field points at, by its accessible name. */
+  const cursorOn = (time: string) => {
+    expect(field()).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('option', { name: time }).id,
+    );
+  };
+
+  it('opens on the chosen time', async () => {
+    render(<TimePicker value="14:00" onChange={() => {}} stepMinutes={60} />);
+    await open();
+    cursorOn('14:00');
+  });
+
+  it('moves with the arrows, writes its time into the field, and Enter picks it', async () => {
+    const onChange = vi.fn();
+    render(<TimePicker value="14:00" onChange={onChange} stepMinutes={60} />);
+    await open();
+    await userEvent.keyboard('{ArrowDown}');
+    cursorOn('15:00');
+    expect(field()).toHaveValue('15:00');
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    cursorOn('13:00');
+    await userEvent.keyboard('{Enter}');
+    expect(onChange).toHaveBeenCalledWith('13:00');
+  });
+
+  it('is not the selection: the chosen time keeps aria-selected while it moves', async () => {
+    render(<TimePicker value="14:00" onChange={() => {}} stepMinutes={60} />);
+    await open();
+    await userEvent.keyboard('{ArrowDown}');
+    cursorOn('15:00');
+    expect(screen.getByRole('option', { name: '14:00' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('option', { name: '15:00' })).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('goes to the first and last time with Home and End', async () => {
+    render(<TimePicker value="14:00" onChange={() => {}} stepMinutes={60} />);
+    await open();
+    await userEvent.keyboard('{End}');
+    cursorOn('23:00');
+    await userEvent.keyboard('{Home}');
+    cursorOn('00:00');
+  });
+
+  it('starts from either end of the list when the field holds no time', async () => {
+    render(<TimePicker value={null} onChange={() => {}} stepMinutes={60} />);
+    await open();
+    expect(field()).not.toHaveAttribute('aria-activedescendant');
+    await userEvent.keyboard('{ArrowDown}');
+    cursorOn('00:00');
+    await userEvent.clear(field());
+    await userEvent.keyboard('{ArrowUp}');
+    cursorOn('23:00');
+  });
+
+  it('follows a typed time, and steps from one typed between two rows', async () => {
+    render(<TimePicker value={null} onChange={() => {}} stepMinutes={60} />);
+    await open();
+    await userEvent.type(field(), '9:00');
+    cursorOn('09:00');
+    // 09:20 is on no row, so no row is under the cursor until a key moves it.
+    await userEvent.clear(field());
+    await userEvent.type(field(), '09:20');
+    expect(field()).not.toHaveAttribute('aria-activedescendant');
+    await userEvent.keyboard('{ArrowDown}');
+    cursorOn('10:00');
+    await userEvent.clear(field());
+    await userEvent.type(field(), '09:20{ArrowUp}');
+    cursorOn('09:00');
+  });
+});
+
 test('read-only keeps the tab stop and refuses to open', async () => {
   render(<TimePicker value="14:30" onChange={() => {}} readOnly />);
   const trigger = screen.getByRole('combobox');

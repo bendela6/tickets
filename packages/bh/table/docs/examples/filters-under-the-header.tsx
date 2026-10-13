@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Table, sortRows, useTable, type Column } from '@bh/table';
-import { Button, Icon, Input, NumberColumn, Select, tableRender } from '@bh/ui';
+import { Button, Combobox, Icon, Input, NumberColumn, tableRender } from '@bh/ui';
 
 interface City {
   id: string;
@@ -64,7 +64,8 @@ export function FiltersUnderTheHeader() {
       sortable: true,
       width: 160,
       filter: (
-        <Select
+        <Combobox
+          searchable={false}
           size="xs"
           className="w-full"
           aria-label="Filter countries"

@@ -22,6 +22,11 @@ body:
     default, the rest show as `+N`.
   - demo: examples/several-people.tsx
   - |
+    A `disabled` person stays in the list, and neither the cursor nor a
+    click can pick them; their `disabledReason` says why, under the greyed
+    row.
+  - demo: examples/disabled-with-a-reason.tsx
+  - |
     `size` steps the field's height, padding, radius and type, and its avatars
     with it.
   - demo: examples/sizes.tsx
@@ -35,7 +40,9 @@ body:
       - keys: [Enter, Space]
         does: On the field, opens the list, with the focus in its search box.
       - keys: [ArrowDown, ArrowUp]
-        does: Moves the cursor to the next or previous person.
+        does: Moves the cursor to the next or previous person, stepping over one who can't be picked.
+      - keys: [Home, End]
+        does: Moves the cursor to the first or last person who can be picked.
       - keys: [Enter]
         does: In the list, picks the person under the cursor. One person closes the list; with `multiple`, it toggles them and the list stays open.
       - keys: [Escape]
@@ -47,8 +54,13 @@ body:
     `aria-multiselectable` with `multiple`. Focus stays in the search box,
     which points at the list with `aria-controls` and at the person under
     the cursor with `aria-activedescendant`, so a screen reader follows the
-    cursor. `readOnly` sets `aria-disabled`, and `tone="danger"` sets
-    `aria-invalid`.
+    cursor, which opens on the first person chosen. A disabled person's
+    `disabledReason` is their row's description, through
+    `aria-describedby`. `readOnly` sets `aria-disabled`, and
+    `tone="danger"` sets `aria-invalid`.
+
+    The list is the one [Combobox](/components/inputs/combobox) opens, so its
+    keys, and the way a search is shown, are the same.
   - h2: Props
   - props: UserPicker
   - ref: Person

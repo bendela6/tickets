@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -212,5 +212,204 @@ describe('SidePanel — controlled', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Filters' }));
     expect(await screen.findByRole('dialog')).toHaveTextContent('Panel body');
+  });
+
+  it('gives focus back to the control that opened it, when hidden from its own button', async () => {
+    const user = userEvent.setup();
+    render(<Controlled narrow={false} />);
+    const filters = screen.getByRole('button', { name: 'Filters' });
+    await user.click(filters);
+    await user.click(screen.getByRole('button', { name: 'Hide Filters panel' }));
+    expect(screen.queryByText('Panel body')).not.toBeInTheDocument();
+    expect(filters).toHaveFocus();
+  });
+
+  it('gives focus back to that control below the breakpoint too, on Esc', async () => {
+    const user = userEvent.setup();
+    render(<Controlled narrow />);
+    const filters = screen.getByRole('button', { name: 'Filters' });
+    await user.click(filters);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(filters).toHaveFocus();
+  });
+
+  it('gives focus back to that control when a field in it took focus with autoFocus', async () => {
+    function WithSearch() {
+      const [open, setOpen] = useState(false);
+      mockViewport(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Filters
+          </button>
+          <SidePanel
+            label="Filters panel"
+            collapsible
+            collapsedTo="none"
+            open={open}
+            onOpenChange={setOpen}
+          >
+            <input aria-label="Find a filter" autoFocus />
+          </SidePanel>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<WithSearch />);
+    const filters = screen.getByRole('button', { name: 'Filters' });
+    await user.click(filters);
+    expect(screen.getByRole('textbox', { name: 'Find a filter' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Hide Filters panel' }));
+    expect(filters).toHaveFocus();
+  });
+
+  it('leaves focus where it is when it closes while focus is elsewhere', async () => {
+    function ClosedFromContent() {
+      const [open, setOpen] = useState(true);
+      mockViewport(false);
+      return (
+        <>
+          <input
+            aria-label="Search"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                setOpen(false);
+              }
+            }}
+          />
+          <SidePanel label="Filters panel" collapsible open={open} onOpenChange={setOpen}>
+            <p>Panel body</p>
+          </SidePanel>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<ClosedFromContent />);
+    const search = screen.getByRole('textbox', { name: 'Search' });
+    await user.click(search);
+    await user.keyboard('{Enter}');
+    expect(screen.queryByText('Panel body')).not.toBeInTheDocument();
+    expect(search).toHaveFocus();
+  });
+
+  it('gives focus to its own way back when the control that opened it has gone', async () => {
+    function OpenerGoes() {
+      const [open, setOpen] = useState(false);
+      const [shown, setShown] = useState(true);
+      mockViewport(false);
+      return (
+        <>
+          {shown ? (
+            <button type="button" onClick={() => setOpen(true)}>
+              Filters
+            </button>
+          ) : null}
+          <SidePanel
+            label="Filters panel"
+            collapsible
+            collapsedTo="edge"
+            open={open}
+            onOpenChange={setOpen}
+          >
+            <button type="button" onClick={() => setShown(false)}>
+              Remove the opener
+            </button>
+          </SidePanel>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<OpenerGoes />);
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    await user.click(screen.getByRole('button', { name: 'Remove the opener' }));
+    await user.click(screen.getByRole('button', { name: 'Hide Filters panel' }));
+    expect(screen.getByRole('button', { name: 'Show Filters panel' })).toHaveFocus();
+  });
+});
+
+describe('SidePanel — where focus goes when it is hidden', () => {
+  it.each(['rail', 'edge'] as const)(
+    'to the button that brings it back, collapsed to the %s',
+    async (collapsedTo) => {
+      mockViewport(false);
+      const user = userEvent.setup();
+      renderPanel({ collapsible: true, collapsedTo });
+      await user.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+      expect(screen.getByRole('button', { name: 'Show Navigation' })).toHaveFocus();
+      // And again after it was brought back from that button.
+      await user.click(screen.getByRole('button', { name: 'Show Navigation' }));
+      await user.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+      expect(screen.getByRole('button', { name: 'Show Navigation' })).toHaveFocus();
+    },
+  );
+
+  it('not to what had focus as the page laid it out open, which did not open it', async () => {
+    function Page() {
+      const [shown, setShown] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setShown(true)}>
+            Go to the page
+          </button>
+          {shown ? (
+            <SidePanel label="Navigation" collapsible>
+              <p>Panel body</p>
+            </SidePanel>
+          ) : null}
+        </>
+      );
+    }
+    mockViewport(false);
+    const user = userEvent.setup();
+    render(<Page />);
+    await user.click(screen.getByRole('button', { name: 'Go to the page' }));
+    await user.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).toHaveFocus();
+  });
+
+  it('nowhere while nothing had focus: it never takes focus as it mounts, in StrictMode', async () => {
+    // StrictMode runs effects twice as a component mounts, as if it unmounted
+    // between. With the window narrow, the button that opens the drawer is on
+    // the page by then, and focus is on nothing; the panel must not take it.
+    mockViewport(true);
+    render(
+      <StrictMode>
+        <SidePanel label="Navigation" collapsible overlayBelow="lg">
+          <p>Panel body</p>
+        </SidePanel>
+      </StrictMode>,
+    );
+    await act(async () => {});
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).not.toHaveFocus();
+    expect(document.body).toHaveFocus();
+  });
+
+  it('nowhere while nothing had focus: closed by the app, it leaves focus alone', () => {
+    mockViewport(false);
+    const { rerender } = render(
+      <SidePanel label="Navigation" collapsible open onOpenChange={() => {}}>
+        <p>Panel body</p>
+      </SidePanel>,
+    );
+    rerender(
+      <SidePanel label="Navigation" collapsible open={false} onOpenChange={() => {}}>
+        <p>Panel body</p>
+      </SidePanel>,
+    );
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).not.toHaveFocus();
+    expect(document.body).toHaveFocus();
+  });
+
+  it('below the breakpoint, to the button that opened the drawer, on Esc', async () => {
+    mockViewport(true);
+    const user = userEvent.setup();
+    renderPanel({ collapsible: true, overlayBelow: 'lg' });
+    const show = screen.getByRole('button', { name: 'Show Navigation' });
+    await user.click(show);
+    expect(screen.getByRole('dialog', { name: 'Navigation' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(show).toHaveFocus();
   });
 });

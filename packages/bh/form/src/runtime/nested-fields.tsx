@@ -5,6 +5,7 @@ import type { LayoutNode } from '../types/layout-node';
 import type { FormRegistry, InputRegistry, LayoutComponentRegistry } from '../types/registry';
 import { evaluateWhen } from '../when/evaluate-when';
 import { fieldIds } from './field-ids';
+import { CommitContext } from './commit-context';
 
 // A form inside a field: the fields of one object (a nested object, or one
 // item of a list), drawn with the registry of the <Form> around them. The
@@ -84,6 +85,9 @@ export interface NestedFieldsProps {
  */
 export function NestedFields(props: NestedFieldsProps): ReactNode {
   const registry = useFormRegistry();
+  // The form's `commit` reaches these inputs too: an item's text field
+  // commits, and with it the list, when the form's fields do.
+  const commit = useContext(CommitContext)?.commit;
   const [left, setLeft] = useState<ReadonlySet<string>>(new Set());
 
   const draw = (nodes: readonly AnyNode[]): ReactNode => {
@@ -134,6 +138,7 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
             label={node.label}
             value={value}
             onChange={(next: unknown) => props.onChange({ ...props.value, [node.name]: next })}
+            commit={commit}
             onBlur={() => setLeft((now) => new Set(now).add(node.name))}
             config={plainConfig(node.config as Record<string, unknown>)}
             error={error}

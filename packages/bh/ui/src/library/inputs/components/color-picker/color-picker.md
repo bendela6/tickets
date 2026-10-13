@@ -1,7 +1,7 @@
 ---
 title: ColorPicker
 summary: Picks one of the eleven colour scales.
-related: [Pill, IconPicker, Select]
+related: [Pill, IconPicker, Combobox]
 ---
 
 [//]: # 'written from color-picker.doc.yaml by pnpm docs:sync; edit that file, not this one'

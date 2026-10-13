@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { disabledClass } from '../../contract';
 import {
   axis,
@@ -79,6 +79,12 @@ interface OptionRowProps {
   /** This row is where the keyboard is. Drawn as an inward ring. */
   cursor?: boolean;
   disabled?: boolean;
+  /**
+   * Why a disabled row can't be picked. Printed under the row, at full
+   * contrast where the row is greyed, and made the row's description, so a
+   * screen reader reads it with the row. Ignored on a row that isn't disabled.
+   */
+  reason?: string;
   /** A dot, an avatar or an icon before the label — data, not decoration. */
   leading?: ReactNode;
   /** A count or a hint after the label. The selection check is drawn separately. */
@@ -94,6 +100,7 @@ export function OptionRow({
   selected = false,
   cursor = false,
   disabled = false,
+  reason,
   leading,
   trailing,
   tone = 'primary',
@@ -102,35 +109,48 @@ export function OptionRow({
   className,
 }: OptionRowProps) {
   const scale = TONE_HUE[tone];
+  const ownId = useId();
+  const why = disabled ? reason : undefined;
+  const reasonId = `${id ?? ownId}-reason`;
   return (
-    <button
-      type="button"
-      role="option"
-      id={id}
-      // Follows SELECTION, never the cursor. The parent points at the cursor
-      // row with aria-activedescendant; if this tracked the cursor too, a
-      // screen reader would announce every row as selected while arrowing.
-      aria-selected={selected}
-      disabled={disabled}
-      onClick={() => {
-        if (!disabled) {
-          onPick();
-        }
-      }}
-      className={optionRowClass({
-        cursor: cursor ? 'on' : 'off',
-        scale,
-        className: cn(selected && 'font-500', className),
-      })}
-    >
-      {leading}
-      <span className="min-w-0 flex-1 truncate">{children}</span>
-      {trailing}
-      {selected ? (
-        <span aria-hidden className={checkClass({ scale })}>
-          ✓
-        </span>
+    <>
+      <button
+        type="button"
+        role="option"
+        id={id}
+        // Follows SELECTION, never the cursor. The parent points at the cursor
+        // row with aria-activedescendant; if this tracked the cursor too, a
+        // screen reader would announce every row as selected while arrowing.
+        aria-selected={selected}
+        aria-describedby={why ? reasonId : undefined}
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) {
+            onPick();
+          }
+        }}
+        className={optionRowClass({
+          cursor: cursor ? 'on' : 'off',
+          scale,
+          className: cn(selected && 'font-500', className),
+        })}
+      >
+        {leading}
+        <span className="min-w-0 flex-1 truncate">{children}</span>
+        {trailing}
+        {selected ? (
+          <span aria-hidden className={checkClass({ scale })}>
+            ✓
+          </span>
+        ) : null}
+      </button>
+      {/* Pulled up into the row's lower padding, so it reads as this row's
+          reason and not the next row's. */}
+      {why ? (
+        <p id={reasonId} className="text-12/17 text-gray-11 -mt-4 px-9 pb-6 font-sans">
+          {why}
+        </p>
       ) : null}
-    </button>
+    </>
   );
 }
