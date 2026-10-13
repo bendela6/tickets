@@ -74,7 +74,9 @@ function SchemaPage() {
           <PageHeader
             title="Schema"
             description={
-              data ? `${data.tables.length} ${data.tables.length === 1 ? 'table' : 'tables'}` : undefined
+              data
+                ? `${data.tables.length} ${data.tables.length === 1 ? 'table' : 'tables'}`
+                : undefined
             }
             actions={
               outline.narrow ? (
