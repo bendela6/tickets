@@ -11,6 +11,8 @@ import {
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
 import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
 import {
   Button,
   Checkbox,
@@ -33,22 +35,6 @@ const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'
 // Combobox value for "starts here" — fromOptionId: null on the wire, meaning
 // this edge is a creation/entry move rather than a move between two options.
 const ENTRY = '__entry__';
-
-function slugify(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-+|-+$)/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
 
 // Dashed pill marking the null-from "entry" edge — the move that happens
 // when an item is created directly into a status, mirrors the design's
