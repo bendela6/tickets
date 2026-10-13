@@ -125,15 +125,14 @@ export function BoardHeader({
           </span>
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="shrink-0 font-sans text-12/17 text-gray-11">
-                Cards:{' '}
-                <strong className="font-500 text-gray-12">
-                  {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
-                </strong>{' '}
-                <span aria-hidden className="text-10 text-gray-9">
-                  <Icon name="chevron-down" size="2xs" />
+              <Button variant="ghost" tone="neutral" size="sm" chevron className="shrink-0 font-400">
+                <span>
+                  Cards:{' '}
+                  <strong className="font-500 text-gray-12">
+                    {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
+                  </strong>
                 </span>
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent align="end">
               <ColumnChecklist indexes={indexes} config={config} onUpdate={onUpdate} />

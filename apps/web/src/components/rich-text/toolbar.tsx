@@ -3,6 +3,7 @@ import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
 import {
+  Button,
   cn,
   focusRing,
   Icon,
@@ -319,14 +320,16 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
   return (
     <Menu>
       <MenuTrigger asChild>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          chevron
           disabled={disabled === true || editor === null}
-          className="mr-4 inline-flex h-26 flex-none items-center gap-4 rounded-6 px-8 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
+          className="mr-4 flex-none"
         >
-          <span className="font-sans text-12 font-500">{currentBlockLabel(editor)}</span>
-          <Icon name="chevron-down" size="sm" />
-        </button>
+          {currentBlockLabel(editor)}
+        </Button>
       </MenuTrigger>
       <MenuContent align="start" className="min-w-150">
         {BLOCK_TYPES.map((type) => (

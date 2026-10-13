@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Input, Pill, SectionHeader } from '@bh/ui';
+import { Button, Combobox, type Option, Icon, Input, Pill, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -109,13 +109,10 @@ export function DetailLinks({
       <SectionHeader
         title="Links"
         action={
-          <button
-            type="button"
-            className="font-sans text-12/17 font-500 text-gray-9 hover:text-gray-12"
-            onClick={() => setAdding((value) => !value)}
-          >
-            ＋ Add link
-          </button>
+          <Button variant="ghost" tone="neutral" size="sm" onClick={() => setAdding((value) => !value)}>
+            <Icon name="plus" size="sm" />
+            Add link
+          </Button>
         }
         className="mb-8"
       />

@@ -608,15 +608,14 @@ export function AllItemsScreen() {
           <span className="flex-1" />
           <Menu>
             <MenuTrigger asChild>
-              <button type="button" className="cursor-pointer py-8 font-sans text-12/17 text-gray-11">
-                Group:{' '}
-                <strong className="font-500 text-gray-12">
-                  {config.group === 'project' ? 'Project' : 'Status kind'}
-                </strong>{' '}
-                <span aria-hidden className="text-10 text-gray-9">
-                  <Icon name="chevron-down" size="2xs" />
+              <Button variant="ghost" tone="neutral" size="sm" chevron className="font-400">
+                <span>
+                  Group:{' '}
+                  <strong className="font-500 text-gray-12">
+                    {config.group === 'project' ? 'Project' : 'Status kind'}
+                  </strong>
                 </span>
-              </button>
+              </Button>
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'project' }))}>

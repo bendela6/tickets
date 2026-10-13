@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Combobox, type Option as ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
+import { Button, Combobox, Icon, type Option as ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
 import type { Board, Field, Option } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { kindColor } from '../../registry/option-color';
@@ -160,12 +160,10 @@ function AddFilter({
       }}
     >
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-28 cursor-pointer items-center gap-5 rounded-8 border-1 border-dashed border-gray-7 px-10 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
-        >
-          ＋ Filter
-        </button>
+        <Button variant="ghost" tone="neutral" size="sm" className="border-dashed border-gray-7">
+          <Icon name="plus" size="sm" />
+          Filter
+        </Button>
       </PopoverTrigger>
       <PopoverContent>
         <div className="flex w-256 flex-col gap-8 p-12">
@@ -295,13 +293,9 @@ export function FilterChips({
         onAdd={(rule) => onRulesChange([...rules, rule])}
       />
       {dirty ? (
-        <button
-          type="button"
-          className="cursor-pointer font-sans text-12/17 font-500 text-indigo-9 hover:underline"
-          onClick={onSaveToView}
-        >
+        <Button variant="ghost" size="sm" onClick={onSaveToView}>
           save to view
-        </button>
+        </Button>
       ) : null}
       <span className="flex-1" />
       <span className="font-mono text-12/17 text-gray-9">

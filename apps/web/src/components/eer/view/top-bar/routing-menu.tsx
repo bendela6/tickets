@@ -2,10 +2,9 @@
 // modes behind one control meant two clicks to reach the third and no way to
 // see what the others were without landing on them.
 
-import { Dropdown, cn } from '@bh/ui';
+import { Button, Dropdown, cn } from '@bh/ui';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramView } from '../../state/diagram-context';
-import { btn } from './button-class';
 
 const MODES: { mode: RoutingMode; label: string; tip: string }[] = [
   { mode: 'curved', label: 'Curved', tip: 'Direct curves (may cross cards)' },
@@ -23,14 +22,11 @@ export function RoutingMenu() {
       align="start"
       padding="sm"
       trigger={
-        // The caret is aria-hidden so the trigger's accessible name stays the
-        // mode itself ("Lines: avoid") — the state, not the decoration.
-        <button type="button" className={cn(btn, 'flex items-center gap-8')} title={current.tip}>
+        // Button's chevron is aria-hidden, so the trigger's accessible name
+        // stays the mode itself ("Lines: avoid") — the state, not the decoration.
+        <Button variant="outline" tone="neutral" size="sm" chevron title={current.tip}>
           Lines: {current.mode}
-          <span aria-hidden className="text-gray-11">
-            ▾
-          </span>
-        </button>
+        </Button>
       }
     >
       {(close) => (

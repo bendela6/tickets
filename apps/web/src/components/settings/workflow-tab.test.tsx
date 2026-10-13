@@ -282,7 +282,7 @@ test('editing an option label/kind fires useUpdateOption, preserving other confi
   const labelBox = screen.getByRole('textbox', { name: 'Label' });
   await userEvent.clear(labelBox);
   await userEvent.type(labelBox, 'Doing');
-  await userEvent.click(screen.getByRole('button', { name: 'blocked' }));
+  await userEvent.click(screen.getByRole('radio', { name: 'Blocked' }));
   await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
