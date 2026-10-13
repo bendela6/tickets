@@ -2,7 +2,7 @@ import { createRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ListTree } from 'lucide-react';
 import { Page, PageHeader } from '@bh/shell/layout';
-import { Button, SidePanel, useIsNarrow, usePersistedFlag } from '@bh/ui';
+import { Button, ScreenState, SidePanel, useIsNarrow, usePersistedFlag } from '@bh/ui';
 import { useSchemaGraph } from '../api/use-schema';
 import { EerCanvas, EerDiagramProvider, schemaGraphToModel } from '../components/eer';
 import { SchemaOutline } from '../components/schema/schema-outline';
@@ -102,14 +102,19 @@ function SchemaPage() {
             <SchemaOutline selected={database} />
           </SidePanel>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            {isLoading && <p className="p-24 font-sans text-13 text-gray-11">Loading schema…</p>}
-            {error && <p className="p-24 font-sans text-13 text-red-11">Failed to load schema.</p>}
-            {drawable && result?.errors.length ? (
-              <p className="p-24 font-sans text-13 text-red-11">This schema could not be drawn.</p>
-            ) : null}
-            {data && data.tables.length === 0 && (
-              <p className="p-24 font-sans text-13 text-gray-11">No tables in this database.</p>
+            {isLoading && <ScreenState title="Loading schema…" />}
+            {error && (
+              <ScreenState
+                tone="danger"
+                icon="triangle-alert"
+                title="Failed to load schema."
+                body={error instanceof Error ? error.message : undefined}
+              />
             )}
+            {drawable && result?.errors.length ? (
+              <ScreenState tone="danger" icon="triangle-alert" title="This schema could not be drawn." />
+            ) : null}
+            {data && data.tables.length === 0 && <ScreenState title="No tables in this database." />}
             {result?.model && drawable ? (
               <div className="flex h-full min-h-0 flex-col">
                 {/* Warnings are how a MISSING edge explains itself. An fk pointing

@@ -2,8 +2,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { columnRoles } from '../../engine/model/column-roles';
 import type { Entity, Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn, Pill } from '@bh/ui';
-import { Empty } from './empty';
+import { cn, Pill, ScreenState } from '@bh/ui';
 import { Header } from './header';
 import { RelRow } from './rel-row';
 import { Section } from './section';
@@ -125,7 +124,7 @@ export function EntityDetail({
         </div>
 
         <Section title="Relationships" count={rels.length} />
-        {rels.length === 0 && <Empty>No relationships.</Empty>}
+        {rels.length === 0 && <ScreenState className="px-8 py-12" title="No relationships." />}
         {rels.map((r) => (
           <RelRow
             key={r.id}

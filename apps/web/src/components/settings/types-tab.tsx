@@ -6,7 +6,7 @@ import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, SectionHeader } from '@bh/ui';
+import { Button, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type SettingsTabProps = {
@@ -241,7 +241,7 @@ export function TypesTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-16">
         {types.length === 0 ? (
-          <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet.</p>
+          <ScreenState className="px-12 py-20" title="No ticket types yet." />
         ) : (
           types.map((type) => {
             // Every live type may be a child, the type itself included: a

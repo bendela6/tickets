@@ -274,7 +274,7 @@ export function AllItemsScreen() {
     return (
       <Page header={<PageHeader title="All items" />}>
         <PageBody>
-          <p className="font-sans text-13/19 text-gray-9">Loading all items…</p>
+          <ScreenState title="Loading all items…" />
         </PageBody>
       </Page>
     );

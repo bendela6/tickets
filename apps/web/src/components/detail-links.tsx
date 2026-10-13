@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Icon, Input, Pill, SectionHeader } from '@bh/ui';
+import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -118,7 +118,7 @@ export function DetailLinks({
       />
       <div className="flex flex-col gap-6">
         {item.links.length === 0 ? (
-          <p className="m-0 font-sans text-12/17 text-gray-9">No links.</p>
+          <ScreenState className="px-12 py-20" title="No links." />
         ) : (
           item.links.map((link) => {
             const linkType = board.linkTypes.find((candidate) => candidate.id === link.linkTypeId);
