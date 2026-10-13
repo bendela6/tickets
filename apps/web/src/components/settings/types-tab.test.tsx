@@ -16,7 +16,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     project: { id: 1, key: 'core', name: 'Items Core', schemeId: 5, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
-      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: '#4E46C6' }, archivedAt: null },
+      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: 'indigo' }, archivedAt: null },
       { id: 2, schemeId: 5, key: 'task', label: 'Task', position: 2, config: {}, archivedAt: null },
       { id: 3, schemeId: 5, key: 'old', label: 'Old', position: 3, config: {}, archivedAt: '2026-01-02T00:00:00.000Z' },
     ],
@@ -90,13 +90,30 @@ test('creating a type fires useCreateType — POSTs /api/types with the envelope
   const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
   expect(typeof commandId).toBe('string');
   expect(commandId).toMatch(UUID_RE);
+  // Unpicked, a new type takes the picker's first hue.
   expect(rest).toEqual({
     actorId: 7,
     schemeId: 5,
     key: 'bug',
     label: 'Bug',
-    config: { color: expect.any(String) },
+    config: { color: 'red' },
   });
+});
+
+test('a new type stores the hue picked in the colour picker, by name', async () => {
+  const fetchMock = mockFetch();
+  renderTab(makeBoard());
+
+  await userEvent.click(screen.getByRole('button', { name: /new type/i }));
+  await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Bug');
+  await userEvent.click(screen.getByRole('combobox', { name: 'Colour' }));
+  await userEvent.click(screen.getByRole('gridcell', { name: 'Teal' }));
+  expect(screen.getByRole('combobox', { name: 'Colour' })).toHaveTextContent('Teal');
+  await userEvent.click(screen.getByRole('button', { name: 'Create type' }));
+
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(body.config).toEqual({ color: 'teal' });
 });
 
 test('archiving a type fires useUpdateType — PATCHes /api/types/:id with archived: true', async () => {
@@ -132,9 +149,13 @@ test('editing label/colour fires useUpdateType with the new label + config', asy
   renderTab(makeBoard());
 
   await userEvent.click(screen.getByRole('button', { name: /edit epic/i }));
+  // The picker opens on the type's own hue.
+  expect(screen.getByRole('combobox', { name: 'Colour' })).toHaveTextContent('Indigo');
   const nameBox = screen.getByRole('textbox', { name: 'Name' });
   await userEvent.clear(nameBox);
   await userEvent.type(nameBox, 'Epic v2');
+  await userEvent.click(screen.getByRole('combobox', { name: 'Colour' }));
+  await userEvent.click(screen.getByRole('gridcell', { name: 'Purple' }));
   await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -142,7 +163,7 @@ test('editing label/colour fires useUpdateType with the new label + config', asy
   expect(url).toBe('/api/types/1');
   expect(init.method).toBe('PATCH');
   const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
-  expect(rest).toEqual({ actorId: 7, label: 'Epic v2', config: { color: expect.any(String) } });
+  expect(rest).toEqual({ actorId: 7, label: 'Epic v2', config: { color: 'purple' } });
 });
 
 test('toggling a child-type chip fires useSetChildTypes — PUTs the updated childTypeIds', async () => {
@@ -175,7 +196,7 @@ test('seeds the chip editor from board.childTypes and does not wipe existing nes
   const board: Board = {
     ...makeBoard(),
     types: [
-      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: '#4E46C6' }, archivedAt: null },
+      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: 'indigo' }, archivedAt: null },
       { id: 2, schemeId: 5, key: 'task', label: 'Task', position: 2, config: {}, archivedAt: null },
       { id: 4, schemeId: 5, key: 'bug', label: 'Bug', position: 3, config: {}, archivedAt: null },
       { id: 5, schemeId: 5, key: 'spike', label: 'Spike', position: 4, config: {}, archivedAt: null },
