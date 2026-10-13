@@ -2,21 +2,18 @@ import { cn } from '@bh/ui';
 import config from '../../../icons.config.json';
 
 /**
- * The brand mark: the same drawing the favicon and the install icons are
+ * The brand mark: the drawing the favicon and the install icons were
  * generated from. Colours, angles and stroke weight all come from
- * `apps/web/icons.config.json` — the document @tickets/icon-studio writes
- * those assets out of — so the logo in the shell and the icon in the tab
- * cannot drift apart. There is one copy of the values, not two.
+ * `apps/web/icons.config.json`, the document the icon studio wrote those
+ * icons out of. The studio is gone, so they are fixed files now: a change to
+ * the config changes this logo, not the icon in the tab.
  *
- * The config is the `IconDoc` shape (`inks` + `elements`, see
- * `packages/web/icon-studio/src/doc.ts`), not the three-stick shape it used
- * to be. Geometry mirrors the studio's `renderSvg()` for the `favicon`
- * variant: a 48-unit grid, each stick a full diameter through the centre,
- * scaled by that variant's own `scale` (see `stickGeometry` below) exactly
- * as `renderSvg` multiplies every element's reach and weight together for
- * it. The studio is a dev-only package that must stay out of the app's
- * bundle, so the drawing is re-derived here rather than imported — the two
- * files agree by matching convention, not by sharing code.
+ * The config is the `IconDoc` shape (`inks` + `elements`), not the
+ * three-stick shape it used to be. Geometry mirrors the studio's
+ * `renderSvg()` for the `favicon` variant: a 48-unit grid, each stick a full
+ * diameter through the centre, scaled by that variant's own `scale` (see
+ * `stickGeometry` below) exactly as `renderSvg` multiplied every element's
+ * reach and weight together for it.
  */
 
 /** Centre of the 48-unit grid. Locked by the mark spec, same as the studio's `CENTRE`. */
@@ -137,12 +134,9 @@ export const BRAND_MARK_CSS = [
 
 /**
  * `elements` reads front to back — `elements[0]` is the one a layer panel
- * would list on top — so, exactly like the studio's renderer
- * (`packages/web/icon-studio/src/generate/render.ts`), painting proceeds in
- * *reverse* document order: the frontmost element is emitted last, since SVG
- * has no z-index and later markup paints over earlier markup. One
- * convention for "who paints on top," shared by both files rather than
- * invented twice.
+ * would list on top — so, as the icon studio's renderer did, painting
+ * proceeds in *reverse* document order: the frontmost element is emitted
+ * last, since SVG has no z-index and later markup paints over earlier markup.
  */
 const PAINT_ORDER = [...STICKS].reverse();
 
