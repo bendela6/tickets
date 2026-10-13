@@ -240,6 +240,7 @@ describe('exportProjects (requires a freshly migrated tickets_test)', () => {
       projectId,
       typeId,
       number,
+      key: `EX${suffix}-${projectId}-${number}`,
       createdBy: id.alice!,
       createdAt: OLD,
       updatedAt: OLD,
