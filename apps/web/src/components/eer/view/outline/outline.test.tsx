@@ -45,7 +45,7 @@ describe('Outline', () => {
 
   it('filters the tree to matches as you type', async () => {
     await renderDiagram(<Outline />, twoZoneRaw());
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'tags' },
     });
     expect(screen.getByRole('treeitem', { name: 'tags' })).toBeInTheDocument();
@@ -56,7 +56,7 @@ describe('Outline', () => {
 
   it('says so when nothing matches, rather than showing an empty pane', async () => {
     await renderDiagram(<Outline />, twoZoneRaw());
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'zzz' },
     });
     expect(screen.getByText('No tables match.')).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('Outline', () => {
     expect(screen.queryByRole('treeitem', { name: 'tags' })).not.toBeInTheDocument();
     // Filtering has to win over the collapsed state, or a match lands inside a
     // closed group and the search looks like it found nothing.
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'tags' },
     });
     expect(screen.getByRole('treeitem', { name: 'tags' })).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe('Outline', () => {
 
   it('clears the filter on Escape', async () => {
     await renderDiagram(<Outline />, twoZoneRaw());
-    const box = screen.getByRole('textbox', { name: 'Filter tables' });
+    const box = screen.getByRole('searchbox', { name: 'Filter tables' });
     fireEvent.change(box, { target: { value: 'tags' } });
     fireEvent.keyDown(box, { key: 'Escape' });
     expect(screen.getByRole('treeitem', { name: 'users' })).toBeInTheDocument();
@@ -160,7 +160,7 @@ describe('Outline', () => {
   it('surfaces a table by column, and jumps to the field when the column is clicked', async () => {
     const { actions } = await renderDiagram(<Outline />, twoZoneRaw());
     const focus = vi.spyOn(actions, 'focusFromSearch');
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'manager' },
     });
     fireEvent.click(screen.getByRole('treeitem', { name: 'manager_id' }));
@@ -173,7 +173,7 @@ describe('Outline', () => {
     // tree migration would leave the "this is the field you searched for"
     // callout reading as a faint hover instead of a real highlight.
     await renderDiagram(<Outline />, twoZoneRaw());
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'manager' },
     });
     // Split, not a raw substring check: `TreeRow`'s own base classes always

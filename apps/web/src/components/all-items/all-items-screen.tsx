@@ -10,7 +10,7 @@ import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
-import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
+import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, SearchInput, tableRender, Tabs, TONE_HUE } from '@bh/ui';
 import { ItemKey } from '../item-key';
 import { avatarFor } from '../../domain/actor';
 import { childProgress } from '../../utils/child-progress';
@@ -541,8 +541,7 @@ export function AllItemsScreen() {
           }
           actions={
             <>
-              <Input
-                type="search"
+              <SearchInput
                 aria-label="Search titles"
                 placeholder="Search titles…"
                 value={query}

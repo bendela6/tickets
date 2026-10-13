@@ -1,4 +1,4 @@
-import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@bh/ui';
+import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
@@ -86,8 +86,7 @@ export function BoardHeader({
 
       {config.mode === 'table' ? (
         <>
-          <Input
-            type="search"
+          <SearchInput
             aria-label="Search titles"
             placeholder="Search titles…"
             value={query}
