@@ -45,8 +45,9 @@ function settingsItem(projectKey: string): NavItem {
  * ../../router.ts. Home counts the projects it lists, and All items the
  * items across them; Projects lists every project with its own count, and
  * carries "New project"; System holds the database's Schema and a project's
- * Settings, its tabs under it. A count shows once every board it sums has
- * loaded, rather than a low one first.
+ * Settings, its tabs under it. An item count is of top-level items, as the
+ * page it opens counts them, and shows once every board it sums has loaded,
+ * rather than a low one first.
  */
 export function useNav({ onNewProject }: NavActions): readonly NavSection[] {
   const projectsQuery = useProjects();
@@ -61,11 +62,11 @@ export function useNav({ onNewProject }: NavActions): readonly NavSection[] {
   const projectCount = projectsQuery.data ? projects.length : undefined;
   const itemCount =
     projectsQuery.data && stats.every((query) => query.data !== undefined)
-      ? stats.reduce((sum, query) => sum + (query.data?.total ?? 0), 0)
+      ? stats.reduce((sum, query) => sum + (query.data?.items ?? 0), 0)
       : undefined;
   // One key for the counts, so the list is rebuilt when one changes and not
   // on every render (useQueries hands back a new array each time).
-  const countsKey = stats.map((query) => query.data?.total ?? '').join(',');
+  const countsKey = stats.map((query) => query.data?.items ?? '').join(',');
   const projectItems = useMemo(() => {
     const counts = countsKey.split(',');
     return projects.map((project, index) => {
