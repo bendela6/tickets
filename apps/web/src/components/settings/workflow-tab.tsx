@@ -15,6 +15,7 @@ import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
 import {
   Button,
+  Card,
   Checkbox,
   cn,
   ColorPicker,
@@ -365,11 +366,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
           ) : (
             <>
               {/* options — the statuses this type takes from its workflow field */}
-              <div
-                role="region"
-                aria-label="Options"
-                className="mb-16 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
-              >
+              <Card role="region" aria-label="Options" className="mb-16">
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
@@ -451,10 +448,10 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     valueHint={newOption.label.trim() ? `value: ${slugify(newOption.label)}` : undefined}
                   />
                 ) : null}
-              </div>
+              </Card>
 
               {/* transitions — the graph of allowed moves for this type */}
-              <div className="overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
+              <Card>
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
@@ -577,7 +574,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     </span>
                   </form>
                 </div>
-              </div>
+              </Card>
             </>
           )}
         </>

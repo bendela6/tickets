@@ -5,7 +5,7 @@ import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../a
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
+import { Button, Card, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
 // Same folded-direction chip text as detail-links: outgoing "label →",
@@ -80,7 +80,7 @@ function CreateForm({
   const typeOptions: ComboOption[] = types.map((type) => ({ value: String(type.id), label: type.label }));
   const canSubmit = draft.itemTypeId !== null && draft.label.trim() !== '';
   return (
-    <div className="max-w-520 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
+    <Card padding={4} className="max-w-520">
       <div className="flex flex-col gap-10">
         <div>
           <FieldLabel>Type</FieldLabel>
@@ -128,7 +128,7 @@ function CreateForm({
           Create link type
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -146,7 +146,7 @@ function EditForm({
   pending: boolean;
 }) {
   return (
-    <div className="mt-10 max-w-520 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
+    <Card padding={4} className="mt-10 max-w-520">
       <div className="flex flex-col gap-10">
         <div className="flex items-center gap-10">
           <div className="flex-1">
@@ -188,7 +188,7 @@ function EditForm({
           Save
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -358,70 +358,66 @@ export function LinksTab({ board }: SettingsTabProps) {
             const owningType = typeById.get(linkType.itemTypeId);
             const selected = targetSelections[linkType.id] ?? [];
             return (
-              <section
-                key={linkType.id}
-                className={cn(
-                  'max-w-660 rounded-12 border-1 border-gray-6 bg-surface-raised p-14',
-                  linkType.archivedAt && 'opacity-60',
-                )}
-              >
-                <div className="flex flex-wrap items-center gap-10">
-                  <span className="truncate font-sans text-13/19 font-600 text-gray-12">{linkType.label}</span>
-                  <span className="font-mono text-12/17 text-gray-9">{linkType.key}</span>
-                  <DirectionChip
-                    text={linkType.directional ? `→ ${linkType.label}` : `${linkType.label} ↔`}
-                  />
-                  <DirectionChip
-                    text={
-                      linkType.directional ? linkType.inverseLabel : linkType.label
-                    }
-                  />
-                  {owningType ? (
-                    <span className="font-mono text-11/13 tracking-wider text-gray-9">on {owningType.label}</span>
-                  ) : null}
-                  {linkType.archivedAt ? <ArchChip /> : null}
-                  <span className="flex-1" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled || Boolean(linkType.archivedAt)}
-                    aria-label={`Edit ${linkType.label}`}
-                    onClick={() => startEdit(linkType)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled}
-                    aria-label={`${linkType.archivedAt ? 'Unarchive' : 'Archive'} ${linkType.label}`}
-                    onClick={() => void toggleArchive(linkType).catch(toasted)}
-                  >
-                    {linkType.archivedAt ? 'Unarchive' : 'Archive'}
-                  </Button>
-                </div>
-
-                {editingId === linkType.id ? (
-                  <EditForm
-                    draft={editDraft}
-                    onChange={setEditDraft}
-                    onCancel={() => setEditingId(null)}
-                    onSubmit={() => void submitEdit(linkType.id).catch(toasted)}
-                    pending={updateLinkType.isPending}
-                  />
-                ) : null}
-
-                {!linkType.archivedAt ? (
-                  <div className="mt-10">
-                    <SectionHeader title="Target types" className="mb-6" />
-                    <TargetTypeChips
-                      candidates={activeTypes}
-                      selected={selected}
-                      disabled={disabled}
-                      onToggle={(targetTypeId) => void toggleTarget(linkType.id, targetTypeId).catch(toasted)}
+              <section key={linkType.id} className={cn('max-w-660', linkType.archivedAt && 'opacity-60')}>
+                <Card padding={4}>
+                  <div className="flex flex-wrap items-center gap-10">
+                    <span className="truncate font-sans text-13/19 font-600 text-gray-12">{linkType.label}</span>
+                    <span className="font-mono text-12/17 text-gray-9">{linkType.key}</span>
+                    <DirectionChip
+                      text={linkType.directional ? `→ ${linkType.label}` : `${linkType.label} ↔`}
                     />
+                    <DirectionChip
+                      text={
+                        linkType.directional ? linkType.inverseLabel : linkType.label
+                      }
+                    />
+                    {owningType ? (
+                      <span className="font-mono text-11/13 tracking-wider text-gray-9">on {owningType.label}</span>
+                    ) : null}
+                    {linkType.archivedAt ? <ArchChip /> : null}
+                    <span className="flex-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={disabled || Boolean(linkType.archivedAt)}
+                      aria-label={`Edit ${linkType.label}`}
+                      onClick={() => startEdit(linkType)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={disabled}
+                      aria-label={`${linkType.archivedAt ? 'Unarchive' : 'Archive'} ${linkType.label}`}
+                      onClick={() => void toggleArchive(linkType).catch(toasted)}
+                    >
+                      {linkType.archivedAt ? 'Unarchive' : 'Archive'}
+                    </Button>
                   </div>
-                ) : null}
+
+                  {editingId === linkType.id ? (
+                    <EditForm
+                      draft={editDraft}
+                      onChange={setEditDraft}
+                      onCancel={() => setEditingId(null)}
+                      onSubmit={() => void submitEdit(linkType.id).catch(toasted)}
+                      pending={updateLinkType.isPending}
+                    />
+                  ) : null}
+
+                  {!linkType.archivedAt ? (
+                    <div className="mt-10">
+                      <SectionHeader title="Target types" className="mb-6" />
+                      <TargetTypeChips
+                        candidates={activeTypes}
+                        selected={selected}
+                        disabled={disabled}
+                        onToggle={(targetTypeId) => void toggleTarget(linkType.id, targetTypeId).catch(toasted)}
+                      />
+                    </div>
+                  ) : null}
+                </Card>
               </section>
             );
           })

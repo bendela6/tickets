@@ -6,7 +6,7 @@ import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
+import { Button, Card, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type SettingsTabProps = {
@@ -78,7 +78,7 @@ function TypeForm({
   const nameId = `${idPrefix}-name`;
   const colorId = `${idPrefix}-color`;
   return (
-    <div className="max-w-420 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
+    <Card padding={4} className="max-w-420">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
       <Input
         id={nameId}
@@ -110,7 +110,7 @@ function TypeForm({
           {submitLabel}
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -249,64 +249,60 @@ export function TypesTab({ board }: SettingsTabProps) {
             const candidates = types.filter((other) => !other.archivedAt);
             const selected = childSelections[type.id] ?? [];
             return (
-              <section
-                key={type.id}
-                className={cn(
-                  'max-w-660 rounded-12 border-1 border-gray-6 bg-surface-raised p-14',
-                  type.archivedAt && 'opacity-60',
-                )}
-              >
-                <div className="flex items-center gap-10">
-                  {type.config.color ? <Dot color={`var(--color-${type.config.color}-9)`} /> : null}
-                  <span className="truncate font-sans text-13/19 font-600 text-gray-12">{type.label}</span>
-                  <span className="shrink-0 font-mono text-12/17 text-gray-9">{type.key}</span>
-                  {type.archivedAt ? <ArchChip /> : null}
-                  <span className="flex-1" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled || Boolean(type.archivedAt)}
-                    aria-label={`Edit ${type.label}`}
-                    onClick={() => startEdit(type)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled}
-                    aria-label={`${type.archivedAt ? 'Unarchive' : 'Archive'} ${type.label}`}
-                    onClick={() => void toggleArchive(type).catch(toasted)}
-                  >
-                    {type.archivedAt ? 'Unarchive' : 'Archive'}
-                  </Button>
-                </div>
-
-                {editingId === type.id ? (
-                  <div className="mt-10">
-                    <TypeForm
-                      idPrefix={`edit-type-${type.id}`}
-                      draft={editDraft}
-                      onChange={setEditDraft}
-                      onCancel={() => setEditingId(null)}
-                      onSubmit={() => void submitEdit(type.id).catch(toasted)}
-                      submitLabel="Save"
-                      pending={updateType.isPending}
-                    />
-                  </div>
-                ) : null}
-
-                {!type.archivedAt ? (
-                  <div className="mt-10">
-                    <SectionHeader title="Allowed children" className="mb-6" />
-                    <ChildTypeChips
-                      candidates={candidates}
-                      selected={selected}
+              <section key={type.id} className={cn('max-w-660', type.archivedAt && 'opacity-60')}>
+                <Card padding={4}>
+                  <div className="flex items-center gap-10">
+                    {type.config.color ? <Dot color={`var(--color-${type.config.color}-9)`} /> : null}
+                    <span className="truncate font-sans text-13/19 font-600 text-gray-12">{type.label}</span>
+                    <span className="shrink-0 font-mono text-12/17 text-gray-9">{type.key}</span>
+                    {type.archivedAt ? <ArchChip /> : null}
+                    <span className="flex-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={disabled || Boolean(type.archivedAt)}
+                      aria-label={`Edit ${type.label}`}
+                      onClick={() => startEdit(type)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       disabled={disabled}
-                      onToggle={(childTypeId) => void toggleChild(type.id, childTypeId).catch(toasted)}
-                    />
+                      aria-label={`${type.archivedAt ? 'Unarchive' : 'Archive'} ${type.label}`}
+                      onClick={() => void toggleArchive(type).catch(toasted)}
+                    >
+                      {type.archivedAt ? 'Unarchive' : 'Archive'}
+                    </Button>
                   </div>
-                ) : null}
+
+                  {editingId === type.id ? (
+                    <div className="mt-10">
+                      <TypeForm
+                        idPrefix={`edit-type-${type.id}`}
+                        draft={editDraft}
+                        onChange={setEditDraft}
+                        onCancel={() => setEditingId(null)}
+                        onSubmit={() => void submitEdit(type.id).catch(toasted)}
+                        submitLabel="Save"
+                        pending={updateType.isPending}
+                      />
+                    </div>
+                  ) : null}
+
+                  {!type.archivedAt ? (
+                    <div className="mt-10">
+                      <SectionHeader title="Allowed children" className="mb-6" />
+                      <ChildTypeChips
+                        candidates={candidates}
+                        selected={selected}
+                        disabled={disabled}
+                        onToggle={(childTypeId) => void toggleChild(type.id, childTypeId).catch(toasted)}
+                      />
+                    </div>
+                  ) : null}
+                </Card>
               </section>
             );
           })
