@@ -75,9 +75,6 @@ function ChildTypeChips({
   onToggle: (childTypeId: number) => void;
   disabled: boolean;
 }) {
-  if (candidates.length === 0) {
-    return <p className="m-0 font-sans text-12/17 text-gray-9">No other types to allow as children.</p>;
-  }
   return (
     <div className="flex flex-wrap items-center gap-6">
       {candidates.map((candidate) => {
@@ -282,7 +279,9 @@ export function TypesTab({ board }: SettingsTabProps) {
           <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet.</p>
         ) : (
           types.map((type) => {
-            const candidates = types.filter((other) => other.id !== type.id && !other.archivedAt);
+            // Every live type may be a child, the type itself included: a
+            // subticket may hold subtickets.
+            const candidates = types.filter((other) => !other.archivedAt);
             const selected = childSelections[type.id] ?? [];
             return (
               <section
