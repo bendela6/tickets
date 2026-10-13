@@ -22,6 +22,11 @@ body:
     hint.
   - demo: examples/loading.tsx
   - |
+    `commit` and `onDraft` are [Input](/components/inputs/input#when-it-commits)'s.
+    `{ after: 300 }` searches once the typing pauses, rather than at every
+    keystroke; the clear button answers to what's in the field.
+  - demo: examples/search-after-a-pause.tsx
+  - |
     `size` is [Input](/components/inputs/input)'s: 30, 38 and 46 pixels.
   - demo: examples/sizes.tsx
   - |

@@ -23,7 +23,9 @@ import { PasswordInput } from '@bh/ui';
 ## Examples
 
 It is an [Input](../input/input.md) whose `type` it sets itself:
-`password`, or `text` while shown.
+`password`, or `text` while shown. Its
+[`commit` and `onDraft`](../input/input.md#when-it-commits) are
+Input's too.
 
 **Show and hide**
 
@@ -135,6 +137,8 @@ For a short code typed a character to a cell, use [PinInput](../pin-input/pin-in
 | `disabled`            | `boolean`                                                                                                                                                                                                   |         | Not applicable: removed from the tab order and from form submission.                                                                                                                                                                          |
 | `readOnly`            | `boolean`                                                                                                                                                                                                   |         | Not editable, but still focusable and still submitted.                                                                                                                                                                                        |
 | `className`           | `string`                                                                                                                                                                                                    |         | Added to the control's own classes.                                                                                                                                                                                                           |
+| `commit`              | `Commit`                                                                                                                                                                                                    |         | When `onChange` gets what you typed: `'change'` at every keystroke; `'leave'` on Enter and on leaving the field or the window; `{ after: 800 }` on those and after 800 ms without typing.                                                     |
+| `onDraft`             | `(draft: string) => void`                                                                                                                                                                                   |         | What's in the field, at every keystroke, before it commits: for a count, a preview, or a button that waits for some text. At `'change'` it's what `onChange` gets.                                                                            |
 | `ref`                 | `Ref<HTMLInputElement>`                                                                                                                                                                                     |         | Forwarded to the `<input>`.                                                                                                                                                                                                                   |
 
 Also every `<input>` attribute (`InputHTMLAttributes<HTMLInputElement>`), passed through.

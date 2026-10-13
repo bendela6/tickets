@@ -1,4 +1,5 @@
 import type { InputProps } from '@bh/form';
+import type { Commit } from '../../../inputs/contract';
 import { NumberInput } from '../../../inputs/components/number-input';
 
 export interface NumberFieldConfig {
@@ -7,6 +8,13 @@ export interface NumberFieldConfig {
   step?: number;
   /** Trailing unit label, e.g. `hours`. Static text, not part of the value. */
   suffix?: string;
+  /**
+   * When the field hands its value to the form: `'change'` (the default) at
+   * every keystroke and step, `'leave'` on Enter and on leaving it,
+   * `{ after: 800 }` on those and after a pause. A run of steps commits once.
+   * It wins over the form's own `commit`.
+   */
+  commit?: Commit;
 }
 
 function clamp(value: number, min?: number, max?: number): number {
@@ -42,6 +50,11 @@ export function NumberField(p: InputProps<NumberFieldConfig, number | null>) {
         step={p.config.step}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
+        commit={p.config.commit ?? p.commit}
+        // What the form hears is what it would get: clamped, as on commit.
+        onDraft={(draft) => {
+          p.onDraft?.(draft === null ? null : clamp(draft, p.config.min, p.config.max));
+        }}
         onChange={(next) => {
           p.onChange(next === null ? null : clamp(next, p.config.min, p.config.max));
         }}

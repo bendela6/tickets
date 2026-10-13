@@ -118,3 +118,86 @@ test('the search box points a screen reader at the highlighted person', async ()
   expect(current()).toHaveTextContent('Rae Kim');
   expect(current()).toHaveAttribute('role', 'option');
 });
+
+// Rae can't be picked, and sits between the first and the third.
+const WITH_AWAY: Person[] = [
+  { id: 'da', name: 'Dara Ahmed', detail: '@dara' },
+  {
+    id: 'rk',
+    name: 'Rae Kim',
+    detail: '@rae',
+    disabled: true,
+    disabledReason: 'Away until Monday.',
+  },
+  { id: 'jm', name: 'Jo Mensah', detail: '@jo' },
+  { id: 'sl', name: 'Sam Lee', detail: '@sam' },
+];
+
+test('the arrows step over a person who can’t be picked', async () => {
+  // Enter on a disabled row would do nothing at all. The list is
+  // ComboboxList's, so its cursor never stops where Enter can't act.
+  const onChange = vi.fn();
+  render(<UserPicker people={WITH_AWAY} value={[]} onChange={onChange} />);
+  await open();
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith(['jm']);
+});
+
+test('a disabled person refuses the pointer too, and says why', async () => {
+  const onChange = vi.fn();
+  render(<UserPicker people={WITH_AWAY} value={[]} onChange={onChange} />);
+  await open();
+  const rae = screen.getByRole('option', { name: /Rae Kim/ });
+  expect(rae).toHaveAccessibleDescription('Away until Monday.');
+  await userEvent.click(rae);
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+test('Home and End go to the first and last people', async () => {
+  const onChange = vi.fn();
+  render(<UserPicker people={PEOPLE} value={[]} onChange={onChange} />);
+  await open();
+  await userEvent.keyboard('{End}{Enter}');
+  expect(onChange).toHaveBeenLastCalledWith(['sl']);
+});
+
+test('the cursor opens on the person chosen, so Enter keeps them', async () => {
+  const onChange = vi.fn();
+  render(<UserPicker people={PEOPLE} value={['jm']} onChange={onChange} />);
+  await open();
+  await userEvent.keyboard('{Enter}');
+  expect(onChange).toHaveBeenCalledExactlyOnceWith(['jm']);
+});
+
+test('the list is named, and says when it holds several', async () => {
+  const { unmount } = render(
+    <UserPicker people={PEOPLE} value={[]} onChange={() => {}} label="Reviewers" multiple />,
+  );
+  await open();
+  expect(screen.getByRole('listbox', { name: 'Reviewers' })).toHaveAttribute(
+    'aria-multiselectable',
+    'true',
+  );
+  unmount();
+
+  render(<UserPicker people={PEOPLE} value={[]} onChange={() => {}} />);
+  await open();
+  expect(screen.getByRole('listbox', { name: 'People' })).not.toHaveAttribute(
+    'aria-multiselectable',
+  );
+});
+
+test('a multi picker keeps the search box focused after a pick', async () => {
+  const onChange = vi.fn();
+  render(<UserPicker people={PEOPLE} value={[]} onChange={onChange} multiple />);
+  await open();
+  await userEvent.keyboard('{Enter}');
+  expect(onChange).toHaveBeenCalledWith(['da']);
+  expect(screen.getByRole('searchbox')).toHaveFocus();
+});
+
+test('nobody to offer says so, rather than naming a search', async () => {
+  render(<UserPicker people={[]} value={[]} onChange={() => {}} />);
+  await open();
+  expect(screen.getByText('Nobody to pick')).toBeInTheDocument();
+});

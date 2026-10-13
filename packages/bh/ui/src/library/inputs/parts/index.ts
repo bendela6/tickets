@@ -8,3 +8,5 @@ export * from './chip';
 export * from './popup';
 export * from './option-row';
 export * from './combobox-list';
+// Not `./inline-edit`: `useInlineEdit`, the draft behind the text controls'
+// `commit`, stays inside bh until a caller that isn't one of them needs it.

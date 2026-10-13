@@ -1,4 +1,12 @@
-import { type ContextType, Fragment, type ReactNode, useContext, useEffect, useMemo } from 'react';
+import {
+  type ContextType,
+  Fragment,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+} from 'react';
 import { useSelector } from '@tanstack/react-form';
 import { formStore } from '../utils/form-store';
 import type {
@@ -17,6 +25,8 @@ import { useResolvedConfig } from '../async/use-resolved-config';
 import { fieldIds } from './field-ids';
 import { FormContext } from './form-context';
 import { shallowEqual } from '../utils/shallow-equal';
+import { CommitContext } from './commit-context';
+import { useChanged } from './use-changed';
 
 export interface WalkProps<I extends InputRegistry, L extends LayoutComponentRegistry> {
   nodes: LayoutNode<I, L>[];
@@ -113,7 +123,14 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
     throw new Error(`<Form>: registry has no entry for type "${String(props.field.type)}"`);
   }
   const Component = def.Component;
-  const ids = fieldIds(props.field.name, props.field.description, fieldState.error ?? configError);
+  const { name } = props.field;
+  const { commits, commit } = useCommitScope();
+  const saving = useSyncExternalStore(commits.subscribe, () => commits.saving(name));
+  const commitError = useSyncExternalStore(commits.subscribe, () => commits.error(name));
+  // A failed save is the field's problem as much as a failed check: it's
+  // shown at once, since the reader just committed the value it's about.
+  const error = fieldState.error ?? commitError;
+  const ids = fieldIds(name, props.field.description, error ?? configError);
 
   // The registry's `any` parameterization (InputDefinition<any, any>) is what bridges
   // these prop types. We keep the value/config plumbing untyped here intentionally —
@@ -123,10 +140,13 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
       name={props.field.name}
       label={props.field.label}
       value={fieldState.value}
-      onChange={fieldState.setValue}
+      onChange={(next: unknown) => commits.commit(name, next)}
+      commit={commit}
+      onDraft={(draft: unknown) => commits.draft(name, draft)}
+      saving={saving}
       onBlur={fieldState.markTouched}
       config={resolved}
-      error={fieldState.error}
+      error={error}
       loading={loading}
       configError={configError}
       disabled={isSubmitting}
@@ -141,12 +161,13 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
       label={props.field.label}
       description={props.field.description}
       required={props.field.required ?? false}
-      error={fieldState.error}
+      error={error}
       descriptionId={ids.descriptionId}
       errorId={ids.errorId}
       touched={fieldState.touched}
       loading={loading}
       configError={configError}
+      saving={saving}
     >
       {inputElement}
     </FieldWrapper>
@@ -167,14 +188,14 @@ function ActionRenderer(props: { node: ActionNode; action?: ActionDefinition }):
     formStore<{ isSubmitting: boolean }>(form.store),
     (s: { isSubmitting: boolean }) => s.isSubmitting,
   );
-  const isDirty = useSelector(
-    formStore<{ isDirty: boolean }>(form.store),
-    (s: { isDirty: boolean }) => s.isDirty,
-  );
+  const { commits, reset: resetForm } = useCommitScope();
+  // Whether a reset has anything to put back: the values differ from where
+  // they started, or from what was last submitted.
+  const changed = useChanged(form, commits);
   const { action, label } = props.node;
   const reset = action === 'reset';
-  const disabled = isSubmitting || (reset && !isDirty);
-  const onClick = reset ? () => form.reset() : undefined;
+  const disabled = isSubmitting || (reset && !changed);
+  const onClick = reset ? resetForm : undefined;
   const Button = props.action?.Component;
   if (Button) {
     return (
@@ -192,6 +213,14 @@ function ActionRenderer(props: { node: ActionNode; action?: ActionDefinition }):
       {label}
     </button>
   );
+}
+
+function useCommitScope() {
+  const scope = useContext(CommitContext);
+  if (!scope) {
+    throw new Error('walkTree must be inside <Form>');
+  }
+  return scope;
 }
 
 /** A node past the field and action kinds: a layout. */
@@ -295,7 +324,6 @@ function useFormFieldState(name: string) {
     formStore<{ submissionAttempts: number }>(form.store),
     (s: { submissionAttempts: number }) => s.submissionAttempts > 0,
   );
-  const setValue = (v: unknown) => form.setFieldValue(name, v);
   const touched = meta?.isTouched ?? false;
   // Leaving a field checks the whole form, so every visible field has its
   // problem from then on. One shows it once the reader has left it, or once
@@ -303,7 +331,6 @@ function useFormFieldState(name: string) {
   const error = touched || submitted ? formatFieldError(meta?.errors?.[0]) : undefined;
   return {
     value,
-    setValue,
     error,
     touched,
     // Marks the field left, then runs blur-cause validation: tanstack's

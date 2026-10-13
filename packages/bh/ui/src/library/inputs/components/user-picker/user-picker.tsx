@@ -1,10 +1,15 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '../../../../style';
 import { Avatar, type AvatarSize } from '../../../primitives/components/avatar';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
-import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
+import {
+  readOnlyFieldClass,
+  type ControlProps,
+  type ControlSize,
+  type Option,
+} from '../../contract';
+import { ComboboxList } from '../../parts/combobox-list';
 import { fieldClass, fieldState } from '../../parts/field';
-import { OptionRow } from '../../parts/option-row';
 import { Popup } from '../../parts/popup';
 
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
@@ -18,6 +23,13 @@ export interface Person {
   name: string;
   /** Secondary line in the list — a handle, a team, a role. */
   detail?: string;
+  /** Shown, but neither the cursor nor a click can pick them. */
+  disabled?: boolean;
+  /**
+   * Why a `disabled` person can't be picked, e.g. "Away until Monday." The
+   * list prints it under the greyed row and makes it the row's description.
+   */
+  disabledReason?: string;
 }
 
 export type UserPickerProps = Omit<ControlProps<string[]>, 'value' | 'onChange'> & {
@@ -49,6 +61,9 @@ export type UserPickerProps = Omit<ControlProps<string[]>, 'value' | 'onChange'>
  * `value` is `string[]` for both modes. A single picker holding `string | null`
  * and a multi holding `string[]` would need two of everything downstream, and
  * "nobody assigned" would have two spellings that drift.
+ *
+ * The list is `ComboboxList`, the one every combobox opens, so its keys are
+ * theirs: the arrows step over a disabled person, Home and End go to the ends.
  */
 export function UserPicker({
   id,
@@ -67,7 +82,6 @@ export function UserPicker({
   className,
 }: UserPickerProps) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const field = fieldState(tone);
 
   const chosen = useMemo(() => {
@@ -76,28 +90,18 @@ export function UserPicker({
       .filter(Boolean) as Person[];
   }, [people, value]);
 
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) {
-      return people;
-    }
-    return people.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.detail?.toLowerCase().includes(q),
-    );
-  }, [people, query]);
-
-  const [cursor, setCursor] = useState(0);
-  // The search box keeps focus while the arrows move the highlight, so it
-  // names the highlighted row (`aria-activedescendant`) and the list.
-  const listId = useId();
-  const optionId = (personId: string) => `${listId}-opt-${personId}`;
-  const current = matches[cursor];
-  useEffect(() => setCursor(0), [query]);
-  useEffect(() => {
-    if (open) {
-      setQuery('');
-    }
-  }, [open]);
+  // The list speaks options; a person is one, with their name as its label.
+  const options = useMemo<Option[]>(() => {
+    return people.map((person) => {
+      return {
+        value: person.id,
+        label: person.name,
+        disabled: person.disabled,
+        disabledReason: person.disabledReason,
+      };
+    });
+  }, [people]);
+  const byId = useMemo(() => new Map(people.map((person) => [person.id, person])), [people]);
 
   function toggle(personId: string) {
     if (readOnly) {
@@ -110,22 +114,6 @@ export function UserPicker({
     }
     // Multi stays open: picking three reviewers should not cost three trips.
     onChange(value.includes(personId) ? value.filter((v) => v !== personId) : [...value, personId]);
-  }
-
-  function onKeyDown(event: React.KeyboardEvent) {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setCursor((index) => Math.min(matches.length - 1, index + 1));
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setCursor((index) => Math.max(0, index - 1));
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      const person = matches[cursor];
-      if (person) {
-        toggle(person.id);
-      }
-    }
   }
 
   const shown = chosen.slice(0, maxAvatars);
@@ -203,57 +191,44 @@ export function UserPicker({
       onOpenChange={(next) => setOpen(readOnly ? false : next)}
       trigger={trigger}
       matchTriggerWidth
+      // The list draws its own padding, under the search box as on every
+      // combobox; the popup's would double it.
+      className="p-0"
     >
-      <div className="flex flex-col gap-6">
-        <div className="border-gray-6 flex items-center gap-8 border-b-1 px-4 pb-6">
-          <Icon name="search" size="xs" className="text-gray-9 shrink-0" />
-          <input
-            type="text"
-            role="searchbox"
-            aria-controls={listId}
-            aria-activedescendant={current ? optionId(current.id) : undefined}
-            autoFocus
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Search people"
-            className="text-13 text-gray-12 placeholder:text-gray-9 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans outline-none"
-          />
-        </div>
-
-        <div
-          id={listId}
-          role="listbox"
-          aria-label={label}
-          aria-multiselectable={multiple || undefined}
-          className="flex max-h-256 flex-col gap-2 overflow-y-auto"
-        >
-          {matches.length === 0 ? (
-            <p className="text-12 text-gray-9 px-9 py-12 text-center font-sans">
-              Nobody matches “{query}”
-            </p>
-          ) : null}
-          {matches.map((person, index) => {
-            return (
-              <OptionRow
-                key={person.id}
-                id={optionId(person.id)}
-                selected={value.includes(person.id)}
-                cursor={index === cursor}
-                onPick={() => toggle(person.id)}
-                leading={<Avatar name={person.name} size="xs" />}
-                trailing={
-                  person.detail ? (
-                    <span className="text-11 text-gray-9 shrink-0 font-mono">{person.detail}</span>
-                  ) : undefined
-                }
-              >
-                {person.name}
-              </OptionRow>
-            );
-          })}
-        </div>
-      </div>
+      {/* Mounted as the popup opens, so each opening starts with an empty
+          search and the cursor on the first person chosen. */}
+      <ComboboxList
+        options={options}
+        isSelected={(personId) => value.includes(personId)}
+        onPick={toggle}
+        keepOpen={multiple}
+        searchPlaceholder="Search people"
+        // A handle finds its person as well as a name does.
+        matches={(option, query) => {
+          return (
+            option.label.toLowerCase().includes(query) ||
+            (byId.get(option.value)?.detail?.toLowerCase().includes(query) ?? false)
+          );
+        }}
+        renderLeading={(option) => <Avatar name={option.label} size="xs" />}
+        renderTrailing={(option) => {
+          const detail = byId.get(option.value)?.detail;
+          return detail ? (
+            <span className="text-11 text-gray-9 shrink-0 font-mono">{detail}</span>
+          ) : null;
+        }}
+        emptyLabel="Nobody to pick"
+        noMatchLabel={(query) => {
+          return (
+            <>
+              Nobody matches <span className="font-500">“{query}”</span>
+            </>
+          );
+        }}
+        label={label}
+        multiselectable={multiple}
+        className="w-full"
+      />
     </Popup>
   );
 }

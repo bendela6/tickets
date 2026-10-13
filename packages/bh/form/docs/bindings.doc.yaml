@@ -1,6 +1,6 @@
 title: Instrument's bindings
 summary: The inputs, layouts, wrappers and button @bh/ui registers, what each kind holds, and what its config takes.
-order: 8
+order: 9
 related: [The registry, Writing an input, FieldWrapper]
 body:
   - |
@@ -21,10 +21,10 @@ body:
   - |
     | Kind             | Control                                                      | Value                                | Empty        | Config                                       |
     | ---------------- | ------------------------------------------------------------ | ------------------------------------ | ------------ | -------------------------------------------- |
-    | `text`           | [Input](/components/inputs/input)                            | `string`                             | `''`         | `placeholder`, `mono`, `prefix`              |
-    | `email`          | [Input](/components/inputs/input), `type="email"`             | `string`                             | `''`         | `placeholder`                                |
-    | `textarea`       | [Textarea](/components/inputs/textarea)                      | `string`                             | `''`         | `rows`, `placeholder`                        |
-    | `number`         | [NumberInput](/components/inputs/number-input)               | `number \| null`                     | `null`       | `min`, `max`, `step`, `suffix`               |
+    | `text`           | [Input](/components/inputs/input)                            | `string`                             | `''`         | `placeholder`, `mono`, `prefix`, `commit`    |
+    | `email`          | [Input](/components/inputs/input), `type="email"`             | `string`                             | `''`         | `placeholder`, `commit`                      |
+    | `textarea`       | [Textarea](/components/inputs/textarea)                      | `string`                             | `''`         | `rows`, `placeholder`, `commit`              |
+    | `number`         | [NumberInput](/components/inputs/number-input)               | `number \| null`                     | `null`       | `min`, `max`, `step`, `suffix`, `commit`     |
     | `select`         | [Combobox](/components/inputs/combobox)                      | `string \| null`                     | `null`       | `options`, `placeholder`                     |
     | `multi-select`   | [MultiCombobox](/components/inputs/multi-combobox)           | `string[]`                           | `[]`         | `options`, `placeholder`, `maxChips`         |
     | `radio`          | [RadioGroup](/components/inputs/radio-group)                 | `string`                             | `''`         | `options`, `variant`, `label`                |
@@ -40,7 +40,7 @@ body:
     | `range`          | [RangeSlider](/components/inputs/range-slider)               | `[number, number]`                   | `[0, 100]`   | `min`, `max`, `step`, `label`                |
     | `rating`         | [Rating](/components/inputs/rating)                          | `number`, `0` unrated                | `0`          | `max`, `label`, `showValue`                  |
     | `tags`           | [TagInput](/components/inputs/tag-input)                     | `string[]`                           | `[]`         | `suggestions`, `placeholder`                 |
-    | `password`       | [PasswordInput](/components/inputs/password-input)           | `string`                             | `''`         | `placeholder`                                |
+    | `password`       | [PasswordInput](/components/inputs/password-input)           | `string`                             | `''`         | `placeholder`, `commit`                      |
     | `pin`            | [PinInput](/components/inputs/pin-input)                     | `string`, the whole code             | `''`         | `length`                                     |
     | `color`          | [ColorPicker](/components/inputs/color-picker)               | `string \| null`, a hue's name       | `null`       | `placeholder`, `label`                       |
     | `icon`           | [IconPicker](/components/inputs/icon-picker)                 | `string \| null`, an icon's name     | `null`       | `placeholder`, `icons`                       |
@@ -53,6 +53,13 @@ body:
     `select`, `multi-select`, `radio`, `segmented`, `checkbox-group` and
     `user` are disabled while their config [loads](/forms/async-options).
     `InputKind` names every kind, and `ValueOfKind` what each one holds.
+
+    `commit`, in the config of `text`, `email`, `password`, `textarea` and
+    `number`, says when the field hands what you type to the form:
+    `'change'` (the default) at every keystroke, `'leave'` on Enter and on
+    leaving the field, `{ after: 800 }` on those and after a pause. Until
+    then the field holds a draft, and the form's value is the last one
+    committed.
 
     A `<label for>` names one element, and `radio`, `segmented`,
     `checkbox-group`, `rating`, `slider` and `range` are drawn as groups or

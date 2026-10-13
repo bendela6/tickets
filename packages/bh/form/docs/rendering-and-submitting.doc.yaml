@@ -14,7 +14,9 @@ body:
     its fields: [`b.submit()`](/forms/building-a-form#buttons) submits,
     as does Enter in a one-line field, and `b.reset()` puts the values
     back. `onSubmit` is then called with the values, once every
-    [check](/forms/validation) passes.
+    [check](/forms/validation) passes. A form that saves each field as it
+    commits takes `onCommit` instead, or as well:
+    [Draft, commit and submit](/forms/draft-commit-submit).
   - |
     `<Form>`'s children are drawn inside the `<form>` after the fields, for
     anything else: a button the registry's doesn't suit, or a line that reads
@@ -37,7 +39,8 @@ body:
     form. `useStandaloneForm` holds the form instead, given the form and
     `onSubmit` (and the provider's registry, so it is called under the
     provider); `<Form formApi>` draws it, and its `submit`, `reset`,
-    `isDirty` and `isSubmitting` are yours to use.
+    `isDirty` and `isSubmitting` are yours to use. `isDirty` means
+    committed but not submitted, so it's false again after a Save.
   - demo: examples/button-outside-the-form.tsx
   - |
     The form, `defaultValues`, `onSubmit` and the cross-field `schema` go to
@@ -54,7 +57,8 @@ body:
     - `<Form formApi>` draws the form the hook holds and never builds a
       second one, so both see the same values, checks and loading options.
     - `useFieldValue` throws outside a `<Form>`.
-    - `reset` puts every value back where it started.
+    - `reset` puts every value back where it started, or to what was last
+      submitted.
     - Both buttons wait while a submit runs, and a reset waits for a change
       to put back.
   - h2: Reference

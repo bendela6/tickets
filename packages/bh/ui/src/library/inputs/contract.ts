@@ -1,6 +1,7 @@
 import type { SyntheticEvent } from 'react';
 import type { Hue, Tone } from '../../style';
 import type { IconName } from '../primitives/components/icon';
+import type { Commit } from '@bh/form';
 
 /**
  * The one size domain for every form control — 30 / 38 / 46px.
@@ -67,25 +68,67 @@ export const CONTROL_LADDER = {
 } as const satisfies Record<ControlSize, Record<string, string | number>>;
 
 /**
- * One option vocabulary for every control that offers a choice, replacing the
- * near-identical `Option` and `RadioOption`.
+ * One option vocabulary for every control that offers a choice.
  *
- * `color` is honoured by the controls that draw a swatch; `SelectRadio` ignores
- * it, having nowhere to paint one. `icon` reads the same way: drawn by the
+ * `color` is honoured by the controls that draw a swatch and ignored by the
+ * ones with nowhere to paint one. `icon` reads the same way: drawn by the
  * controls with room for a glyph beside the label, ignored by the ones without.
+ * So does `description`, drawn only where there is room for a line under the
+ * label, which is RadioGroup today. On the shared vocabulary rather than a
+ * RadioGroup option of its own, because a second option type is what this one
+ * replaced, and because a form's `radio` field passes its options straight
+ * through: one type is what lets a stored config carry the line too.
  */
 export interface Option {
+  /** What `onChange` reports when this option is picked. */
   value: string;
+  /** What the option shows. */
   label: string;
+  /** Shown, but neither the cursor nor a click can pick it. */
   disabled?: boolean;
+  /**
+   * Why a `disabled` option can't be chosen, e.g. "The workflow doesn't go
+   * from Done to To do." The list controls (`Combobox`, with search or
+   * without, and `MultiCombobox`) print it under the greyed row and make it
+   * the row's description, so a screen reader reads it out; the others
+   * ignore it.
+   * Ignored on an option that isn't `disabled`.
+   */
+  disabledReason?: string;
+  /** A scale for the controls that draw a swatch beside the label. */
   color?: Hue;
   /**
+   * A glyph before the label, for the controls with room for one.
+   *
    * A leading glyph, named from the registry rather than handed over as a node
    * — the same trade `Tabs` makes. A `ReactNode` would let any call site pass a
    * control a glyph it cannot size, tone, or hide from a screen reader.
    */
   icon?: IconName;
+  /**
+   * A line under the label, saying what choosing it does: drawn by RadioGroup,
+   * ignored by the controls with no room for it.
+   *
+   * Plain text, as `label` is, so an option stays data a stored config can hold.
+   */
+  description?: string;
 }
+
+/**
+ * A heading in a list of options. `groupOf` names each option's `key`; the
+ * groups' order is the order the list shows them in.
+ */
+export interface OptionGroup {
+  /** What `groupOf` returns for the options under this heading. */
+  key: string;
+  /** The heading shown over them. */
+  label: string;
+}
+
+// `Commit` (`'change' | 'leave' | { after: number }`) is the form engine's:
+// a form sets it for its fields as the controls take it, so there is one
+// definition, below both.
+export type { Commit } from '@bh/form';
 
 /**
  * What every control in this package answers to. A caller that knows the value
@@ -100,6 +143,12 @@ export interface Option {
  *
  * There is deliberately no `invalid`. Error is a tone like any other, resolved
  * one layer up where both facts are known: `tone={error ? 'danger' : config.tone}`.
+ *
+ * A control holds no value of its own, with one exception: the text controls'
+ * draft. Given `commit` other than `'change'` (`CommitProps`), `Input`,
+ * `Textarea` and `NumberInput` hold what you type until the field commits, so
+ * a caller that saves hears of an edit once rather than at every keystroke.
+ * The draft lives only while you edit: `value` is what they show otherwise.
  */
 export interface ControlProps<T> {
   /** The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page. */
@@ -110,7 +159,14 @@ export interface ControlProps<T> {
    * or error its wrapper draws.
    */
   'aria-describedby'?: string;
-  /** The value shown. The control holds none of its own: it reports changes through `onChange`. */
+  /**
+   * The value shown. The control holds none of its own: it reports changes through `onChange`.
+   *
+   * One exception: a text control (`CommitProps`) whose `commit` isn't
+   * `'change'` holds what you type as a draft while you edit, and reports it
+   * through `onChange` when it commits. It shows `value` again once the draft
+   * commits or Escape drops it, and whenever nobody is typing in it.
+   */
   value: T;
   /**
    * The new value — and, second, the event that produced it where one exists.
@@ -148,6 +204,30 @@ export interface ControlProps<T> {
   readOnly?: boolean;
   /** Added to the control's own classes. */
   className?: string;
+}
+
+/**
+ * What the text controls (`Input`, `Textarea`, `NumberInput`, and through
+ * `Input` `SearchInput` and `PasswordInput`) add to the contract: when what
+ * you type is handed over.
+ */
+export interface CommitProps<T> {
+  /**
+   * When `onChange` gets what you typed: `'change'` at every keystroke;
+   * `'leave'` on Enter and on leaving the field or the window; `{ after: 800 }`
+   * on those and after 800 ms without typing.
+   *
+   * Until it commits, what you type is a draft the control holds: Escape puts
+   * the value back, an unchanged draft commits nothing, and a `value` changed
+   * from outside replaces the field while nobody is typing in it.
+   */
+  commit?: Commit;
+  /**
+   * What's in the field, at every keystroke, before it commits: for a count,
+   * a preview, or a button that waits for some text. At `'change'` it's what
+   * `onChange` gets.
+   */
+  onDraft?: (draft: T) => void;
 }
 
 /**

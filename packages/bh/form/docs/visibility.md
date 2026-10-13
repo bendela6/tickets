@@ -2,7 +2,7 @@
 title: Visibility
 summary: Show a field, or a whole layout, only while other fields hold certain
   values, with when.
-order: 5
+order: 6
 related: [Building a form, Rendering and submitting, Async options]
 ---
 

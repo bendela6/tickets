@@ -1,7 +1,13 @@
 import { forwardRef, type TextareaHTMLAttributes } from 'react';
 import { cn } from '../../../../style';
 import { fieldClass, fieldState } from '../../parts/field';
-import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
+import {
+  readOnlyFieldClass,
+  type CommitProps,
+  type ControlProps,
+  type ControlSize,
+} from '../../contract';
+import { useInlineEdit } from '../../parts/inline-edit/use-inline-edit';
 
 /**
  * The multi-line text control, on the shared control contract.
@@ -18,7 +24,8 @@ type TextareaProps = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
   'value' | 'onChange' | 'size'
 > &
-  ControlProps<string>;
+  ControlProps<string> &
+  CommitProps<string>;
 
 // A textarea grows, so its size axis sets a FLOOR rather than a height —
 // roughly two, three and four lines of body text. This is the one thing the
@@ -35,17 +42,47 @@ const BOX: Record<ControlSize, string> = {
 
 /** Several lines of text, held by the caller: `onChange` hands over the new value. */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { value, onChange, size = 'md', tone, disabled, readOnly, className, ...rest },
+  {
+    value,
+    onChange,
+    size = 'md',
+    tone,
+    disabled,
+    readOnly,
+    commit = 'change',
+    onDraft,
+    onKeyDown,
+    onBlur,
+    className,
+    ...rest
+  },
   ref,
 ) {
   const field = fieldState(tone);
+  // The event isn't passed on, as it never was here: `onChange` gets the value.
+  const edit = useInlineEdit({
+    value,
+    onCommit: (next: string) => onChange(next),
+    commit,
+    onDraft,
+  });
   return (
     <textarea
       ref={ref}
-      value={value}
+      value={edit.draft}
       // The contract's onChange takes the value. Unwrapping the event here is
       // the only translation this component owes the DOM.
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => edit.change(e.target.value)}
+      // Enter stays a new line: Ctrl/Cmd+Enter commits instead. Escape puts
+      // the value back. Both before the caller's own handler sees the key.
+      onKeyDown={(event) => {
+        edit.onKeyDown(event, { enter: false });
+        onKeyDown?.(event);
+      }}
+      onBlur={(event) => {
+        edit.onBlur(event);
+        onBlur?.(event);
+      }}
       disabled={disabled}
       // A <textarea> is one of the elements HTML's `readonly` actually reaches
       // (unlike checkbox, radio and range), so the real attribute does the

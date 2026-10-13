@@ -179,7 +179,11 @@ needs `pointer-events: auto` of its own to take a click.
 
 Closing returns focus to whatever had it when the drawer opened, also
 when the drawer is mounted already open, and also after its content has
-changed while it was open.
+changed while it was open. If that has left the page or can no longer
+take focus, focus goes to the nearest thing still on the page that held
+it, such as a list that takes focus. Dialog's
+[`useRestoreFocus`](../dialog/dialog.md#userestorefocus) does
+this.
 
 ## When not to use it
 

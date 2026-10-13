@@ -31,10 +31,11 @@ test('loading disables and marks busy', () => {
 
 test('outline shares its border-2 weight with Pill/CopyButton outline', () => {
   // button.tsx's own comment: Button `outline` and Pill `outline` must not
-  // diverge on a shared variant name. design-system.html calls this weight
-  // "edges you act on" (inputs, cards, outline controls); Button used to be
-  // border-1 while Pill/CopyButton were already border-2 — this pins the
-  // reconciled value so the two can't silently drift apart again.
+  // diverge on a shared variant name. The design spec
+  // (docs/design/design-system.html) calls this weight "edges you act on"
+  // (inputs, cards, outline controls); Button used to be border-1 while
+  // Pill/CopyButton were already border-2 — this pins the reconciled value so
+  // the two can't silently drift apart again.
   render(<Button variant="outline">Outline</Button>);
   const button = screen.getByRole('button');
   expect(button).toHaveClass('border-2');

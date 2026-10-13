@@ -70,4 +70,28 @@ describe('TextField', () => {
     render(<TextField {...base} value="" onChange={vi.fn()} disabled />);
     expect(screen.getByRole('textbox')).toBeDisabled();
   });
+  // `commit` is data in the field's config, so a stored form or a table's
+  // column carries it: the form hears of the value once, when it's left.
+  it("commits when it is left, with { commit: 'leave' } in its config", async () => {
+    const onChange = vi.fn();
+    const onBlur = vi.fn();
+    render(
+      <TextField
+        {...base}
+        config={{ commit: 'leave' }}
+        value=""
+        onChange={onChange}
+        onBlur={() => onBlur(onChange.mock.calls.length)}
+      />,
+    );
+
+    await userEvent.type(screen.getByRole('textbox'), 'hi');
+    expect(onChange).not.toHaveBeenCalled();
+
+    await userEvent.tab();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('hi');
+    // The commit lands before the blur, so the form checks the new value.
+    expect(onBlur).toHaveBeenCalledWith(1);
+  });
 });
