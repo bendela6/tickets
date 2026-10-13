@@ -653,14 +653,14 @@
           "id": "TK-4",
           "title": "Replace tickets' frame with `@bh/shell`'s",
           "description": "tickets' own rail and panels go; bh's sidebar, phone layout and pages take their place.",
-          "status": "In progress",
+          "status": "Done",
           "blockedBy": [
             {
               "id": "TK-3",
               "why": "needs `@bh/shell` in tickets' copy of bh"
             }
           ],
-          "statusNote": "Being built on tickets branch `tk-4`, in `../tickets-wt-tk-4`, cut from `bh-2.0.0` (pull request #2) with `tk-3` merged in (2a19662a).",
+          "statusNote": "On tickets branch `tk-4`, in `../tickets-wt-tk-4`, cut from `bh-2.0.0` (pull request #2) with `tk-3` merged in (2a19662a); not merged. TK-4.1 (69f85ee1) bh's `AppShell` mounted once in the root route, the theme through bh's helpers; TK-4.3 (f12b8476) each settings tab is a route, `/settings` goes to Types; TK-4.6 (5687f8cb) the schema outline in a `SidePanel` on the schema page, an Outline button on a phone; TK-4.5 (d16b2aa9) every page on `Page`/`PageHeader`/`PageBody`, the views on `TabNav` with New view; TK-4.2.1–4.2.4 (6de4f803, 26e3a799, 66433feb, 31277c5c) the sidebar from `useNav()`: Home and All items with counts, Projects with \"+\", and a System section with Schema and Settings, its tabs (and Repository) under it; TK-4.4 (1bcf17ee) the footer: the user menu and `ThemeFooter`; TK-4.7 (8e6795ac) the old frame deleted; TK-4.8 (06a9a216) checked in the browser, desktop, rail, phone, light and dark, fixing the sidebar to count top-level items as the pages do. Typecheck, 578 web tests and the build pass. What bh lacked: `SidePanel`'s reopen button sits over `AppShell`'s phone top bar (worked around), and a nav row's accessible name runs label and count together (\"Home2\"). Found on a phone, there before: the board's KPI strip is wider than the screen, the schema diagram's Details panel takes 320 of 500px, and the Fields tab's \"Required\" overlaps.",
           "where": [
             {
               "repo": "tickets",
@@ -680,7 +680,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -704,25 +704,25 @@
                 {
                   "id": "TK-4.2.1",
                   "title": "Add Home and All items, with counts",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
                   "id": "TK-4.2.2",
                   "title": "Add Projects: one item per project with its count, and \"+\" on the section",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
                   "id": "TK-4.2.3",
                   "title": "Add Schema",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
                   "id": "TK-4.2.4",
                   "title": "Add Settings, with Types, Fields, Workflow and Links under it",
-                  "done": false,
+                  "done": true,
                   "blockedBy": [
                     {
                       "id": "TK-4.3",
@@ -743,7 +743,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -755,7 +755,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-4.1",
@@ -774,7 +774,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -787,7 +787,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -800,7 +800,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-4.1",
@@ -835,7 +835,7 @@
                   "part": "apps/web (dev server)"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-4.7",
@@ -857,7 +857,14 @@
               "why": "needs bh's next version in tickets' copy"
             }
           ],
-          "statusNote": "TK-5.21, TK-5.10, TK-5.7 and TK-5.9.1 being built on tickets branch `tk-5`, in `../tickets-wt-tk-5`, cut from the same base as `tk-4` (2a19662a), beside TK-4. The parts on the pages TK-4 moves (TK-5.1, 5.2, 5.3, 5.5, 5.9.2, 5.13, 5.14) follow once TK-4 is built, on `tk-5` rebased onto `tk-4`.",
+          "statusNote": "On tickets branch `tk-5`, in `../tickets-wt-tk-5`, cut from the same base as `tk-4` (2a19662a): TK-5.21.1 (3853e6a1) migration 0008 turns every hex `config.color` on options and item types into its hue name, tested on the seed's 5 hexes and the 13 from the live backup, run on the copy `tickets_tk_5` (not yet on `tickets_dev`, which gets it after the merge; live with its deploy); TK-5.21.2 (0ccde49b) the Types and Workflow tabs pick with bh's `ColorPicker` and the seed writes names (the Fields tab has no picker); TK-5.21.3 (58fbb925) `hexToOptionColor` gone, `config.color` typed `Hue`; TK-5.10 (4a90cb6e) one `ArchChip` and one `slugify`; TK-5.7 (abe26551) the status picker is bh's `Combobox` without search, grouped by kind, a forbidden move disabled with why; TK-5.9.1 (e263379e) `InlineTitle` on bh's `Input` with `commit=\"leave\"`. What bh lacked: Escape in an `Input` inside a `Drawer` closes the drawer and its unmount commits the draft (worked around in `InlineTitle`); `ColorPicker`'s selected dot (`bg-${hue}-contrast`) isn't in bh's safelist, so no selected mark shows; `Combobox` draws no option icons; its list is only as wide as its trigger. Being built now that TK-4 is: TK-5.1, 5.2, 5.3, 5.5, 5.9.2, 5.13 and 5.14, on `tk-5` rebased onto `tk-4` (so the commits above get new ids).",
+          "notes": [
+            {
+              "at": "2026-10-13T08:00:45.644Z",
+              "by": "claude",
+              "text": "The four gaps in bh the builder found while building this are now TK-103: Escape in an `Input` inside a `Drawer` saving the draft it drops, `ColorPicker`'s selected swatch showing no mark, `Combobox` not showing option icons, and its list being only as wide as its trigger. TK-103 also releases bh's next version and updates tickets to it, removing `InlineTitle`'s Escape workaround and giving the status picker its kind icons back. It has one question for you: what Escape does when you're editing a field in the drawer."
+            }
+          ],
           "where": [
             {
               "repo": "tickets",
@@ -961,7 +968,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-2.2.2",
@@ -1012,7 +1019,7 @@
                 {
                   "id": "TK-5.9.1",
                   "title": "Move `InlineTitle` onto the same input",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
@@ -1032,7 +1039,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1264,14 +1271,14 @@
                   "id": "TK-5.21.1",
                   "title": "Write a migration that maps each stored hex to its hue, once",
                   "description": "`config.color` on options, statuses and types becomes the hue `hexToOptionColor` gives it today, so nothing looks different afterwards; a test checks every hex in the seed and in a copy of the live rows lands where it did. Run on `tickets_dev` first; the live database is migrated by the deploy that carries it, with your yes.",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 },
                 {
                   "id": "TK-5.21.2",
                   "title": "Switch the color pickers to bh's `ColorPicker`",
                   "description": "In the workflow, types and fields settings tabs. It takes and gives a hue name; `OPTION_COLOR_CHOICES` and `DEFAULT_OPTION_HEX` go, and the seed writes names.",
-                  "done": false,
+                  "done": true,
                   "blockedBy": [
                     {
                       "id": "TK-5.21.1",
@@ -1284,7 +1291,7 @@
                   "id": "TK-5.21.3",
                   "title": "Remove `hexToOptionColor`",
                   "description": "Its 9 users read `config.color` as a `Hue`, typed so in `api/types`. `kindColor` stays.",
-                  "done": false,
+                  "done": true,
                   "blockedBy": [
                     {
                       "id": "TK-5.21.1",
@@ -1298,6 +1305,154 @@
                   "approved": true
                 }
               ]
+            }
+          ]
+        },
+        {
+          "status": "Planning",
+          "waitingOn": ["your choices (below)"],
+          "today": [
+            "Escape in an `Input` that holds a draft (its `commit` isn't `'change'`) inside a `Drawer`: the drawer, a Radix dialog, hears Escape first, on the document's capture phase, and closes; the Input then unmounts and commits the draft Escape meant to drop. tickets' `InlineTitle` refuses that commit with an Escape listener of its own on the window (TK-5.9.1, e263379e).",
+            "`ColorPicker`'s selected swatch draws its inner dot with `bg-${hue}-contrast` (`color-picker.tsx:192`), a class bh's safelist doesn't hold, so in an app the dot is transparent and nothing marks the chosen color: seen in tickets' Types and Workflow tabs (TK-5.21.2). bh's own test passes, since it checks the class name, not what it draws.",
+            "`Option` has an `icon` (`inputs/contract.ts`), but `Combobox` draws only `color`'s dot, so tickets' status picker (TK-5.7) lost the status kinds' icons; its group headings name the kind instead.",
+            "Without search, `Combobox`'s list is exactly its trigger's width (`triggerWidthClass`), so a disabled option's reason wraps a word or two per line in a narrow cell: tickets' table status cell is about 190px."
+          ],
+          "openChoices": [
+            {
+              "question": "When you press Escape while editing a field inside bh's drawer (an `Input` holding a draft, like tickets' item title in the item drawer), what should happen?",
+              "context": "Today the drawer hears Escape first and closes, and the field then saves the draft as it goes away: the edit you meant to drop is kept. tickets stops that in its title by hand (TK-5.9.1). bh's fix (TK-103.1) can go two ways:\n\n- **Drop the draft and close, in one press**: what tickets' drawer does today. For: nothing changes for the user; one small fix in the draft hook covers every `Dialog`, `Drawer` and `SidePanel`. Against: undoing a typo also closes the drawer, so you reopen it.\n- **Drop the draft first, close on a second press**: the field keeps Escape while it holds a changed draft; with nothing changed, Escape closes the drawer at once. For: Escape undoes one layer at a time, as a menu open inside a drawer already does. Against: tickets' drawer behaves differently; the field has to catch Escape before the drawer, which listens early.",
+              "options": [
+                "Drop the draft and close the drawer, in one press",
+                "Drop the draft first; a second Escape closes the drawer"
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "TK-103.1",
+              "title": "Fix Escape in an `Input` inside a `Drawer` saving the draft it drops",
+              "description": "Escape in a field holding a draft drops it, inside a `Drawer`, `Dialog` or `SidePanel` too: the draft is never committed on the way out. Whether that same Escape also closes the drawer is your choice on this feature. The draft lives in `useInlineEdit` (TK-2.5.1); a test opens an `Input` with `commit=\"leave\"` in a `Drawer`, types, presses Escape, and checks nothing was committed.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.2",
+              "title": "Fix `ColorPicker`'s selected swatch showing no mark in an app",
+              "description": "The chosen swatch's inner dot shows in an app: its `bg-<hue>-contrast` classes reach the safelist (`scripts/extract-safelist.mjs`) for every hue. A test checks that the classes bh's components build from a hue or tone are all in the safelist, so the next one fails in bh, not in an app.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.3",
+              "title": "Show each option's `icon` in `Combobox`'s list and on its trigger",
+              "description": "`ComboboxList`'s rows draw an option's `icon` before its label (`OptionRow` has a `leading` slot for it), and `Combobox`'s trigger draws the chosen option's, as it draws `color`'s dot today. `Select` and `MultiCombobox`, on the same list, show it too. tickets' status picker then passes each status kind's icon (TK-103.6).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.4",
+              "title": "Let `Combobox`'s list grow wider than its trigger",
+              "description": "Without search, the list is at least its trigger's width and grows with its widest row, up to a limit, so a disabled option's reason reads in a line or two in a narrow table cell, not a word or two per line.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.5",
+              "title": "Release bh's next version, with these fixes",
+              "description": "Merging TK-103.1 to TK-103.4 into bh's main makes the version: on each push, `scripts/release.mjs` reads the commits since the last tag and tags the next one (a fix a patch, a feature a minor). A push to bh's main is your yes.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "main"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-103.1",
+                  "why": "the release carries the Escape fix"
+                },
+                {
+                  "id": "TK-103.2",
+                  "why": "the release carries `ColorPicker`'s selected mark"
+                },
+                {
+                  "id": "TK-103.3",
+                  "why": "the release carries the options' icons"
+                },
+                {
+                  "id": "TK-103.4",
+                  "why": "the release carries the list's width"
+                }
+              ]
+            },
+            {
+              "id": "TK-103.6",
+              "title": "Update tickets to that version on the bh page, and remove its workarounds",
+              "description": "On the gateway's bh page, as a branch or a pull request, not main, since main deploys (as TK-3.1). Then `InlineTitle` (`apps/web/src/components/item-detail.tsx`) drops its own Escape listener, and the status picker passes each status kind's icon, its group headings still naming the kind.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "bh page"
+                },
+                {
+                  "repo": "tickets",
+                  "part": "apps/web, packages/bh"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-103.5",
+                  "why": "the bh version with the fixes"
+                },
+                {
+                  "id": "TK-5.9.1",
+                  "why": "`InlineTitle`'s workaround is on tickets branch `tk-5`"
+                },
+                {
+                  "id": "TK-5.7",
+                  "why": "the status picker on `Combobox` is on tickets branch `tk-5`"
+                }
+              ]
+            }
+          ],
+          "id": "TK-103",
+          "title": "Fix the gaps in bh's `Input`, `ColorPicker` and `Combobox` that TK-5 found",
+          "description": "Four gaps the builder found in bh 2.0.0 while moving tickets onto bh's parts (TK-5), which no ticket covered. tickets works around the first, and goes without the others until bh's next version reaches it.",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/ui"
+            },
+            {
+              "repo": "live gateway",
+              "part": "bh page"
+            },
+            {
+              "repo": "tickets",
+              "part": "apps/web"
             }
           ]
         },
