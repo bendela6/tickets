@@ -608,7 +608,7 @@
               "why": "the bh version with TK-1's and TK-2's parts"
             }
           ],
-          "statusNote": "TK-3.2 on tickets branch `tk-3` (9ff43ffb), in `../tickets-wt-tk-3`: `apps/web/vite.config.ts` dedupes `react`, `react-dom` and `@tanstack/react-router`, as gateway does; the bundle is unchanged until `@bh/shell` arrives. `apps/web/vitest.config.ts` doesn't inherit it, so tests rendering `@bh/shell` may need the same. TK-3.1 is yours, on the bh page: bh's version is 2.0.0 (6ad435a), a major. TK-3.1 (2026-10-13): bh 2.0.0 with `@bh/shell` is pull request #2 (https://github.com/bendela6/tickets/pull/2), branch `bh-2.0.0` (3d8553d6), made by the gateway's bh page, its checks passed; not merged, since main deploys. Its delivery is now a pull request, not a push to main, and its packages include `shell`. TK-4 and TK-5 build on `bh-2.0.0` with tk-3's TK-3.2, not on main.",
+          "statusNote": "TK-3.2 on tickets branch `tk-3` (9ff43ffb), in `../tickets-wt-tk-3`: `apps/web/vite.config.ts` dedupes `react`, `react-dom` and `@tanstack/react-router`, as gateway does; the bundle is unchanged until `@bh/shell` arrives. `apps/web/vitest.config.ts` doesn't inherit it, so tests rendering `@bh/shell` may need the same. TK-3.1 is yours, on the bh page: bh's version is 2.0.0 (6ad435a), a major. TK-3.1 (2026-10-13): bh 2.0.0 with `@bh/shell`, made by the gateway's bh page as pull request #2 (branch `bh-2.0.0`, 3d8553d6), is merged into main with tk-3's TK-3.2 and pushed. The gateway delivers tickets' bh updates by a push to main again, its packages now including `shell`. TK-4 and TK-5 build on main.",
           "where": [
             {
               "repo": "live gateway",
