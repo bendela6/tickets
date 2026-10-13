@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
+import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, DrawerControls, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
+import { Button, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
 import { ItemKey } from './item-key';
-import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { DetailActivity } from './detail-activity';
@@ -22,8 +22,10 @@ const ICON_BUTTON =
   'inline-flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 ' +
   'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
-// Click-to-edit title: static heading until clicked, then a borderless input
-// that commits on blur/Enter and cancels on Escape.
+// Click-to-edit title: static heading until clicked, then bh's Input holding
+// the draft (`commit="leave"`): leaving the field or Enter saves it, Escape
+// drops it (and in the drawer closes the drawer too, as it always has).
+// Either way the heading returns.
 function InlineTitle({
   value,
   disabled,
@@ -35,14 +37,34 @@ function InlineTitle({
   className?: string;
   onSave: (next: string) => void;
 }) {
-  const [draft, setDraft] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
+  // Whether Escape dropped this edit's draft. In the drawer the dialog hears
+  // Escape first (on the document, capturing) and closes, and the Input
+  // commits a draft it still holds as it unmounts: the edit Escape dropped
+  // would be saved. The window hears the key before the document does, so it
+  // is noted there and that commit refused.
+  const dropped = useRef(false);
+  useEffect(() => {
+    if (!editing) {
+      return;
+    }
+    dropped.current = false;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && event.target === field.current) {
+        dropped.current = true;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
+  }, [editing]);
 
-  if (draft === null) {
+  if (!editing) {
     return (
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setDraft(value)}
+        onClick={() => setEditing(true)}
         className={cn(
           'm-0 w-full cursor-text border-b-1 border-dashed border-transparent bg-transparent p-0',
           'text-left font-sans font-600 text-gray-12 enabled:hover:border-gray-7',
@@ -53,33 +75,35 @@ function InlineTitle({
       </button>
     );
   }
+  // The field's floor and padding around the title's own type, pulled out by
+  // its padding and border so the words stay where the heading had them.
   return (
-    <input
-      autoFocus
-      aria-label="Title"
-      value={draft}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        const next = draft.trim();
-        setDraft(null);
-        if (next.length > 0 && next !== value) {
-          onSave(next);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.currentTarget.blur();
-        } else if (event.key === 'Escape') {
-          event.stopPropagation(); // cancel the edit without closing the drawer
-          setDraft(null);
-        }
-      }}
-      className={cn(
-        'm-0 w-full border-b-1 border-dashed border-indigo-9 bg-transparent p-0',
-        'font-sans font-600 text-gray-12 outline-none',
-        className,
-      )}
-    />
+    <div className="-mx-9 -my-5">
+      <Input
+        ref={field}
+        autoFocus
+        aria-label="Title"
+        commit="leave"
+        value={value}
+        onChange={(next) => {
+          const title = next.trim();
+          if (!dropped.current && title.length > 0 && title !== value) {
+            onSave(title);
+          }
+        }}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(event) => {
+          // The Input has already saved on Enter and put the title back on
+          // Escape; this only leaves the field.
+          if (event.key === 'Enter') {
+            event.currentTarget.blur();
+          } else if (event.key === 'Escape') {
+            setEditing(false);
+          }
+        }}
+        className={cn('h-auto px-8 py-4 font-600', className)}
+      />
+    </div>
   );
 }
 
@@ -174,15 +198,13 @@ export function ItemDetail({
     );
   };
 
-  const legalStatusOptions = legalStatusTargets(board, indexes, item, item.typeId);
-  const statusOptions = legalStatusOptions.map((option) => ({
-    key: option.value,
-    label: option.label,
-    kind: option.kind ?? 'todo',
-  }));
-  const legalKeys = legalStatusOptions.map((option) => option.value);
-  const setStatus = (next: string) => {
-    if (userId === null || !workflowField) {
+  const statusValue = typeof rawStatus === 'string' ? rawStatus : null;
+  const statuses = workflowField
+    ? indexes.optionsForField(item.typeId, workflowField).filter((option) => !option.archivedAt)
+    : [];
+  const legalStatuses = legalStatusTargets(board, indexes, item, item.typeId);
+  const setStatus = (next: string | null) => {
+    if (userId === null || !workflowField || next === null) {
       return;
     }
     patch.mutate(
@@ -268,12 +290,14 @@ export function ItemDetail({
           <ItemKey itemKey={item.key} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
-            <StatusSelect
+            <Combobox
               size="xs"
-              className="w-auto"
-              statuses={statusOptions}
-              legalTargets={legalKeys}
-              value={typeof rawStatus === 'string' ? rawStatus : null}
+              className="w-176"
+              aria-label="Status"
+              searchable={false}
+              placeholder="Set status…"
+              {...statusChoices(statuses, legalStatuses, statusValue)}
+              value={statusValue}
               disabled={userId === null}
               onChange={setStatus}
             />

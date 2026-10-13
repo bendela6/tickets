@@ -11,11 +11,11 @@ afterAll(resetDb);
 it('creates a type at the next position and emits type.created', async () => {
   const fx = await seedFixture();
   const res = await runCommand(testDb, typeCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
-    schemeId: fx.schemeId, key: 'chore', label: 'Chore', config: { color: '#888' },
+    schemeId: fx.schemeId, key: 'chore', label: 'Chore', config: { color: 'gray' },
   });
   const row = (await testDb.select().from(itemTypes).where(eq(itemTypes.id, res.id)))[0]!;
   expect(row.key).toBe('chore');
-  expect((row.config as { color?: string }).color).toBe('#888');
+  expect((row.config as { color?: string }).color).toBe('gray');
   expect((await testDb.select().from(events).where(eq(events.kind, 'type.created')))).toHaveLength(1);
 });
 

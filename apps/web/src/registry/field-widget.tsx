@@ -4,7 +4,7 @@ import type { Board, Field, Item } from '../api/types';
 import { RichTextEditor } from '../components/rich-text/rich-text-editor';
 import { Checkbox, Combobox, type Option, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@bh/ui';
 import type { BoardIndexes } from '../utils/index-board';
-import { hexToOptionColor, kindColor } from './option-color';
+import { kindColor } from './option-color';
 
 /**
  * A text field that saves on blur rather than on every keystroke — one PATCH
@@ -48,15 +48,15 @@ function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): Op
   return options.map((option) => ({
     value: option.value,
     label: option.label,
-    color: field.config.workflow === true ? kindColor(option.kind) : hexToOptionColor(option.config.color),
+    color: field.config.workflow === true ? kindColor(option.kind) : option.config.color ?? 'gray',
   }));
 }
 
 // The editable counterpart of getCellContent: one widget per storage type,
 // refined by fields.config.format/multiple. Controlled: (value, onChange).
 // The workflow field (config.workflow===true) is just an option field here —
-// its color source is kindColor instead of hexToOptionColor; the kind-grouped
-// picker with legal-target narrowing (StatusSelect + legalStatusTargets)
+// its color source is kindColor instead of the option's own; the kind-grouped
+// picker with legal-target narrowing (statusChoices + legalStatusTargets)
 // lives in the callers that own status transitions (drawer header, board
 // status cell), not in this generic widget.
 export function FieldWidget({

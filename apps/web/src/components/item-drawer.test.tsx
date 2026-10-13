@@ -7,6 +7,8 @@ import {
 } from '@tanstack/react-router';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
@@ -76,7 +78,7 @@ function makeBoard(): Board {
     options: [
       { id: 1000, optionSetId: 100, value: 'backlog', label: 'Backlog', position: 1, kind: 'todo', config: {}, archivedAt: null },
       { id: 1001, optionSetId: 100, value: 'in-review', label: 'In review', position: 2, kind: 'active', config: {}, archivedAt: null },
-      { id: 2000, optionSetId: 200, value: 'p0', label: 'P0 · critical', position: 1, kind: null, config: { color: '#a03028' }, archivedAt: null },
+      { id: 2000, optionSetId: 200, value: 'p0', label: 'P0 · critical', position: 1, kind: null, config: { color: 'red' }, archivedAt: null },
     ],
     transitions: [],
     linkTypes: [
@@ -155,7 +157,10 @@ function makeBoard(): Board {
   };
 }
 
-async function renderDrawer(onOpenItem?: (itemKey: string) => void) {
+// `closes`: the host closes the drawer when it asks, as the board does, and
+// at once: in a browser the close lands between the dialog's Escape listener
+// and the field's, which a test's synchronous key event would not show.
+async function renderDrawer(onOpenItem?: (itemKey: string) => void, { closes = false } = {}) {
   const board = makeBoard();
   const indexes = indexBoard(board);
   const item = indexes.itemByNumber.get(128);
@@ -168,18 +173,25 @@ async function renderDrawer(onOpenItem?: (itemKey: string) => void) {
   });
   // ItemDetail uses router links/navigation, so the drawer mounts inside a
   // minimal memory router.
-  const rootRoute = createRootRoute({
-    component: () => (
+  const Host = () => {
+    const [open, setOpen] = useState(true);
+    return open ? (
       <ItemDrawer
         projectKey="core"
         board={board}
         indexes={indexes}
         item={item}
-        onClose={onClose}
+        onClose={() => {
+          onClose();
+          if (closes) {
+            flushSync(() => setOpen(false));
+          }
+        }}
         onOpenItem={onOpenItem}
       />
-    ),
-  });
+    ) : null;
+  };
+  const rootRoute = createRootRoute({ component: Host });
   const router = createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory({ initialEntries: ['/'] }),
@@ -353,6 +365,79 @@ test('editing the title PATCHes /api/items/:id with a commandId envelope', async
   });
 });
 
+test('Enter saves the title once, trimmed, and shows the heading again', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    text: () => Promise.resolve(JSON.stringify({ id: 100, updatedAt: 'later' })),
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  await renderDrawer();
+  await userEvent.click(
+    screen.getByRole('button', { name: /fix pagination reset on column resize/i }),
+  );
+  const input = screen.getByRole('textbox', { name: 'Title' });
+  expect(input).toHaveFocus();
+  await userEvent.clear(input);
+  await userEvent.type(input, '  Fix the offset cache {Enter}');
+
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect((JSON.parse(String(init.body)) as { values: unknown }).values).toEqual({
+    title: 'Fix the offset cache',
+  });
+  expect(screen.queryByRole('textbox', { name: 'Title' })).not.toBeInTheDocument();
+});
+
+test('Escape puts the title back without saving it', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('{}') });
+  vi.stubGlobal('fetch', fetchMock);
+  await renderDrawer();
+  await userEvent.click(
+    screen.getByRole('button', { name: /fix pagination reset on column resize/i }),
+  );
+  await userEvent.type(screen.getByRole('textbox', { name: 'Title' }), ' and more{Escape}');
+
+  expect(screen.queryByRole('textbox', { name: 'Title' })).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: /^fix pagination reset on column resize$/i }),
+  ).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test('Escape in the title closes the drawer without saving the draft', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('{}') });
+  vi.stubGlobal('fetch', fetchMock);
+  const { onClose } = await renderDrawer(undefined, { closes: true });
+  await userEvent.click(
+    screen.getByRole('button', { name: /fix pagination reset on column resize/i }),
+  );
+  await userEvent.type(screen.getByRole('textbox', { name: 'Title' }), ' and more{Escape}');
+
+  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('dialog', { name: 'Item detail' })).not.toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test('leaving the title unchanged, or emptied, saves nothing', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('{}') });
+  vi.stubGlobal('fetch', fetchMock);
+  await renderDrawer();
+  const heading = () => screen.getByRole('button', { name: /fix pagination reset on column resize/i });
+
+  await userEvent.click(heading());
+  fireEvent.blur(screen.getByRole('textbox', { name: 'Title' }));
+  await userEvent.click(heading());
+  await userEvent.clear(screen.getByRole('textbox', { name: 'Title' }));
+  await userEvent.type(screen.getByRole('textbox', { name: 'Title' }), '   {Enter}');
+
+  expect(heading()).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
 test('changing the status select PATCHes the workflow field key', async () => {
   localStorage.setItem('tickets-user-id', '7');
   const fetchMock = vi.fn().mockResolvedValue({
@@ -362,7 +447,7 @@ test('changing the status select PATCHes the workflow field key', async () => {
   vi.stubGlobal('fetch', fetchMock);
   await renderDrawer();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(screen.getByRole('combobox', { name: 'Status' }));
   await userEvent.click(await screen.findByRole('option', { name: /in review/i }));
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));

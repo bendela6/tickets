@@ -36,7 +36,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
       { itemTypeId: 2, fieldId: 20, position: 1, required: true, configOverride: null },
     ],
     options: [
-      { id: 400, optionSetId: 300, value: 'todo', label: 'To do', position: 1, kind: 'todo', config: { color: '#79756A' }, archivedAt: null },
+      { id: 400, optionSetId: 300, value: 'todo', label: 'To do', position: 1, kind: 'todo', config: { color: 'gray' }, archivedAt: null },
       {
         id: 401,
         optionSetId: 300,
@@ -44,7 +44,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
         label: 'In progress',
         position: 2,
         kind: 'active',
-        config: { color: '#2E6FCC', icon: 'bolt' },
+        config: { color: 'blue', icon: 'bolt' },
         archivedAt: null,
       },
       {
@@ -137,6 +137,8 @@ test('adding an option fires useCreateOption — POST /api/fields/:id/options wi
 
   await userEvent.click(screen.getByRole('button', { name: '+ Add option' }));
   await userEvent.type(screen.getByRole('textbox', { name: 'Label' }), 'In review');
+  await userEvent.click(screen.getByRole('combobox', { name: 'Colour' }));
+  await userEvent.click(screen.getByRole('gridcell', { name: 'Cyan' }));
   await userEvent.click(screen.getByRole('button', { name: 'Create option' }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -146,12 +148,13 @@ test('adding an option fires useCreateOption — POST /api/fields/:id/options wi
   const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
   expect(typeof commandId).toBe('string');
   expect(commandId).toMatch(UUID_RE);
+  // The colour goes as the picked hue's name.
   expect(rest).toEqual({
     actorId: 7,
     value: 'in-review',
     label: 'In review',
     kind: 'todo',
-    config: { color: expect.any(String) },
+    config: { color: 'cyan' },
   });
 });
 
@@ -295,8 +298,24 @@ test('editing an option label/kind fires useUpdateOption, preserving other confi
     actorId: 7,
     label: 'Doing',
     kind: 'blocked',
-    config: { color: '#2E6FCC', icon: 'bolt' },
+    config: { color: 'blue', icon: 'bolt' },
   });
+});
+
+test("editing an option's colour opens the picker on its hue and stores the new one by name", async () => {
+  const fetchMock = mockFetch();
+  renderTab(makeBoard());
+
+  const optionsRegion = screen.getByRole('region', { name: 'Options' });
+  await userEvent.click(within(optionsRegion).getByRole('button', { name: 'Edit In progress' }));
+  expect(screen.getByRole('combobox', { name: 'Colour' })).toHaveTextContent('Blue');
+  await userEvent.click(screen.getByRole('combobox', { name: 'Colour' }));
+  await userEvent.click(screen.getByRole('gridcell', { name: 'Pink' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(body.config).toEqual({ color: 'pink', icon: 'bolt' });
 });
 
 test('disables option/edge actions when there is no current user', () => {

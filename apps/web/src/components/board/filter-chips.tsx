@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Combobox, type Option as ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
 import type { Board, Field, Option } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { hexToOptionColor, kindColor } from '../../registry/option-color';
+import { kindColor } from '../../registry/option-color';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { FilterRule } from '../../utils/view-config';
 
@@ -70,7 +70,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
           <Pill
             key={value}
             label={option?.label ?? value}
-            tone={hexToOptionColor(option?.config.color)}
+            tone={option?.config.color ?? 'gray'}
             shape="round"
             className="h-18"
           />
@@ -134,7 +134,7 @@ function AddFilter({
       : optionsInSet(selectedField, indexes).map((option) => ({
           value: option.value,
           label: option.label,
-          color: hexToOptionColor(option.config.color),
+          color: option.config.color ?? 'gray',
         }));
 
   const needsValues = op === 'any-of' || op === 'none-of' || op === 'kinds';
