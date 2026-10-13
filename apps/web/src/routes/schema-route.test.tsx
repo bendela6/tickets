@@ -107,19 +107,14 @@ describe('/schema inside the app shell', () => {
     vi.unstubAllGlobals();
   });
 
-  it('mounts the activity rail, so the route is reachable from every other mode', async () => {
-    // The regression this pins: schemaRoute rendered a bare full-height div
-    // and was never wrapped in AppShell. The rail and mode panel did not mount
-    // at all, so `modeForPath`'s 'schema' branch was unreachable in the real
-    // app and SchemaPanel was dead code.
+  it('mounts inside the frame, so the sidebar is there to leave it by', async () => {
+    // The root route draws the one frame around every page; a page drawn
+    // outside it would have no way back to the rest of the app.
     renderSchemaRoute();
-    expect(await screen.findByLabelText('Schema')).toBeInTheDocument();
-    expect(screen.getByLabelText('Tasks')).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: 'Navigation' })).toBeInTheDocument();
   });
 
-  it('shows the schema mode panel with its database dropdown', async () => {
-    // Not just "a panel": the SCHEMA panel. This is what proves modeForPath
-    // resolved 'schema' and ModePanel took that branch.
+  it('shows the schema panel with its database dropdown', async () => {
     renderSchemaRoute();
     expect(await screen.findByText('SCHEMA')).toBeInTheDocument();
     // By its aria-label, not its text. The outline below it lists a table
@@ -128,10 +123,9 @@ describe('/schema inside the app shell', () => {
     expect(await screen.findByRole('button', { name: 'Database: tickets' })).toBeInTheDocument();
   });
 
-  it('renders the outline in the mode panel, under the database picker', async () => {
-    // The groups → tables tree lives in the shell's left panel, which only
-    // works because schemaRoute wraps the WHOLE shell in the diagram provider.
-    // Rendered inside <main> instead, none of this would be here.
+  it('renders the outline in the schema panel, under the database picker', async () => {
+    // The groups → tables tree sits beside the canvas, which only works
+    // because schemaRoute wraps both in the diagram provider.
     renderSchemaRoute();
     const panel = (await screen.findByText('SCHEMA')).closest('div')!.parentElement!;
     expect(
@@ -173,7 +167,6 @@ describe('/schema inside the app shell', () => {
 
   it('reads the selected database from the search param', async () => {
     renderSchemaRoute({ path: '/schema?database=postgres' });
-    await screen.findByLabelText('Schema');
     await waitFor(() =>
       expect(vi.mocked(fetch)).toHaveBeenCalledWith(
         '/api/schema?database=postgres',
@@ -194,8 +187,8 @@ describe('/schema inside the app shell', () => {
     // error, so the error branch and the empty branch both fired and a red
     // "could not be drawn" stacked above the real explanation.
     expect(screen.queryByText('This schema could not be drawn.')).not.toBeInTheDocument();
-    // The shell survives: the crash used to take the rail with it.
-    expect(screen.getByLabelText('Schema')).toBeInTheDocument();
+    // The frame survives: the crash used to take the whole app with it.
+    expect(screen.getByRole('complementary', { name: 'Navigation' })).toBeInTheDocument();
   });
 
   it('says why an edge is missing instead of just not drawing it', async () => {
