@@ -3,7 +3,6 @@ import { formatExact, Pill } from '@bh/ui';
 import type { Field } from '../api/types';
 import { statusPill } from '../domain/status';
 import type { BoardIndexes } from '../utils/index-board';
-import { hexToOptionColor } from './option-color';
 
 const empty = <span className="text-gray-9">—</span>;
 
@@ -51,7 +50,7 @@ export function getCellContent(
             <Pill
               key={index}
               label={option?.label ?? String(value)}
-              tone={hexToOptionColor(option?.config.color)}
+              tone={option?.config.color ?? 'gray'}
               shape="round"
             />
           );
