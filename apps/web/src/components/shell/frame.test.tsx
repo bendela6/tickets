@@ -87,6 +87,10 @@ function board(of: Project, items: Item[]): Board {
 
 const TICKETS = project(1, 'tk', 'Tickets', 'TK');
 const GATEWAY = project(2, 'gw', 'Gateway', 'GW');
+const USERS = [
+  { id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null },
+  { id: 8, name: 'Build bot', email: null, kind: 'agent', archivedAt: null },
+];
 const BOARDS: Record<string, Board> = {
   tk: board(TICKETS, [item(1, 'backlog'), item(2, 'backlog'), item(3, 'backlog', 1)]),
   gw: board(GATEWAY, [item(4, 'backlog')]),
@@ -94,8 +98,9 @@ const BOARDS: Record<string, Board> = {
 
 /**
  * Mounts the REAL root route, so the REAL frame and its sidebar, on a memory
- * history at `path`, over a page that says only where it is. The projects and
- * their boards are the fixtures above; anything else reads as an empty list.
+ * history at `path`, over a page that says only where it is. The projects,
+ * their boards and the users are the fixtures above; anything else reads as
+ * an empty list.
  */
 function renderFrame(path = '/') {
   vi.stubGlobal(
@@ -107,7 +112,9 @@ function renderFrame(path = '/') {
           ? { data: [TICKETS, GATEWAY] }
           : boardKey
             ? BOARDS[boardKey]
-            : { data: [] };
+            : url.startsWith('/api/users')
+              ? { data: USERS }
+              : { data: [] };
       return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
     }),
   );
@@ -234,4 +241,35 @@ test('lists the settings tabs under Settings, the one on screen lit', async () =
   }
   expect(within(nav).getByRole('link', { name: 'Fields' })).toHaveAttribute('aria-current', 'page');
   expect(within(nav).getByRole('link', { name: 'Types' })).not.toHaveAttribute('aria-current');
+});
+
+test('shows who is acting in the footer, and switches to someone else', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  renderFrame('/');
+  const nav = await sidebar();
+  await userEvent.click(await within(nav).findByRole('button', { name: /Mara K/ }));
+  await userEvent.click(await screen.findByRole('menuitem', { name: /Build bot/ }));
+  expect(await within(nav).findByRole('button', { name: /Build bot/ })).toBeInTheDocument();
+  expect(localStorage.getItem('tickets-user-id')).toBe('8');
+});
+
+test("picks the theme in the footer, and remembers it under tickets' key", async () => {
+  renderFrame('/');
+  const nav = await sidebar();
+  const theme = within(nav).getByRole('radiogroup', { name: 'Theme' });
+  const other = document.documentElement.dataset.theme === 'dark' ? 'Light' : 'Dark';
+  await userEvent.click(within(theme).getByRole('radio', { name: other }));
+  expect(document.documentElement.dataset.theme).toBe(other.toLowerCase());
+  expect(localStorage.getItem('tickets-theme')).toBe(other.toLowerCase());
+});
+
+test("at rail width, the footer keeps the user's avatar and one theme switch", async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  localStorage.setItem('tickets-nav:collapsed', 'true');
+  renderFrame('/');
+  const nav = await sidebar();
+  expect(await within(nav).findByRole('button', { name: 'Acting as Mara K' })).toBeInTheDocument();
+  expect(
+    within(nav).getByRole('button', { name: /^Switch to the (light|dark) theme$/ }),
+  ).toBeInTheDocument();
 });
