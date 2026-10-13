@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { Sql } from 'postgres';
 import { createDbClient, type Db } from '../client';
 import {
@@ -114,13 +114,15 @@ describe('verifyImport (run after the import tasks)', () => {
   // declaration order by default).
   describe('newly-covered surfaces actually get caught when corrupted', () => {
     it('flags and recovers from a corrupted item type_id (skeleton)', async () => {
-      const [sample] = await db.select({ id: items.id, typeId: items.typeId }).from(items).limit(1);
+      // Both picks come from this file's own import, in id order. tickets_test
+      // is shared (the api suite, and the runs in every worktree), so an
+      // unordered pick from the tables can land on another run's row, such as
+      // a type with the sample's own key, which leaves its type_key as it was
+      // and the corruption unseen.
+      const sample = [...legacy.tickets].sort((a, b) => a.id - b.id)[0];
       expect(sample).toBeDefined();
-      const [otherType] = await db
-        .select({ id: itemTypes.id })
-        .from(itemTypes)
-        .where(ne(itemTypes.id, sample!.typeId))
-        .limit(1);
+      const sampleTypeKey = legacy.ticketTypes.find((t) => t.id === sample!.typeId)?.key;
+      const otherType = [...legacy.ticketTypes].sort((a, b) => a.id - b.id).find((t) => t.key !== sampleTypeKey);
       expect(otherType).toBeDefined();
 
       await db.update(items).set({ typeId: otherType!.id }).where(eq(items.id, sample!.id));
