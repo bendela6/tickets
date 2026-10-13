@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from 'drizzle-orm';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { comments, itemTypeChildTypes, itemValues, items } from '@tickets/db';
 import { HttpError } from '../../errors';
@@ -104,7 +104,10 @@ export async function runTransitionGuard(
   const guard = (input.edge?.config as { guard?: Guard } | undefined)?.guard;
   if (!guard) return;
   if (guard.requiresComment) {
-    const c = await tx.select({ n: count() }).from(comments).where(eq(comments.itemId, input.itemId));
+    const c = await tx
+      .select({ n: count() })
+      .from(comments)
+      .where(and(eq(comments.itemId, input.itemId), isNull(comments.deletedAt)));
     if (Number(c[0]?.n ?? 0) < 1) {
       throw new HttpError(422, 'add a comment explaining the resolution before closing');
     }

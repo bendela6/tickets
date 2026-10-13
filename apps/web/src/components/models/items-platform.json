@@ -1768,6 +1768,27 @@
           "title": "Created at",
           "description": "When posted.",
           "nullable": false
+        },
+        {
+          "name": "quote",
+          "type": "text",
+          "title": "Quote",
+          "description": "The fragment of the item's description a thread is on (whitespace collapsed, at most 1000 characters); replies carry their thread's; null = on the item.",
+          "nullable": true
+        },
+        {
+          "name": "nth",
+          "type": "integer",
+          "title": "Place",
+          "description": "Which place of the quote, from 0, when the description has it more than once; null without a quote.",
+          "nullable": true
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "title": "Deleted at",
+          "description": "When its author deleted it; null = shown. Its event and its replies stay.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -1810,6 +1831,12 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "comments_quote_nth",
+          "expression": "(quote IS NULL AND nth IS NULL) OR (quote IS NOT NULL AND nth >= 0)"
         }
       ],
       "indexes": [
