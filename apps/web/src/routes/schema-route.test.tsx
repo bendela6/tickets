@@ -83,7 +83,8 @@ function renderSchemaRoute({
         ? { databases: ['tickets', 'postgres'], current: 'tickets' }
         : url.startsWith('/api/schema')
           ? schema
-          : url.startsWith('/api/users')
+          : // What the frame's sidebar reads: no projects, no users.
+            url.startsWith('/api/users') || url === '/api/projects'
             ? { data: [] }
             : null;
       if (body === null) throw new Error(`unexpected fetch: ${url}`);
