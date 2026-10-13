@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Navigate, createRoute } from '@tanstack/react-router';
+import { ScreenState } from '@bh/ui';
 import { useBoard } from '../api/use-board';
 import { ItemDetail } from '../components/item-detail';
 import { indexBoard } from '../utils/index-board';
@@ -28,9 +29,7 @@ function TicketPageScreen() {
   }
   const item = indexes.itemByKey.get(itemKey);
   if (!item) {
-    return (
-      <p className="py-16 font-sans text-13/19 text-red-9">No item {itemKey} in this project.</p>
-    );
+    return <ScreenState tone="danger" icon="triangle-alert" title={`No item ${itemKey} in this project.`} />;
   }
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">

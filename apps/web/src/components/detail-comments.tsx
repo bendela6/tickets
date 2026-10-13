@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, RelativeDate } from '@bh/ui';
+import { Avatar, RelativeDate, ScreenState } from '@bh/ui';
 import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 import { boardSuggestions } from './rich-text/board-suggestions';
@@ -56,7 +56,7 @@ export function DetailComments({
   return (
     <div className="flex flex-col gap-14">
       {comments.length === 0 ? (
-        <p className="m-0 font-sans text-12/17 text-gray-9">No comments yet.</p>
+        <ScreenState className="px-12 py-20" title="No comments yet." />
       ) : (
         comments.map((comment) => {
           const author = indexes.userById.get(comment.authorId);

@@ -1,9 +1,8 @@
-import { cn, Dot } from '@bh/ui';
+import { cn, Dot, ScreenState } from '@bh/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { Empty } from './empty';
 import { Header } from './header';
 import { RelRow, rowClass } from './rel-row';
 import { Section } from './section';
@@ -84,7 +83,9 @@ export function GroupDetail({
         ))}
 
         <Section title={isSub ? 'Connections beyond this group' : 'Connections to other groups'} count={external.length} />
-        {external.length === 0 && <Empty>None — this group is self-contained.</Empty>}
+        {external.length === 0 && (
+          <ScreenState className="px-8 py-12" title="None" body="This group is self-contained." />
+        )}
         {external.map((r) => {
           const outward = idset.has(r.source);
           const here = outward ? r.source : r.target;

@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Combobox, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState } from '@bh/ui';
+import { Button, cn, Combobox, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState, Tooltip } from '@bh/ui';
 import { ItemKey } from '../item-key';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -112,12 +112,14 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   }
   const percent = Math.round((done / total) * 100);
   return (
-    <span className="inline-flex items-center gap-7" title={`${done} of ${total} subtasks done`}>
-      <Progress tone="green" value={percent} className="w-36" />
-      <span className="font-mono text-11 text-gray-11">
-        {done}/{total}
+    <Tooltip content={`${done} of ${total} subtasks done`}>
+      <span className="inline-flex items-center gap-7">
+        <Progress tone="green" value={percent} className="w-36" />
+        <span className="font-mono text-11 text-gray-11">
+          {done}/{total}
+        </span>
       </span>
-    </span>
+    </Tooltip>
   );
 }
 
@@ -132,14 +134,16 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
       className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex"
       onClick={(event) => event.stopPropagation()}
     >
-      <Link
-        to="/p/$projectKey/t/$itemKey"
-        params={{ projectKey, itemKey: ticket.key }}
-        title="Open item page"
-        className={actionClasses}
-      >
-        ↗
-      </Link>
+      <Tooltip content="Open item page">
+        <Link
+          to="/p/$projectKey/t/$itemKey"
+          params={{ projectKey, itemKey: ticket.key }}
+          aria-label="Open item page"
+          className={actionClasses}
+        >
+          ↗
+        </Link>
+      </Tooltip>
       <Menu>
         <MenuTrigger asChild>
           <button type="button" aria-label="Item actions" className={actionClasses}>

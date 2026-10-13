@@ -2,7 +2,7 @@ import { docToText, parseDoc } from '@tickets/richtext';
 import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
-import { Avatar, RelativeDate } from '@bh/ui';
+import { Avatar, RelativeDate, ScreenState } from '@bh/ui';
 import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -84,14 +84,20 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
 
   if (activity.isError) {
     return (
-      <p className="m-0 font-sans text-12/17 text-red-9">{(activity.error as Error).message}</p>
+      <ScreenState
+        className="px-12 py-20"
+        tone="danger"
+        icon="triangle-alert"
+        title="Could not load the activity"
+        body={(activity.error as Error).message}
+      />
     );
   }
   if (!activity.data) {
-    return <p className="m-0 font-sans text-12/17 text-gray-9">Loading…</p>;
+    return <ScreenState className="px-12 py-20" title="Loading…" />;
   }
   if (activity.data.length === 0) {
-    return <p className="m-0 font-sans text-12/17 text-gray-9">No activity yet.</p>;
+    return <ScreenState className="px-12 py-20" title="No activity yet." />;
   }
 
   return (

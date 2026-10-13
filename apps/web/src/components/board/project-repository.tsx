@@ -1,6 +1,6 @@
 import type { Project } from '../../api/types';
 import { repositoryLink } from '../../utils/repository-link';
-import { cn, CopyButton, Icon } from '@bh/ui';
+import { cn, CopyButton, Icon, Tooltip } from '@bh/ui';
 
 // The project's repository on its page, under its name: a web link (GitHub's,
 // say) opens in a new tab; an ssh or git@host:path link shows as text with a
@@ -13,17 +13,18 @@ export function ProjectRepository({ project, className }: { project: Project; cl
   return (
     <span className={cn('inline-flex min-w-0 items-center gap-8 font-mono text-12/17 text-gray-9', className)}>
       {link.kind === 'web' ? (
-        <a
-          href={link.href}
-          target="_blank"
-          rel="noreferrer"
-          title="Open the repository in a new tab"
-          className="inline-flex min-w-0 items-center gap-5 rounded-4 text-gray-11 hover:text-gray-12 hover:underline"
-        >
-          <Icon name="link" size="sm" />
-          <span className="truncate">{link.label}</span>
-          <Icon name="arrow-up-right" size="xs" />
-        </a>
+        <Tooltip content="Open the repository in a new tab">
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-w-0 items-center gap-5 rounded-4 text-gray-11 hover:text-gray-12 hover:underline"
+          >
+            <Icon name="link" size="sm" />
+            <span className="truncate">{link.label}</span>
+            <Icon name="arrow-up-right" size="xs" />
+          </a>
+        </Tooltip>
       ) : (
         <>
           <span className="inline-flex min-w-0 items-center gap-5 text-gray-11">

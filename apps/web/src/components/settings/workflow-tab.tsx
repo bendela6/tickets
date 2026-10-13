@@ -15,6 +15,7 @@ import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
 import {
   Button,
+  Card,
   Checkbox,
   cn,
   ColorPicker,
@@ -26,7 +27,10 @@ import {
   Icon,
   Input,
   Pill,
+  ScreenState,
+  SegmentedControl,
   Tabs,
+  Tooltip,
 } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
@@ -51,38 +55,28 @@ function EntryPill() {
   );
 }
 
+// One of the five kinds, as bh's segmented control: a choice of one among a
+// few short words, read without opening anything.
 function KindPicker({
   value,
   onChange,
-  disabled,
 }: {
   value: StatusKind;
   onChange: (kind: StatusKind) => void;
-  disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-6">
-      {KIND_ORDER.map((kind) => (
-        <button
-          key={kind}
-          type="button"
-          disabled={disabled}
-          aria-pressed={value === kind}
-          onClick={() => onChange(kind)}
-          className={cn(
-            'inline-flex h-28 items-center gap-6 rounded-6 border-1 px-8 font-sans text-12 font-500 capitalize',
-            value === kind
-              ? 'border-indigo-9 bg-indigo-3 text-gray-12'
-              : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
-          )}
-        >
-          <span className="inline-flex">
-            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
-          </span>
-          {kind}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      label="Kind"
+      size="xs"
+      className="self-start"
+      options={KIND_ORDER.map((kind) => ({
+        value: kind,
+        label: kind.charAt(0).toUpperCase() + kind.slice(1),
+        icon: KIND_ICON[kind],
+      }))}
+      value={value}
+      onChange={(next) => onChange(KIND_ORDER.find((kind) => kind === next) ?? value)}
+    />
   );
 }
 
@@ -353,7 +347,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
       </p>
 
       {activeTypes.length === 0 ? (
-        <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet — create one on the Types tab first.</p>
+        <ScreenState className="px-12 py-20" title="No ticket types yet." body="Create one on the Types tab first." />
       ) : (
         <>
           <Tabs
@@ -373,11 +367,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
           ) : (
             <>
               {/* options — the statuses this type takes from its workflow field */}
-              <div
-                role="region"
-                aria-label="Options"
-                className="mb-16 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
-              >
+              <Card role="region" aria-label="Options" className="mb-16">
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
@@ -390,9 +380,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                   </Button>
                 </div>
                 {options.length === 0 ? (
-                  <p className="m-0 px-16 py-20 text-center font-sans text-12/17 text-gray-9">
-                    No options yet on this workflow field.
-                  </p>
+                  <ScreenState className="px-12 py-20" title="No options yet on this workflow field." />
                 ) : (
                   options.map((option) => {
                     const archived = option.archivedAt !== null;
@@ -461,10 +449,10 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     valueHint={newOption.label.trim() ? `value: ${slugify(newOption.label)}` : undefined}
                   />
                 ) : null}
-              </div>
+              </Card>
 
               {/* transitions — the graph of allowed moves for this type */}
-              <div className="overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
+              <Card>
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
@@ -518,16 +506,17 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             </span>
                           ) : null}
                           <span className="flex-1" />
-                          <button
-                            type="button"
-                            aria-label={`Remove transition ${transitionLabel(t)}`}
-                            title="Remove transition"
-                            disabled={disabled || deleteTransition.isPending}
-                            className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
-                            onClick={() => void removeEdge(t).catch(toasted)}
-                          >
-                            ×
-                          </button>
+                          <Tooltip content="Remove transition">
+                            <button
+                              type="button"
+                              aria-label={`Remove transition ${transitionLabel(t)}`}
+                              disabled={disabled || deleteTransition.isPending}
+                              className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+                              onClick={() => void removeEdge(t).catch(toasted)}
+                            >
+                              ×
+                            </button>
+                          </Tooltip>
                         </div>
                       );
                     })
@@ -587,7 +576,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     </span>
                   </form>
                 </div>
-              </div>
+              </Card>
             </>
           )}
         </>

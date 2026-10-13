@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, createRoute, useParams } from '@tanstack/react-router';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
-import { Button, Icon } from '@bh/ui';
+import { Button, Icon, ScreenState } from '@bh/ui';
 import { useBoard } from '../api/use-board';
 import { ProjectRepository } from '../components/board/project-repository';
 import { NewItemDialog } from '../components/new-item-dialog';
@@ -33,7 +33,7 @@ function ProjectLayout() {
     return (
       <Page header={<PageHeader title={projectKey} breadcrumb={PROJECTS_CRUMB} />}>
         <PageBody>
-          <p className="font-sans text-13/19 text-gray-9">Loading {projectKey}…</p>
+          <ScreenState title={`Loading ${projectKey}…`} />
         </PageBody>
       </Page>
     );
@@ -42,15 +42,20 @@ function ProjectLayout() {
     return (
       <Page header={<PageHeader title={projectKey} breadcrumb={PROJECTS_CRUMB} />}>
         <PageBody>
-          <p className="font-sans text-13/19 text-red-9">
-            Could not load project “{projectKey}” — {(boardQuery.error as Error | null)?.message}
-          </p>
-          <Link
-            to="/"
-            className="inline-flex h-32 w-max items-center rounded-8 border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
-          >
-            ← projects
-          </Link>
+          <ScreenState
+            tone="danger"
+            icon="triangle-alert"
+            title={`Could not load project “${projectKey}”`}
+            body={(boardQuery.error as Error | null)?.message}
+            action={
+              <Link
+                to="/"
+                className="inline-flex h-32 w-max items-center rounded-8 border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+              >
+                ← projects
+              </Link>
+            }
+          />
         </PageBody>
       </Page>
     );

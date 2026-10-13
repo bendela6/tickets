@@ -4,7 +4,8 @@ import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, useToast } from '@bh/ui';
+import { Button, ScreenState, useToast } from '@bh/ui';
+import { DisabledReason } from '../disabled-reason';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
@@ -74,11 +75,14 @@ export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: S
       <Page header={<PageHeader title="Settings" breadcrumb={[PROJECTS_CRUMB]} />}>
         <PageBody>
           {boardQuery.isLoading ? (
-            <p className="font-sans text-13/19 text-gray-9">Loading {projectKey} settings…</p>
+            <ScreenState title={`Loading ${projectKey} settings…`} />
           ) : (
-            <p className="font-sans text-13/19 text-red-9">
-              Could not load project "{projectKey}" — {(boardQuery.error as Error | null)?.message}
-            </p>
+            <ScreenState
+              tone="danger"
+              icon="triangle-alert"
+              title={`Could not load project “${projectKey}”`}
+              body={(boardQuery.error as Error | null)?.message}
+            />
           )}
         </PageBody>
       </Page>
@@ -106,15 +110,16 @@ export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: S
           }
           actions={
             onScheme ? (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={userId === null || forkScheme.isPending || updateProject.isPending}
-                title={userId === null ? 'Sign in to fork the scheme' : undefined}
-                onClick={handleFork}
-              >
-                Fork for this project
-              </Button>
+              <DisabledReason reason={userId === null ? 'Sign in to fork the scheme' : undefined}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+                  onClick={handleFork}
+                >
+                  Fork for this project
+                </Button>
+              </DisabledReason>
             ) : null
           }
         />

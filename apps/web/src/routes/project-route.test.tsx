@@ -119,8 +119,13 @@ function renderProject(path: string) {
   const board = makeBoard();
   vi.stubGlobal(
     'fetch',
-    vi.fn((url: string) => {
-      const body = url === '/api/projects/core/board' ? board : { data: [] };
+    vi.fn((url: string, init?: RequestInit) => {
+      let body: unknown = url === '/api/projects/core/board' ? board : { data: [] };
+      // A new view answers as view 3, under the name it was sent.
+      if (url === '/api/projects/core/views' && init?.method === 'POST') {
+        const { name } = JSON.parse(String(init.body)) as { name: string };
+        body = { id: 3, projectId: 1, name, config: {} };
+      }
       return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
     }),
   );
@@ -192,6 +197,50 @@ test('"New view" after the tabs asks for the view\'s name', async () => {
   // It is not one of the tabs.
   const views = screen.getByRole('group', { name: 'Views' });
   expect(within(views).queryByRole('button', { name: 'New view' })).not.toBeInTheDocument();
+});
+
+// What was sent to create a view, by name.
+function createdViews(): string[] {
+  const fetchMock = vi.mocked(fetch);
+  return fetchMock.mock.calls
+    .filter(([url, init]) => url === '/api/projects/core/views' && init?.method === 'POST')
+    .map(([, init]) => (JSON.parse(String(init?.body)) as { name: string }).name);
+}
+
+test('Enter creates the view under the name typed, and opens it', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const router = renderProject('/p/core/v/1');
+  await userEvent.click(await screen.findByRole('button', { name: 'New view' }));
+  await userEvent.keyboard('  Triage {Enter}');
+  await waitFor(() => expect(router.state.location.pathname).toBe('/p/core/v/3'));
+  expect(createdViews()).toEqual(['Triage']);
+  expect(screen.queryByRole('textbox', { name: 'New view name' })).not.toBeInTheDocument();
+});
+
+test('Escape drops the name: no view is created and "New view" comes back', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const router = renderProject('/p/core/v/1');
+  await userEvent.click(await screen.findByRole('button', { name: 'New view' }));
+  await userEvent.keyboard('Triage{Escape}');
+  expect(await screen.findByRole('button', { name: 'New view' })).toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'New view name' })).not.toBeInTheDocument();
+  expect(createdViews()).toEqual([]);
+  expect(router.state.location.pathname).toBe('/p/core/v/1');
+});
+
+test('leaving the field creates the view it names, and leaving it empty creates none', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const router = renderProject('/p/core/v/1');
+  await userEvent.click(await screen.findByRole('button', { name: 'New view' }));
+  await userEvent.tab();
+  expect(await screen.findByRole('button', { name: 'New view' })).toBeInTheDocument();
+  expect(createdViews()).toEqual([]);
+
+  await userEvent.click(screen.getByRole('button', { name: 'New view' }));
+  await userEvent.keyboard('Mine too');
+  await userEvent.tab();
+  await waitFor(() => expect(router.state.location.pathname).toBe('/p/core/v/3'));
+  expect(createdViews()).toEqual(['Mine too']);
 });
 
 test('"New item" in the header opens the new item dialog', async () => {

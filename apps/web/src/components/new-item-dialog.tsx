@@ -359,16 +359,9 @@ export function NewItemDialog({
           <>
             <header className="flex items-center gap-10 border-b-1 border-gray-6 px-20 py-16">
               {selectable.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setPickedTypeId(null)}
-                  className={cn(
-                    'shrink-0 rounded-6 bg-transparent font-sans text-12/17 font-500 text-indigo-9 hover:text-indigo-10',
-                    'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
-                  )}
-                >
+                <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setPickedTypeId(null)}>
                   ‹ Type
-                </button>
+                </Button>
               ) : null}
               <DialogTitle className="truncate">New {type.label}</DialogTitle>
               <Pill
