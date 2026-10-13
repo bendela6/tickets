@@ -9,7 +9,7 @@
 
 import { useCallback, useId, useMemo, useState } from 'react';
 
-import { Tree, cn, useTreeView } from '@bh/ui';
+import { ScreenState, Tree, cn, useTreeView } from '@bh/ui';
 import type { Selection } from '../../engine/model/types';
 import {
   useDiagramActionsOrNull,
@@ -113,7 +113,7 @@ export function Outline() {
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tree.rows.length === 0 ? (
-          <p className="px-4 py-8 text-12 text-gray-11">No tables match.</p>
+          <ScreenState className="px-4 py-12" title="No tables match." />
         ) : (
           <Tree activeDescendant={tree.activeDescendant} onKeyDown={tree.onKeyDown}>
             {tree.rows.map((r) => {

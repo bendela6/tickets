@@ -26,6 +26,7 @@ import {
   Icon,
   Input,
   Pill,
+  ScreenState,
   SegmentedControl,
   Tabs,
 } from '@bh/ui';
@@ -344,7 +345,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
       </p>
 
       {activeTypes.length === 0 ? (
-        <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet — create one on the Types tab first.</p>
+        <ScreenState className="px-12 py-20" title="No ticket types yet." body="Create one on the Types tab first." />
       ) : (
         <>
           <Tabs
@@ -381,9 +382,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                   </Button>
                 </div>
                 {options.length === 0 ? (
-                  <p className="m-0 px-16 py-20 text-center font-sans text-12/17 text-gray-9">
-                    No options yet on this workflow field.
-                  </p>
+                  <ScreenState className="px-12 py-20" title="No options yet on this workflow field." />
                 ) : (
                   options.map((option) => {
                     const archived = option.archivedAt !== null;

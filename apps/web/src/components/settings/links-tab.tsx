@@ -5,7 +5,7 @@ import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../a
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, SectionHeader } from '@bh/ui';
+import { Button, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
 // Same folded-direction chip text as detail-links: outgoing "label →",
@@ -352,7 +352,7 @@ export function LinksTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-16">
         {linkTypes.length === 0 ? (
-          <p className="m-0 font-sans text-12/17 text-gray-9">No link types yet.</p>
+          <ScreenState className="px-12 py-20" title="No link types yet." />
         ) : (
           linkTypes.map((linkType) => {
             const owningType = typeById.get(linkType.itemTypeId);

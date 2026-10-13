@@ -286,7 +286,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
       </p>
 
       {activeTypes.length === 0 ? (
-        <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet — create one on the Types tab first.</p>
+        <ScreenState className="px-12 py-20" title="No ticket types yet." body="Create one on the Types tab first." />
       ) : (
         <>
           <Tabs
