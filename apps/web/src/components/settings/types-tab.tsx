@@ -4,6 +4,8 @@ import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
 import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
+import { ArchChip } from '../arch-chip';
+import { slugify } from '../../utils/slugify';
 import { Button, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, SectionHeader } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
@@ -12,22 +14,6 @@ export type SettingsTabProps = {
   indexes: BoardIndexes;
   projectKey: string;
 };
-
-function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-+|-+$)/g, '');
-}
-
-function ArchChip() {
-  return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
-      ARCH
-    </span>
-  );
-}
 
 // Toggling a chip PUTs the *whole* new set to /api/types/:id/child-types
 // (type.setChildTypes is a full delete+reinsert replace, not a diff). The
