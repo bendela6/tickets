@@ -1,8 +1,9 @@
 import { cn } from '@bh/ui';
 
-type ItemKeyProps = { prefix: string; number: number; muted?: boolean; className?: string };
+type ItemKeyProps = { itemKey: string; muted?: boolean; className?: string };
 
-export function ItemKey({ prefix, number, muted, className }: ItemKeyProps) {
+/** An item's key (`TIX-90`, `TK/E14`, `TK-80.3`) in the mono key style. */
+export function ItemKey({ itemKey, muted, className }: ItemKeyProps) {
   return (
     <span
       className={cn(
@@ -11,7 +12,7 @@ export function ItemKey({ prefix, number, muted, className }: ItemKeyProps) {
         className,
       )}
     >
-      {prefix}-{number}
+      {itemKey}
     </span>
   );
 }

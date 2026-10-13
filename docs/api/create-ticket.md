@@ -6,7 +6,10 @@ Creates a ticket of a given type. Every required field of that type must
 have a value; the status defaults to the project's initial status (the one
 with `config.initial: true`, else the first) when the caller doesn't pick
 one. The ticket number is assigned `max + 1` under a project-row lock, so
-concurrent creations can't collide.
+concurrent creations can't collide, and so is its key: `PREFIX-number`, or
+in a plan project an epic's `PREFIX/E<n>`, a feature's `PREFIX-<n>` and a
+ticket's or subticket's parent's key and `.<n>` (see
+[Get item by key](get-item-by-key.md#keys)).
 
 **Source:** [`apps/api/src/routes/tickets.routes.ts`](../../apps/api/src/routes/tickets.routes.ts) — `createTicket`
 
@@ -42,7 +45,8 @@ Body:
   projectId: number;
   typeId: number;
   parentId: number | null;
-  number: number;              // display number, e.g. 42 in TASK-42
+  number: number;              // its place in its project, e.g. 42 in TASK-42
+  key: string;                 // TASK-42; in a plan project TK/E14, TK-80, TK-80.3
   createdBy: number;           // = actorId
   archivedAt: null;
   createdAt: string;
@@ -59,7 +63,8 @@ assembled ticket.
 | ------ | ---- |
 | `400` | Unknown/archived `typeKey`; a required field is missing, `null`, or `""`; unknown field key; value has the wrong type; unknown option/status value; parent not in this project |
 | `404` | Unknown project key |
-| `422` | Parent is itself a child (hierarchy is depth-1); chosen status is not a valid starting status (when entry edges exist) |
+| `409` | `key "…" is already taken`: the key it would get names another item |
+| `422` | Parent is itself a child (hierarchy is depth-1); chosen status is not a valid starting status (when entry edges exist); a plan's ticket or subticket without a parent (`a ticket is made under its parent in a plan: its key is its parent's and the next number under it`) |
 
 ## Database
 

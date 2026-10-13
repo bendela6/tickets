@@ -18,7 +18,7 @@ export function ItemDrawer({
   indexes: BoardIndexes;
   item: Item;
   onClose: () => void;
-  onOpenItem?: (itemNumber: number) => void;
+  onOpenItem?: (itemKey: string) => void;
 }) {
   return (
     <Drawer

@@ -6,6 +6,7 @@ export const itemCreated = defineEvent({
   payload: v.object({
     typeKey: v.string(),
     number: v.number(),
+    key: v.optional(v.string()), // since TK-80.3; older events have none
     parentId: v.nullable(v.number()),
     values: v.record(v.string(), v.unknown()),
   }),
@@ -35,7 +36,7 @@ export const commentDeleted = defineEvent({
 });
 export const itemLinked = defineEvent({
   kind: 'item.linked', aggregateType: 'item', version: 1,
-  payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number() }),
+  payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number(), why: v.optional(v.string()) }),
 });
 export const itemUnlinked = defineEvent({
   kind: 'item.unlinked', aggregateType: 'item', version: 1,

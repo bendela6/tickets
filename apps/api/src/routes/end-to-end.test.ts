@@ -8,14 +8,14 @@ import { itemCreate } from '../command/item/create';
 import { itemUpdate } from '../command/item/update';
 import { createOutboxWorker } from '../outbox/worker';
 import { allAutomations } from '../automation/registry';
-import '../automation/rules'; // registers all three rules
+import '../automation/rules'; // registers every shipping rule
 
 beforeEach(resetDb);
 afterAll(resetDb);
 
-it('all three rules are registered by importing the rules index', () => {
+it('every shipping rule is registered by importing the rules index', () => {
   const ids = allAutomations().map((a) => a.id);
-  expect(ids).toEqual(expect.arrayContaining(['parent-rollup', 'auto-assign-on-start', 'blocked-link-flag']));
+  expect(ids).toEqual(expect.arrayContaining(['parent-rollup', 'auto-assign-on-start', 'blocked-link-flag', 'repos-from-where']));
 });
 
 it('end-to-end: resolving the last child rolls the parent up, feed shows it', async () => {

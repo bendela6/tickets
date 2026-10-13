@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
-  check, index, integer, serial, timestamp, unique,
+  check, index, integer, serial, text, timestamp, unique,
 } from 'drizzle-orm/pg-core';
 import { items } from './items';
 import { linkTypes } from './link-types';
@@ -20,6 +20,9 @@ export const itemLinks = recordsSchema.table(
     targetItemId: integer('target_item_id')
       .notNull()
       .references(() => items.id),
+    // Why the link is there: on a plan's blocker (source blocks target), why
+    // the target waits on the source, which the API requires there.
+    why: text('why'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
       .notNull()
       .defaultNow(),

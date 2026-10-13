@@ -15,7 +15,7 @@ function board(transitions: Board['transitions']): Board {
       { id: 1002, optionSetId: 100, value: 'done', label: 'Done', position: 3, kind: 'done', config: {}, archivedAt: null },
     ],
     transitions, linkTypes: [], targetTypes: [], views: [], users: [], childTypes: [],
-    items: [{ id: 500, number: 1, typeId: 1, parentId: null, createdBy: 1, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: { status: 'todo' }, comments: [], links: [] }],
+    items: [{ id: 500, number: 1, key: 'C-1', typeId: 1, parentId: null, createdBy: 1, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: { status: 'todo' }, comments: [], links: [] }],
   };
 }
 

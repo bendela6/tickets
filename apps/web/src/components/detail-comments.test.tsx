@@ -26,6 +26,7 @@ function makeBoard(): Board {
       {
         id: 100,
         number: 128,
+        key: 'CORE-128',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -59,7 +60,7 @@ function renderComments() {
   render(
     <QueryClientProvider client={client}>
       <CurrentUserProvider>
-        <DetailComments indexes={indexes} item={item} prefix="CORE" />
+        <DetailComments indexes={indexes} item={item} />
       </CurrentUserProvider>
     </QueryClientProvider>,
   );

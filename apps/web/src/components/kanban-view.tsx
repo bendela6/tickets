@@ -84,9 +84,9 @@ export function KanbanView({
   board: Board;
   indexes: BoardIndexes;
   rows: Item[];
-  /** Kept for API symmetry with TableView; keys render from the itemPrefix. */
+  /** Kept for API symmetry with TableView; cards show each item's key. */
   projectKey: string;
-  onOpenTicket: (ticketNumber: number) => void;
+  onOpenTicket: (itemKey: string) => void;
   /** A column's ＋: start a new item in that status. */
   onNewTicket?: (status: string) => void;
 }): JSX.Element {
@@ -229,11 +229,11 @@ export function KanbanView({
         tabIndex={0}
         draggable={userId !== null}
         title={userId === null ? 'Pick a user in the header to move items' : undefined}
-        onClick={() => onOpenTicket(ticket.number)}
+        onClick={() => onOpenTicket(ticket.key)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            onOpenTicket(ticket.number);
+            onOpenTicket(ticket.key);
           }
         }}
         onDragStart={(event) => {
@@ -250,11 +250,7 @@ export function KanbanView({
         )}
       >
         <div className="flex items-center gap-8">
-          <ItemKey
-            prefix={board.project.itemPrefix}
-            number={ticket.number}
-            className="text-11"
-          />
+          <ItemKey itemKey={ticket.key} className="text-11" />
           {priorityOption ? (
             <Pill
               label={priorityOption.label}
@@ -360,7 +356,7 @@ export function KanbanView({
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
                 <div className="flex h-[74px] shrink-0 items-center justify-center rounded-12 border-2 border-dashed border-gray-7 font-mono text-11 text-gray-9">
-                  {board.project.itemPrefix}-{dragged.number} — dragging…
+                  {dragged.key} — dragging…
                 </div>
               ) : null}
             </div>

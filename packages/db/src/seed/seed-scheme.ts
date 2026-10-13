@@ -18,7 +18,7 @@ export type SeededScheme = {
 export async function seedScheme(db: Db, def: SchemeDef): Promise<SeededScheme> {
   const [scheme] = await db
     .insert(schemes)
-    .values({ key: def.key, name: def.name })
+    .values({ key: def.key, name: def.name, config: def.config ?? {} })
     .returning();
   const schemeId = scheme!.id;
 

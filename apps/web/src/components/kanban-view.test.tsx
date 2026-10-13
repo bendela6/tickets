@@ -124,6 +124,7 @@ function makeBoard(): Board {
       {
         id: 100,
         number: 121,
+        key: 'CORE-121',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -142,6 +143,7 @@ function makeBoard(): Board {
       {
         id: 101,
         number: 122,
+        key: 'CORE-122',
         typeId: 1,
         parentId: null,
         createdBy: 7,
@@ -206,6 +208,7 @@ function boardWithIncidents(): Board {
   board.items.push({
     id: 102,
     number: 123,
+    key: 'CORE-123',
     typeId: 2,
     parentId: null,
     createdBy: 7,
@@ -328,7 +331,7 @@ test('card shows the assignee avatar for a user-typed field', () => {
 test('clicking a card opens the ticket', async () => {
   const { onOpenTicket } = renderKanban();
   await userEvent.click(screen.getByRole('button', { name: /keyboard nav for board mode/i }));
-  expect(onOpenTicket).toHaveBeenCalledWith(121);
+  expect(onOpenTicket).toHaveBeenCalledWith('CORE-121');
 });
 
 test('dragging highlights legal targets, dims illegal ones, ghosts the origin', () => {
