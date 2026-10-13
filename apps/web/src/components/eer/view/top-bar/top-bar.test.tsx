@@ -15,7 +15,7 @@ describe('TopBar', () => {
   it('carries only Lines, Fit and Rearrange', async () => {
     await renderDiagram(<TopBar />, twoZoneRaw());
     expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Lines: avoid▾',
+      'Lines: avoid',
       'Fit',
       'Rearrange',
     ]);

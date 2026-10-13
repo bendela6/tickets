@@ -246,7 +246,7 @@ test('columns popover offers shared fields and disables unshared ones', async ()
 
 test('filtering by a shared field narrows rows across projects', async () => {
   await renderScreen();
-  await userEvent.click(screen.getByRole('button', { name: '＋ Filter' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Filter' }));
   await userEvent.click(screen.getByRole('button', { name: /Field…/ }));
   await userEvent.click(await screen.findByRole('option', { name: 'Severity' }));
   await userEvent.click(screen.getByRole('combobox', { name: 'Values…' }));

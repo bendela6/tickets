@@ -26,6 +26,7 @@ import {
   Icon,
   Input,
   Pill,
+  SegmentedControl,
   Tabs,
 } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
@@ -51,38 +52,28 @@ function EntryPill() {
   );
 }
 
+// One of the five kinds, as bh's segmented control: a choice of one among a
+// few short words, read without opening anything.
 function KindPicker({
   value,
   onChange,
-  disabled,
 }: {
   value: StatusKind;
   onChange: (kind: StatusKind) => void;
-  disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-6">
-      {KIND_ORDER.map((kind) => (
-        <button
-          key={kind}
-          type="button"
-          disabled={disabled}
-          aria-pressed={value === kind}
-          onClick={() => onChange(kind)}
-          className={cn(
-            'inline-flex h-28 items-center gap-6 rounded-6 border-1 px-8 font-sans text-12 font-500 capitalize',
-            value === kind
-              ? 'border-indigo-9 bg-indigo-3 text-gray-12'
-              : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
-          )}
-        >
-          <span className="inline-flex">
-            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
-          </span>
-          {kind}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      label="Kind"
+      size="xs"
+      className="self-start"
+      options={KIND_ORDER.map((kind) => ({
+        value: kind,
+        label: kind.charAt(0).toUpperCase() + kind.slice(1),
+        icon: KIND_ICON[kind],
+      }))}
+      value={value}
+      onChange={(next) => onChange(KIND_ORDER.find((kind) => kind === next) ?? value)}
+    />
   );
 }
 
