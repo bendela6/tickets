@@ -149,8 +149,9 @@ test('toggling a child-type chip fires useSetChildTypes — PUTs the updated chi
   const fetchMock = mockFetch();
   renderTab(makeBoard());
 
-  // Epic's child-type chip row offers Task (and not itself/archived Old).
-  await userEvent.click(screen.getByRole('button', { name: 'Task', hidden: true }));
+  // Epic's child-type chip row offers Task (and not the archived Old).
+  const epicCard = screen.getByText('epic').closest('section')!;
+  await userEvent.click(within(epicCard).getByRole('button', { name: 'Task', hidden: true }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -162,7 +163,7 @@ test('toggling a child-type chip fires useSetChildTypes — PUTs the updated chi
   expect(rest).toEqual({ actorId: 7, childTypeIds: [2] });
 
   // toggling it again removes it — a second PUT with an empty array.
-  await userEvent.click(screen.getByRole('button', { name: 'Task', hidden: true }));
+  await userEvent.click(within(epicCard).getByRole('button', { name: 'Task', hidden: true }));
   expect(fetchMock).toHaveBeenCalledTimes(2);
   const [, init2] = fetchMock.mock.calls[1] as [string, RequestInit];
   const { childTypeIds } = JSON.parse(String(init2.body)) as Record<string, unknown>;
@@ -221,4 +222,63 @@ test('disables create/edit/archive actions when there is no current user', () =>
 
   expect(screen.getByRole('button', { name: /new type/i })).toBeDisabled();
   expect(screen.getByRole('button', { name: /archive epic/i })).toBeDisabled();
+});
+
+// A ticket holds subtickets and a subticket subtickets of its own (TK-80.1).
+function makeNestingBoard(): Board {
+  return makeBoard({
+    types: [
+      { id: 1, schemeId: 5, key: 'ticket', label: 'Ticket', position: 1, config: {}, archivedAt: null },
+      { id: 2, schemeId: 5, key: 'subticket', label: 'Subticket', position: 2, config: {}, archivedAt: null },
+      { id: 3, schemeId: 5, key: 'old', label: 'Old', position: 3, config: {}, archivedAt: '2026-01-02T00:00:00.000Z' },
+    ],
+    childTypes: [
+      { parentTypeId: 1, childTypeId: 2 },
+      { parentTypeId: 2, childTypeId: 2 },
+    ],
+  });
+}
+
+// A type's card, found by its key.
+function card(typeKey: string): HTMLElement {
+  return screen.getByText(typeKey).closest('section')!;
+}
+
+test("shows a chip for a type's own type, pressed when the type may hold itself", () => {
+  renderTab(makeNestingBoard());
+
+  expect(
+    within(card('subticket')).getByRole('button', { name: 'Subticket', hidden: true, pressed: true }),
+  ).toBeInTheDocument();
+  expect(
+    within(card('ticket')).getByRole('button', { name: 'Ticket', hidden: true, pressed: false }),
+  ).toBeInTheDocument();
+  expect(
+    within(card('ticket')).getByRole('button', { name: 'Subticket', hidden: true, pressed: true }),
+  ).toBeInTheDocument();
+  expect(within(card('ticket')).queryByRole('button', { name: 'Old', hidden: true })).not.toBeInTheDocument();
+});
+
+test("toggling a type's own chip lets it hold itself, and toggling it off stops that", async () => {
+  const fetchMock = mockFetch();
+  renderTab(makeNestingBoard());
+
+  await userEvent.click(within(card('ticket')).getByRole('button', { name: 'Ticket', hidden: true }));
+  await userEvent.click(within(card('subticket')).getByRole('button', { name: 'Subticket', hidden: true }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/api/types/1/child-types');
+  expect(init.method).toBe('PUT');
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({ actorId: 7, childTypeIds: [2, 1] });
+
+  const [url2, init2] = fetchMock.mock.calls[1] as [string, RequestInit];
+  expect(url2).toBe('/api/types/2/child-types');
+  const { childTypeIds } = JSON.parse(String(init2.body)) as Record<string, unknown>;
+  expect(childTypeIds).toEqual([]);
+  expect(
+    within(card('subticket')).getByRole('button', { name: 'Subticket', hidden: true, pressed: false }),
+  ).toBeInTheDocument();
 });
