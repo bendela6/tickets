@@ -171,8 +171,8 @@ test('leads with Home, counting the projects, lit on the home page', async () =>
 test("counts every project's items on All items", async () => {
   renderFrame('/all');
   const nav = await sidebar();
-  // Two in Tickets, one of them with a subitem, and one in Gateway.
-  const all = await row(nav, 'All items', '4');
+  // Two in Tickets and one in Gateway: a subitem is counted under its parent, as the page does.
+  const all = await row(nav, 'All items', '3');
   expect(all).toHaveAttribute('href', '/all');
   expect(all).toHaveAttribute('aria-current', 'page');
   expect(await row(nav, 'Home', '2')).not.toHaveAttribute('aria-current');
@@ -185,8 +185,8 @@ test('lists each project under Projects, with its own count, lit while inside it
     'aria-expanded',
     'true',
   );
-  // Two items and a subitem.
-  const tickets = await row(nav, 'Tickets', '3');
+  // Two items; their subitem is not one of the board's rows.
+  const tickets = await row(nav, 'Tickets', '2');
   expect(tickets).toHaveAttribute('href', '/p/tk');
   expect(tickets).toHaveAttribute('aria-current', 'page');
   const gateway = await row(nav, 'Gateway', '1');
