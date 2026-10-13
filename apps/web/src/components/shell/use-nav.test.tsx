@@ -6,6 +6,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board, Item, Project } from '../../api/types';
 import { rootRoute } from '../../routes/root-route';
@@ -168,4 +169,27 @@ test("counts every project's items on All items", async () => {
   expect(all).toHaveAttribute('href', '/all');
   expect(all).toHaveAttribute('aria-current', 'page');
   expect(await row(nav, 'Home', '2')).not.toHaveAttribute('aria-current');
+});
+
+test('lists each project under Projects, with its own count, lit while inside it', async () => {
+  renderFrame('/p/tk/v/1');
+  const nav = await sidebar();
+  expect(within(nav).getByRole('button', { name: /^Projects/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  // Two items and a subitem.
+  const tickets = await row(nav, 'Tickets', '3');
+  expect(tickets).toHaveAttribute('href', '/p/tk');
+  expect(tickets).toHaveAttribute('aria-current', 'page');
+  const gateway = await row(nav, 'Gateway', '1');
+  expect(gateway).toHaveAttribute('href', '/p/gw');
+  expect(gateway).not.toHaveAttribute('aria-current');
+});
+
+test('"New project" on the Projects section opens the new project dialog', async () => {
+  renderFrame('/');
+  const nav = await sidebar();
+  await userEvent.click(within(nav).getByRole('button', { name: 'New project' }));
+  expect(await screen.findByRole('dialog', { name: 'New project' })).toBeInTheDocument();
 });
