@@ -7,6 +7,7 @@ import { useProjects } from '../../api/use-projects';
 import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
+import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
 import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
 import { ItemKey } from '../item-key';
@@ -269,7 +270,13 @@ export function AllItemsScreen() {
   const loading =
     projectsQuery.isLoading || (projects.length > 0 && boardQueries.every((q) => !q.data));
   if (loading) {
-    return <p className="px-32 py-28 font-sans text-13/19 text-gray-9">Loading all items…</p>;
+    return (
+      <Page header={<PageHeader title="All items" />}>
+        <PageBody>
+          <p className="font-sans text-13/19 text-gray-9">Loading all items…</p>
+        </PageBody>
+      </Page>
+    );
   }
 
   const { shared, unshared } = computeSharedFields(entries);
@@ -522,167 +529,175 @@ export function AllItemsScreen() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col px-16 pt-16 md:px-28 md:pt-22">
-      {/* Header: title · meta · search · columns · density */}
-      <div className="mb-14 flex shrink-0 flex-wrap items-center gap-14 gap-y-8">
-        <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">
-          All items
-        </h1>
-        <span className="font-mono text-12/17 text-gray-9">
-          {totalCount} items · {entries.length} projects
-        </span>
-        <span className="flex-1" />
-        <Input
-          type="search"
-          aria-label="Search titles"
-          placeholder="Search titles…"
-          value={query}
-          onChange={(next) => setQuery(next)}
-          className="h-32 w-full md:w-220"
-        />
-        <ColumnsPopover
-          projectCount={entries.length}
-          shared={shared}
-          unshared={unshared}
-          enabled={new Set(visibleColumns)}
-          customized={columnsCustomized}
-          kpi={config.kpi}
-          onToggle={setColumn}
-          onKpiChange={(kpi) => setConfig((current) => ({ ...current, kpi }))}
-        />
-        <span title="Density">
-          <Tabs variant="pill" role="group"
-            items={[
-              { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
-              { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
-            ]}
-            value={config.density}
-            onChange={(density) =>
-              setConfig((current) => ({ ...current, density: density as GlobalViewConfig['density'] }))
-            }
-          />
-        </span>
-      </div>
-
-      {/* Global view tabs + group selector */}
-      <div className="mb-12 flex shrink-0 items-center gap-6 border-b-1 border-gray-6">
-        <Tabs
-          className="border-b-0"
-          items={[DEFAULT_GLOBAL_VIEW, ...views].map((view) => ({
-            value: view.id,
-            label: view.name,
-            badge:
-              view.id === activeId && dirty ? (
-                <span aria-hidden title="Unsaved changes" className="inline-block size-6 rounded-full bg-orange-9" />
-              ) : undefined,
-          }))}
-          value={activeId}
-          onChange={(next) => {
-            const view = [DEFAULT_GLOBAL_VIEW, ...views].find((candidate) => candidate.id === next);
-            if (view) selectView(view);
-          }}
-        />
-        <button
-          type="button"
-          aria-label="New global view"
-          className="cursor-pointer px-10 py-8 font-sans text-13/19 text-gray-9 hover:text-gray-12"
-          onClick={() => setNaming(true)}
-        >
-          ＋
-        </button>
-        <span className="flex-1" />
-        <Menu>
-          <MenuTrigger asChild>
-            <button type="button" className="cursor-pointer py-8 font-sans text-12/17 text-gray-11">
-              Group:{' '}
-              <strong className="font-500 text-gray-12">
-                {config.group === 'project' ? 'Project' : 'Status kind'}
-              </strong>{' '}
-              <span aria-hidden className="text-10 text-gray-9">
-                <Icon name="chevron-down" size="2xs" />
+    <Page
+      header={
+        <PageHeader
+          title="All items"
+          description={
+            <span className="font-mono text-12/17 text-gray-9">
+              {totalCount} items · {entries.length} projects
+            </span>
+          }
+          actions={
+            <>
+              <Input
+                type="search"
+                aria-label="Search titles"
+                placeholder="Search titles…"
+                value={query}
+                onChange={(next) => setQuery(next)}
+                className="h-32 w-200 md:w-220"
+              />
+              <ColumnsPopover
+                projectCount={entries.length}
+                shared={shared}
+                unshared={unshared}
+                enabled={new Set(visibleColumns)}
+                customized={columnsCustomized}
+                kpi={config.kpi}
+                onToggle={setColumn}
+                onKpiChange={(kpi) => setConfig((current) => ({ ...current, kpi }))}
+              />
+              <span title="Density">
+                <Tabs variant="pill" role="group"
+                  items={[
+                    { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+                    { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+                  ]}
+                  value={config.density}
+                  onChange={(density) =>
+                    setConfig((current) => ({ ...current, density: density as GlobalViewConfig['density'] }))
+                  }
+                />
               </span>
-            </button>
-          </MenuTrigger>
-          <MenuContent align="end">
-            <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'project' }))}>
-              Project
-            </MenuItem>
-            <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'kind' }))}>
-              Status kind
-            </MenuItem>
-          </MenuContent>
-        </Menu>
-      </div>
-
-      <GlobalFilterChips
-        sharedFields={shared}
-        rules={config.filters}
-        dirty={dirty}
-        onRulesChange={(next) => setConfig((current) => ({ ...current, filters: next }))}
-        onSaveToView={saveToView}
-        onReset={() => setConfig(cloneConfig(activeView.config))}
-      />
-
-      {config.kpi ? (
-        <KpiTiles
-          counts={kpiCounts}
-          onHide={() => setConfig((current) => ({ ...current, kpi: false }))}
+            </>
+          }
         />
-      ) : null}
-
-      <div className="mb-8 shrink-0 font-mono text-12/17 text-gray-9">
-        {allRows.length} of {totalCount} match filters
-      </div>
-
-      {/* Grouped table */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-12 border-1 border-gray-6 bg-surface-raised">
-        {allRows.length === 0 ? (
-          <ScreenState
-            className="flex-1 justify-center py-64"
-            tone="neutral"
-            icon="search"
-            title={totalCount > 0 ? 'No items match these filters' : 'No items yet'}
-            body={
-              totalCount > 0
-                ? `Filters are hiding all ${totalCount} items across ${entries.length} projects.`
-                : 'Nothing here yet — create an item in any project.'
-            }
+      }
+    >
+      {/* One column with no gap of its own (each row keeps its margin), and no
+          bottom gutter: the table runs to the window's foot, as a sheet. */}
+      <PageBody className="min-h-0 flex-1 gap-0 pb-0 md:pb-0">
+        {/* Global view tabs + group selector */}
+        <div className="mb-12 flex shrink-0 items-center gap-6 border-b-1 border-gray-6">
+          <Tabs
+            className="border-b-0"
+            items={[DEFAULT_GLOBAL_VIEW, ...views].map((view) => ({
+              value: view.id,
+              label: view.name,
+              badge:
+                view.id === activeId && dirty ? (
+                  <span aria-hidden title="Unsaved changes" className="inline-block size-6 rounded-full bg-orange-9" />
+                ) : undefined,
+            }))}
+            value={activeId}
+            onChange={(next) => {
+              const view = [DEFAULT_GLOBAL_VIEW, ...views].find((candidate) => candidate.id === next);
+              if (view) selectView(view);
+            }}
           />
-        ) : (
-          <Table<Row>
-            columns={columns}
-            rows={[]}
-            groups={groups}
-            state={{ sort, widths }}
-            onSortChange={setSort}
-            onWidthChange={setWidth}
-            onRowClick={(row) =>
-              setSelected({ projectKey: row.entry.project.key, ticketId: row.ticket.id })
-            }
-            rowHeight={config.density === 'compact' ? 32 : 42}
-            isLoading={false}
-            render={tableRender<Row>()}
-          />
-        )}
-      </div>
+          <button
+            type="button"
+            aria-label="New global view"
+            className="cursor-pointer px-10 py-8 font-sans text-13/19 text-gray-9 hover:text-gray-12"
+            onClick={() => setNaming(true)}
+          >
+            ＋
+          </button>
+          <span className="flex-1" />
+          <Menu>
+            <MenuTrigger asChild>
+              <button type="button" className="cursor-pointer py-8 font-sans text-12/17 text-gray-11">
+                Group:{' '}
+                <strong className="font-500 text-gray-12">
+                  {config.group === 'project' ? 'Project' : 'Status kind'}
+                </strong>{' '}
+                <span aria-hidden className="text-10 text-gray-9">
+                  <Icon name="chevron-down" size="2xs" />
+                </span>
+              </button>
+            </MenuTrigger>
+            <MenuContent align="end">
+              <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'project' }))}>
+                Project
+              </MenuItem>
+              <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'kind' }))}>
+                Status kind
+              </MenuItem>
+            </MenuContent>
+          </Menu>
+        </div>
 
-      {selectedEntry && selectedTicket ? (
-        <ItemDrawer
-          projectKey={selectedEntry.project.key}
-          board={selectedEntry.board}
-          indexes={selectedEntry.indexes}
-          item={selectedTicket}
-          onClose={() => setSelected(null)}
-          onOpenItem={(itemKey) => {
-            // /all keeps the open item in state, not in the URL's `t`, so the
-            // drawer's subtask, link and parent rows open through here.
-            const target = selectedEntry.indexes.itemByKey.get(itemKey);
-            if (target) setSelected({ projectKey: selectedEntry.project.key, ticketId: target.id });
-          }}
+        <GlobalFilterChips
+          sharedFields={shared}
+          rules={config.filters}
+          dirty={dirty}
+          onRulesChange={(next) => setConfig((current) => ({ ...current, filters: next }))}
+          onSaveToView={saveToView}
+          onReset={() => setConfig(cloneConfig(activeView.config))}
         />
-      ) : null}
 
-      <SaveViewDialog open={naming} onOpenChange={setNaming} onSave={createView} />
-    </div>
+        {config.kpi ? (
+          <KpiTiles
+            counts={kpiCounts}
+            onHide={() => setConfig((current) => ({ ...current, kpi: false }))}
+          />
+        ) : null}
+
+        <div className="mb-8 shrink-0 font-mono text-12/17 text-gray-9">
+          {allRows.length} of {totalCount} match filters
+        </div>
+
+        {/* Grouped table */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-12 border-1 border-gray-6 bg-surface-raised">
+          {allRows.length === 0 ? (
+            <ScreenState
+              className="flex-1 justify-center py-64"
+              tone="neutral"
+              icon="search"
+              title={totalCount > 0 ? 'No items match these filters' : 'No items yet'}
+              body={
+                totalCount > 0
+                  ? `Filters are hiding all ${totalCount} items across ${entries.length} projects.`
+                  : 'Nothing here yet — create an item in any project.'
+              }
+            />
+          ) : (
+            <Table<Row>
+              columns={columns}
+              rows={[]}
+              groups={groups}
+              state={{ sort, widths }}
+              onSortChange={setSort}
+              onWidthChange={setWidth}
+              onRowClick={(row) =>
+                setSelected({ projectKey: row.entry.project.key, ticketId: row.ticket.id })
+              }
+              rowHeight={config.density === 'compact' ? 32 : 42}
+              isLoading={false}
+              render={tableRender<Row>()}
+            />
+          )}
+        </div>
+
+        {selectedEntry && selectedTicket ? (
+          <ItemDrawer
+            projectKey={selectedEntry.project.key}
+            board={selectedEntry.board}
+            indexes={selectedEntry.indexes}
+            item={selectedTicket}
+            onClose={() => setSelected(null)}
+            onOpenItem={(itemKey) => {
+              // /all keeps the open item in state, not in the URL's `t`, so the
+              // drawer's subtask, link and parent rows open through here.
+              const target = selectedEntry.indexes.itemByKey.get(itemKey);
+              if (target) setSelected({ projectKey: selectedEntry.project.key, ticketId: target.id });
+            }}
+          />
+        ) : null}
+
+        <SaveViewDialog open={naming} onOpenChange={setNaming} onSave={createView} />
+      </PageBody>
+    </Page>
   );
 }

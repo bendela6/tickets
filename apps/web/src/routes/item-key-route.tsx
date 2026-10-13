@@ -1,4 +1,5 @@
 import { Link, Navigate, createRoute } from '@tanstack/react-router';
+import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { useItemByKey } from '../api/use-item-by-key';
 import { rootRoute } from './root-route';
 
@@ -17,21 +18,23 @@ function ItemKeyScreen() {
     );
   }
   return (
-    <div className="px-32 py-28">
-      {found.isError ? (
-        <>
-          <p className="font-sans text-13/19 text-red-9">{(found.error as Error).message}</p>
-          <Link
-            to="/"
-            className="mt-12 inline-flex h-32 items-center rounded-8 border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
-          >
-            ← projects
-          </Link>
-        </>
-      ) : (
-        <p className="font-sans text-13/19 text-gray-9">Finding {itemKey}…</p>
-      )}
-    </div>
+    <Page header={<PageHeader title={itemKey} />}>
+      <PageBody>
+        {found.isError ? (
+          <>
+            <p className="font-sans text-13/19 text-red-9">{(found.error as Error).message}</p>
+            <Link
+              to="/"
+              className="inline-flex h-32 w-max items-center rounded-8 border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+            >
+              ← projects
+            </Link>
+          </>
+        ) : (
+          <p className="font-sans text-13/19 text-gray-9">Finding {itemKey}…</p>
+        )}
+      </PageBody>
+    </Page>
   );
 }
 
