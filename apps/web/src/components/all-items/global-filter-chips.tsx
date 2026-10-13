@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Combobox, type Option, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
+import { Button, Combobox, Icon, type Option, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
 import { KIND_TONE } from '../../domain/status';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';
@@ -134,12 +134,10 @@ function AddFilter({
       }}
     >
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-28 cursor-pointer items-center gap-5 rounded-8 border-1 border-dashed border-gray-7 px-10 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
-        >
-          ＋ Filter
-        </button>
+        <Button variant="ghost" tone="neutral" size="sm" className="border-dashed border-gray-7">
+          <Icon name="plus" size="sm" />
+          Filter
+        </Button>
       </PopoverTrigger>
       <PopoverContent>
         <div className="flex w-256 flex-col gap-8 p-12">
@@ -273,13 +271,9 @@ export function GlobalFilterChips({
           <Button size="sm" onClick={onSaveToView}>
             Save to view
           </Button>
-          <button
-            type="button"
-            className="cursor-pointer font-sans text-12/17 font-500 text-gray-9 hover:text-gray-12"
-            onClick={onReset}
-          >
+          <Button variant="ghost" tone="neutral" size="sm" onClick={onReset}>
             Reset
-          </button>
+          </Button>
         </>
       ) : null}
     </div>

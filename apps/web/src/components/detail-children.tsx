@@ -7,7 +7,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { cn, Combobox, Icon, Progress, SectionHeader } from '@bh/ui';
+import { Card, cn, Combobox, Icon, Progress, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { childProgress } from '../utils/child-progress';
 import { nextKey } from '../utils/next-key';
@@ -80,7 +80,7 @@ export function DetailChildren({
         }
         className="mb-8 gap-10"
       />
-      <div className="overflow-hidden rounded-12 border-1 border-gray-6">
+      <Card>
         {children.map((child) => {
           const wf = indexes.workflowField(child.typeId);
           const rawStatus = wf ? child.values[wf.key] : undefined;
@@ -166,7 +166,7 @@ export function DetailChildren({
             </span>
           ) : null}
         </form>
-      </div>
+      </Card>
       {createItem.isError ? (
         <p className="m-0 mt-6 font-sans text-12/17 text-red-9">
           {(createItem.error as Error).message}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
+import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger, SearchInput } from '@bh/ui';
 import type { SharedField, UnsharedField } from './shared-fields';
 import { canonicalColumns } from './shared-fields';
 
@@ -63,16 +63,13 @@ export function ColumnsPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-280 p-0">
-        <div className="flex items-center gap-8 border-b-1 border-gray-6 px-13 py-10">
-          <span aria-hidden className="font-sans text-12/17 text-gray-9">
-            ⌕
-          </span>
-          <input
+        <div className="border-b-1 border-gray-6 px-10 py-10">
+          <SearchInput
+            size="xs"
             aria-label="Find a field"
             placeholder="Find a field…"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-0"
+            onChange={setQuery}
           />
         </div>
         <div className="max-h-320 overflow-y-auto p-6">

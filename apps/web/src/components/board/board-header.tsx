@@ -1,4 +1,4 @@
-import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@bh/ui';
+import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs, Tooltip } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
@@ -86,8 +86,7 @@ export function BoardHeader({
 
       {config.mode === 'table' ? (
         <>
-          <Input
-            type="search"
+          <SearchInput
             aria-label="Search titles"
             placeholder="Search titles…"
             value={query}
@@ -104,16 +103,18 @@ export function BoardHeader({
               <ColumnChecklist indexes={indexes} config={config} onUpdate={onUpdate} />
             </PopoverContent>
           </Popover>
-          <span title="Density">
-            <Tabs variant="pill" role="group"
-              items={[
-                { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
-                { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
-              ]}
-              value={config.density}
-              onChange={(density) => onUpdate((current) => ({ ...current, density: density as ViewDensity }))}
-            />
-          </span>
+          <Tooltip content="Density">
+            <span>
+              <Tabs variant="pill" role="group"
+                items={[
+                  { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+                  { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+                ]}
+                value={config.density}
+                onChange={(density) => onUpdate((current) => ({ ...current, density: density as ViewDensity }))}
+              />
+            </span>
+          </Tooltip>
         </>
       ) : (
         <>
@@ -125,15 +126,14 @@ export function BoardHeader({
           </span>
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="shrink-0 font-sans text-12/17 text-gray-11">
-                Cards:{' '}
-                <strong className="font-500 text-gray-12">
-                  {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
-                </strong>{' '}
-                <span aria-hidden className="text-10 text-gray-9">
-                  <Icon name="chevron-down" size="2xs" />
+              <Button variant="ghost" tone="neutral" size="sm" chevron className="shrink-0 font-400">
+                <span>
+                  Cards:{' '}
+                  <strong className="font-500 text-gray-12">
+                    {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
+                  </strong>
                 </span>
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent align="end">
               <ColumnChecklist indexes={indexes} config={config} onUpdate={onUpdate} />

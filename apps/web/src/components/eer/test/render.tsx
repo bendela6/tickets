@@ -1,6 +1,7 @@
 // Render helpers for component tests: a loaded DiagramProvider around arbitrary UI.
 
 import { act, render, type RenderResult } from '@testing-library/react';
+import { TooltipProvider } from '@bh/ui';
 import type { ReactNode } from 'react';
 
 import { useDiagramActions } from '../state/diagram-context';
@@ -24,6 +25,7 @@ export async function renderDiagram(ui: ReactNode, raw?: unknown): Promise<Rende
       <Grab />
       {ui}
     </DiagramProvider>,
+    { wrapper: TooltipProvider },
   );
   await act(async () => grabbed!.load(buildModel(raw)));
   return Object.assign(result, { actions: grabbed! });

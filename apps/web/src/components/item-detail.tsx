@@ -6,7 +6,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
+import { Button, Card, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -398,10 +398,10 @@ export function ItemDetail({
           </section>
         </div>
         <div className="flex w-320 shrink-0 flex-col gap-20">
-          <section className="flex flex-col gap-12 rounded-12 border-1 border-gray-6 bg-surface-raised p-16">
+          <Card padding={4} className="flex flex-col gap-12">
             <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
-          </section>
+          </Card>
           <section>
             <SectionHeader title="Activity" className="mb-10" />
             <DetailActivity item={item} indexes={indexes} />

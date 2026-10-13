@@ -174,7 +174,7 @@ describe('/schema inside the frame', () => {
     renderSchemaRoute();
     const panel = await screen.findByRole('complementary', { name: 'Schema outline' });
     expect(
-      await within(panel).findByRole('textbox', { name: 'Filter tables' }),
+      await within(panel).findByRole('searchbox', { name: 'Filter tables' }),
     ).toBeInTheDocument();
     expect(
       await within(panel).findByRole('treeitem', { name: 'Ticket data, 2 tables' }),
@@ -189,7 +189,7 @@ describe('/schema inside the frame', () => {
   it('filters the outline without touching what the canvas draws', async () => {
     const { container } = renderSchemaRoute();
     await waitFor(() => expect(container.querySelectorAll('[data-card]')).toHaveLength(2));
-    fireEvent.change(await screen.findByRole('textbox', { name: 'Filter tables' }), {
+    fireEvent.change(await screen.findByRole('searchbox', { name: 'Filter tables' }), {
       target: { value: 'comments' },
     });
     expect(screen.queryByRole('treeitem', { name: 'tickets' })).not.toBeInTheDocument();

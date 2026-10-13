@@ -10,7 +10,7 @@ import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
-import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@bh/ui';
+import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, SearchInput, tableRender, Tabs, TONE_HUE, Tooltip } from '@bh/ui';
 import { ItemKey } from '../item-key';
 import { avatarFor } from '../../domain/actor';
 import { childProgress } from '../../utils/child-progress';
@@ -274,7 +274,7 @@ export function AllItemsScreen() {
     return (
       <Page header={<PageHeader title="All items" />}>
         <PageBody>
-          <p className="font-sans text-13/19 text-gray-9">Loading all items…</p>
+          <ScreenState title="Loading all items…" />
         </PageBody>
       </Page>
     );
@@ -541,8 +541,7 @@ export function AllItemsScreen() {
           }
           actions={
             <>
-              <Input
-                type="search"
+              <SearchInput
                 aria-label="Search titles"
                 placeholder="Search titles…"
                 value={query}
@@ -559,18 +558,20 @@ export function AllItemsScreen() {
                 onToggle={setColumn}
                 onKpiChange={(kpi) => setConfig((current) => ({ ...current, kpi }))}
               />
-              <span title="Density">
-                <Tabs variant="pill" role="group"
-                  items={[
-                    { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
-                    { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
-                  ]}
-                  value={config.density}
-                  onChange={(density) =>
-                    setConfig((current) => ({ ...current, density: density as GlobalViewConfig['density'] }))
-                  }
-                />
-              </span>
+              <Tooltip content="Density">
+                <span>
+                  <Tabs variant="pill" role="group"
+                    items={[
+                      { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+                      { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+                    ]}
+                    value={config.density}
+                    onChange={(density) =>
+                      setConfig((current) => ({ ...current, density: density as GlobalViewConfig['density'] }))
+                    }
+                  />
+                </span>
+              </Tooltip>
             </>
           }
         />
@@ -588,7 +589,9 @@ export function AllItemsScreen() {
               label: view.name,
               badge:
                 view.id === activeId && dirty ? (
-                  <span aria-hidden title="Unsaved changes" className="inline-block size-6 rounded-full bg-orange-9" />
+                  <Tooltip content="Unsaved changes">
+                    <span aria-hidden className="inline-block size-6 rounded-full bg-orange-9" />
+                  </Tooltip>
                 ) : undefined,
             }))}
             value={activeId}
@@ -608,15 +611,14 @@ export function AllItemsScreen() {
           <span className="flex-1" />
           <Menu>
             <MenuTrigger asChild>
-              <button type="button" className="cursor-pointer py-8 font-sans text-12/17 text-gray-11">
-                Group:{' '}
-                <strong className="font-500 text-gray-12">
-                  {config.group === 'project' ? 'Project' : 'Status kind'}
-                </strong>{' '}
-                <span aria-hidden className="text-10 text-gray-9">
-                  <Icon name="chevron-down" size="2xs" />
+              <Button variant="ghost" tone="neutral" size="sm" chevron className="font-400">
+                <span>
+                  Group:{' '}
+                  <strong className="font-500 text-gray-12">
+                    {config.group === 'project' ? 'Project' : 'Status kind'}
+                  </strong>
                 </span>
-              </button>
+              </Button>
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem onSelect={() => setConfig((current) => ({ ...current, group: 'project' }))}>

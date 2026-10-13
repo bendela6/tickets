@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import { TooltipProvider } from '@bh/ui';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -81,6 +82,7 @@ function renderWithProviders(node: ReactNode) {
     <QueryClientProvider client={client}>
       <CurrentUserProvider>{node}</CurrentUserProvider>
     </QueryClientProvider>,
+    { wrapper: TooltipProvider },
   );
 }
 
@@ -282,7 +284,7 @@ test('editing an option label/kind fires useUpdateOption, preserving other confi
   const labelBox = screen.getByRole('textbox', { name: 'Label' });
   await userEvent.clear(labelBox);
   await userEvent.type(labelBox, 'Doing');
-  await userEvent.click(screen.getByRole('button', { name: 'blocked' }));
+  await userEvent.click(screen.getByRole('radio', { name: 'Blocked' }));
   await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);

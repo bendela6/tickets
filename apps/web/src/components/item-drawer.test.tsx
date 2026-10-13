@@ -12,7 +12,7 @@ import { flushSync } from 'react-dom';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
-import { ToastProvider } from '@bh/ui';
+import { ToastProvider, TooltipProvider } from '@bh/ui';
 import { indexBoard } from '../utils/index-board';
 import { ItemDrawer } from './item-drawer';
 
@@ -204,6 +204,7 @@ async function renderDrawer(onOpenItem?: (itemKey: string) => void, { closes = f
         </ToastProvider>
       </CurrentUserProvider>
     </QueryClientProvider>,
+    { wrapper: TooltipProvider },
   );
   await screen.findByRole('dialog', { name: 'Item detail' });
   return { onClose };

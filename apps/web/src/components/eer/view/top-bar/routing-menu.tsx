@@ -2,16 +2,30 @@
 // modes behind one control meant two clicks to reach the third and no way to
 // see what the others were without landing on them.
 
-import { Dropdown, cn } from '@bh/ui';
+import { forwardRef, type ComponentPropsWithoutRef } from 'react';
+import { Button, Dropdown, Tooltip, cn } from '@bh/ui';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramView } from '../../state/diagram-context';
-import { btn } from './button-class';
 
 const MODES: { mode: RoutingMode; label: string; tip: string }[] = [
   { mode: 'curved', label: 'Curved', tip: 'Direct curves (may cross cards)' },
   { mode: 'avoid', label: 'Avoid', tip: 'Curves routed around cards' },
   { mode: 'ortho', label: 'Ortho', tip: 'Horizontal / vertical only' },
 ];
+
+// The trigger: a Button with the mode's tip as its tooltip. A component of its
+// own because the dropdown's trigger hands its props and ref to its child, and
+// a Tooltip around the Button would swallow them; here they reach the Button.
+const LinesButton = forwardRef<
+  HTMLButtonElement,
+  ComponentPropsWithoutRef<typeof Button> & { tip: string }
+>(function LinesButton({ tip, ...rest }, ref) {
+  return (
+    <Tooltip content={tip}>
+      <Button ref={ref} variant="outline" tone="neutral" size="sm" chevron {...rest} />
+    </Tooltip>
+  );
+});
 
 export function RoutingMenu() {
   const view = useDiagramView();
@@ -23,14 +37,9 @@ export function RoutingMenu() {
       align="start"
       padding="sm"
       trigger={
-        // The caret is aria-hidden so the trigger's accessible name stays the
-        // mode itself ("Lines: avoid") — the state, not the decoration.
-        <button type="button" className={cn(btn, 'flex items-center gap-8')} title={current.tip}>
-          Lines: {current.mode}
-          <span aria-hidden className="text-gray-11">
-            ▾
-          </span>
-        </button>
+        // Button's chevron is aria-hidden, so the trigger's accessible name
+        // stays the mode itself ("Lines: avoid") — the state, not the decoration.
+        <LinesButton tip={current.tip}>Lines: {current.mode}</LinesButton>
       }
     >
       {(close) => (
