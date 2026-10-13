@@ -283,6 +283,20 @@
           "nullable": false
         },
         {
+          "name": "repository_url",
+          "type": "text",
+          "title": "Repository",
+          "description": "Git URL of the project's repository (https, ssh or git@host:path); the same for everyone. Each developer's local checkout is kept on their machine, not here.",
+          "nullable": true
+        },
+        {
+          "name": "default_branch",
+          "type": "text",
+          "title": "Default branch",
+          "description": "Branch work lands on; null means the remote's own default (its HEAD). Only set with a repository.",
+          "nullable": true
+        },
+        {
           "name": "created_at",
           "type": "timestamp with time zone",
           "title": "Created at",
@@ -317,6 +331,12 @@
             "key"
           ],
           "nullsNotDistinct": false
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "projects_branch_needs_repository",
+          "expression": "default_branch IS NULL OR repository_url IS NOT NULL"
         }
       ],
       "indexes": []

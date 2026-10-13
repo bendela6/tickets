@@ -13,7 +13,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 function makeBoard(overrides: Partial<Board> = {}): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 5, itemPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 5, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
       { id: 1, schemeId: 5, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null },
@@ -124,6 +124,22 @@ test('switching tabs renders the corresponding placeholder panel', async () => {
 
   await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
   expect(screen.getByRole('heading', { name: 'Links' })).toBeInTheDocument();
+});
+
+// The repository is the project's own, so the banner about the shared scheme
+// is left off its tab, and comes back on the scheme's.
+test('the Repository tab shows the project\'s repository without the scheme banner', async () => {
+  mockBoardFetch(makeBoard());
+  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  await screen.findByRole('tab', { name: /Types/ });
+
+  await userEvent.click(screen.getByRole('tab', { name: /Repository/ }));
+  expect(screen.getByRole('heading', { name: 'Repository' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Git link')).toBeInTheDocument();
+  expect(screen.queryByText(/Editing the shared scheme/)).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
+  expect(screen.getByText(/Editing the shared scheme/)).toBeInTheDocument();
 });
 
 test('clicking Fork forks the scheme then repoints the project to the forked scheme', async () => {

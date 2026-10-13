@@ -45,7 +45,7 @@ const severityOptions = (base: number, optionSetId: number): Option[] => [
 // same key + type + shape in both — while 'flavor' exists only in Items Core.
 function makeCoreBoard(): Board {
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [taskType(1, 1)],
     fields: [
@@ -112,7 +112,7 @@ function makeCoreBoard(): Board {
 
 function makeAppBoard(): Board {
   return {
-    project: { id: 2, key: 'app', name: 'Items App', schemeId: 2, itemPrefix: 'APP', createdAt },
+    project: { id: 2, key: 'app', name: 'Items App', schemeId: 2, itemPrefix: 'APP', createdAt, repositoryUrl: null, defaultBranch: null },
     users: [{ id: 9, name: 'Jae R', email: null, kind: 'human', archivedAt: null }],
     types: [taskType(5, 2)],
     fields: [

@@ -2,6 +2,7 @@ import type { Board } from '../../api/types';
 import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
+import { ProjectRepository } from './project-repository';
 
 type UpdateConfig = (mutate: (current: ViewConfig) => ViewConfig) => void;
 
@@ -96,6 +97,9 @@ export function BoardHeader({
       <span className="font-mono text-12/17 text-gray-9">
         {ticketCount} items · {donePercent}% done
       </span>
+      {/* A line of its own under the row: inline, a long link would push the
+          controls onto a second row at desktop widths. */}
+      <ProjectRepository project={board.project} className="order-last basis-full" />
       <span className="flex-1" />
 
       {config.mode === 'table' ? (

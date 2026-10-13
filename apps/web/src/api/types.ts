@@ -1,4 +1,10 @@
-export interface Project { id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string; }
+export interface Project {
+  id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string;
+  /** The git link everyone clones (https, ssh or git@host:path); null when none is set. */
+  repositoryUrl: string | null;
+  /** The branch work lands on; null is the remote's own default. Only set with a repository. */
+  defaultBranch: string | null;
+}
 
 export type UserKind = 'human' | 'agent';
 export interface User { id: number; name: string; email: string | null; kind: UserKind; archivedAt: string | null; }

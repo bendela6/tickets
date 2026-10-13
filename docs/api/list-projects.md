@@ -22,6 +22,8 @@ No parameters.
     key: string;           // URL-safe project key, e.g. "tickets"
     name: string;
     ticketPrefix: string;  // display prefix, e.g. "TASK" in TASK-42
+    repositoryUrl: string | null;  // git link everyone clones: https://…, ssh://… or git@host:path
+    defaultBranch: string | null;  // branch work lands on; null = the remote's own default
     createdAt: string;     // ISO timestamp
   }[];
   meta: {
