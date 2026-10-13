@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { applyTheme } from '../../utils/apply-theme';
+import { applyTheme } from '@bh/shell';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import { cn } from '@bh/ui';
 import { ActorMenu } from './actor-menu';
 import { BrandMark } from './brand-mark';
@@ -48,7 +49,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
         aria-label="Toggle theme"
         onClick={() => {
           const next = theme === 'dark' ? 'light' : 'dark';
-          applyTheme(next);
+          applyTheme(next, STORAGE_KEYS.theme);
           setTheme(next);
         }}
         className="flex size-36 items-center justify-center rounded-8 text-gray-11 hover:bg-surface-inset"
