@@ -844,6 +844,13 @@
               ],
               "approved": true
             }
+          ],
+          "notes": [
+            {
+              "at": "2026-10-13T08:04:51.577Z",
+              "by": "claude",
+              "text": "The builder's findings from TK-4, placed:\n\n- **bh**: `SidePanel`'s reopen button covering the phone's top bar is TK-103.7, and a nav row read as \"Home2\" is TK-103.8. TK-103, the bh gaps TK-5 found, now holds both, and its release and tickets' update carry them.\n- **New TK-104**, tickets on a phone and its counts: the Fields tab's table overlapping (TK-104.1), a project's page header counting subitems while the sidebar counts top-level items (TK-104.2), and a small fix for the KPI strip widening the page until TK-5.8 replaces it (TK-104.3, cancel it to wait).\n- TK-5.8's number cards must fit a phone, and TK-9.2, moving the schema diagram into bh, must keep its Details panel from taking 320 of a phone's 500px."
+            }
           ]
         },
         {
@@ -857,12 +864,17 @@
               "why": "needs bh's next version in tickets' copy"
             }
           ],
-          "statusNote": "On tickets branch `tk-5`, in `../tickets-wt-tk-5`, cut from the same base as `tk-4` (2a19662a): TK-5.21.1 (3853e6a1) migration 0008 turns every hex `config.color` on options and item types into its hue name, tested on the seed's 5 hexes and the 13 from the live backup, run on the copy `tickets_tk_5` (not yet on `tickets_dev`, which gets it after the merge; live with its deploy); TK-5.21.2 (0ccde49b) the Types and Workflow tabs pick with bh's `ColorPicker` and the seed writes names (the Fields tab has no picker); TK-5.21.3 (58fbb925) `hexToOptionColor` gone, `config.color` typed `Hue`; TK-5.10 (4a90cb6e) one `ArchChip` and one `slugify`; TK-5.7 (abe26551) the status picker is bh's `Combobox` without search, grouped by kind, a forbidden move disabled with why; TK-5.9.1 (e263379e) `InlineTitle` on bh's `Input` with `commit=\"leave\"`. What bh lacked: Escape in an `Input` inside a `Drawer` closes the drawer and its unmount commits the draft (worked around in `InlineTitle`); `ColorPicker`'s selected dot (`bg-${hue}-contrast`) isn't in bh's safelist, so no selected mark shows; `Combobox` draws no option icons; its list is only as wide as its trigger. Being built now that TK-4 is: TK-5.1, 5.2, 5.3, 5.5, 5.9.2, 5.13 and 5.14, on `tk-5` rebased onto `tk-4` (so the commits above get new ids).",
+          "statusNote": "On tickets branch `tk-5`, in `../tickets-wt-tk-5`, rebased onto `tk-4` (so merged after it); not merged. TK-5.21.1 (a0686b9f) migration 0008 turns every hex `config.color` on options and item types into its hue name, tested on the seed's 5 hexes and the 13 from the live backup, run on the copy `tickets_tk_5` (not yet on `tickets_dev`, which gets it after the merge; live with its deploy); TK-5.21.2 (e0e48746) the Types and Workflow tabs pick with bh's `ColorPicker`, the seed writes names; TK-5.21.3 (1dff3f05) `hexToOptionColor` gone, `config.color` typed `Hue`; TK-5.10 (9fe58439) one `ArchChip` and one `slugify`; TK-5.7 (a40800a8) the status picker is bh's `Combobox` without search, grouped by kind, a forbidden move disabled with why; TK-5.9.1 (f930f190) `InlineTitle` on bh's `Input` with `commit=\"leave\"`; TK-5.1 (441930d4) text buttons are bh's `Button`, Workflow's kind picker a `SegmentedControl` (its per-kind icon colors gone); TK-5.2 (abd3127c) loading, empty and error states are `ScreenState`; TK-5.3 (a92a84e6) Home's project cards and TK-5.13 (dc1fcfdc) the other hand-spelled cards are `Card` (the KPI strip waits for TK-5.8; the New project tile and the new-item type tiles stay hand-built, since `Card` can't be a button or link); TK-5.5 (4098a015) search fields are `SearchInput`; TK-5.9.2 (a7d2bdab) the add-view field is bh's `Input` with `commit=\"leave\"`; TK-5.14 (7aafda3c) native `title=` hints are bh's `Tooltip`, a disabled button's on a wrapping span. Typecheck, 589 web tests and the build pass. Glyph-only buttons wait for TK-5.12. What bh lacked: Escape in an `Input` inside a `Drawer` commits the draft (worked around in `InlineTitle`); `ColorPicker`'s selected mark; `Combobox` option icons and a list wider than its trigger (all four in TK-103); also `ScreenState` has no loading look, `Card` can't render as a button or link, and `SegmentedControl` icons take no tone.",
           "notes": [
             {
               "at": "2026-10-13T08:00:45.644Z",
               "by": "claude",
               "text": "The four gaps in bh the builder found while building this are now TK-103: Escape in an `Input` inside a `Drawer` saving the draft it drops, `ColorPicker`'s selected swatch showing no mark, `Combobox` not showing option icons, and its list being only as wide as its trigger. TK-103 also releases bh's next version and updates tickets to it, removing `InlineTitle`'s Escape workaround and giving the status picker its kind icons back. It has one question for you: what Escape does when you're editing a field in the drawer."
+            },
+            {
+              "at": "2026-10-13T08:42:41.409Z",
+              "by": "claude",
+              "text": "Three more gaps in bh from the rest of this run, placed:\n\n- `Card` can't be a button or a link: TK-103.9. TK-103.6, tickets' update, then moves the New project tile, the new-item type tiles and Home's project cards onto it.\n- `SegmentedControl`'s icons can't take a color: TK-103.10. TK-103.6 gives Workflow's kind icons their colors back.\n- `ScreenState` has no loading look: that is TK-34 already (Not planned), now naming tickets' plain-text loading states.\n\nAlso: TK-5.12, the glyph buttons, now says a disabled one shows its hint too."
             }
           ],
           "where": [
@@ -887,7 +899,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -899,7 +911,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -911,7 +923,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -936,7 +948,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -984,6 +996,7 @@
             {
               "id": "TK-5.8",
               "title": "Replace the KPI strip with number `Card`s (TK-76)",
+              "description": "The board's KPI strip (`components/board/kpi-strip.tsx`) becomes number `Card`s that fit a phone's width: today the strip is wider than a 500px screen and the page scrolls sideways (seen in TK-4.8).",
               "where": [
                 {
                   "repo": "tickets",
@@ -997,7 +1010,14 @@
                   "why": "uses bh's number `Card`s"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-13T08:04:51.315Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: its cards must fit a phone's width; the strip they replace makes a 500px screen scroll sideways today."
+                }
+              ]
             },
             {
               "id": "TK-5.9",
@@ -1025,7 +1045,7 @@
                 {
                   "id": "TK-5.9.2",
                   "title": "Move the \"add view\" input in `ViewTabs` onto the same input",
-                  "done": false,
+                  "done": true,
                   "approved": true
                 }
               ]
@@ -1100,6 +1120,7 @@
             {
               "id": "TK-5.12",
               "title": "Replace glyph buttons with icon-only `Button`s (TK-24.2)",
+              "description": "Every glyph-only button (unplace, remove, and the others) becomes bh's icon-only `Button` with a `Tooltip`, and a disabled one shows its hint too, on a wrapping span as TK-5.14 does for text buttons: today a disabled glyph button shows its hint only while enabled.",
               "where": [
                 {
                   "repo": "tickets",
@@ -1113,7 +1134,14 @@
                   "why": "uses `Button`'s icon-only size"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-13T08:42:41.285Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: a disabled glyph button must show its hint too, on a wrapping span as TK-5.14 does; today it shows it only while enabled."
+                }
+              ]
             },
             {
               "id": "TK-5.13",
@@ -1124,7 +1152,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1136,7 +1164,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1309,13 +1337,34 @@
           ]
         },
         {
+          "id": "TK-103",
+          "title": "Fix the gaps in bh that TK-4 and TK-5 found",
+          "description": "Eight gaps the builder found in bh 2.0.0 while moving tickets onto bh's frame (TK-4) and parts (TK-5), which no ticket covered. tickets works around some of them, and goes without the others until bh's next version reaches it. `ScreenState`'s missing loading look, found by the same run, is TK-34.",
           "status": "Planning",
           "waitingOn": ["your choices (below)"],
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/ui, @bh/shell"
+            },
+            {
+              "repo": "live gateway",
+              "part": "bh page"
+            },
+            {
+              "repo": "tickets",
+              "part": "apps/web"
+            }
+          ],
           "today": [
             "Escape in an `Input` that holds a draft (its `commit` isn't `'change'`) inside a `Drawer`: the drawer, a Radix dialog, hears Escape first, on the document's capture phase, and closes; the Input then unmounts and commits the draft Escape meant to drop. tickets' `InlineTitle` refuses that commit with an Escape listener of its own on the window (TK-5.9.1, e263379e).",
             "`ColorPicker`'s selected swatch draws its inner dot with `bg-${hue}-contrast` (`color-picker.tsx:192`), a class bh's safelist doesn't hold, so in an app the dot is transparent and nothing marks the chosen color: seen in tickets' Types and Workflow tabs (TK-5.21.2). bh's own test passes, since it checks the class name, not what it draws.",
             "`Option` has an `icon` (`inputs/contract.ts`), but `Combobox` draws only `color`'s dot, so tickets' status picker (TK-5.7) lost the status kinds' icons; its group headings name the kind instead.",
-            "Without search, `Combobox`'s list is exactly its trigger's width (`triggerWidthClass`), so a disabled option's reason wraps a word or two per line in a narrow cell: tickets' table status cell is about 190px."
+            "Without search, `Combobox`'s list is exactly its trigger's width (`triggerWidthClass`), so a disabled option's reason wraps a word or two per line in a narrow cell: tickets' table status cell is about 190px.",
+            "`SidePanel`'s reopen button is fixed at the top left, so on a phone it sits over `AppShell`'s top bar (seen in TK-4.8).",
+            "A sidebar nav row's accessible name runs its label and count together: \"Home2\".",
+            "`Card` is a `<div>` with no `asChild` or `as`, so it can't be a button or a link: tickets' New project tile on Home and the new-item dialog's type tiles stay hand-built, and Home's project cards are a `Card` inside a `Link` (TK-5.3, TK-5.13).",
+            "`SegmentedControl` draws an option's `icon` in the segment's text color, never the option's own, so tickets' Workflow kind picker, moved onto it in TK-5.1, lost its per-kind icon colors."
           ],
           "openChoices": [
             {
@@ -1380,7 +1429,7 @@
             {
               "id": "TK-103.5",
               "title": "Release bh's next version, with these fixes",
-              "description": "Merging TK-103.1 to TK-103.4 into bh's main makes the version: on each push, `scripts/release.mjs` reads the commits since the last tag and tags the next one (a fix a patch, a feature a minor). A push to bh's main is your yes.",
+              "description": "Merging TK-103.1 to TK-103.4 and TK-103.7 to TK-103.10 into bh's main makes the version: on each push, `scripts/release.mjs` reads the commits since the last tag and tags the next one (a fix a patch, a feature a minor). A push to bh's main is your yes.",
               "where": [
                 {
                   "repo": "bh",
@@ -1404,13 +1453,29 @@
                 {
                   "id": "TK-103.4",
                   "why": "the release carries the list's width"
+                },
+                {
+                  "id": "TK-103.7",
+                  "why": "the release carries `SidePanel`'s reopen button fix"
+                },
+                {
+                  "id": "TK-103.8",
+                  "why": "the release carries the nav rows' names"
+                },
+                {
+                  "id": "TK-103.9",
+                  "why": "`Card` as a button or a link"
+                },
+                {
+                  "id": "TK-103.10",
+                  "why": "`SegmentedControl`'s icon colors"
                 }
               ]
             },
             {
               "id": "TK-103.6",
               "title": "Update tickets to that version on the bh page, and remove its workarounds",
-              "description": "On the gateway's bh page, as a branch or a pull request, not main, since main deploys (as TK-3.1). Then `InlineTitle` (`apps/web/src/components/item-detail.tsx`) drops its own Escape listener, and the status picker passes each status kind's icon, its group headings still naming the kind.",
+              "description": "On the gateway's bh page, as a branch or a pull request, not main, since main deploys (as TK-3.1). Then `InlineTitle` (`apps/web/src/components/item-detail.tsx`) drops its own Escape listener, the status picker passes each status kind's icon, its group headings still naming the kind, the schema page's outline panel uses TK-103.7's fix in place of its own workaround, Workflow's kind picker gives each kind's icon its color again, and the New project tile, the new-item dialog's type tiles and Home's project cards become `Card`s that are the button or the link.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -1434,22 +1499,138 @@
                 {
                   "id": "TK-5.7",
                   "why": "the status picker on `Combobox` is on tickets branch `tk-5`"
+                },
+                {
+                  "id": "TK-4.6",
+                  "why": "the schema page's outline panel is on tickets branch `tk-4`"
+                },
+                {
+                  "id": "TK-5.1",
+                  "why": "Workflow's kind picker on `SegmentedControl` is on tickets branch `tk-5`"
+                },
+                {
+                  "id": "TK-5.13",
+                  "why": "the cards it moves are on tickets branch `tk-5`"
+                }
+              ]
+            },
+            {
+              "id": "TK-103.7",
+              "title": "Fix `SidePanel`'s reopen button covering `AppShell`'s top bar on a phone",
+              "description": "On a phone the reopen button sits clear of `AppShell`'s top bar, and a panel whose host opens it from a button of its own can turn its reopen button off. tickets' schema page works around it (TK-4.6, `routes/schema-route.tsx`): it controls its outline panel and opens it from an Outline button in its header.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.8",
+              "title": "Fix a sidebar nav row's accessible name running its label and count together",
+              "description": "A screen reader reads Home with 2 items as \"Home2\". It reads the label and the count apart (\"Home, 2\"): a space or the row's own `aria-label`.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.9",
+              "title": "Let `Card` render as a button or a link",
+              "description": "`Card` takes `asChild` (a Radix `Slot`, as `Button` does), so a card can be the `<button>` or the router's `<Link>` itself, focusable and with its hover look, instead of a `Card` inside a link. bh's `Card` (`layout/components/card/card.tsx`) is a `<div>`; `interactive` gives it a hover look only. TK-76, which makes `Card` configurable, builds on the same component.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "TK-103.10",
+              "title": "Let `SegmentedControl`'s option icons take the option's color",
+              "description": "An option's `icon` is drawn in its `color`'s hue when the option has one (`Option.color`, the hue the swatch controls already read), as tickets' Workflow kind picker drew each kind's icon in its own color before TK-5.1. Unselected and disabled segments keep the hue, dimmed as their label is.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            }
+          ]
+        },
+        {
+          "status": "Planned",
+          "today": [
+            "On a 500px phone, the Fields settings tab's placements table (`components/settings/fields-tab.tsx:40`, six columns with fixed widths) runs its \"Required\" heading into the next column.",
+            "A project's page header says \"5 items\", counting subitems (`routes/project-route.tsx`, from `boardProgress`), while the sidebar counts that project's top-level items (1), as the other pages do since TK-4.8.",
+            "The board's KPI strip (`components/board/kpi-strip.tsx`) is wider than a 500px phone, so the whole page scrolls sideways. TK-5.8 replaces it with number `Card`s, once bh has them (TK-76)."
+          ],
+          "plan": [
+            {
+              "id": "TK-104.1",
+              "title": "Fix the Fields tab's placements table overlapping on a phone",
+              "description": "On a narrow screen the table scrolls sideways inside its own frame, its columns keeping their widths, so no heading or control overlaps another and the page itself doesn't scroll sideways.",
+              "where": [
+                {
+                  "repo": "tickets",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-4.3",
+                  "why": "the settings tabs are routes on tickets branch `tk-4`"
+                }
+              ]
+            },
+            {
+              "id": "TK-104.2",
+              "title": "Fix a project's page header counting subitems",
+              "description": "Every item count in tickets counts the same way: a project's page header counts its top-level items, as the sidebar does, and says so if it shows subitems too. Checked with a project whose items have subitems.",
+              "where": [
+                {
+                  "repo": "tickets",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-4.5",
+                  "why": "the page headers are `PageHeader`s on tickets branch `tk-4`"
+                }
+              ]
+            },
+            {
+              "id": "TK-104.3",
+              "title": "Fix the board's KPI strip making a phone's page scroll sideways",
+              "description": "Until TK-5.8 replaces the strip with number `Card`s, which waits on bh's `Card` (TK-76), the strip wraps on a narrow screen instead of widening the page. A small fix to code TK-5.8 deletes: cancel it if you'd rather wait.",
+              "where": [
+                {
+                  "repo": "tickets",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-4.5",
+                  "why": "the board page is on `Page` and `PageBody` on tickets branch `tk-4`"
                 }
               ]
             }
           ],
-          "id": "TK-103",
-          "title": "Fix the gaps in bh's `Input`, `ColorPicker` and `Combobox` that TK-5 found",
-          "description": "Four gaps the builder found in bh 2.0.0 while moving tickets onto bh's parts (TK-5), which no ticket covered. tickets works around the first, and goes without the others until bh's next version reaches it.",
+          "id": "TK-104",
+          "title": "Fix the phone layouts and the item count TK-4's check found",
+          "description": "Problems the builder saw in tickets while checking the new frame in the browser (TK-4.8), there before TK-4 and unchanged by it. The schema diagram's Details panel, which also takes too much of a phone, is fixed where the diagram moves to bh (TK-9.2).",
           "where": [
-            {
-              "repo": "bh",
-              "part": "@bh/ui"
-            },
-            {
-              "repo": "live gateway",
-              "part": "bh page"
-            },
             {
               "repo": "tickets",
               "part": "apps/web"
@@ -1869,7 +2050,7 @@
             {
               "id": "TK-9.2",
               "title": "Move the diagram and its panels into bh, on bh's parts",
-              "description": "The hand-built card, stat, section, empty and buttons become bh's.",
+              "description": "The hand-built card, stat, section, empty and buttons become bh's. On a narrow screen the Details panel leaves room for the diagram, over it or narrower: in tickets' diagram today it takes 320 of a 500px phone's width (seen in TK-4.8).",
               "where": [
                 {
                   "repo": "bh",
@@ -1887,7 +2068,14 @@
                   "why": "its hand-built stat tile becomes bh's number `Card`"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-13T08:04:51.442Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: on a narrow screen the diagram's Details panel must leave room for the diagram; today it takes 320 of a 500px phone's width."
+                }
+              ]
             },
             {
               "id": "TK-9.3",
@@ -4995,7 +5183,7 @@
               "part": "@bh/ui"
             }
           ],
-          "today": "apps spell their own loading screens: gateway 5, medialib 10, cv 13, wallet-passes 2, signals, items-core.",
+          "today": "apps spell their own loading screens: gateway 5, medialib 10, cv 13, wallet-passes 2, signals, items-core. tickets' loading states moved onto `ScreenState` in TK-5.2 and show as plain centered text, with no spinner or skeleton.",
           "plan": [
             {
               "id": "TK-34.1",
