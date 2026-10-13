@@ -1,26 +1,24 @@
 import { OWN_ERROR } from '../../api/mutation-meta';
 import { useMemo } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Tabs, useToast } from '@bh/ui';
+import { Button, useToast } from '@bh/ui';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
 import { RepositoryTab } from './repository-tab';
-import { SETTINGS_TABS, type SettingsTab } from './settings-tabs';
+import type { SettingsTab } from './settings-tabs';
 import { TypesTab } from './types-tab';
 import { WorkflowTab } from './workflow-tab';
 
 const PROJECTS_CRUMB = { label: 'Projects', path: '/' };
 
 // A project's settings page: its header says which scheme the four scheme
-// tabs edit (and offers to fork it), over a left-rail tab switcher (Types ·
-// Fields · Workflow · Links · Repository) beside the tab on screen. Which tab
-// that is is the route's: each is a route of its own
-// (routes/settings-route.tsx), and the rail navigates between them.
+// tabs edit (and offers to fork it), over the tab on screen. Which tab that
+// is is the route's: each is a route of its own (routes/settings-route.tsx),
+// and the sidebar lists them under Settings (components/shell/use-nav.ts).
 //
 // The board payload carries no scheme *name* (only `project.schemeId` — see
 // `apps/web/src/api/types.ts`), so the banner labels the scheme by id rather
@@ -28,7 +26,6 @@ const PROJECTS_CRUMB = { label: 'Projects', path: '/' };
 // no project-count-per-scheme on the board, so the banner doesn't claim a
 // specific N; it says "all projects on this scheme" instead.
 export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: SettingsTab }) {
-  const navigate = useNavigate();
   const boardQuery = useBoard(projectKey);
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
@@ -123,52 +120,31 @@ export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: S
         />
       }
     >
-      <div className="flex min-h-0 flex-1">
-        <nav
-          aria-label="Settings sections"
-          className="w-212 flex-none border-r-1 border-gray-6 bg-gray-1 px-12 py-22"
-        >
-          <Tabs
-            variant="rail"
-            items={SETTINGS_TABS.map(({ tab: value, label }) => ({ value, label }))}
-            value={tab}
-            onChange={(next) => {
-              void navigate({
-                to: `/p/$projectKey/settings/${next as SettingsTab}`,
-                params: { projectKey },
-              });
-            }}
-          />
-        </nav>
-
-        <PageBody className="min-w-0 flex-1">
-          <div role="tabpanel">
-            {/*
-              Keyed on the scheme id: each panel seeds local state (chip
-              selections, the selected-type picker, etc.) from the board on
-              mount, keyed by *type* ids. Forking re-inserts every type under
-              fresh ids (see schemeFork in
-              apps/api/src/command/config/scheme.ts) and repoints the project
-              without navigating away, so without this key the panels would
-              keep their stale, now-mismatched selections after the board
-              refetch — silently re-seeding from a scheme that no longer
-              applies. The key forces a clean remount so each panel re-derives
-              its state from the *new* board.
-            */}
-            {tab === 'types' ? (
-              <TypesTab key={board.project.schemeId} {...tabProps} />
-            ) : tab === 'fields' ? (
-              <FieldsTab key={board.project.schemeId} {...tabProps} />
-            ) : tab === 'workflow' ? (
-              <WorkflowTab key={board.project.schemeId} {...tabProps} />
-            ) : tab === 'links' ? (
-              <LinksTab key={board.project.schemeId} {...tabProps} />
-            ) : (
-              <RepositoryTab {...tabProps} />
-            )}
-          </div>
-        </PageBody>
-      </div>
+      <PageBody>
+        {/*
+          Keyed on the scheme id: each panel seeds local state (chip
+          selections, the selected-type picker, etc.) from the board on
+          mount, keyed by *type* ids. Forking re-inserts every type under
+          fresh ids (see schemeFork in
+          apps/api/src/command/config/scheme.ts) and repoints the project
+          without navigating away, so without this key the panels would
+          keep their stale, now-mismatched selections after the board
+          refetch — silently re-seeding from a scheme that no longer
+          applies. The key forces a clean remount so each panel re-derives
+          its state from the *new* board.
+        */}
+        {tab === 'types' ? (
+          <TypesTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'fields' ? (
+          <FieldsTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'workflow' ? (
+          <WorkflowTab key={board.project.schemeId} {...tabProps} />
+        ) : tab === 'links' ? (
+          <LinksTab key={board.project.schemeId} {...tabProps} />
+        ) : (
+          <RepositoryTab {...tabProps} />
+        )}
+      </PageBody>
     </Page>
   );
 }

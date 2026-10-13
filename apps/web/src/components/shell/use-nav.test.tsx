@@ -202,3 +202,36 @@ test('links Schema under System, lit on the schema page', async () => {
   expect(schema).toHaveAttribute('href', '/schema');
   expect(schema).toHaveAttribute('aria-current', 'page');
 });
+
+test('opens the settings of the project on screen', async () => {
+  localStorage.setItem('tickets-last-project', 'tk');
+  renderFrame('/p/gw/v/1');
+  const settings = await row(await sidebar(), 'Settings');
+  expect(settings).toHaveAttribute('href', '/p/gw/settings');
+});
+
+test("off a project, opens the last project's settings, or else the first's", async () => {
+  localStorage.setItem('tickets-last-project', 'gw');
+  renderFrame('/all');
+  expect(await row(await sidebar(), 'Settings')).toHaveAttribute('href', '/p/gw/settings');
+});
+
+test("with no project opened yet, opens the first project's settings", async () => {
+  renderFrame('/');
+  expect(await row(await sidebar(), 'Settings')).toHaveAttribute('href', '/p/tk/settings');
+});
+
+test('lists the settings tabs under Settings, the one on screen lit', async () => {
+  renderFrame('/p/gw/settings/fields');
+  const nav = await sidebar();
+  await row(nav, 'Settings');
+  const tabs = ['Types', 'Fields', 'Workflow', 'Links', 'Repository'];
+  for (const label of tabs) {
+    expect(within(nav).getByRole('link', { name: label })).toHaveAttribute(
+      'href',
+      `/p/gw/settings/${label.toLowerCase()}`,
+    );
+  }
+  expect(within(nav).getByRole('link', { name: 'Fields' })).toHaveAttribute('aria-current', 'page');
+  expect(within(nav).getByRole('link', { name: 'Types' })).not.toHaveAttribute('aria-current');
+});
