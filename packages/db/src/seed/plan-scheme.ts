@@ -70,7 +70,7 @@ export const planScheme: SchemeDef = {
   ],
   types: [
     {
-      key: 'epic', label: 'Epic', config: { color: '#8f7ae8' },
+      key: 'epic', label: 'Epic', config: { color: 'indigo' },
       allowedChildTypes: ['feature'],
       placements: [
         { fieldKey: 'title', required: true },
@@ -79,7 +79,7 @@ export const planScheme: SchemeDef = {
       ],
     },
     {
-      key: 'feature', label: 'Feature', config: { color: '#3987e5' },
+      key: 'feature', label: 'Feature', config: { color: 'blue' },
       allowedChildTypes: ['ticket'],
       placements: [
         { fieldKey: 'title', required: true },
@@ -98,7 +98,7 @@ export const planScheme: SchemeDef = {
       ],
     },
     {
-      key: 'ticket', label: 'Ticket', config: { color: '#4aa3a3' },
+      key: 'ticket', label: 'Ticket', config: { color: 'teal' },
       allowedChildTypes: ['subticket'],
       placements: [
         { fieldKey: 'title', required: true },
@@ -110,7 +110,7 @@ export const planScheme: SchemeDef = {
       ],
     },
     {
-      key: 'subticket', label: 'Subticket', config: { color: '#e5a339' },
+      key: 'subticket', label: 'Subticket', config: { color: 'orange' },
       allowedChildTypes: ['subticket'],
       placements: [
         { fieldKey: 'title', required: true },
