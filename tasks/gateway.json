@@ -1,0 +1,1673 @@
+{
+  "$schema": "./tasks.schema.json",
+  "repo": "gateway",
+  "prefix": "GW",
+  "intro": ["The gateway's list, moved here from `../gateway/tasks.md` on 2026-10-12."],
+  "epics": [
+    {
+      "id": "E1",
+      "title": "Change only the gateway's frontend",
+      "features": [
+        {
+          "id": "GW-1",
+          "title": "Add a code editor",
+          "description": "Everywhere the UI shows a code or script fragment, show it in a code editor with syntax highlighting, e.g. the setup and teardown scripts of a stack's shared service.",
+          "status": "Done",
+          "statusNote": "286f948, live 2026-10-11",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/code, @bh/markdown, docs"
+            },
+            {
+              "repo": "live gateway",
+              "part": "bh page"
+            },
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": [
+            "editable, plain textareas: Provides › Setup and Teardown (`apps/web/src/stacks/form/shared-cards.tsx:179`, `:186`);",
+            "editable, already highlighted with CodeMirror, but the gateway's own: the inline Dockerfile (`apps/web/src/stacks/form/dockerfile-editor.tsx`);",
+            "read-only, already bh's `CodeBlock`: the Compose tab and the stack form's compose preview;",
+            "read-only, plain `<code>`: the agent token's `curl` example (`apps/web/src/settings/tokens-page.tsx:50`).",
+            "Logs (deploys, job runs, service logs) are output, not code: they're GW-11."
+          ],
+          "plan": [
+            {
+              "id": "GW-1.1",
+              "title": "Make a `@bh/code` package",
+              "description": "A package for everything code. `CodeBlock`, the highlighter (`SYNTAX_HIGHLIGHTER`, `highlightLines`) and its grammars move there from `@bh/markdown`, which then depends on `@bh/code` for its code block. `@bh/markdown` keeps exporting them, from `@bh/code`, and its sheet imports `@bh/code`'s, so an app's next update passes its checks before the app switches its imports. BH-15 (the blocks into `@bh/markdown`) is done (195df76), so nothing else moves these files. The docs site lists the package (Packages › Code), and the layers become config < form, table < ui < code < markdown, shell.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/code, @bh/markdown, docs"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.2",
+              "title": "Add `CodeEditor` to `@bh/code`",
+              "description": "Generalized from the gateway's `DockerfileEditor`: `value`, `onChange`, `lang`, a title strip with line count and Ln/Col, a min height, growing with its text (no scroll box of its own, GW-7), `readOnly`. It colors with `CodeBlock`'s highlighter. Languages: `shell`, `dockerfile`, `yaml`; `CodeBlock` also colors `sh` and `dockerfile`, so read-only fragments match the editor. With tests and a docs page, as every bh package has.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/code"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.3",
+              "title": "Bring `@bh/code` into the gateway",
+              "description": "bh's commit pushed to its main makes a release (your yes). Then the gateway's bh page updates the gateway to it: the copy brings `@bh/code` with `@bh/markdown`, which needs it, runs the checks and commits `chore: bh <version>` to the gateway, whose push deploys it (your yes again). Then `CodeBlock` and `SYNTAX_HIGHLIGHTER` are imported from `@bh/code`.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "main"
+                },
+                {
+                  "repo": "live gateway",
+                  "part": "bh page"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.4",
+              "title": "Edit the Dockerfile in `CodeEditor`",
+              "description": "The inline Dockerfile uses `CodeEditor lang=\"dockerfile\"`; `dockerfile-editor.tsx` and the gateway's own `@codemirror/*` dependencies go.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.5",
+              "title": "Edit Setup and Teardown in `CodeEditor`",
+              "description": "Both use `CodeEditor lang=\"shell\"`.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.6",
+              "title": "Show the token's `curl` example in `CodeBlock`",
+              "description": "`CodeBlock lang=\"sh\"`. The token itself stays plain: it's a value, not code.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-1.7",
+              "title": "Check in the browser",
+              "description": "A stack's Provides tab (Setup, Teardown), an inline Dockerfile, the tokens page, in light and dark.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "GW-2",
+          "title": "Replace the gateway's own components with bh's",
+          "description": "Wherever possible, use components from bh (`@bh/*`) instead of the gateway's own. A component bh lacks is added in `../bh` first and then synced, never edited under `packages/bh/`.",
+          "status": "In progress",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            },
+            {
+              "repo": "bh",
+              "part": "@bh/ui, @bh/shell"
+            },
+            {
+              "repo": "medialib",
+              "part": "apps/web"
+            }
+          ],
+          "today": {
+            "text": "pages already use `@bh/shell`'s `Page`, `PageHeader`, `CardGrid`, and `@bh/ui`'s primitives (`Card`, `Button`, `Input`, `Pill`…). The gateway still keeps its own:",
+            "items": [
+              "copies of what bh has now: `ThemeFooter` (`apps/web/src/app/theme-footer.tsx`; `@bh/shell` has one since), `Field` (`apps/web/src/stacks/form/fold.tsx`; `@bh/ui`'s `FieldWrapper`), the uppercase captions (`GROUP_LABEL`, `Figures`' title; `@bh/ui`'s `SectionHeader`);",
+              "generic parts bh lacks: the card parts (`apps/web/src/lib/card-parts.tsx`: `MetricCard`, `CardState`, `Meter`, `Figure`, `Figures`, `Num`), the folds (`Chevron`, `Section`, `FoldCard` in `fold.tsx`), `RouteTabs` (`apps/web/src/stacks/route-tabs.tsx`, because `@bh/shell`'s `TabNav` lights the first matching tab, not the longest, and shows no badges), and a link class copied into 9 files (`const LINK = 'text-gray-12 underline-offset-2 hover:underline'`);",
+              "hand-built controls: 11 raw `<button>`s in 9 files, one raw radio (`service-card.tsx:368`), one hand-made chip (`service-settings.tsx:128`).",
+              "medialib's dashboard has its own `CardState` and `Figures` too (`../medialib/apps/web/src/app/lib/card-state.tsx`): a second app, so those belong in bh."
+            ]
+          },
+          "stays": "what knows the gateway (`StackLink`, `SaveBar`, `DockerfilePicker`, the pages and their cards), and the charts (`Sparkline`, `TimeChart`), which no other app has yet. The stack form stays hand-built from bh's primitives rather than moving to `@bh/form`: that would be a rewrite, not a swap. Covered elsewhere: `DockerfileEditor` (GW-1), the logs' `<pre>`s (GW-11), `TabBody` and page gutters (GW-3).",
+          "plan": [
+            {
+              "id": "GW-2.1",
+              "title": "Swap in what bh already has",
+              "description": "`ThemeFooter` from `@bh/shell` (with the gateway's `THEME_STORAGE_KEY`); a service's settings jumps become ghost `Button`s (a5e7b4c, not pushed). The rest turned out to need bh first: `FieldWrapper` is `@bh/form`'s slot (labels beside fields from 520px, text-only hints, form-only props), so `Field` moves to bh as its own (GW-2.2); the three choice cards (`OrderChoice`, Start from, What it runs) need `RadioGroup` cards with a line of description (GW-2.2). Stay as they are: the deploy and run list rows, the Dockerfile picker's tree rows and trigger, and Log out (a nav control, as the theme's).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-2.2",
+              "title": "Add the missing parts to bh",
+              "description": "Parts the gateway built for itself that other apps need too. Each with tests and a docs page.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui, @bh/shell"
+                }
+              ],
+              "done": false,
+              "subtickets": [
+                {
+                  "id": "GW-2.2.1",
+                  "title": "Add `TextLink`",
+                  "description": "The link style, for `<a>`, router links and link-like buttons; replaces the `LINK` class copied into 9 files.",
+                  "done": false
+                },
+                {
+                  "id": "GW-2.2.2",
+                  "title": "Add `Field`",
+                  "description": "Label, control, hint or error, stacked; a width of its own from the form.",
+                  "done": false
+                },
+                {
+                  "id": "GW-2.2.3",
+                  "title": "Add `RadioGroup` cards with a line of description and an icon",
+                  "done": false
+                },
+                {
+                  "id": "GW-2.2.4",
+                  "title": "Add `Disclosure`, and `FoldCard` on it",
+                  "description": "A row that folds what follows it: chevron, title, summary while folded. `LogView` (GW-13) reuses `FoldCard` for its steps.",
+                  "done": false,
+                  "blockedBy": [
+                    {
+                      "id": "TK-31.2",
+                      "why": "builds `Disclosure` over the `useDisclosure` hook"
+                    }
+                  ]
+                },
+                {
+                  "id": "GW-2.2.5",
+                  "title": "Add the card parts, merged with medialib's copies",
+                  "description": "`CardState`, `MetricCard` (or an `aside` on `CardHeader`), `Meter`, `Figure`, `Figures` (titled by `SectionHeader`), `Num`.",
+                  "done": false,
+                  "blockedBy": [
+                    {
+                      "id": "TK-76",
+                      "why": "the card parts are designed and built with the configurable `Card`"
+                    }
+                  ]
+                },
+                {
+                  "id": "GW-2.2.6",
+                  "title": "Fix `TabNav` lighting the wrong tab, and add badges and a sideways scroll (TK-1.1)",
+                  "description": "Built as TK-1.1 on bh branch `gw2-shell`: the longest matching tab, badges, and the row scrolls sideways on a phone.",
+                  "done": true
+                },
+                {
+                  "id": "GW-2.2.7",
+                  "title": "Release bh's next version, with these parts",
+                  "where": [
+                    {
+                      "repo": "bh",
+                      "part": "main"
+                    }
+                  ],
+                  "done": false,
+                  "blockedBy": [
+                    {
+                      "id": "GW-2.2.1",
+                      "why": "the release carries it"
+                    },
+                    {
+                      "id": "GW-2.2.2",
+                      "why": "the release carries it"
+                    },
+                    {
+                      "id": "GW-2.2.3",
+                      "why": "the release carries it"
+                    },
+                    {
+                      "id": "GW-2.2.4",
+                      "why": "the release carries it"
+                    },
+                    {
+                      "id": "GW-2.2.5",
+                      "why": "the release carries it"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "GW-2.3",
+              "title": "Sync and switch to them",
+              "description": "Update the gateway to that release on the bh page, then: `card-parts.tsx`, `fold.tsx`'s parts and `GROUP_LABEL`, `route-tabs.tsx` and the 9 `LINK`s go; the choice cards become `RadioGroup`s under a `SectionHeader`.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "bh page"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-2.2",
+                  "why": "switches to the parts GW-2.2 adds to bh"
+                },
+                {
+                  "id": "TK-2.7",
+                  "why": "takes the bh release with `TabNav`'s fix and `PageBody`"
+                }
+              ]
+            },
+            {
+              "id": "GW-2.4",
+              "title": "Replace medialib's card parts with bh's too",
+              "description": "Later, in its own session: its `card-state.tsx` goes.",
+              "where": [
+                {
+                  "repo": "medialib",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-2.2",
+                  "why": "uses bh's `CardState` and `Figures` from GW-2.2"
+                },
+                {
+                  "id": "TK-70.1",
+                  "why": "medialib's update to a bh version with the card parts"
+                }
+              ]
+            },
+            {
+              "id": "GW-2.5",
+              "title": "Check in the browser",
+              "description": "Overview, a stack's tabs (badges, the active tab on a nested route), the stack form's folds, Settings, on a phone's width too, in light and dark.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-2.3",
+                  "why": "checks the pages switched to bh's parts"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-3",
+          "title": "Put every page on the same layout",
+          "description": "Every page uses the same bh layout: one width, the same gutters and gaps, the same kind of header.",
+          "status": "In progress",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/shell"
+            },
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": {
+            "text": "every page in the app's shell has `@bh/shell`'s `Page` and `PageHeader`, but each body is its own:",
+            "items": [
+              "six widths, all left-aligned: none (Overview, the four Docker pages, Caddy), `max-w-1200` (a stack's Services tab, `apps/web/src/stacks/services/services-tab.tsx:33`), `max-w-1040` (Stacks, bh), `max-w-960` (a stack's other tabs by `TabBody`, `apps/web/src/stacks/tab-body.tsx:5`; the generic provider page; the save bar), `max-w-880` (Add stack), `max-w-800` (the four Settings pages);",
+              "the gutters `px-16 py-16 md:px-32 md:py-24` typed out in each page, except the tables (Docker pages, Caddy), which run edge to edge, and the provider page's loading and missing states, which have none;",
+              "a gap of 28 between sections on Stacks and bh, 16 elsewhere; `CardGrid` on Overview only;",
+              "headers: only a stack's page has a breadcrumb; Add stack (`apps/web/src/stacks/new-stack-page.tsx:66`) and a connection (`apps/web/src/settings/connection-page.tsx:291`) have none. Not found (`apps/web/src/app/router.tsx:37`) and a missing service (`apps/web/src/stacks/services/service-layout.tsx:26`) are bare, with no `Page`.",
+              "medialib: every page `Page` + `PageHeader`, every body the same gutters and no width cap, tables inside the padded body."
+            ]
+          },
+          "chosen": "full width on every page, as medialib.",
+          "plan": [
+            {
+              "id": "GW-3.1",
+              "title": "Add `PageBody` to `@bh/shell`",
+              "description": "The body every page now types out (`flex min-w-0 flex-col gap-16` with the gutters), no width cap. `CardGrid` stays the body of a page of cards. A docs page says which to use when. medialib switches to it later, in its own session. Built as TK-1.4 on bh branch `gw2-shell` (5cd015d); it reaches bh's main with TK-2.7.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-3.2",
+              "title": "Put every page's body on `PageBody`",
+              "description": "After the sync, every body is a `PageBody` or a `CardGrid`: the `max-w-*`s go, `TabBody` becomes `PageBody`, the Services tab keeps its side list without the 1200 cap, the save bar's inner 960 goes, Stacks and bh drop their 28 for 16, and the Docker pages' and Caddy's tables sit inside the body, as medialib's do.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-3.1",
+                  "why": "uses `PageBody` (built already as TK-1.4)"
+                },
+                {
+                  "id": "GW-2.3",
+                  "why": "copies in the bh version with `PageBody`"
+                }
+              ]
+            },
+            {
+              "id": "GW-3.3",
+              "title": "Give form fields their own width",
+              "description": "At full width, each field keeps a width of its own (a name or a port isn't as wide as the screen), set by the form, not the page.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-2.2",
+                  "why": "uses `Field`'s width, set by the form"
+                },
+                {
+                  "id": "GW-2.3",
+                  "why": "copies in the bh version with `Field`"
+                }
+              ]
+            },
+            {
+              "id": "GW-3.4",
+              "title": "Add the missing breadcrumbs and pages",
+              "description": "Add stack gets \"Stacks › Add stack\", a connection \"Connections › its name\"; Not found shows in a `Page`, with a header and a way back to the Overview; a missing service, already inside its stack's page, is a `ScreenState` with the way to its services (701cc75, not pushed).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-3.5",
+              "title": "Check in the browser",
+              "description": "Every page at a phone's width, a laptop's and a wide screen's, in light and dark.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-3.2",
+                  "why": "checks every page's body on `PageBody`"
+                },
+                {
+                  "id": "GW-3.3",
+                  "why": "checks the fields' own widths"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-4",
+          "title": "Split charts into cards",
+          "description": "Each chart gets its own card. For example, the overview's History card (`apps/web/src/overview/history-card.tsx`) holds four charts in one card: CPU, Memory, Containers' network, Distro disk used.",
+          "status": "In progress",
+          "statusNote": "built and checked (1ad5230), waiting on the gateway push (your yes)",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": "the History card spans both columns of the Overview's `CardGrid` and draws the four in a grid of its own, each with a title and a note (\"now X · peak Y\", \"now X of Y\", \"in X · out Y\", \"+X over the range\"). The range (1 h / 6 h / 24 h, a `SegmentedControl` whose state lives in the card, `:113`) and \"kept since <time>\" (the oldest sample still in memory; hidden on a phone) sit in the card's header. A service's Status tab has one more such card, \"The last hour\", with CPU and Memory (`apps/web/src/stacks/services/service-status.tsx:83`).",
+          "chosen": "one range for the four, above them.",
+          "stays": "sparklines in a row or a table cell (a stack's Services card, Docker › Services): they're a row's detail, not charts.",
+          "plan": [
+            {
+              "id": "GW-4.1",
+              "title": "Put one range above the History charts",
+              "description": "A \"History\" heading across both columns of the Overview, the range on its right and \"kept since\" beside it. The range's state moves up from the card, and one `useHistory(range)` feeds the four cards.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-4.2",
+              "title": "Make four History cards",
+              "description": "In the grid's two columns, each titled as its chart was, its note in the card's header, the chart in its body. Loading and errors show in each card.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-4.3",
+              "title": "Make two cards on a service's Status tab",
+              "description": "\"The last hour\" becomes two cards, CPU and Memory, side by side from a tablet's width.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": true
+            },
+            {
+              "id": "GW-4.4",
+              "title": "Check in the browser",
+              "description": "Overview at a phone's width and a wide screen's, each range, the empty charts right after a restart, a service's Status tab, in light and dark.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "GW-5",
+          "title": "Show secrets apart",
+          "description": "Show a stack's secret and non-secret environment variables apart. Build it with GW-12: the same files.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": "a stack's Variables tab has one table per service, secrets and plain values mixed in compose order, a Secret switch on each row (`apps/web/src/stacks/form/service-card.tsx:166`). A secret's value is a password field left empty, since the API never returns it; its \"Reaches\" is fixed to run. A service's Settings tab and Add stack show the same table (`Variables` in `service-card.tsx`). Settings › Variables lists shared ones in one list, a secret showing a \"secret\" pill instead of its value (`apps/web/src/settings/variables-page.tsx:113`).",
+          "chosen": "two tables per service.",
+          "plan": [
+            {
+              "id": "GW-5.1",
+              "title": "Split a service's table into Variables and Secrets",
+              "description": "**Variables** (name, from, value, reaches: build or run), then **Secrets** (name, from, a write-only value; run only, so no \"reaches\"). Turning a row's Secret on or off moves it to the other table; each table has its own \"Add variable\" / \"Add secret\". The same in a service's Settings tab and in Add stack, which share the component. No API change: `secret` is already kept per variable.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-5.2",
+              "title": "Count both in the summaries",
+              "description": "\"3 variables, 2 secrets\"; the \"N secrets have no value\" note points at the Secrets tables.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-5.1",
+                  "why": "counts and points at the Secrets tables GW-5.1 makes"
+                }
+              ]
+            },
+            {
+              "id": "GW-5.3",
+              "title": "Split Settings › Environment the same way",
+              "description": "The shared ones: Variables, then Secrets.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-5.4",
+              "title": "Test and check in the browser",
+              "description": "Tests for the split and for a row moving across. In the browser: a stack with both kinds, a secret taken from Settings, a new secret typed and saved, a phone's width.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (tests, dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-5.1",
+                  "why": "tests the split and a row moving across"
+                },
+                {
+                  "id": "GW-5.2",
+                  "why": "checks the summaries' counts"
+                },
+                {
+                  "id": "GW-5.3",
+                  "why": "checks Settings' split and a secret taken from it"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-6",
+          "title": "Take providers off the Stacks page",
+          "description": "Stacks and providers aren't in the same list: a stack that provides (Caddy, Postgres, Mailpit…) shows under Providers only, not also under Stacks.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": "the sidebar already keeps them apart: Stacks is one row, Providers a section of its own, a row per providing stack (`apps/web/src/app/nav.ts:62`), only Caddy's with a status dot. The Stacks page still lists them, in a \"Shared services\" group beside Apps and Gateway (`apps/web/src/stacks/stacks-page-view.ts:28`); its counts and the sidebar's Stacks dot count them too. On a provider's stack page (`/stacks/caddy`) the sidebar lights Stacks, not Providers › Caddy. A provider's page links to its stack page (\"Stack caddy\", `apps/web/src/providers/module.tsx:38`); nothing links back.",
+          "chosen": "the stack page stays, reached from Providers.",
+          "stays": "adding one (Add stack, the Postgres and Mailpit presets); once saved it shows under Providers.",
+          "plan": [
+            {
+              "id": "GW-6.1",
+              "title": "Drop the Shared services group from Stacks",
+              "description": "Apps and Gateway stay, and \"Not stacks yet\". The page's counts and the sidebar's Stacks dot count only those. Its test (`stacks-page-view.test.ts:49`) changes with it.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-6.2",
+              "title": "Light the provider's row in the sidebar",
+              "description": "On a provider's stack page and its tabs, Providers › its row lights, not Stacks: decided by the stack's `provides`, not by the path alone.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-6.3",
+              "title": "Give every provider row a status dot",
+              "description": "Its stack's state (Postgres and Mailpit have none today); Caddy's shows the worse of its stack and its routes.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-6.4",
+              "title": "Link a provider's stack page back to it",
+              "description": "Its breadcrumb reads \"Providers › Caddy\", and its Overview's Provides row links to the provider's page.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-6.5",
+              "title": "Check in the browser",
+              "description": "Stacks, each provider's page and its stack page (the lit sidebar row, the breadcrumb), a phone's width.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-6.1",
+                  "why": "checks Stacks without the Shared services group"
+                },
+                {
+                  "id": "GW-6.2",
+                  "why": "checks the lit provider row in the sidebar"
+                },
+                {
+                  "id": "GW-6.3",
+                  "why": "checks every provider row's status dot"
+                },
+                {
+                  "id": "GW-6.4",
+                  "why": "checks the breadcrumb and the link back"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-7",
+          "title": "Fix the double scroll",
+          "description": "Pages with large content show two scrollbars (the page's and an inner one) instead of one.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            },
+            {
+              "repo": "bh",
+              "part": "@bh/ui"
+            }
+          ],
+          "today": {
+            "text": "the page scrolls in `@bh/shell`'s `<main>` (`app-shell.tsx:128`), by design its one scroller. Inside it, boxes with a height of their own:",
+            "items": [
+              "a service's Logs: `h-[60vh] min-h-240 overflow-auto` (`apps/web/src/stacks/services/service-logs.tsx:62`): fixed, so under the stack's header a second scrollbar always shows;",
+              "a deploy's log and a job run's (`max-h-480`, `apps/web/src/stacks/deploy-parts.tsx:87`, `apps/web/src/stacks/services/job-runs.tsx:61`), a bh app's update log (`max-h-360`, `apps/web/src/library/app-row.tsx:130`): a second scrollbar once long;",
+              "the Dockerfile editor (`maxHeight 480px`, `apps/web/src/stacks/form/dockerfile-editor.tsx:13`), and Setup, Teardown and a bh app's checks, textareas of fixed rows (`apps/web/src/stacks/form/shared-cards.tsx:192`, `:199`, `apps/web/src/library/app-form.tsx:144`).",
+              "Sideways-only boxes (the tab row, the `curl` line, `CodeBlock`, tables) are fine: no second vertical bar."
+            ]
+          },
+          "rule": "nothing scrolls up and down inside a page; content grows and the page scrolls. `LogView`'s design (GW-13) keeps it.",
+          "plan": [
+            {
+              "id": "GW-7.1",
+              "title": "Add a `useFollowEnd` hook",
+              "description": "While the reader is at the end of the page and lines arrive, it keeps them there; once they scroll up it stops, with a \"Jump to the end\" button. It goes when `LogView` comes, which brings its own.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-7.2",
+              "title": "Let the logs grow with the page",
+              "description": "The four logs lose their height and their own `scrollTo`, and follow with the hook.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-7.1",
+                  "why": "the logs follow the end with `useFollowEnd`"
+                }
+              ]
+            },
+            {
+              "id": "GW-7.3",
+              "title": "Let text boxes grow with their text",
+              "description": "`Textarea` gets an `autoGrow` prop in bh, then a sync; a bh app's checks use it. The Dockerfile editor loses its 480 cap. Setup and Teardown become `CodeEditor`s, which grow (GW-1).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-7.4",
+              "title": "Check in the browser",
+              "description": "A service with long logs, a long deploy log while it runs and after, a long Dockerfile, a phone's width: one scrollbar each time.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-7.2",
+                  "why": "checks the logs growing with the page"
+                },
+                {
+                  "id": "GW-7.3",
+                  "why": "checks the text boxes growing with their text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-8",
+          "title": "Split Shared services into Uses and Provides",
+          "description": "A stack's \"Shared services\" tab (`apps/web/src/stacks/stack-layout.tsx:112`) becomes two tabs: **Uses**, the providers it connects to (its `uses`), and **Provides**, what it shares and who connects to it (its `provides`). \"Provides\" matches the sidebar's Providers on purpose: a stack with something on that tab is one of them.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web, README.md"
+            }
+          ],
+          "today": "one tab on every stack, at `/stacks/$id/shared` (`apps/web/src/app/router.tsx:81`), its badge the providers it uses plus one if it provides. Its body (`apps/web/src/stacks/shared-tab.tsx`) already holds two cards: `UsesCard` (its connections, Caddy's web addresses) and `ProvidesCard` (the switch, service, host, fields, setup, teardown, gives), in `apps/web/src/stacks/form/shared-cards.tsx`. The one draft spans every tab (`apps/web/src/stacks/draft/`); its change labels (\"shared services\", \"what it provides\", `draft-model.ts:94`) and a problem it shows (\"Shared services: choose which services reach X.\", `shared-model.ts:177`) name the old tab. The Overview tab's \"Shared services\" card links to it (`apps/web/src/stacks/overview/overview-tab.tsx:118`, `:134`).",
+          "chosen": "Uses / Provides, both on every stack: the tab row stays the same from stack to stack, and Provides holds the switch that makes a stack a provider.",
+          "plan": [
+            {
+              "id": "GW-8.1",
+              "title": "Make the two tabs",
+              "description": "`/stacks/$id/uses` and `/stacks/$id/provides`, each its card alone, open; `/shared` redirects to `/uses`. Badges: Uses, the providers it connects to; Provides, how many stacks connect to it, nothing while it provides nothing.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-8.2",
+              "title": "Name the new tabs in every text",
+              "description": "`UsesCard`'s title becomes \"Uses\"; the change labels \"uses\" and \"what it provides\"; the problem \"Uses: choose which services reach X.\"; the generic provider page's \"A stack connects in its Shared services\" names Uses; the rename hint (`apps/web/src/stacks/services/service-settings.tsx:35`); README's two mentions. Tests that assert them follow.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web, README.md"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-8.1",
+                  "why": "the texts name the Uses and Provides tabs"
+                }
+              ]
+            },
+            {
+              "id": "GW-8.3",
+              "title": "Link the Overview tab to both",
+              "description": "Its card's two rows each link to their tab; \"connect it to Caddy in Uses\".",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-8.1",
+                  "why": "links to the `/uses` and `/provides` tabs"
+                }
+              ]
+            },
+            {
+              "id": "GW-8.4",
+              "title": "Title Add stack's cards Uses and Provides",
+              "description": "Add stack keeps both cards in its one form.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-8.5",
+              "title": "Check in the browser",
+              "description": "An app (cv, using Caddy), a provider (Postgres, used by wallet-passes), Caddy's web addresses, edits on both tabs saved at once, the old `/shared` link.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-8.1",
+                  "why": "checks both tabs and the old `/shared` link"
+                },
+                {
+                  "id": "GW-8.2",
+                  "why": "checks the renamed texts"
+                },
+                {
+                  "id": "GW-8.3",
+                  "why": "checks the Overview's links to both tabs"
+                },
+                {
+                  "id": "GW-8.4",
+                  "why": "checks Add stack's retitled cards"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-9",
+          "title": "Show who uses a provider",
+          "description": "A providing service's page shows the services that use it. For example, opening the caddy service (stack `caddy`) lists every stack and service that connects to it; the same for Postgres, Mailpit and any other provider.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": "a stack's `provides` belongs to one of its services (`Provides.service`, `apps/api/src/contracts/stacks.ts:93`); `usedBy` names the stacks that connect (`:164`), and `/api/stacks` returns each stack's `uses`: which of its services reach the provider, which take its variables, its fields (a secret's value null). A service's Status tab (`apps/web/src/stacks/services/service-status.tsx:53`) shows its container, the last hour, \"Reached as\", its mounts: nothing of who uses it. The generic provider page (Postgres, Mailpit) lists \"Connected stacks\" (`apps/web/src/providers/generic-page.tsx:53`); Caddy's page lists Caddy's routes but no stack (`apps/web/src/providers/caddy/caddy-page.tsx:212`); the Provides card names the stacks only.",
+          "plan": [
+            {
+              "id": "GW-9.1",
+              "title": "Build the list of a provider's users",
+              "description": "In the page alone (`/api/stacks` already holds it all), from the generic page's \"Connected stacks\": a row per connection, the stack (a link), its services that reach it, those that take its variables, the fields that aren't secret. For Caddy a row is a web address: the address (a link) and its state (as the stack Overview's addresses), the stack and service it goes to, the port. For Postgres, its database and role; for Mailpit, the stack and its services.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-9.2",
+              "title": "Show \"Used by\" on the service's Status tab",
+              "description": "On the providing service's Status tab: a \"Used by\" card with the list, or \"No stack connects to it yet\".",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-9.1",
+                  "why": "shows the list of users GW-9.1 builds"
+                }
+              ]
+            },
+            {
+              "id": "GW-9.3",
+              "title": "Show the same list on Provides and the provider's page",
+              "description": "On the Provides tab, instead of the names in its summary; on the provider's page it replaces the generic page's \"Connected stacks\", and Caddy's routes table gains a Stack column, matched by host name.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-9.1",
+                  "why": "shows the same list GW-9.1 builds"
+                }
+              ]
+            },
+            {
+              "id": "GW-9.4",
+              "title": "Test and check in the browser",
+              "description": "Tests for building the rows. In the browser: the caddy, postgres and mailpit services, a provider no stack uses yet.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (tests, dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-9.1",
+                  "why": "tests building the rows"
+                },
+                {
+                  "id": "GW-9.2",
+                  "why": "checks the services' Used by card"
+                },
+                {
+                  "id": "GW-9.3",
+                  "why": "checks Provides and the provider pages"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "title": "Change only the gateway's backend",
+      "features": [
+        {
+          "id": "GW-10",
+          "title": "Fix gateway-update's unhealthy status",
+          "description": "The helper `gateway-update` shows as unhealthy after every deploy of the gateway's own stack, though it exits 0.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/api (deployer)"
+            },
+            {
+              "repo": "live gateway",
+              "part": "stack gateway"
+            }
+          ],
+          "today": "it runs the deployer's image, which has a HEALTHCHECK on `http://127.0.0.1:8080/health`, a server the helper never starts.",
+          "plan": [
+            {
+              "id": "GW-10.1",
+              "title": "Run the helper without the healthcheck",
+              "description": "Add `--no-healthcheck` to its `docker run` (`apps/api/src/deployer/helper.ts`, `dockerHelper`), with a test of its arguments.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api (deployer)"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-10.2",
+              "title": "Check after the next deploy of the gateway",
+              "description": "The helper shows as exited, not unhealthy.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "stack gateway"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-10.1",
+                  "why": "checks the helper run without the healthcheck"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "title": "Change the gateway's frontend and backend",
+      "features": [
+        {
+          "id": "GW-11",
+          "title": "Fold and highlight logs",
+          "description": "Highlight the gateway's logs and make them collapsible, with bh's `LogView` (GW-13): a deploy's log, a job run's log, a service's logs.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "GW-13.6",
+              "why": "uses bh's `LogView`, in the gateway's copy"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/api (deployer), apps/web"
+            }
+          ],
+          "today": "three plain `<pre>`s (`apps/web/src/stacks/deploy-parts.tsx:87`, `apps/web/src/stacks/services/job-runs.tsx:61`, `apps/web/src/stacks/services/service-logs.tsx:56`), each with its own scroll box (GW-7 removes them). A deploy's log is the deployer's own steps (`fetched the commit`, `build`, `up; watching for 10 s`, `done: live`), each followed by a tool's output (BuildKit's `#N` steps, compose's `Container … Started`, `Untagged:`/`Deleted:`). The file doesn't say which line is which: both go through one `say` (`apps/api/src/deployer/deployer.ts:317`, `:346`). A service's logs are what its container printed, ANSI color codes included, which show as `[32m…` today.",
+          "plan": [
+            {
+              "id": "GW-11.1",
+              "title": "Mark the deployer's own steps",
+              "description": "The deployer writes its own steps apart from a tool's output, a marked line (`HH:MM:SS ▸ build`) that a raw file still reads well. Each step starts a section; the tool's lines under it are its body. The same for job runs. Logs written before this have no marks: they show flat, highlighted only.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api (deployer)"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-11.2",
+              "title": "Show a deploy's log in sections",
+              "description": "One section per deployer step; the build folds a second level, one per BuildKit step (`#N`). The gateway's own highlight rules on top of bh's: `done: live` green, `CACHED` dimmed. Folded by default, except the last section and any that failed; while running, the current one is open and followed.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-11.1",
+                  "why": "sections come from the deployer's marked steps"
+                }
+              ]
+            },
+            {
+              "id": "GW-11.3",
+              "title": "Show a job run's log in sections",
+              "description": "The same, by the deployer's steps around the job's own output.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-11.1",
+                  "why": "sections come from the job runs' marked steps"
+                }
+              ]
+            },
+            {
+              "id": "GW-11.4",
+              "title": "Fold a service's multi-line entries",
+              "description": "No steps to fold by, so a multi-line entry (a stack trace: the lines indented under an error) folds under its first line. Docker's timestamps are shortened to the time.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-11.5",
+              "title": "Check in the browser",
+              "description": "A live deploy as it runs, a failed one, an old unmarked log, a job run, a service that prints ANSI colors, in light and dark.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-11.2",
+                  "why": "checks a deploy's log in sections"
+                },
+                {
+                  "id": "GW-11.3",
+                  "why": "checks a job run's log in sections"
+                },
+                {
+                  "id": "GW-11.4",
+                  "why": "checks a service's folded entries and colors"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-12",
+          "title": "Rename Variables to Environment",
+          "description": "Rename a stack's \"variables\" in the UI, and in the API's messages, which name them too (\"Settings › Variables\", `apps/api/src/stacks/stacks.ts`). Build it with GW-5: the same files.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/web, apps/api, README.md"
+            }
+          ],
+          "today": "\"Variables\" in about 60 texts: the stack's tab and its address (`apps/web/src/stacks/stack-layout.tsx:111`, `/stacks/$id/variables`), the tab's notes (`apps/web/src/stacks/variables-tab.tsx`), a service's section with its columns, buttons and help (`Variables` in `apps/web/src/stacks/form/service-card.tsx`), Settings › Variables (`apps/web/src/app/nav.ts:81`, `/settings/variables`, `apps/web/src/settings/variables-page.tsx`), what a provider gives (`apps/web/src/stacks/form/shared-cards.tsx:91`…), and the API's messages (`apps/api/src/stacks/stacks.ts:73`–`:174`, `variables.ts`, `compose.ts:112`, `:390`, `shared.ts:112`, `:117`, `:247`), some asserted by tests (`apps/api/src/server.test.ts:898`, `:1192`, `stacks/compose.test.ts:45`, `stacks/push-deploys.test.ts:108`, `:112`).",
+          "chosen": "**Environment**.",
+          "plan": [
+            {
+              "id": "GW-12.1",
+              "title": "Rename the tab, the Settings page and the section",
+              "description": "The stack's tab \"Environment\", at `/stacks/$id/environment` (`/variables` redirects); Settings › Environment at `/settings/environment` (redirects too); a service's section \"Environment\", holding its Variables and Secrets tables (GW-5).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-5.1",
+                  "why": "the Environment section holds GW-5.1's two tables"
+                }
+              ]
+            },
+            {
+              "id": "GW-12.2",
+              "title": "Say \"environment variable\" in the texts",
+              "description": "Where \"variable\" stood alone (\"the variables a connecting stack's services get\" → \"the environment variables…\"); inside an Environment section, \"Add variable\" and \"Add secret\" stay short.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-12.3",
+              "title": "Rename them in the API's messages",
+              "description": "\"Settings › Variables\" becomes \"Settings › Environment\", a lone \"variable\" \"environment variable\"; the tests follow. Error codes (`bad_variables`, `missing_variable`), the API's paths (`/api/variables`) and its stored and returned fields stay: the agent tokens' clients read them.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-12.4",
+              "title": "Update the README",
+              "description": "Its mentions follow.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "README.md"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-12.5",
+              "title": "Check in the browser",
+              "description": "The tab, Settings › Environment, the old addresses, a deploy refused for a missing secret (its message).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web (dev server)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-12.1",
+                  "why": "checks the renamed tab, page and old addresses"
+                },
+                {
+                  "id": "GW-12.2",
+                  "why": "checks the reworded texts"
+                },
+                {
+                  "id": "GW-12.3",
+                  "why": "checks the API's message for a missing secret"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-17",
+          "title": "Add made secrets of a given shape to the stack form's Make",
+          "description": "Make makes 16 random bytes as 32 hex digits, which no one types or sees. Some secrets need another shape: Rauthy's encryption key is a key id, `/`, then 32 random bytes in base64 (AU-1.8). Make takes a shape, so the gateway makes those too.",
+          "status": "In progress",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/api"
+            },
+            {
+              "repo": "gateway",
+              "part": "apps/web"
+            }
+          ],
+          "today": [
+            "`{ make: true }` in `POST` and `PATCH /api/stacks` makes `madeValue()` (`apps/api/src/stacks/stacks.ts:106-111`), and in `/api/variables` `randomBytes(16).toString('hex')` (`apps/api/src/stacks/variables.ts:83`); the contract is `VariableInput.make?: true` (`apps/api/src/contracts/stacks.ts`).",
+            "The gateway deploys itself on every push to its `main` (its stack's deploy on push, checked on 2026-10-13)."
+          ],
+          "plan": [
+            {
+              "id": "GW-17.1",
+              "title": "Add a shape to `make`: how many random bytes, hex or base64, and a prefix",
+              "description": "`make: true` stays 16 bytes as hex. `make: {bytes, encoding, prefix}` makes `bytes` random bytes (16 to 64) as `hex`, `base64` or `base64url`, after `prefix` (up to 32 of `A-Za-z0-9:_/-`), so Rauthy's encryption key is `{bytes: 32, encoding: 'base64', prefix: 'k1/'}`. In `VariableInput`, the stacks' variables and the shared ones, with tests: each shape's length and alphabet, and a shape refused with its reason.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api"
+                }
+              ],
+              "done": false,
+              "approved": true
+            },
+            {
+              "id": "GW-17.2",
+              "title": "Add the shape to the form's Make",
+              "description": "Beside Make, the shape it makes: 16 bytes as hex, as now, or the bytes, the encoding and a prefix chosen. A made secret still shows only that it is set.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-17.1",
+                  "why": "sends the shape the API takes"
+                }
+              ],
+              "approved": true
+            },
+            {
+              "id": "GW-17.3",
+              "title": "Merge GW-17 into main, which deploys the gateway",
+              "description": "Your go: a push to the gateway's `main` deploys it, and a gateway deploy replaces the deployer itself, through `gateway-update`.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-17.2",
+                  "why": "merges the API and the form together"
+                }
+              ],
+              "approved": true,
+              "byYou": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "title": "Build parts in bh, then copy them into the gateway",
+      "description": "In `../bh`, then synced in.",
+      "features": [
+        {
+          "id": "GW-13",
+          "title": "Build LogView in bh",
+          "description": "A `LogView` component in `@bh/ui`, for any app's logs. It knows nothing of the gateway: the app says which lines start a section, and at which level. Also BH-16.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/ui, docs"
+            }
+          ],
+          "design": "https://claude.ai/artifact/373FqCFMX7MWWu3U33K7Nf (six artboards: done, running, failed, service logs, dark, anatomy). Beyond the plan below, it adds: the toolbar and the step being read stick to the top of the page; error and warning counts per step and in the toolbar; neighboring CACHED steps fold into one row; a Readable / Raw JSON switch for JSON lines; Find opens the folds holding a match; keys ↑ ↓ → ← Enter.",
+          "plan": [
+            {
+              "id": "GW-13.1",
+              "title": "Build sections that fold and follow",
+              "description": "Lines in sections, nested to any depth. Each section folds, shows its time and how long it took, and can start open or folded. It follows the end while lines arrive, unless the reader scrolled up, with a \"jump to the end\" when they did. No scroll box of its own: it grows with the page (GW-7).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-2.2.4",
+                  "why": "sections reuse `Disclosure` and `FoldCard`"
+                }
+              ]
+            },
+            {
+              "id": "GW-13.2",
+              "title": "Highlight lines and draw ANSI colors",
+              "description": "By default: timestamps dimmed; failures red (`error`, `failed`, `FAIL`, `[ERROR]`); warnings amber (`warn`, `[WARN]`); successes green (`OK`, `DONE`, `healthy`). ANSI colors are rendered in the page's tones, never shown as codes. An app adds rules of its own on top.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-13.3",
+              "title": "Fold multi-line entries",
+              "description": "A multi-line entry (lines indented under the one before, as a stack trace) can fold under its first line, for logs with no sections.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-13.4",
+              "title": "Test it and write its docs page",
+              "description": "Tests: sections and nesting, ANSI parsing, following the end, a log of thousands of lines staying fast. A docs page with examples, as every bh component has.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui, docs"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-13.1",
+                  "why": "tests sections, nesting and following the end"
+                },
+                {
+                  "id": "GW-13.2",
+                  "why": "tests ANSI parsing and the highlights"
+                },
+                {
+                  "id": "GW-13.3",
+                  "why": "tests and documents folding multi-line entries"
+                }
+              ]
+            },
+            {
+              "id": "GW-13.5",
+              "title": "Release bh's next version, with `LogView`",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "main"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-13.4",
+                  "why": "releases the tested `LogView`"
+                }
+              ]
+            },
+            {
+              "id": "GW-13.6",
+              "title": "Sync that version into the gateway on the bh page",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "bh page"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "packages/bh"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-13.5",
+                  "why": "copies the version with `LogView`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "title": "Change the gateway's infrastructure",
+      "description": "Compose, Caddy config, containers.",
+      "features": [
+        {
+          "id": "GW-14",
+          "title": "Move other apps' config out of Caddy",
+          "description": "Caddy's stack shouldn't hold other apps' config: no site file or variable of another app in it. Each app holds its own names, by its stack's connection to Caddy.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "config, caddy, README.md"
+            },
+            {
+              "repo": "live gateway",
+              "part": "stacks gateway, caddy, medialib"
+            }
+          ],
+          "today": [
+            "Already out: wallet-passes' site file and `WALLET_PASSES_DOMAIN` (7cb44f2), the gateway's `gateway.caddy` (9374a72). docs, cv and wallet-passes hold their names as web addresses of their stacks, whose sites `config/site.sh` writes.",
+            "Left in Caddy's stack: medialib's `config/sites/media.caddy` and `MEDIA_DOMAIN` (a wildcard site `*.<media domain>` routing nine names, plex, radarr, sonarr, prowlarr, qbittorrent, seerr, bazarr, jellyfin, cleanuparr, to medialib's services, any other name a 404, and the bare name to its dashboard); and the gateway's page, by a temporary `@gateway host {$GATEWAY_DOMAIN}` rule in the wildcard site (`config/Caddyfile:47`), with `GATEWAY_DOMAIN`.",
+            "Caddy's own, so they stay: `ACME_CA`, `WILDCARDS` (the wildcard certificates it holds), and the two build versions, `CADDY_VERSION` and `CLOUDFLARE_DNS_VERSION` (`caddy/compose.yaml:22`)."
+          ],
+          "chosenOn": "2026-10-09",
+          "chosen": "no hand-written site and no exception; one wildcard certificate per domain; the gateway holds its own name by its connection to Caddy; medialib keeps its names, two labels deep, under a second wildcard, and may be down a minute or two while it switches.",
+          "plan": [
+            {
+              "id": "GW-14.1",
+              "title": "Let the gateway hold its own name",
+              "description": "The stack `gateway` connects to Caddy with its address, to the page's service (`gateway`, or `web` after GW-15: a rename carries into its connections), port 8080, its site written by `site.sh` as any stack's. Once that site serves, a Caddy deploy removes the `@gateway` rule and `GATEWAY_DOMAIN`, on its Compose tab too: Caddy's compose is kept by the gateway, not read from `caddy/compose.yaml`.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "stacks gateway, caddy"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "config/Caddyfile"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-14.2",
+              "title": "Write the gateway's site on a new machine",
+              "description": "With no rule, Caddy's first start has no way to the page. The bootstrap (`caddy/compose.yaml` and its README steps) writes the gateway's site once, the file the connection writes, so the gateway's first deploy takes it over. `GATEWAY_DOMAIN` remains an input of the bootstrap only (`.env.example`).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "caddy, README.md, .env.example"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-14.3",
+              "title": "Let medialib hold its names",
+              "description": "Each name becomes a web address of the stack `medialib`, to its service and port, and the bare name to its dashboard. Then one Caddy deploy removes `media.caddy` and `MEDIA_DOMAIN` and adds `*.<media domain>` to `WILDCARDS`, whose site then holds that certificate and answers 404 for any other name. It can't join `WILDCARDS` sooner: two sites of one name, which Caddy refuses. medialib's hand-made DNS records stay, unmarked, as docs' and cv's did.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "stacks medialib, caddy"
+                },
+                {
+                  "repo": "gateway",
+                  "part": "config/sites"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-14.4",
+              "title": "Update the comments, README and fixture",
+              "description": "The Caddyfile's comments and README name no app any more; the routes fixture (`apps/api/src/caddy/__fixtures__/servers.json`, stale since 12c73c8) is made again.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "config/Caddyfile, README.md, apps/api"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-14.1",
+                  "why": "comments name no app once the `@gateway` rule goes"
+                },
+                {
+                  "id": "GW-14.3",
+                  "why": "comments name no app once `media.caddy` goes"
+                }
+              ]
+            },
+            {
+              "id": "GW-14.5",
+              "title": "Deploy and check, each with your yes",
+              "description": "Each deploy (the gateway, Caddy, medialib) only with your yes at the time. After each: every name answers over HTTPS, an unknown name under each wildcard gets the 404, the certificates are the wildcards.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "stacks gateway, caddy, medialib"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-14.1",
+                  "why": "deploys the gateway's own name and Caddy without the rule"
+                },
+                {
+                  "id": "GW-14.3",
+                  "why": "deploys medialib's names and the second wildcard"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GW-15",
+          "title": "Cut the gateway to two services",
+          "description": "The gateway's own stack goes from four services to two, `web` and `deployer`: its containers become `gateway-web-1` and `gateway-deployer-1`, plus the `gateway-update` helper during a deploy of itself.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/api, compose.yaml, scripts, README.md"
+            },
+            {
+              "repo": "live gateway",
+              "part": "stack gateway"
+            }
+          ],
+          "today": "`gateway` (the page and API), `gateway-deployer` (the one container with write access to Docker), `gateway-docker-proxy` (a stock Caddy passing the page's read-only Docker requests, `docker-proxy/Caddyfile`), `gateway-sizes` (`du` every 15 minutes, `sizes/measure.sh`). The proxy's and sizes' isolation adds nothing next to the deployer, which already holds the socket.",
+          "chosen": "two.",
+          "plan": [
+            {
+              "id": "GW-15.1",
+              "title": "Serve the Docker allowlist from the deployer",
+              "description": "On the `deploy` network it already shares with the page: GET of the lists, `system/df`, a container's stats (`stream=false`) and logs (no `follow`, no `details`), `_ping`, `version`; anything else, inspect included, refused. Tests for each refusal. The page's `DOCKER_URL` points there (`apps/api/src/config.ts:82`); the `docker` network and `docker-proxy/` go.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api (deployer), compose.yaml"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-15.2",
+              "title": "Measure folder sizes in the deployer",
+              "description": "On a 15-minute timer, `SIZES_ROOT` mounted read-only, writing `sizes.txt` where the page reads it; `gateway-sizes` and `sizes/measure.sh` go.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "apps/api (deployer), compose.yaml"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-15.3",
+              "title": "Rename the services and images",
+              "description": "`gateway` → `web`, keeping `gateway` as an alias on the shared network so Caddy's temporary `@gateway` rule (`reverse_proxy gateway:8080`, `config/Caddyfile:51`) still reaches it until GW-14 replaces it; `web` joins the reserved names (`RESERVED_ALIASES`, `apps/api/src/stacks/compose.ts:45`), because Docker registers it there too. `gateway-deployer` → `deployer`. The images become `gateway-web:<commit>` and `gateway-deployer:<commit>`; `scripts/recover.sh`, the helper (`apps/api/src/deployer/helper.ts`), `DEPLOYER_URL` and the README follow.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "compose.yaml, apps/api, scripts, README.md"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-15.4",
+              "title": "Take it over in one deploy",
+              "description": "Both `compose.yaml` and the stored stack `gateway` change; one deploy of the gateway's own stack takes it over. Check after: the Docker pages, a service's logs and stats, the Volumes page's sizes, a deploy of another stack, `scripts/recover.sh`.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "stack gateway"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "GW-15.1",
+                  "why": "deploys the deployer serving the Docker allowlist"
+                },
+                {
+                  "id": "GW-15.2",
+                  "why": "deploys the deployer measuring folder sizes"
+                },
+                {
+                  "id": "GW-15.3",
+                  "why": "deploys the renamed services and images"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "id": "GW-16",
+          "title": "Add the gateway's own data folder to its backups",
+          "description": "The gateway keeps its stacks, their connections and secrets, the shared variables, the agent tokens and its password in `${APPDATA_ROOT}/gateway/data`, and nothing backs that folder up: the README names only the shared Postgres's nightly dumps. Losing the disk would lose every stack's setup. Its July spec warned of this; found while triaging the older GW tickets (TK-85.6), none of which is carried.",
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "README, deploy"
+            },
+            {
+              "repo": "live gateway",
+              "part": "backups"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

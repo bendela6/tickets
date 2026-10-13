@@ -1,0 +1,822 @@
+{
+  "$schema": "./tasks.schema.json",
+  "repo": "items-core",
+  "prefix": "IC",
+  "intro": [
+    "items-core's cloud deployment list: **Milestone 3, \"Deploy and accept in GCP\"**, of the worker migration plan `../items-core/docs/superpowers/plans/2026-09-22-worker-migration-finish.md`. By its own rule that plan stays uncommitted, in items-core's main checkout only. The runbook it leads to is committed: `docs/workflow/deploy.md`, with `DEPLOY.md` and `WORKER.md` beside it. This list replaces the HTTP-worker one (worker tokens, job-claim endpoints, a compose bundle) that Milestone 2 made stale. That list was retired on 2026-10-12 with nothing left open; it is `TASKS.md` in items-core's git history.",
+    "Where it stands: Milestones 1 and 2 landed on items-core's `bbendeliani/detection` on 2026-09-22 and 2026-09-23, and the Milestone 3 code, docs and Terraform were written on 2026-09-23. None of it is deployed. items-core's `main` (`b1ccebf8`, 2026-09-12) still has the HTTP worker, and a push to `main` deploys the gateway. The Terraform sits on items-infrastructure's local branch `bbendeliani/direct-worker`: six commits, never pushed or applied.",
+    {
+      "text": "**Topology (cloud dev, `bnw-items-dev`):**",
+      "items": [
+        "**Gateway**: Cloud Run `items-gateway-dev`, one instance with CPU always on. It serves the console API and owns migrations (in its build), schedule firing, the sweep and `run_events` partition upkeep.",
+        "**Worker and browser**: one GCE VM, `items-worker-dev` (Container-Optimized OS, no public address, egress through Cloud NAT, SSH through IAP), running two containers under systemd. The worker is `gcp-dev-1`.",
+        "**Workers connect to Postgres directly**, as the restricted `aitems_worker` role. They hold no token, have no gateway URL, listen for no inbound traffic and run no DDL. A machine joins the fleet the first time it starts, under its `WORKER_NAME`.",
+        "**Data**: Cloud SQL `items-postgres-dev` (`db-f1-micro`), page content in GCS `bnw-items-screenshots-dev`, workflow blobs in Postgres. The console is on Firebase Hosting.",
+        "Remote machines provide browsers or proxies only (the plan's rule). Browser automation and crawl decisions stay in GCP."
+      ]
+    },
+    "A ticket marked `byYou` is yours: console access, an external account, credentials, or a go/no-go. The others can be written (code, docs or Terraform) for your review. Every step that changes the cloud needs your go-ahead first.",
+    {
+      "text": "Watch out for:",
+      "items": [
+        "**One transport, hard cutover.** Old HTTP workers and direct workers never run at the same time. There is no fallback and no transport switch.",
+        "**Workers never run DDL.** The gateway creates the weekly partitions. A worker refuses to boot without next week's, and stops claiming while any of the coming seven days is uncovered.",
+        "**Leases are fenced by epoch.** A killed worker hands nothing back: its leases lapse after 30 seconds and a new boot reclaims the runs from the durable log. A worker whose lease was taken over has its writes refused.",
+        "**The connection budget is tight**: 47 of 50 with one worker. A second worker adds 10 and doesn't fit during a gateway rollout. Move to a bigger tier (`db-g1-small`) first; a higher flag on `db-f1-micro` risks running out of memory.",
+        "**Never create the worker role through Terraform or `gcloud sql users`.** Cloud SQL makes those users members of `cloudsqlsuperuser`, which the worker's probe refuses. Run `docs/workflow/worker-role.sql` as `aitems`.",
+        "**A stop is sticky.** A stopped worker exits again on every start until its fleet row is deleted. systemd restarts it on failure only, so it stays down.",
+        "**`NOLOGIN` doesn't end live sessions.** To cut a worker off at the database, also `pg_terminate_backend` its `items-worker:<bootId>` sessions.",
+        "**Storage settings must match** on the gateway and the worker: `STORAGE_PROVIDER`, `GCS_BUCKET`, `WORKFLOW_BLOB_STORAGE_PROVIDER` and `WORKFLOW_BLOB_BUCKET`.",
+        "**The clock check stays at 5 s.** Fix a drifting clock rather than setting `WORKER_ALLOW_UNSAFE_CLOCK_SKEW`, and never use that in an acceptance run.",
+        "**GCP egress is one datacenter address.** Rendered fetching from it, real-site bot defenses and large sitemaps are proven only by the cloud acceptance. Residential addresses are later browser-provider work.",
+        "**A push to items-core's `main` deploys everything on it**, not only the worker migration."
+      ]
+    },
+    "Deferred, not in this list: flush and snapshot tuning, notification coalescing, a polished multi-worker launcher, dropping the unused token columns and renaming the stop column (`revoked_at`), and browser-provider and obstacle work."
+  ],
+  "epics": [
+    {
+      "id": "E2",
+      "title": "Deploy the direct worker to GCP and accept it",
+      "description": "Milestone 3 of the worker migration: the gateway on Cloud Run and one direct worker with its browser on a GCE VM, both on Cloud SQL, checked in cloud dev until the migration is complete.",
+      "features": [
+        {
+          "id": "IC-5",
+          "title": "Measure and budget Cloud SQL connections for the direct worker",
+          "description": "Count every pool and listener that the gateway, the worker, the migration step and operators open, and keep the sum under Cloud SQL's limit. The plan's first Milestone 3 step.",
+          "status": "Planned",
+          "statusNote": "Budget written and the flag in Terraform (not applied); the census on cloud dev not taken.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "docs/workflow/deploy.md"
+            },
+            {
+              "repo": "items-infrastructure",
+              "part": "modules/db/items-postgresql"
+            },
+            {
+              "repo": "gcp",
+              "part": "Cloud SQL items-postgres-dev"
+            }
+          ],
+          "today": [
+            "`docs/workflow/deploy.md` (\"Connection budget\") names every term: the gateway's 2 pools of 6 plus 2 `LISTEN`s, doubled during a rollout; the worker's pool of 6 plus 4; the migration step 1; an operator reserve of 5; the superuser reserve of 3. Total 47 of 50.",
+            "Every connection carries an `application_name` (`items-gateway:console`, `items-worker:<bootId>:lease` …), so a census can name it. The names in the code match the doc's table.",
+            "items-infrastructure's `bbendeliani/direct-worker` sets `max_connections` to 50. Cloud dev still runs the tier's default of 25.",
+            "`superuser_reserved_connections` is assumed to be 3 and marked \"measure\". Nobody has taken the census on cloud dev."
+          ],
+          "plan": [
+            {
+              "id": "IC-5.1",
+              "title": "Write the connection budget into `docs/workflow/deploy.md`",
+              "description": "The budget's formula and terms, the census query, and which process opens each named connection. Commits `612a2eb0`, `3a0dd6fb` (the worker's four extra connections) and `687a3cc8` (names the gateway's run-changes listener and the migration connection).",
+              "done": true
+            },
+            {
+              "id": "IC-5.2",
+              "title": "Set Cloud SQL's `max_connections` to 50 and the fleet to one worker",
+              "description": "`modules/db/items-postgresql` raises the flag from 25 to 50 (`2ad24b0`, items-infrastructure). The fleet limit is the worker count in Terraform: one VM with one worker container (`0e8f27e`). Both sit on the unmerged `bbendeliani/direct-worker`; IC-8.5 applies them.",
+              "done": true
+            },
+            {
+              "id": "IC-5.3",
+              "title": "Take the connection census on cloud dev before the cutover",
+              "description": "Run `SHOW max_connections`, `SHOW superuser_reserved_connections` and the `pg_stat_activity` count by `application_name` from `deploy.md`, with cloud dev idle. Correct the budget if the reserve or today's usage differs. Needs Cloud SQL access.",
+              "done": false,
+              "byYou": true
+            }
+          ]
+        },
+        {
+          "id": "IC-6",
+          "title": "Define the worker's name, browser, images, credentials and storage in Terraform",
+          "description": "The plan's second step: settle the deployment-owned worker name, where the browser runs, the image pipeline, credentials and storage permissions, and check who still reads `PUBLIC_API_URL` before removing it.",
+          "status": "Planned",
+          "statusNote": "Written on items-infrastructure's `bbendeliani/direct-worker` (2026-09-23); two gaps opened since, as items-core moved on.",
+          "where": [
+            {
+              "repo": "items-infrastructure",
+              "part": "modules/services/worker, modules/networks/items-vpc, modules/secrets, modules/services"
+            },
+            {
+              "repo": "items-core",
+              "part": "docker/worker, docs/workflow/worker-role.sql"
+            }
+          ],
+          "today": {
+            "text": "The Terraform follows items-core as it was on 2026-09-23. The plan is behind the code in three places:",
+            "items": [
+              "`de0d48aa` (2026-09-24) made `STORAGE_PROVIDER` choose `gcs`, defaulting to `local`, and refuses a `GCS_BUCKET` that no store uses. The branch sets only `GCS_BUCKET`, on the gateway (`modules/services/main.tf`) and on the VM (`modules/services/worker/cloud-init.yaml.tftpl`). So today's gateway and worker would refuse to boot. `deploy.md` already lists `STORAGE_PROVIDER=gcs`.",
+              "`0dc3fbcc` (2026-10-05) gave `docker/gateway/Dockerfile` and `docker/worker/Dockerfile` BuildKit cache mounts (`RUN --mount=type=cache`). Both Cloud Build triggers run plain `docker build`, with no `DOCKER_BUILDKIT=1`.",
+              "The plan's \"confirm the `PUBLIC_API_URL` consumers\" is already done: its only reader was the deleted worker setup script.",
+              "Two image pipelines exist. The Cloud Build trigger pushes to Artifact Registry for the VM. `.github/workflows/worker-images.yml` still pushes both images to `ghcr.io/bob-and-weave` on every push to `main`."
+            ]
+          },
+          "openChoices": [
+            {
+              "question": "What happens to `.github/workflows/worker-images.yml`?",
+              "options": [
+                "Keep it. It costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; revisit once a host outside GCP is decided.",
+                "Delete it. Cloud Build and Artifact Registry are the only pipeline the cloud uses, and the plan leaves remote machines browsers and proxies only."
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "IC-6.1",
+              "title": "Add the worker VM with its browser container and a fixed `WORKER_NAME`",
+              "description": "`modules/services/worker`: one `e2-standard-2` Container-Optimized OS VM, `items-worker-dev`, with no public address. cloud-init writes four systemd units: `items-browser` (the `docker/browser` prod image, CDP on the `items` Docker network), `items-worker` (`--init`, `WORKER_NAME=gcp-dev-1`, `Restart=on-failure`), `items-worker-rollout` and `items-docker-network`. The name lives in Terraform, so the fleet row's flags survive a replaced container. Commit `0e8f27e` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-6.2",
+              "title": "Add a worker subnet, Cloud NAT and IAP SSH",
+              "description": "`modules/networks/items-vpc`: a subnet with Private Google Access, NAT from one reserved egress address, and SSH only from IAP's range to VMs tagged `items-worker`. Commit `0699801` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-6.3",
+              "title": "Add the worker's image build and its rollout on the VM",
+              "description": "A Cloud Build trigger builds `docker/worker` and `docker/browser` on a push to `main` and pushes both to Artifact Registry, which keeps the last ten. It waits up to 30 minutes for the gateway to serve the same commit, then pins both tags in the VM's metadata. `items-worker-rollout` pulls and restarts whichever container's pin changed; a pin of `none` stops it. Commit `0e8f27e` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-6.4",
+              "title": "Add the worker's database password and its role script",
+              "description": "Terraform generates the secret `items-worker-db-password-dev` (`846a610`, items-infrastructure). The VM's service account `items-worker-run-dev` reads it, pulls from the image repository, writes to the screenshots bucket and writes logs and metrics. items-core's `docs/workflow/worker-role.sql` creates the role and sets its password; its default privileges follow the migrating role (`4ef0cabb`, `e2ecb5bc`).",
+              "done": true
+            },
+            {
+              "id": "IC-6.5",
+              "title": "Drop `PUBLIC_API_URL` from the gateway",
+              "description": "Its only reader was the HTTP worker's setup script. Removed from items-core in `6f7a6c11` and from the gateway's Terraform env in `94c4c54` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-6.6",
+              "title": "Set `STORAGE_PROVIDER=gcs` on the gateway and the worker VM",
+              "description": "Add `STORAGE_PROVIDER=gcs` and `WORKFLOW_BLOB_STORAGE_PROVIDER=postgres` beside `GCS_BUCKET` in `modules/services/main.tf` and `modules/services/worker/cloud-init.yaml.tftpl`, as `deploy.md`'s configuration tables list them. Since `de0d48aa` both processes refuse a bucket that no store uses. Code from before it ignores the two extra variables.",
+              "done": false
+            },
+            {
+              "id": "IC-6.7",
+              "title": "Check the Cloud Build steps build the BuildKit Dockerfiles",
+              "description": "Since `0dc3fbcc`, `docker/gateway/Dockerfile` and `docker/worker/Dockerfile` use `RUN --mount=type=cache`, which needs BuildKit. The gateway trigger (`modules/services/items-api/main.tf`, already live) and the worker trigger run `gcr.io/cloud-builders/docker` with plain `build` and no `DOCKER_BUILDKIT=1`. Confirm the builder uses BuildKit, or set it on the steps, before any push to `main` that carries `0dc3fbcc`.",
+              "done": false
+            }
+          ]
+        },
+        {
+          "id": "IC-7",
+          "title": "Add partition upkeep, health checks and operator docs for the cloud",
+          "description": "The plan's third step: the gateway's partition upkeep with health that can be watched from outside, the worker images, and operator docs for stop, restart, credential failure and rollback.",
+          "status": "Planned",
+          "statusNote": "Code and docs landed on 2026-09-23 and the Terraform is written (not applied); two docs are out of date.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "services/runs, docker/worker, docs/workflow/deploy.md, WORKER.md, ARCHITECTURE.md"
+            },
+            {
+              "repo": "items-infrastructure",
+              "part": "modules/workflow-ops, modules/services"
+            }
+          ],
+          "today": [
+            "`GET /api/internal/workflow/partitions` answers 200 while partitions reach 14 days ahead, and 503 otherwise. `POST /api/internal/workflow/sweep` runs the upkeep, then one sweep, behind `WORKFLOW_SWEEP_TOKEN`.",
+            "The worker image starts Node directly, so SIGTERM reaches the worker.",
+            "`docs/workflow/deploy.md` holds the topology, configuration, IAM, connection budget, upkeep, a table for operating the worker (pause, stop, start after a stop, restart, rollout, rollback, take out of service) and the cutover runbook.",
+            "`WORKER.md` and `deploy.md` still cite `apps/worker/src/__tests__/takeover.direct.e2e.test.ts` as the two-process takeover proof. `252b077c` (2026-09-24) deleted it with the corpus-crawl graphs; its message says site-crawl's proof replaces it.",
+            "`ARCHITECTURE.md` still draws the HTTP worker. Its own banner says the Milestone 3 work rewrites it."
+          ],
+          "plan": [
+            {
+              "id": "IC-7.1",
+              "title": "Add the partition coverage endpoint and upkeep on every sweep call",
+              "description": "`services/runs`: a read-only coverage endpoint for an uptime check, and upkeep before every call of the sweep endpoint. Commit `295da798`. Upkeep keeps one week back and four ahead, and `db:migrate` seeds the same range (`840a6ee4`).",
+              "done": true
+            },
+            {
+              "id": "IC-7.2",
+              "title": "Set the gateway to one always-on instance with the sweep token",
+              "description": "Cloud Run minimum and maximum 1, with CPU allocated outside requests, so the sweep loop, schedule firing and hourly upkeep keep running. `WORKFLOW_SWEEP_TOKEN` comes from `items-workflow-sweep-token-dev`. Commits `94c4c54` and `846a610` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-7.3",
+              "title": "Add the sweep backstop and the partition alert to Discord",
+              "description": "`modules/workflow-ops`: a Cloud Scheduler job calls the sweep endpoint every five minutes. An uptime check reads the partitions endpoint every 15 minutes; its alert goes to the `items-alerts-dev` topic, and a small function posts it to the Discord webhook in `items-alerts-discord-webhook-dev`. Commit `e3a07fb` (items-infrastructure).",
+              "done": true
+            },
+            {
+              "id": "IC-7.4",
+              "title": "Build the worker image for the direct worker",
+              "description": "`docker/worker/Dockerfile`: the direct worker, with no gateway URL, token or Doppler. It starts `node` directly so SIGTERM arrives, and runs with `--init`. Commits `273f82da` and `89f9e653`; made smaller in `0dc3fbcc`.",
+              "done": true
+            },
+            {
+              "id": "IC-7.5",
+              "title": "Write the operator docs for stop, restart, credential failure and rollback",
+              "description": "`docs/workflow/deploy.md` (`612a2eb0`, `396d36ad`; storage settings in `de0d48aa`), `WORKER.md`, `DEPLOY.md` and `docker/worker/README.md`. On a credential failure the worker exits 1 with a one-line reason, and systemd retries every 30 seconds.",
+              "done": true
+            },
+            {
+              "id": "IC-7.6",
+              "title": "Update the recovery-proof paths in `WORKER.md` and `deploy.md`",
+              "description": "Replace the deleted `takeover.direct.e2e.test.ts` with the site-crawl proof that replaced it, in `WORKER.md` (\"Operational checks\") and `docs/workflow/deploy.md` (\"Recovery proofs\"). The plan's final acceptance needs the docs to match the deployed system.",
+              "done": false
+            },
+            {
+              "id": "IC-7.7",
+              "title": "Replace `ARCHITECTURE.md`'s HTTP-worker diagrams with the direct worker",
+              "description": "Its component and sequence diagrams show workers as token-holding API clients that upload through signed URLs. Redraw them from `deploy.md`'s topology: the gateway on Cloud Run, the worker and browser on the VM, both on Cloud SQL, page content in GCS.",
+              "done": false
+            }
+          ]
+        },
+        {
+          "id": "IC-8",
+          "title": "Cut cloud dev over to the direct worker",
+          "description": "The plan's fourth step, as `deploy.md`'s cutover runbook: your approval, then stop the old workers, apply the Terraform, create the worker role, push `main` and refresh the workflow definitions.",
+          "status": "Planned",
+          "waitingOn": ["your choice of release (below)"],
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "main"
+            },
+            {
+              "repo": "items-infrastructure",
+              "part": "environments/dev"
+            },
+            {
+              "repo": "gcp",
+              "part": "bnw-items-dev"
+            }
+          ],
+          "today": [
+            "Nothing is deployed. Cloud dev runs the gateway from items-core's `main` (`b1ccebf8`, 2026-09-12), from the HTTP-worker era. `bbendeliani/detection` is 264 commits ahead and not merged.",
+            "The runbook says the cutover drops and renames nothing, and rolls back by redeploying the old images because the new schema is a superset. That holds up to the migration's last commit, `396d36ad` (2026-09-23): every migration between `main` and it only adds.",
+            "It no longer holds at the branch tip. Later migrations drop columns (`services/crawls/migrations/0011_crawl_stage.sql`, `services/sites/migrations/sites/0005` and `0007`), drop a table (`sites/0009`), rename a table and columns (`sites/0012`), and delete the old crawl workflows with their runs (`services/runs/migrations/0017`, `services/workflows/migrations/0004`). Old images can't run on that schema, so a rollback becomes a dev reset.",
+            "The tip also deleted the crawl graphs the recorded baseline ran (`252b077c`). It serves `ai.generate` only through a local `GENERATION_PROVIDER`, so the site crawl's model step is refused in the cloud."
+          ],
+          "openChoices": [
+            {
+              "question": "Which items-core commit does the cutover deploy?",
+              "options": [
+                "The migration's own tip, `396d36ad`, first. Every migration is additive, the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The later work goes out as its own push once IC-6.6 and IC-6.7 are done.",
+                "The `bbendeliani/detection` tip. One push carries everything. It needs IC-6.6 and IC-6.7 first, a rollback becomes a dev reset, the runbook's rollback must be rewritten, and the acceptance crawl needs a new baseline."
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "IC-8.1",
+              "title": "Merge the worker migration into items-core's `main`",
+              "description": "Milestone 2's gate: review, then merge, before any deploy. Merge the release chosen above into `main` locally. Don't push yet: the push deploys (IC-8.8).",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-8.2",
+              "title": "Merge `bbendeliani/direct-worker` into items-infrastructure's `main` after reading `terraform plan`",
+              "description": "Review the six commits, then run `make init-dev` and `doppler run -- terraform -chdir=environments/dev plan`. The branch was never pushed.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-6.6",
+                  "why": "today's gateway and worker refuse `GCS_BUCKET` without `STORAGE_PROVIDER`"
+                },
+                {
+                  "id": "IC-6.7",
+                  "why": "a push that carries `0dc3fbcc` needs BuildKit in Cloud Build"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.3",
+              "title": "Give the go-ahead for the cloud cutover",
+              "description": "The runbook's \"Before\": the release is on `main` locally, the Terraform is reviewed and its plan read, the census is taken, and no crawl is running. Every step after this changes the cloud.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-5.3",
+                  "why": "the runbook starts from a census of cloud dev"
+                },
+                {
+                  "id": "IC-8.1",
+                  "why": "the release is on `main`"
+                },
+                {
+                  "id": "IC-8.2",
+                  "why": "the Terraform is reviewed and its plan read"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.4",
+              "title": "Stop every existing worker",
+              "description": "Including any local HTTP worker still pointed at the cloud gateway. Old and direct workers never run at the same time (runbook step 1).",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.3",
+                  "why": "changes the cloud"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.5",
+              "title": "Run `make apply-dev` with the direct-worker Terraform",
+              "description": "The flag change restarts Cloud SQL for a few minutes. The apply creates the VM (idle, since no image is pinned), the secrets, the image repository and trigger, NAT, the scheduler job, the uptime check and its relay, and the gateway's always-on CPU. If Monitoring's Pub/Sub publisher grant fails on the first apply, apply again (runbook step 2).",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.4",
+                  "why": "no old worker may run once the direct setup exists"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.6",
+              "title": "Add the Discord webhook as a secret version",
+              "description": "`gcloud secrets versions add items-alerts-discord-webhook-dev --data-file=-`. Terraform stores a placeholder, and the relay posts nothing until the real URL is there. It reads it at its next cold start.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.5",
+                  "why": "the secret exists once applied"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.7",
+              "title": "Create the `aitems_worker` role on cloud dev",
+              "description": "Run `docs/workflow/worker-role.sql` as `aitems` over the instance's public IP, passing the password from `items-worker-db-password-dev` (runbook step 3). Later migrations' tables are covered by the script's default privileges.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.5",
+                  "why": "its password secret exists once applied"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.8",
+              "title": "Deploy the gateway and the worker by pushing items-core's `main`",
+              "description": "The gateway build migrates, then deploys. The worker build pushes both images, waits for the gateway to serve the commit, and pins them on the VM, which starts the worker (runbook step 4).",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.7",
+                  "why": "the worker's probe refuses to start without its role"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-8.9",
+              "title": "Run `seed:workflow-engine` against cloud dev",
+              "description": "`pnpm --filter @bw/gateway seed:workflow-engine` with cloud dev's `POSTGRES_*` exported, as `aitems` (runbook step 5). It inserts missing graph versions and keeps the Monday 03:00 UTC weekly schedule's settings.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.8",
+                  "why": "the seeds need the release's migrations"
+                }
+              ],
+              "byYou": true
+            }
+          ]
+        },
+        {
+          "id": "IC-9",
+          "title": "Check the direct worker in cloud dev and accept the migration",
+          "description": "The plan's fifth step and its final acceptance: every cloud check passes, the docs match the deployed system, and the HTTP worker path is gone.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "IC-8.9",
+              "why": "checks the deployed and seeded system"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gcp",
+              "part": "bnw-items-dev: the console, items-worker-dev, Cloud SQL"
+            },
+            {
+              "repo": "items-core",
+              "part": "docs/workflow/transport-parity.md"
+            }
+          ],
+          "today": [
+            "The checks are `deploy.md`'s runbook step 6 and `WORKER.md`'s operational checks. None has run in the cloud.",
+            "The recorded baseline is a 200-page crawl of the local fixture site (`tools/dev/fixture-site.mjs` on `127.0.0.1:8089`), captured on the HTTP worker (2026-09-22) and on two direct workers across a kill (2026-09-23), in `transport-parity.md`. The VM can't reach that address.",
+            "The recovery proofs run locally against isolated databases. Rendered fetching from GCP egress and real-site bot defenses are proven only here."
+          ],
+          "openChoices": [
+            {
+              "question": "What does the acceptance crawl run against?",
+              "options": [
+                "The fixture site, served where the VM can reach it (a container on its `items` network), compared with the baseline, then one seeded real site, rendered.",
+                "Real sites only, judged on business outcomes without a comparison with the baseline."
+              ],
+              "recommended": 0
+            },
+            {
+              "question": "How is takeover proven?",
+              "options": [
+                "Kill the worker mid-crawl, and also start a temporary second container, `gcp-dev-2`, outside a gateway rollout. The plan asks for takeover, and the budget holds two workers only outside a rollout.",
+                "Kill the worker only, and let the restarted container reclaim the run under a new boot."
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "IC-9.1",
+              "title": "Check the fleet page shows `gcp-dev-1` on the pushed commit",
+              "description": "Its version is the pushed commit and its capabilities are the expected ones.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.2",
+              "title": "Check no request reaches `/api/worker/` after the old workers stopped",
+              "description": "Read Cloud Run's request log from IC-8.4 on. The routes are gone, so a request there is an old worker still polling. Only one execution transport may be active.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.3",
+              "title": "Check the partitions endpoint answers 200 and the scheduler job succeeds",
+              "description": "`GET /api/internal/workflow/partitions`, then `gcloud scheduler jobs run items-workflow-sweep-dev --location=europe-west1`.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.4",
+              "title": "Run an acceptance crawl and compare it with the recorded baseline",
+              "description": "Judge it on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures, frontier states and completion. Raise `WORKER_CONCURRENCY` only after a rendered crawl passes.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.5",
+              "title": "Check pause, resume and stop from the fleet page",
+              "description": "Pause takes no new work and keeps what the worker holds. Stop finishes within five minutes and exits 0, and systemd leaves it down. To start it again, delete the row, then `sudo systemctl start items-worker`.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.6",
+              "title": "Check a rendered page loads through the browser container, before and after its restart",
+              "description": "Fetch a rendered page, run `sudo systemctl restart items-browser`, and fetch again. The worker reconnects on its next rendered fetch without restarting (`67134243`).",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.7",
+              "title": "Check a killed worker's run is reclaimed and completes",
+              "description": "`docker kill` the worker mid-crawl. Its leases lapse after 30 seconds, and the run is reclaimed from its durable log and completes. How far this goes is the takeover choice above.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.8",
+              "title": "Check a worker restart leaves no `items-worker:*` session behind",
+              "description": "After `sudo systemctl restart items-worker`, `pg_stat_activity` holds only the new boot's connections.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.9",
+              "title": "Measure peak connections under the acceptance crawl against the budget",
+              "description": "Take the census again while the crawl runs. The peak must stay within `deploy.md`'s budget of 47.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.10",
+              "title": "Mark the worker migration complete",
+              "description": "The plan's final acceptance: every check above passed, the docs match the deployed system, and no execution path uses HTTP or worker tokens.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-9.1",
+                  "why": "the fleet check"
+                },
+                {
+                  "id": "IC-9.2",
+                  "why": "the one-transport check"
+                },
+                {
+                  "id": "IC-9.3",
+                  "why": "the partition and scheduler check"
+                },
+                {
+                  "id": "IC-9.4",
+                  "why": "the acceptance crawl"
+                },
+                {
+                  "id": "IC-9.5",
+                  "why": "the fleet controls check"
+                },
+                {
+                  "id": "IC-9.6",
+                  "why": "the browser check"
+                },
+                {
+                  "id": "IC-9.7",
+                  "why": "the takeover check"
+                },
+                {
+                  "id": "IC-9.8",
+                  "why": "the shutdown cleanup check"
+                },
+                {
+                  "id": "IC-9.9",
+                  "why": "the peak connection check"
+                },
+                {
+                  "id": "IC-7.6",
+                  "why": "the docs must cite proofs that exist"
+                },
+                {
+                  "id": "IC-7.7",
+                  "why": "the docs must match the deployed system"
+                }
+              ],
+              "byYou": true
+            }
+          ]
+        },
+        {
+          "id": "IC-10",
+          "title": "Switch cloud dev back to the previous release if a check fails",
+          "description": "The plan's last step, only if needed: stop the direct worker first, then restore the old images and configuration.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "IC-8.8",
+              "why": "rolls back a deployed push"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gcp",
+              "part": "items-worker-dev, Cloud Run items-gateway-dev, Cloud SQL items-postgres-dev"
+            }
+          ],
+          "today": "`deploy.md`'s rollback redeploys the previous images, because the schema the release migrates to is a superset of the old one. That holds for `396d36ad`, not for the branch tip (see IC-8). Cloud SQL backups exist only in prod. On dev the fallback is a reset with the restored release's own `db:migrate` and seeds, with execution stopped throughout.",
+          "plan": [
+            {
+              "id": "IC-10.1",
+              "title": "Stop the direct worker by pinning `worker-image=none`",
+              "description": "`gcloud compute instances add-metadata items-worker-dev --zone=europe-west1-b --metadata=worker-image=none`. The rollout unit stops it with SIGTERM, and a reboot leaves it down.",
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-10.2",
+              "title": "Point the gateway's traffic back at its previous revision",
+              "description": "`gcloud run services update-traffic items-gateway-dev --region=europe-west1 --to-revisions=<previous>=100`. Start an old worker only after this, and after IC-10.3 when that runs.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-10.1",
+                  "why": "the direct worker stops first"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-10.3",
+              "title": "Rebuild the dev database from the restored release's migrations and seeds",
+              "description": "Only if the old release can't run on the migrated schema. Keep execution stopped throughout, then restart. No dev backup is required.",
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-10.2",
+                  "why": "uses the restored release's migrations"
+                }
+              ],
+              "byYou": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "title": "Take on what the older TASK tickets left open",
+      "description": "What the older TASK (items-core) project left open and still worth doing, carried over by the planner on 2026-10-13 (TK-85.6) from the backup taken before it left tickets' database (TK-85.1). Each item names its older ticket; approve or cancel each as any item. What was done, already planned or stale stays in the backup only, with each verdict in `tickets-backups/2026-10-13-older-projects/TRIAGE.md`.",
+      "features": [
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-11.1",
+              "title": "Move the resource route loop the services copy into `@bw/server`",
+              "description": "Five services copy the same loop that registers `crudRoute` for each repo blueprint: `services/{crawls,pages,products,sites,workflows}/src/resources.module.ts`, each marked `TODO(TASK-010)`; `services/runs` has the same loop with `queryRoute`. Add one factory beside `crudRoute` in `@bw/server` (for example `resourcesModule({ blueprints, tags })`) and cut each file down to its blueprint map. It also gives TK-23 one place to switch items-core onto the resource API. Drop the stale `TODO(TASK-016)` at `services/products/src/resources.module.ts:32` while there: both services own their blueprints now. Older ticket: TASK-10.",
+              "done": false
+            },
+            {
+              "id": "IC-11.2",
+              "title": "Delete the site patterns and obstacles list routes nothing calls",
+              "description": "`services/sites/src/sites/sites.routes.ts` still serves `GET /api/sites/:id/patterns` and `GET /api/sites/:id/obstacles` as bare arrays (`TODO(TASK-011)`). Nothing in console-web calls them: it reads both through `/resource/...` (for example `site-obstacles/site-obstacle.api.ts`). First check that the resource query shows the drafts the patterns route returns (`listForAuthoring`). Then delete both routes, or keep them and say why in the sites README. The worker surface the audit listed went with the HTTP worker. Older ticket: TASK-11.",
+              "done": false
+            },
+            {
+              "id": "IC-11.3",
+              "title": "Change `admin.routes.ts` to named handlers that call `reply.send`",
+              "description": "`services/admins/src/admins/admin.routes.ts` is the one route file that registers inline handlers and returns values bare (`return { admins }`, `return { admin }`), marked `TODO(TASK-014)`. Declare named handlers before registering them, and send every answer with `reply.send`. Its `{ admins }` wrapper is a list-shape question for TK-23. Older ticket: TASK-14.",
+              "done": false
+            },
+            {
+              "id": "IC-11.4",
+              "title": "Move the crawl-only error classes from `@bw/server` into the crawls service",
+              "description": "`packages/backend/server/src/errors` holds `ActiveCrawlError` and `CrawlNotFoundError` beside the generic errors (`TODO(TASK-017)` at `errors/index.ts:8`), and only `services/crawls` uses them. Move them into `services/crawls`, extending `HttpError` or `ConflictError`. `InvalidUrlError` is also thrown by `services/items/src/detection/detection.routes.ts:45`, so it can stay generic. Update the note in `packages/backend/server/README.md:83`. Older ticket: TASK-17.",
+              "done": false
+            },
+            {
+              "id": "IC-11.5",
+              "title": "Add a nested-schema form of `parseEnv`",
+              "description": "`packages/shared/env/src/index.ts:40` sketches a `parseEnv` that takes nested `p('ENV_KEY', schema)` pickers, with a `label` and a `source`, and returns a typed nested object. Today each app writes a flat schema and nests it by hand in its `environment.ts`. Keep the rule that only `environment.ts` reads `process.env`: this changes the API's shape, not who reads it. Older ticket: TASK-23.",
+              "done": false
+            }
+          ],
+          "id": "IC-11",
+          "title": "Simplify items-core's server code where the July API audit found copies and drift",
+          "description": "The July audit of items-core's API left copies and layering drift in the services. These are the parts still open. The list and error shapes it also flagged go with TK-23, which moves items-core onto the resource API. Older ticket: TASK-270.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "services/*"
+            },
+            {
+              "repo": "items-core",
+              "part": "packages/backend/server"
+            },
+            {
+              "repo": "items-core",
+              "part": "packages/shared/env"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-12.1",
+              "title": "Replace the site Pages tab's ID columns with the global Pages list's columns",
+              "description": "`apps/console-web/src/app/sites/components/tabs/site-pages-tab.tsx` leads with `ID` and `Site ID` UUID columns, which say nothing on one site's tab (`TODO(TASK-019)`). Use the global Pages list's columns (`apps/console-web/src/app/pages`) without the site column. Older ticket: TASK-19.",
+              "done": false
+            },
+            {
+              "id": "IC-12.2",
+              "title": "Fix the run input starting as `{}` when the workflow declares its inputs",
+              "description": "The workflow editor's Launch run panel (`apps/console-web/src/app/workflows/components/tabs/editor-tab.tsx`) starts its run input at `{}`, so every run's input is typed by hand. The engine's `GraphDefinition` declares the workflow's `inputs` as JSON Schemas (`packages/domain/workflow/src/types/graph.ts:54`). Build the starting input, or its fields, from them. Don't seed a placeholder that a user could submit as a real value. Older ticket: TASK-267.",
+              "done": false
+            }
+          ],
+          "id": "IC-12",
+          "title": "Fix the console's site Pages tab and its empty run input",
+          "description": "Two console screens still make users work around them: a site's Pages tab shows raw ids, and a workflow run's input starts empty. Older ticket: TASK-269.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "apps/console-web"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-13.1",
+              "title": "Smoke-test the setup wizard's seed step and a second claim's 409",
+              "description": "On the local dev stack, set `SEEDS_UI_ENABLED=true` and restart the gateway. Empty `admins.admins` with docker psql, claim in the browser, and run the seed step: the console loads with data and no 401s. Then claim from a second browser after the first: it gets 409 `ALREADY_BOOTSTRAPPED`, signs out of Firebase and shows the normal login. Don't run the gateway test suite meanwhile. The Settings Developer card the old plan also checked was removed with the Settings page (`f4305a62`). Older ticket: TASK-262.",
+              "done": false
+            },
+            {
+              "id": "IC-13.2",
+              "title": "Fix `SEEDS_UI_ENABLED` meaning off when it is set to `1` or `TRUE`",
+              "description": "`apps/gateway/src/environment.ts:93` turns `SEEDS_UI_ENABLED` on only for the literal `'true'`, so `1` or `TRUE` silently leave the seed endpoint off. Accept only `'true'` and `'false'` (`v.picklist`) so a typo fails at boot. Off stays the default. The review's other two follow-ups went with the Settings page's Developer card. Older ticket: TASK-264.",
+              "done": false
+            }
+          ],
+          "id": "IC-13",
+          "title": "Check the console's first-run setup wizard end to end",
+          "description": "When `admins.admins` is empty, the console shows a setup wizard: claim the first admin, then optionally seed dev data. It shipped in July. The claim was checked live; the rest was not. Older ticket: TASK-254.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "apps/console-web/src/app/setup"
+            },
+            {
+              "repo": "items-core",
+              "part": "apps/gateway/src/setup"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-14.1",
+              "title": "Replace DESIGN.md's two stale token systems with bh's",
+              "description": "Section 2 describes Tailwind's 50–950 OKLCH palette with `dark:` variants. Sections 4, 7 and 9 (component styles, do's and don'ts, the agent prompt guide) describe a `base-N` and `primary-9` scale switched by `data-theme`. Since `f31df28e` the console is built on bh 1.0.0 (`packages/bh`), with classes like `bg-gray-1 text-gray-12 text-red-11` (`apps/console-web/src/app/auth/login-page.tsx`). DESIGN.md's links to `packages/bh/ui/src/styles/globals.css` and `packages/bh/ui/src/theming/themes.ts` point at files that don't exist. Rewrite it against bh's tokens and its spec of record, bh's `docs/design/design-system.html` (TK-66.3), or cut it down to a pointer there. Older ticket: TASK-75.",
+              "done": false
+            }
+          ],
+          "id": "IC-14",
+          "title": "Update items-core's DESIGN.md to the bh tokens the console uses",
+          "description": "Agents read DESIGN.md before any UI change in items-core, and it describes two token systems the console doesn't use. Older ticket: TASK-75.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "DESIGN.md"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-15.1",
+              "title": "Define what the Search tab searches",
+              "description": "The user's own items, their bags, or the global product catalog. Decide before building: it sets the endpoint and the shape of its results. Older ticket: TASK-290.",
+              "done": false
+            },
+            {
+              "id": "IC-15.2",
+              "title": "Add a paged search endpoint to the consumer API",
+              "description": "In items-core's consumer group (`services/items`), for what the definition picks, with pagination. Publish it in the consumer OpenAPI so items-app's generated client picks it up. Older ticket: TASK-290.",
+              "done": false
+            },
+            {
+              "id": "IC-15.3",
+              "title": "Build the Search screen's input, results, and empty, loading and error states",
+              "description": "In `SearchScreen.tsx`, on the new endpoint. Add recent searches if the definition keeps them. Older ticket: TASK-290.",
+              "done": false
+            }
+          ],
+          "id": "IC-15",
+          "title": "Build the Search tab end to end",
+          "description": "items-app's Search tab (`src/app/features/search/screens/SearchScreen.tsx`) renders only a grey 'Search' label, and the consumer API has no search endpoint. It is in the MVP's scope: a full slice with no backend yet. Older ticket: TASK-290.",
+          "where": [
+            {
+              "repo": "items-app",
+              "part": "src/app/features/search"
+            },
+            {
+              "repo": "items-core",
+              "part": "services/items"
+            }
+          ]
+        },
+        {
+          "status": "Not planned",
+          "plan": [
+            {
+              "id": "IC-16.1",
+              "title": "Stop turbo's no-outputs warning for the config package's build",
+              "description": "Every `turbo run build`, so every `pnpm dev`, warns that `@bw/config#build` found no output files. Its build is `echo '(no build) ok'` (`packages/shared/config/package.json:24`), and the root `build` task expects `dist/**` and `build/**` (`turbo.json:20-24`). Declare empty `outputs` for that task in the root `turbo.json`, or drop its build script if nothing needs it. TK-66.2 swaps `@bw/config` for `@bh/config`, whose build is the same echo, so name whichever package is there by then. Older ticket: TASK-253.",
+              "done": false
+            },
+            {
+              "id": "IC-16.2",
+              "title": "Drop items-infrastructure's two leftover stashes",
+              "description": "items-infrastructure keeps two stashes nobody needs: `stash@{0}`, the repo-rename edit already folded into the gateway cutover, and `stash@{1}` (`fmt-drift`), which touches only `modules/pubsub` and `modules/services/scrapper-web`, both deleted in `5165c8f`. Drop both after a look. The two items-core stashes the old ticket named are already gone. Older ticket: TASK-292.",
+              "done": false
+            }
+          ],
+          "id": "IC-16",
+          "title": "Clear small leftovers in items-core and items-infrastructure",
+          "description": "Two small leftovers from the July and August cleanups. Older tickets: TASK-253, TASK-292.",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "turbo.json, packages/shared/config"
+            },
+            {
+              "repo": "items-infrastructure",
+              "part": "git stashes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
