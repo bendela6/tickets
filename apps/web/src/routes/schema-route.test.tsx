@@ -103,7 +103,7 @@ function renderSchemaRoute({
   );
 }
 
-describe('/schema inside the app shell', () => {
+describe('/schema inside the frame', () => {
   const realMatchMedia = window.matchMedia;
 
   afterEach(() => {

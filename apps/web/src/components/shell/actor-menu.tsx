@@ -6,7 +6,7 @@ import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Inp
 import { avatarFor } from '../../domain/actor';
 
 // Sidebar footer card: who edits are attributed to. Design 01 §sidebar footer.
-// `compact` renders just the avatar (for the 48px activity rail) instead of
+// `compact` renders just the avatar (for the sidebar's 48px rail) instead of
 // the full bordered card with name + "acting as" + ⇅ glyph — same menu either way.
 export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
   const users = useUsers();

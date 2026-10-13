@@ -46,10 +46,10 @@ function ModelLoader({ model }: { model: Model }) {
  * Diagram state for everything inside it.
  *
  * Separate from the canvas so the two can sit in DIFFERENT parts of a page: on
- * /schema the outline renders in the app shell's left panel and the canvas in
- * the shell's main area, and only a provider wrapped around the whole shell can
- * feed both. `model` is nullable because the shell must still mount while the
- * schema is loading, missing, or empty.
+ * /schema the outline renders in the page's side panel and the canvas beside
+ * it, and only a provider wrapped around both can feed both. `model` is
+ * nullable because the panel must still mount while the schema is loading,
+ * missing, or empty.
  */
 export function EerDiagramProvider({
   model,
@@ -92,7 +92,7 @@ export function EerCanvas() {
  * turns it into diagram state.
  *
  * /schema does NOT use this — it composes the three pieces itself so the
- * outline can live in the app shell. This is the standalone form, for a host
+ * outline can live in the page's own side panel. This is the standalone form, for a host
  * that has no sidebar of its own to lend.
  */
 export function EerDiagram({ model }: { model: Model }) {
