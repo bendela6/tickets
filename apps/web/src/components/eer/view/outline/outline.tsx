@@ -9,7 +9,7 @@
 
 import { useCallback, useId, useMemo, useState } from 'react';
 
-import { ScreenState, Tree, cn, useTreeView } from '@bh/ui';
+import { ScreenState, SearchInput, Tree, useTreeView } from '@bh/ui';
 import type { Selection } from '../../engine/model/types';
 import {
   useDiagramActionsOrNull,
@@ -89,19 +89,15 @@ export function Outline() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-8">
-      <input
-        type="text"
+      <SearchInput
+        size="xs"
         name="eer-outline-filter"
         value={query}
         placeholder="Filter tables…"
         aria-label="Filter tables"
         autoComplete="off"
         spellCheck={false}
-        className={cn(
-          'w-full rounded-6 border-1 border-gray-6 bg-gray-2 px-8 py-6 text-12 text-gray-12',
-          'outline-none placeholder:text-gray-9 focus:border-gray-7',
-        )}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={setQuery}
         onKeyDown={(e) => {
           if (e.key === 'Escape') setQuery('');
         }}
