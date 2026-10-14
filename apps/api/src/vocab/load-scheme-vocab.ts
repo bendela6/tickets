@@ -111,12 +111,28 @@ export async function loadSchemeVocab(db: DbExecutor, selector: { key?: string; 
         | undefined)?.allowedOptionIds;
       return allow ? all.filter((o) => allow.includes(o.id)) : all;
     },
-    // helper: the default workflow option — lowest-position 'todo', else lowest position
+    // helper: the default workflow option, where an item starts when no one
+    // names its status — lowest-position 'todo', else lowest position. When
+    // the workflow says where the type may start (entry edges, from no
+    // option), only among those: the option the transition check would
+    // accept, not one it refuses because the options' order puts another first.
     initialOption(typeId: number) {
       const wf = this.workflowField(typeId);
       if (!wf) return undefined;
       const opts = this.optionsForField(typeId, wf.id).filter((o) => !o.archivedAt);
-      return opts.find((o) => o.kind === 'todo') ?? opts[0];
+      const entries = new Set(
+        transitionRows
+          .filter(
+            (e) =>
+              e.fieldId === wf.id &&
+              (e.itemTypeId === null || e.itemTypeId === typeId) &&
+              e.fromOptionId === null,
+          )
+          .map((e) => e.toOptionId),
+      );
+      const starts = opts.filter((o) => entries.has(o.id));
+      const from = starts.length > 0 ? starts : opts;
+      return from.find((o) => o.kind === 'todo') ?? from[0];
     },
   };
   return vocab;
