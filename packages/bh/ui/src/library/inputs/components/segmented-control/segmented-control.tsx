@@ -1,4 +1,4 @@
-import { cn, focusRing, TONE_HUE } from '../../../../style';
+import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../../style';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import {
   CONTROL_LADDER,
@@ -14,10 +14,33 @@ import { useSegmentTile } from './use-segment-tile';
 // said in the glyph ladder's own vocabulary because that is what `Icon` takes.
 const GLYPH: Record<ControlSize, IconSize> = { xs: 'sm', md: 'md', lg: 'lg' };
 
+/**
+ * An option's icon in its `color`: the text rung, 11, on the chosen segment,
+ * and a rung down on the others, lifted under the pointer, as their labels
+ * are dimmed (gray 11 for 12) and lifted. A disabled segment dims it with its
+ * label. Through `variants()` because the classes are interpolated per hue,
+ * and the safelist holds `variants()` output only.
+ */
+const glyphClass = variants({
+  base: '',
+  config: {
+    segment: {
+      default: 'chosen',
+      options: {
+        chosen: over(axis('scale', HUES, 'indigo'), (hue) => `text-${hue}-11`),
+        other: over(axis('scale', HUES, 'indigo'), (hue) => {
+          return `text-${hue}-10 group-hover:text-${hue}-11`;
+        }),
+      },
+    },
+  },
+});
+
 export type SegmentedControlProps = ControlProps<string> & {
   /**
    * The segments, in the order given; an option's `icon` is drawn before its
-   * label, and a `disabled` option can't be picked.
+   * label, in its `color` when it has one, and a `disabled` option can't be
+   * picked.
    */
   options: Option[];
   /**
@@ -136,7 +159,7 @@ export function SegmentedControl({
               // shoves the ones after it sideways — with the tile chasing a box
               // that moved because the tile moved. Selection is said by the
               // tile and the colour; the type never changes size.
-              'font-500 relative flex flex-auto items-center justify-center font-sans whitespace-nowrap transition-colors',
+              'group font-500 relative flex flex-auto items-center justify-center font-sans whitespace-nowrap transition-colors',
               rung.padX,
               rung.text,
               rung.radius,
@@ -151,7 +174,17 @@ export function SegmentedControl({
               option.disabled && disabledTreatment,
             )}
           >
-            {option.icon ? <Icon name={option.icon} size={GLYPH[size]} /> : null}
+            {option.icon ? (
+              <Icon
+                name={option.icon}
+                size={GLYPH[size]}
+                className={
+                  option.color
+                    ? glyphClass({ segment: isSelected ? 'chosen' : 'other', scale: option.color })
+                    : undefined
+                }
+              />
+            ) : null}
             {option.label}
           </button>
         );

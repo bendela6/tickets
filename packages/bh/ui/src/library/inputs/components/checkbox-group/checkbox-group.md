@@ -43,6 +43,39 @@ export function Controlled() {
 }
 ```
 
+An option's `description` is a line under its label, as a Checkbox's
+`description` draws it. When any option has one, every label is set in
+500, so the options still read as one list. Give the lines room with a
+wider `gap` through `className`. The options are the `Option` every
+control with a choice takes, and
+[RadioGroup](../radio-group/radio-group.md) draws the line too.
+
+**Described**
+
+```tsx
+import { useState } from 'react';
+import { CheckboxGroup } from '@bh/ui';
+
+const NOTICES = [
+  { value: 'replies', label: 'Replies', description: 'When someone answers something you wrote.' },
+  { value: 'mentions', label: 'Mentions', description: 'When someone names you in a comment.' },
+  { value: 'digest', label: 'Weekly digest' },
+];
+
+export function Described() {
+  const [value, setValue] = useState<string[]>(['mentions']);
+  return (
+    <CheckboxGroup
+      label="Notices"
+      className="max-w-320 gap-12"
+      options={NOTICES}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+```
+
 `selectAllLabel` adds a parent box that checks and clears the whole group.
 It shows a dash while only some boxes are on, and is checked when every
 box that can be toggled is. The legend is read only by screen readers
@@ -153,7 +186,9 @@ export function ReadOnlyAndDisabled() {
 
 The `<fieldset>` is a group named by its `<legend>`, so a screen reader
 announces `label` on entering it, shown or not. `id` goes on the
-fieldset. `readOnly` marks each box `aria-readonly`.
+fieldset. `readOnly` marks each box `aria-readonly`. A box whose option
+has a `description` is named by its label alone and described by the
+line.
 
 ## When not to use it
 
@@ -170,7 +205,7 @@ fieldset. `readOnly` marks each box `aria-readonly`.
 
 | Prop                  | Type                                                                                                                                                                                                        | Default     | Description                                                                                                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The choices, a box each, in the order given; a `disabled` option can't be toggled.                                                                                            |
+| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The choices, a box each, in the order given; a `disabled` option can't be toggled. An option's `description` goes under its label.                                            |
 | `label` (required)    | `string`                                                                                                                                                                                                    |             | The group's name, rendered as its `<legend>`.                                                                                                                                 |
 | `showLabel`           | `boolean`                                                                                                                                                                                                   | `false`     | Shows the legend, which is otherwise read only by screen readers.                                                                                                             |
 | `selectAllLabel`      | `string`                                                                                                                                                                                                    |             | The label of a parent box, above the others, that checks and clears the whole group.                                                                                          |

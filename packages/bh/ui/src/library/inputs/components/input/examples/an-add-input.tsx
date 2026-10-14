@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn, Input } from '@bh/ui';
+import { cn, Input, Kbd } from '@bh/ui';
 
 export function AnAddInput() {
   const [tasks, setTasks] = useState(['Book the room', 'Send the agenda']);
@@ -25,11 +25,7 @@ export function AnAddInput() {
           }
           setTyping(false);
         }}
-        trailing={
-          <kbd className={cn('text-11 text-gray-9 shrink-0 font-mono', !typing && 'invisible')}>
-            Enter
-          </kbd>
-        }
+        trailing={<Kbd keys="enter" className={cn('shrink-0', !typing && 'invisible')} />}
       />
     </div>
   );

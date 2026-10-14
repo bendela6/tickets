@@ -22,9 +22,11 @@ import { SearchInput } from '@bh/ui';
 
 ## Examples
 
-While the field is empty it shows `shortcut`. Type, and the hint gives way
-to the clear button, which sets the value to `''`. The hint is only
-drawn: binding the key is yours.
+While the field is empty it shows `shortcut`, drawn as a
+[Kbd](../../../primitives/components/kbd/kbd.md) the field's size: `mod+K` is ⌘K on a
+Mac and Ctrl+K elsewhere. Type, and the hint gives way to the clear
+button, which sets the value to `''`. The hint is only drawn: binding
+the key is yours.
 
 **Shortcut and clear**
 
@@ -36,7 +38,7 @@ export function ShortcutAndClear() {
   const [query, setQuery] = useState('');
   return (
     <div className="w-256">
-      <SearchInput aria-label="Search files" value={query} onChange={setQuery} shortcut="⌘K" />
+      <SearchInput aria-label="Search files" value={query} onChange={setQuery} shortcut="mod+K" />
     </div>
   );
 }
@@ -160,7 +162,7 @@ To pick one option from a list, searching it as you type, use
 | Prop                  | Type                                                                                                                                                                                                        | Default | Description                                                                                                                                                                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loading`             | `boolean`                                                                                                                                                                                                   | `false` | Results are in flight. The trailing gutter carries a spinner.                                                                                                                                                                                 |
-| `shortcut`            | `string`                                                                                                                                                                                                    |         | Keyboard hint shown while empty — `⌘K`. Dropped as soon as there is a value, because by then the field is already open and focused.                                                                                                           |
+| `shortcut`            | `string`                                                                                                                                                                                                    |         | A key hint shown while empty, drawn as a `Kbd`: `'mod+K'` is ⌘K on a Mac and Ctrl+K elsewhere. Dropped as soon as there is a value, because by then the field is already open and focused.                                                    |
 | `id`                  | `string`                                                                                                                                                                                                    |         | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                                                           |
 | `aria-describedby`    | `string`                                                                                                                                                                                                    |         | Identifies the element (or elements) that describes the object. The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |
 | `value` (required)    | `string`                                                                                                                                                                                                    |         | The value shown. The control holds none of its own: it reports changes through `onChange`.                                                                                                                                                    |

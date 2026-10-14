@@ -1,6 +1,7 @@
 ---
 title: RelativeDate
-summary: 'Shows a date as days from now: today, in 3 days, 2 days ago.'
+summary: 'Shows a date as days from now (today, in 3 days, 2 days ago);
+  formatDateTime writes one out with its time.'
 related: [DatePicker, DateRangePicker]
 ---
 
@@ -66,9 +67,166 @@ export function Overdue() {
 
 ## Props
 
-| Prop               | Type      | Default      | Description                                                         |
-| ------------------ | --------- | ------------ | ------------------------------------------------------------------- |
-| `value` (required) | `string`  |              | The date, as a string `new Date()` reads, such as an ISO timestamp. |
-| `now`              | `Date`    | `new Date()` | The moment to count from. Unset, the current time.                  |
-| `overdue`          | `boolean` |              | Style overdue past dates in danger (for due-date fields).           |
-| `className`        | `string`  |              | Added to the `<span>`'s own classes.                                |
+| Prop               | Type      | Default      | Description                                                                                                             |
+| ------------------ | --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `value` (required) | `string`  |              | The date, as a string `new Date()` reads, such as an ISO timestamp.                                                     |
+| `now`              | `Date`    | `new Date()` | The moment to count from. Unset, the current time.                                                                      |
+| `locale`           | `string`  |              | The locale to write in, as a BCP 47 tag such as `ka` or `de`: the label and its title in that language. Unset, English. |
+| `overdue`          | `boolean` |              | Style overdue past dates in danger (for due-date fields).                                                               |
+| `className`        | `string`  |              | Added to the `<span>`'s own classes.                                                                                    |
+
+The label and the title it writes are exported too:
+
+```ts
+relativeLabel(value: string, now: Date, options?: DateLocaleOptions): string
+```
+
+A date as whole calendar days from `now`, counted in UTC: `today`,
+`tomorrow`, `yesterday`, `in 3 days`, `2 days ago`. Given a `locale`, in
+that locale's words, its own for the near days too: `vorgestern` in `de`.
+
+| Parameter          | Type                | Default | Description                                                                                                                                                             |
+| ------------------ | ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` (required) | `string`            |         | The date, as a string `new Date()` reads, such as an ISO timestamp.                                                                                                     |
+| `now` (required)   | `Date`              |         | The moment to count from.                                                                                                                                               |
+| `options`          | `DateLocaleOptions` | `{}`    | The language to write in.                                                                                                                                               |
+| `options.locale`   | `string`            |         | The locale to write in, as a BCP 47 tag such as `ka`, `en-GB` or `de-CH`: its words and their order, from `Intl`. Unset, bh's own English: `Jul 13, 2026`, `in 3 days`. |
+
+Returns `string`.
+
+```ts
+formatExact(value: string, options?: DateLocaleOptions): string
+```
+
+A date as `Jul 13, 2026`: its calendar day in UTC. Given a `locale`, that
+locale's medium date, still in UTC: `13 Jul 2026` in `en-GB`.
+
+| Parameter          | Type                | Default | Description                                                                                                                                                             |
+| ------------------ | ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` (required) | `string`            |         | The date, as a string `new Date()` reads, such as an ISO timestamp.                                                                                                     |
+| `options`          | `DateLocaleOptions` | `{}`    | The language to write in.                                                                                                                                               |
+| `options.locale`   | `string`            |         | The locale to write in, as a BCP 47 tag such as `ka`, `en-GB` or `de-CH`: its words and their order, from `Intl`. Unset, bh's own English: `Jul 13, 2026`, `in 3 days`. |
+
+Returns `string`.
+
+## Date and time
+
+Where the day alone is not enough, as for when a job ran or a page was
+saved, `formatDateTime` writes the moment out: the date as the `title`
+above writes it, then the time on a 24-hour clock, `Jul 13, 2026, 09:05`.
+It comes from `@bh/ui`, as `RelativeDate` does.
+
+RelativeDate counts calendar days in UTC, since a day is the same
+everywhere. A time of day is not, so the clock reads in the reader's own
+zone unless `timeZone` names another: `UTC`, or an IANA zone such as
+`Europe/Tbilisi` for a place's own clock. `seconds` adds the seconds, as
+a log wants them.
+
+**One moment, four ways**
+
+```tsx
+import { Figure, Figures, formatDateTime } from '@bh/ui';
+
+const AT = '2026-07-13T09:05:30Z';
+
+export function DateAndTime() {
+  return (
+    <div className="w-400">
+      <Figures>
+        <Figure label="Your zone" note="no timeZone" value={formatDateTime(AT)} />
+        <Figure
+          label="UTC"
+          note="timeZone: 'UTC'"
+          value={formatDateTime(AT, { timeZone: 'UTC' })}
+        />
+        <Figure
+          label="New York"
+          note="timeZone: 'America/New_York'"
+          value={formatDateTime(AT, { timeZone: 'America/New_York' })}
+        />
+        <Figure
+          label="With seconds"
+          note="seconds: true"
+          value={formatDateTime(AT, { timeZone: 'UTC', seconds: true })}
+        />
+      </Figures>
+    </div>
+  );
+}
+```
+
+```ts
+formatDateTime(value: string | Date, options?: FormatDateTimeOptions): string
+```
+
+A moment as its date and time of day, `Jul 13, 2026, 09:05`, on a 24-hour
+clock in the reader's zone unless `timeZone` names another. The date is
+written as `formatExact` writes it. Given a `locale`, that locale's
+medium date and short time: `13 Jul 2026, 09:05` in `en-GB`,
+`Jul 13, 2026, 9:05 AM` in `en-US`.
+
+A string no `Date` can read comes back as it was written, where `Intl`
+would throw; an invalid `Date` comes back as `Invalid Date`.
+
+| Parameter          | Type                    | Default | Description                                                                                                                                                             |
+| ------------------ | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` (required) | `string \| Date`        |         | The moment: a `Date`, or a string `new Date()` reads, such as an ISO timestamp.                                                                                         |
+| `options`          | `FormatDateTimeOptions` | `{}`    | The language, the zone the clock reads in, and whether it shows seconds.                                                                                                |
+| `options.locale`   | `string`                |         | The locale to write in, as a BCP 47 tag such as `ka`, `en-GB` or `de-CH`: its words and their order, from `Intl`. Unset, bh's own English: `Jul 13, 2026`, `in 3 days`. |
+| `options.timeZone` | `string`                |         | The zone the clock reads in: `UTC`, or an IANA zone such as `Europe/Tbilisi` for a place's own clock. Unset, the reader's own zone.                                     |
+| `options.seconds`  | `boolean`               | `false` | Show the seconds: `09:05:30` rather than `09:05`.                                                                                                                       |
+
+Returns `string`.
+
+## In another language
+
+Each of these writes English until it is given a `locale`, a BCP 47 tag
+such as `ka`, `en-GB` or `de-CH`: RelativeDate takes it as a prop, and
+`relativeLabel`, `formatExact` and `formatDateTime` as an option. bh keeps
+no translations of its own, so an app that translates passes in the
+locale it already has.
+
+In a locale the words, their order and the clock are that locale's own,
+from `Intl`: `in 3 days` is `in 3 Tagen` in `de`, two days back is
+`vorgestern` rather than `vor 2 Tagen`, and `en-US` writes `2:30 PM`
+where the English without a locale writes `14:30`. Only the writing
+changes: days are still counted in UTC, and the clock still reads in the
+zone it is given. A tag `Intl` cannot read, such as `en_US`, is ignored.
+
+**The same moment, by locale**
+
+```tsx
+import { Fragment } from 'react';
+import { formatDateTime, RelativeDate } from '@bh/ui';
+
+const NOW = new Date('2026-07-06T09:00:00Z');
+const AT = '2026-07-09T14:30:00Z';
+const LOCALES = [undefined, 'en-US', 'en-GB', 'de', 'fr'];
+
+export function InAnotherLanguage() {
+  return (
+    <div className="grid grid-cols-3 items-baseline gap-x-24 gap-y-8">
+      {LOCALES.map((locale) => {
+        return (
+          <Fragment key={locale ?? 'none'}>
+            <span className="text-12/17 text-gray-9 font-mono">{locale ?? 'no locale'}</span>
+            <RelativeDate value={AT} now={NOW} locale={locale} />
+            <span className="text-12/17 text-gray-12 font-mono tabular-nums">
+              {formatDateTime(AT, { locale, timeZone: 'UTC' })}
+            </span>
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+> [!WARNING]
+> **The browser has to know the language**
+>
+> `Intl` writes only the languages its runtime carries data for, and
+> any other in the runtime's default, with no error. Some Chrome
+> builds carry no Georgian, so there `ka` comes out in English. An app
+> whose language may be missing can ask first:
+> `Intl.DateTimeFormat.supportedLocalesOf(['ka'])` is empty where it is.

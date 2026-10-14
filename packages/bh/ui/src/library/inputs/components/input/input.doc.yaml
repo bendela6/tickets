@@ -51,7 +51,10 @@ body:
     - `{ after: 800 }`: on those, and after 800 ms without typing.
 
     Until then, what you type is a draft the field holds, and `onDraft` hears
-    it at every keystroke. Escape puts the value back. A draft that ends where
+    it at every keystroke. Escape puts the value back, inside a
+    [Drawer](/components/overlays/drawer) or a
+    [Dialog](/components/overlays/dialog) too, where the same press closes it:
+    the draft it dropped never commits on the way out. A draft that ends where
     it started commits nothing. A `value` that changes while nobody is typing,
     an edit made elsewhere, replaces the field without remounting it; while
     somebody is typing, their draft stays. A draft still waiting for its pause
@@ -67,15 +70,21 @@ body:
   - |
     A "+ add" input keeps its `value` at `''`: each commit adds a task, and
     after it the field shows `value` again, empty. `onDraft` shows the Enter
-    hint only while there's something to add.
+    hint, a [Kbd](/components/primitives/kbd), only while there's something
+    to add.
   - demo: examples/an-add-input.tsx
+  - |
+    In a drawer, one Escape drops what you typed and closes the drawer:
+    nothing is saved on the way out. Type in the field, then press Escape;
+    or press Enter, or Tab away, to save.
+  - demo: examples/a-field-in-a-drawer.tsx
   - h2: Keyboard and accessibility
   - |
     It is a native `<input>`, so typing, selecting and Tab are the browser's.
     The ref lands on the `<input>`, with or without `leading` and `trailing`.
     With `commit` other than `'change'`, Enter commits the draft (and still
-    submits a form around it) and Escape puts the value back; an Escape with
-    nothing to put back reaches a dialog around the field.
+    submits a form around it) and Escape puts the value back. A dialog around
+    the field hears every Escape: one press drops the draft and closes it.
 
     `readOnly` is HTML's `readonly`, not `aria-readonly`. The count from
     `showCount` is `aria-hidden`. An `Icon` given as `leading` or `trailing`

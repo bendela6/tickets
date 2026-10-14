@@ -1,5 +1,13 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-import { cn } from '../../../../style';
+import {
+  cloneElement,
+  forwardRef,
+  isValidElement,
+  type HTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import { Slot } from 'radix-ui';
+import { cn, focusRing } from '../../../../style';
 import type { Gap } from '../stack';
 
 export type CardRadius = 'md' | 'lg' | 'xl';
@@ -28,9 +36,19 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
   radius?: CardRadius;
   /** Space inside the edge, in steps of 4 pixels. Leave it 0 when the card has a CardHeader. */
   padding?: Padding;
-  /** Adds the hover border-lift and pointer cursor for a card that is a link
-   *  or a button. Does not make it focusable — wrap it or use `role`. */
+  /**
+   * Adds the hover border-lift and pointer cursor for a card that is a link
+   * or a button. Does not make a `<div>` focusable: with `asChild`, the card
+   * is the link or the button itself.
+   */
   interactive?: boolean;
+  /**
+   * Draws the card on the one element it wraps instead of a `<div>`: a
+   * `<button>`, or a router's link, which @bh/ui doesn't know. That element
+   * takes the card's look, its focus ring and the other props. Radix's
+   * `asChild`, as `TextLink` takes it.
+   */
+  asChild?: boolean;
 };
 
 /**
@@ -47,21 +65,38 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
  * full-bleed child square off the rounded corners.
  */
 export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
-  { radius = 'xl', padding = 0, interactive, className, ...rest },
+  { radius = 'xl', padding = 0, interactive, asChild = false, className, children, ...rest },
   ref,
 ) {
+  const look = cn(
+    'border-gray-6 bg-surface-raised overflow-hidden border-1',
+    RADIUS[radius],
+    PAD[padding],
+    interactive && 'hover:border-gray-7 cursor-pointer',
+    // A card that is a link or a button is a tab stop, and shows it as the
+    // controls do: its border lit as the rim, and the halo around it.
+    (asChild || interactive) && focusRing('indigo'),
+  );
+  if (asChild && isValidElement<{ className?: string }>(children)) {
+    // A link is inline and a button centres its text: a card is a block that
+    // starts at its left edge, whichever it is drawn on. Slot joins the two
+    // classNames as they are, so they are merged here first and the child's
+    // own win, as a caller's do.
+    const child = children as ReactElement<{ className?: string }>;
+    return (
+      <Slot.Root
+        ref={ref}
+        className={cn(look, 'block text-left', className, child.props.className)}
+        {...rest}
+      >
+        {cloneElement(child, { className: undefined })}
+      </Slot.Root>
+    );
+  }
   return (
-    <div
-      ref={ref}
-      className={cn(
-        'border-gray-6 bg-surface-raised overflow-hidden border-1',
-        RADIUS[radius],
-        PAD[padding],
-        interactive && 'hover:border-gray-7 cursor-pointer',
-        className,
-      )}
-      {...rest}
-    />
+    <div ref={ref} className={cn(look, className)} {...rest}>
+      {children}
+    </div>
   );
 });
 

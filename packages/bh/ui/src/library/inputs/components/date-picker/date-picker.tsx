@@ -1,10 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
-import { cn, cursorRing, focusRing } from '../../../../style';
+import { axis, cn, cursorRing, focusRing, HUES, over, variants } from '../../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
+import { Button } from '../../../primitives/components/button';
 import { Popup } from '../../parts/popup';
 import { formatExact } from '../../../primitives/components/relative-date';
+
+/**
+ * Today's cell: a 1px inset outline on the field's ramp. Through
+ * `variants()` because the ring's class is interpolated per hue, and the
+ * safelist holds `variants()` output only: built in `cn()`,
+ * `ring-${hue}-9` compiled to nothing in an app and today wore no outline.
+ */
+const todayClass = variants({
+  base: 'text-gray-12 ring-1 ring-inset hover:bg-gray-4',
+  config: {
+    outline: {
+      default: 'on',
+      options: { on: over(axis('scale', HUES, 'indigo'), (hue) => `ring-${hue}-9`) },
+    },
+  },
+});
 
 const MONTH_NAMES = [
   'January',
@@ -319,25 +336,25 @@ export function DatePicker({
     >
       <div className="p-7">
         <div className="mb-8 flex items-center justify-between">
-          <button
-            type="button"
-            aria-label="Previous month"
+          <Button
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon="chevron-left"
+            label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="rounded-6 text-gray-11 hover:bg-surface-inset inline-flex h-24 w-24 items-center justify-center"
-          >
-            <Icon name="chevron-left" size="xs" />
-          </button>
+          />
           <span className="text-13/19 font-600 text-gray-12 font-sans">
             {MONTH_NAMES[view.month]} {view.year}
           </span>
-          <button
-            type="button"
-            aria-label="Next month"
+          <Button
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon="chevron-right"
+            label="Next month"
             onClick={() => shiftMonth(1)}
-            className="rounded-6 text-gray-11 hover:bg-surface-inset inline-flex h-24 w-24 items-center justify-center"
-          >
-            <Icon name="chevron-right" size="xs" />
-          </button>
+          />
         </div>
         <div
           ref={gridRef}
@@ -405,7 +422,7 @@ export function DatePicker({
                         // outward ring on the middle of a grid overlaps the days
                         // either side of it. It also used to name two ring
                         // colours at once, so which one won was down to order.
-                        `text-gray-12 ring-1 ring-inset ring-${field.scale}-9 hover:bg-gray-4`
+                        todayClass({ scale: field.scale })
                       : 'text-gray-12 hover:bg-gray-4',
                   blocked && 'cursor-default opacity-40 hover:bg-transparent',
                 )}

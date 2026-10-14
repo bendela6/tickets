@@ -1,7 +1,14 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type FocusEvent,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { axis, focusRing, HUES, over, TONE_HUE, variants, type Tone } from '../../../../style';
-import { Icon, type IconSize } from '../icon';
+import { Icon, type IconName, type IconSize } from '../icon';
 import { Spinner } from '../../../feedback/components/spinner';
+import { Tooltip } from '../../../overlays/components/tooltip';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -15,23 +22,55 @@ const SCALE = axis('scale', HUES, 'indigo');
  */
 export type ButtonVariant = 'subtle' | 'solid' | 'outline' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
+/** An icon-only button's sizes: a text button's three, and `xs`, which only a glyph fits. */
+export type IconButtonSize = 'xs' | ButtonSize;
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+// The props both forms take are split around the two forms' own, so the props
+// table reads them in this file's order: look, size, glyph, label, the rest.
+type LookProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   /** How much of the tone the button spends. */
   variant?: ButtonVariant;
   /** Which ramp the variant paints from: a role, or a hue by name. */
   tone?: Tone;
-  /** Height, padding, radius and type size, as one step. */
-  size?: ButtonSize;
-  /** Shows a spinner before the label and disables the button, keeping its fill. Sets `aria-busy`. */
+};
+
+/** A square button that shows a glyph alone, named by its `label`, which is also its tooltip. */
+type IconButtonProps = LookProps &
+  RestProps & {
+    /** Height, padding, radius and type size, as one step: 24 (icon-only), 28, 36 and 44 pixels. */
+    size?: IconButtonSize;
+    /** Draws a glyph alone, in place of words: an icon's name, or an element for a glyph the registry lacks. The button is square, and `label` names it. */
+    icon: IconName | ReactElement;
+    /** The tooltip. With `icon`, also the button's name, and required. */
+    label: string;
+    chevron?: never;
+    children?: never;
+  };
+
+/** A button that says what it does in words. */
+type TextButtonProps = LookProps &
+  RestProps & {
+    /** Height, padding, radius and type size, as one step: 24 (icon-only), 28, 36 and 44 pixels. */
+    size?: ButtonSize;
+    /** Draws a glyph alone, in place of words: an icon's name, or an element for a glyph the registry lacks. The button is square, and `label` names it. */
+    icon?: never;
+    /** The tooltip. With `icon`, also the button's name, and required. */
+    label?: string;
+    /** Adds a trailing chevron, for a button that opens a menu or a popover. */
+    chevron?: boolean;
+    /** The label. */
+    children?: ReactNode;
+  };
+
+interface RestProps {
+  /** Shows a spinner before the label, or in the glyph's place, and disables the button, keeping its fill. Sets `aria-busy`. */
   loading?: boolean;
-  /** Adds a trailing chevron, for a button that opens a menu or a popover. */
-  chevron?: boolean;
-  /** The label. */
-  children?: ReactNode;
   /** Added to the button's own classes. */
   className?: string;
-};
+}
+
+/** A button with a label in words, or, given `icon`, a glyph alone. */
+export type ButtonProps = IconButtonProps | TextButtonProps;
 
 // Per-variant fill/text/border + hover + focus halo, matching the design spec,
 // docs/design/design-system.html §06 Buttons. Solid gets a 1px inset
@@ -109,9 +148,21 @@ const buttonClass = variants({
     size: {
       default: 'md',
       options: {
+        xs: 'h-24 px-6 rounded-6 text-12',
         sm: 'h-28 px-10 rounded-6 text-12',
         md: 'h-36 px-14 rounded-8 text-13',
         lg: 'h-44 px-[18px] rounded-12 text-14',
+      },
+    },
+    // An icon-only button is as wide as it is high, at every size. Set only
+    // when there is an `icon`, so it has no default; after `size`, so its
+    // `px-0` evicts the size's padding.
+    square: {
+      options: {
+        xs: 'w-24 shrink-0 px-0',
+        sm: 'w-28 shrink-0 px-0',
+        md: 'w-36 shrink-0 px-0',
+        lg: 'w-44 shrink-0 px-0',
       },
     },
   },
@@ -133,8 +184,12 @@ const DISABLED: Record<ButtonVariant, string> = {
   ghost: 'text-gray-9 opacity-60',
 };
 
-const CHEVRON: Record<ButtonSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
-const SPINNER: Record<ButtonSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+const CHEVRON: Record<IconButtonSize, IconSize> = { xs: 'sm', sm: 'sm', md: 'sm', lg: 'md' };
+const SPINNER: Record<IconButtonSize, IconSize> = { xs: 'sm', sm: 'sm', md: 'sm', lg: 'md' };
+// An icon-only button's glyph, about half its height: 12 in 24, 14 in 28, 16
+// in 36 and 20 in 44. Its spinner takes the same size, so a loading icon
+// button keeps its glyph's footprint.
+const GLYPH: Record<IconButtonSize, IconSize> = { xs: 'sm', sm: 'md', md: 'lg', lg: 'xl' };
 
 /** Starts an action: save, open a dialog, run a job. */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -144,31 +199,102 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     size = 'md',
     loading = false,
     chevron = false,
+    icon,
+    label,
     className,
     children,
     disabled,
+    onFocus,
     ...rest
   },
   ref,
 ) {
+  const iconOnly = icon !== undefined;
   const showDisabled = Boolean(disabled) && !loading;
-  return (
+  const button = (
     <button
       ref={ref}
       type="button"
       disabled={Boolean(disabled) || loading}
       aria-busy={loading || undefined}
+      // An icon-only button's name. A text button is named by its words, and
+      // its `label` is the tooltip alone. An `aria-label` in `rest` still wins.
+      aria-label={iconOnly ? label : undefined}
+      onFocus={
+        label
+          ? (event) => {
+              onFocus?.(event);
+              keyboardFocusOnly(event);
+            }
+          : onFocus
+      }
       className={buttonClass({
         variant,
         scale: TONE_HUE[tone],
         size,
+        square: iconOnly ? size : undefined,
         className: showDisabled ? `${DISABLED[variant]} ${className ?? ''}`.trim() : className,
       })}
       {...rest}
     >
-      {loading ? <Spinner size={SPINNER[size]} /> : null}
-      {children}
-      {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-2" /> : null}
+      {iconOnly ? (
+        <IconOnlyGlyph icon={icon} size={GLYPH[size]} loading={loading} />
+      ) : (
+        <>
+          {loading ? <Spinner size={SPINNER[size]} /> : null}
+          {children}
+          {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-2" /> : null}
+        </>
+      )}
     </button>
   );
+  if (!label) {
+    return button;
+  }
+  // A disabled button hears no pointer (`disabled:pointer-events-none`, and
+  // browsers send a disabled control few events), so its tooltip hangs on a
+  // span around it instead, and still says on hover what the button would do.
+  return (
+    <Tooltip content={label}>
+      {Boolean(disabled) || loading ? <span className="inline-flex">{button}</span> : button}
+    </Tooltip>
+  );
 });
+
+/**
+ * Lets focus open the tooltip only when it came from the keyboard. Radix opens
+ * a tooltip on any focus, so a drawer focusing its Close button, or a menu
+ * handing focus back to its trigger, after a click, would show one nobody
+ * asked for. Radix skips its own handler when an earlier one prevented the
+ * default, which a focus event has no other use for.
+ */
+function keyboardFocusOnly(event: FocusEvent<HTMLButtonElement>) {
+  if (!focusVisible(event.currentTarget)) {
+    event.preventDefault();
+  }
+}
+
+function focusVisible(element: Element): boolean {
+  try {
+    return element.matches(':focus-visible');
+  } catch {
+    // An engine that can't parse the selector keeps Radix's own behaviour.
+    return true;
+  }
+}
+
+/** An icon-only button's glyph: the registry's at the button's size, an element as given, or the spinner in its place. */
+function IconOnlyGlyph({
+  icon,
+  size,
+  loading,
+}: {
+  icon: IconName | ReactElement;
+  size: IconSize;
+  loading: boolean;
+}) {
+  if (loading) {
+    return <Spinner size={size} />;
+  }
+  return typeof icon === 'string' ? <Icon name={icon} size={size} /> : icon;
+}

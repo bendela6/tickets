@@ -1,4 +1,5 @@
 import { createRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -6,6 +7,8 @@ import { focusRing } from '../../../../style';
 import { CONTROL_LADDER } from '../../parts/field';
 import { FieldError } from '../../../forms/components/field-error';
 import { FieldLabel } from '../../../forms/components/field-label';
+import { DialogContent, DialogRoot, DialogTitle } from '../../../overlays/components/dialog';
+import { Drawer } from '../../../overlays/components/drawer';
 import { Input } from './input';
 
 function Controlled({ initial = '', ...props }: { initial?: string } & Record<string, unknown>) {
@@ -388,4 +391,108 @@ test('the counter joins any trailing the caller already passed', () => {
   );
   expect(screen.getByText('⌘K')).toBeInTheDocument();
   expect(screen.getByText('2/10')).toBeInTheDocument();
+});
+
+// A dialog hears Escape first, on the document as it captures, and closes; the
+// field unmounts with it. Its draft must not commit on the way out: the press
+// that closed the drawer also meant to drop it.
+//
+// A browser runs React's render of that close between the document's listener
+// and the field's, since it empties the microtask queue after each listener a
+// real key press calls; jsdom's dispatch calls them all in one go, so the field
+// would hear the key before the close and the bug would hide. This does the
+// browser's part: the close renders before the key reaches the field.
+function renderBetweenListeners() {
+  const flush = () => flushSync(() => {});
+  document.addEventListener('keydown', flush, { capture: true });
+  return () => document.removeEventListener('keydown', flush, { capture: true });
+}
+
+function InADrawer({ onCommit }: { onCommit: (next: string) => void }) {
+  const [open, setOpen] = useState(true);
+  const [value, setValue] = useState('Draft');
+  return (
+    <>
+      <Drawer open={open} onOpenChange={setOpen} label="Detail">
+        <Input
+          aria-label="Title"
+          commit="leave"
+          value={value}
+          onChange={(next) => {
+            onCommit(next);
+            setValue(next);
+          }}
+        />
+      </Drawer>
+      <output aria-label="Saved">{value}</output>
+    </>
+  );
+}
+
+test('Escape in a drawer drops the draft and closes the drawer, in one press', async () => {
+  const onCommit = vi.fn();
+  render(<InADrawer onCommit={onCommit} />);
+  const stop = renderBetweenListeners();
+
+  await userEvent.type(screen.getByLabelText('Title'), ' two');
+  await userEvent.keyboard('{Escape}');
+
+  stop();
+
+  expect(screen.queryByRole('dialog', { name: 'Detail' })).not.toBeInTheDocument();
+  expect(onCommit).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('Saved')).toHaveTextContent(/^Draft$/);
+});
+
+test('Escape in a dialog drops the draft and closes the dialog, in one press', async () => {
+  const onCommit = vi.fn();
+  function InADialog() {
+    const [open, setOpen] = useState(true);
+    return (
+      <DialogRoot open={open} onOpenChange={setOpen}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>Rename</DialogTitle>
+          <Input aria-label="Title" commit="leave" value="Draft" onChange={onCommit} />
+        </DialogContent>
+      </DialogRoot>
+    );
+  }
+  render(<InADialog />);
+  const stop = renderBetweenListeners();
+
+  await userEvent.type(screen.getByLabelText('Title'), ' two');
+  await userEvent.keyboard('{Escape}');
+  stop();
+
+  expect(screen.queryByRole('dialog', { name: 'Rename' })).not.toBeInTheDocument();
+  expect(onCommit).not.toHaveBeenCalled();
+});
+
+test('leaving a drawer another way still commits the draft', async () => {
+  const onCommit = vi.fn();
+  render(<InADrawer onCommit={onCommit} />);
+
+  await userEvent.type(screen.getByLabelText('Title'), ' two');
+  await userEvent.keyboard('{Enter}');
+
+  expect(onCommit).toHaveBeenCalledWith('Draft two');
+});
+
+test('an Escape aimed at another field leaves this one’s draft alone', async () => {
+  const onCommit = vi.fn();
+  render(
+    <>
+      <Input aria-label="Title" commit="leave" value="Draft" onChange={onCommit} />
+      <input aria-label="Other" />
+    </>,
+  );
+
+  await userEvent.type(screen.getByLabelText('Title'), ' two');
+  // Not by clicking, which would leave the field and commit it: the Escape
+  // goes to the other element while this field still holds its draft.
+  screen
+    .getByLabelText('Other')
+    .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+  expect(screen.getByLabelText('Title')).toHaveValue('Draft two');
 });

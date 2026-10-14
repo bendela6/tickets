@@ -16,6 +16,12 @@ body:
     Keep the value in state and pass its setter as `onChange`.
   - demo: examples/controlled.tsx
   - |
+    `description` is a line under the label, saying what checking the box
+    does, in a quieter colour. The label is then set in 500 and the box sits
+    by its line, as [RadioGroup](/components/inputs/radio-group) draws an
+    option with one. A click on the line toggles the box too.
+  - demo: examples/described.tsx
+  - |
     `indeterminate` draws a dash, for a box that stands for several others
     when only some of them are on.
     [CheckboxGroup](/components/inputs/checkbox-group) draws one for you with
@@ -47,6 +53,9 @@ body:
     names it and a click on the text toggles it. `id`, and any other
     attribute it doesn't take itself, go on the input. `readOnly` sets
     `aria-readonly`; the platform's `readonly` does nothing on a checkbox.
+    With a `description`, `label` alone names the box and the line describes
+    it, before anything its own `aria-describedby` names, so a screen reader
+    says the choice, then what it does.
     `indeterminate` is set on the input's own `indeterminate` property,
     which has no attribute.
   - h2: When not to use it

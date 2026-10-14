@@ -1,9 +1,12 @@
-import { Button, Icon } from '@bh/ui';
+import { Button } from '@bh/ui';
 
 export function IconOnly() {
   return (
-    <Button variant="ghost" aria-label="More actions" className="w-36 p-0">
-      <Icon name="ellipsis" />
-    </Button>
+    <div className="flex items-center gap-8">
+      <Button icon="ellipsis" label="More actions" size="xs" />
+      <Button icon="ellipsis" label="More actions" size="sm" />
+      <Button icon="ellipsis" label="More actions" size="md" />
+      <Button icon="ellipsis" label="More actions" size="lg" />
+    </div>
   );
 }

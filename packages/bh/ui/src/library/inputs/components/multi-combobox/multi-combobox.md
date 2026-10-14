@@ -24,7 +24,9 @@ import { MultiCombobox } from '@bh/ui';
 
 Picking an option toggles it, and the list stays open for the next. The
 list's footer selects every option that is not disabled, or clears them
-all. A chip's × removes it without opening the list.
+all. A chip's × removes it without opening the list. An option's `icon`
+leads its row in the list, as in
+[Combobox](../combobox/combobox.md)'s.
 
 **Picking several**
 

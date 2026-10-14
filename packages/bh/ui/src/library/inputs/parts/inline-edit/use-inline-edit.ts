@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -53,6 +54,12 @@ export interface InlineEdit<T> {
   onKeyDown: (event: KeyboardEvent, options?: { enter?: boolean }) => void;
   /** Leaving the field commits. A control made of several elements checks that focus left all of them first. */
   onBlur: (event: FocusEvent) => void;
+  /**
+   * Goes on the element the field lives in: the `<input>`, or the wrapper
+   * around a control's parts. An Escape aimed inside it drops the draft
+   * before a dialog around the field hears the key.
+   */
+  ref: (node: Element | null) => void;
 }
 
 /** What the window events and the unmount read: they outlive the render that set them up. */
@@ -77,7 +84,9 @@ interface Live<T> {
  * - After a commit it shows `value` again, whatever the caller did with it: a
  *   "+ add" input that keeps its value `''` empties, a field whose caller
  *   saves shows the saved value.
- * - Escape drops the draft and shows the committed value.
+ * - Escape drops the draft and shows the committed value, inside a dialog
+ *   too: the press that closes it doesn't commit the draft as the field
+ *   unmounts.
  * - A draft still waiting for its pause commits at once when you leave the
  *   field or the window, or when the field unmounts, so a draft is never lost.
  *
@@ -107,6 +116,14 @@ export function useInlineEdit<T>({
   useLayoutEffect(() => {
     live.current = { held: current, value, commit, onCommit, onDraft, equals };
   });
+
+  // The element the field lives in, and the Escape that dropped its draft
+  // before the field's own handler heard it.
+  const element = useRef<Element | null>(null);
+  const ref = useCallback((node: Element | null) => {
+    element.current = node;
+  }, []);
+  const escaped = useRef<Event | null>(null);
 
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   function stopTimer() {
@@ -169,7 +186,8 @@ export function useInlineEdit<T>({
   }
 
   // Leaving the window while a draft is held: switching apps or tabs, or
-  // closing the page, none of which blurs the field everywhere.
+  // closing the page, none of which blurs the field everywhere. And an Escape
+  // aimed at the field, heard before anything else hears it.
   const holding = current !== null;
   useEffect(() => {
     if (!holding) {
@@ -181,12 +199,32 @@ export function useInlineEdit<T>({
         flush();
       }
     };
+    // A dialog (Radix's, under Drawer, Dialog and SidePanel's overlay) hears
+    // Escape on the document as it captures, before the field does, and
+    // closes; the field unmounts with it and would commit the draft that
+    // Escape meant to drop. The window hears the key before the document, so
+    // the draft is dropped here. Not `preventDefault`: the dialog reads it as
+    // "keep me open", and the same press still closes it.
+    const escape = (event: globalThis.KeyboardEvent) => {
+      const node = element.current;
+      if (
+        event.key === 'Escape' &&
+        node !== null &&
+        event.target instanceof Node &&
+        node.contains(event.target) &&
+        revert()
+      ) {
+        escaped.current = event;
+      }
+    };
     window.addEventListener('blur', leave);
     window.addEventListener('pagehide', leave);
+    window.addEventListener('keydown', escape, { capture: true });
     document.addEventListener('visibilitychange', hidden);
     return () => {
       window.removeEventListener('blur', leave);
       window.removeEventListener('pagehide', leave);
+      window.removeEventListener('keydown', escape, { capture: true });
       document.removeEventListener('visibilitychange', hidden);
     };
     // `flush` reads `live`, so the listeners never go stale.
@@ -213,15 +251,21 @@ export function useInlineEdit<T>({
         if (options?.enter !== false || event.metaKey || event.ctrlKey) {
           flush(event);
         }
-      } else if (event.key === 'Escape' && revert()) {
+      } else if (event.key === 'Escape') {
+        // The window may have dropped the draft already, on its way here.
+        const dropped = escaped.current === event.nativeEvent || revert();
+        escaped.current = null;
         // Only an Escape that dropped something is spent here; one with
-        // nothing to drop still reaches the dialog around the field.
-        event.preventDefault();
-        event.stopPropagation();
+        // nothing to drop goes on to the handlers around the field.
+        if (dropped) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       }
     },
     onBlur(event) {
       flush(event);
     },
+    ref,
   };
 }

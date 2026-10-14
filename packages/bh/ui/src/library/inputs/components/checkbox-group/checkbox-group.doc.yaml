@@ -17,6 +17,14 @@ body:
     takes it out.
   - demo: examples/controlled.tsx
   - |
+    An option's `description` is a line under its label, as a Checkbox's
+    `description` draws it. When any option has one, every label is set in
+    500, so the options still read as one list. Give the lines room with a
+    wider `gap` through `className`. The options are the `Option` every
+    control with a choice takes, and
+    [RadioGroup](/components/inputs/radio-group) draws the line too.
+  - demo: examples/described.tsx
+  - |
     `selectAllLabel` adds a parent box that checks and clears the whole group.
     It shows a dash while only some boxes are on, and is checked when every
     box that can be toggled is. The legend is read only by screen readers
@@ -39,7 +47,9 @@ body:
   - |
     The `<fieldset>` is a group named by its `<legend>`, so a screen reader
     announces `label` on entering it, shown or not. `id` goes on the
-    fieldset. `readOnly` marks each box `aria-readonly`.
+    fieldset. `readOnly` marks each box `aria-readonly`. A box whose option
+    has a `description` is named by its label alone and described by the
+    line.
   - h2: When not to use it
   - |
     - For one choice among several, use

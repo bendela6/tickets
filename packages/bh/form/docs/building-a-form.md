@@ -127,7 +127,11 @@ const registry = defineRegistry({
 
 export const profile = defineForm(registry).build((b) => {
   return [
-    b.text({ name: 'name', label: 'Name', config: {} }),
+    b.text({
+      name: 'name',
+      label: 'Name',
+      config: {},
+    }),
     b.actions({}, [b.reset({ label: 'Reset' }), b.submit({ label: 'Save' })]),
   ];
 });

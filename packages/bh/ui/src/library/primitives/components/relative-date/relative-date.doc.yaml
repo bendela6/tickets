@@ -1,5 +1,5 @@
 title: RelativeDate
-summary: 'Shows a date as days from now: today, in 3 days, 2 days ago.'
+summary: 'Shows a date as days from now (today, in 3 days, 2 days ago); formatDateTime writes one out with its time.'
 related: [DatePicker, DateRangePicker]
 body:
   - |
@@ -21,3 +21,47 @@ body:
   - demo: examples/overdue.tsx
   - h2: Props
   - props: RelativeDate
+  - |
+    The label and the title it writes are exported too:
+  - ref: relativeLabel
+  - ref: formatExact
+  - h2: Date and time
+  - |
+    Where the day alone is not enough, as for when a job ran or a page was
+    saved, `formatDateTime` writes the moment out: the date as the `title`
+    above writes it, then the time on a 24-hour clock, `Jul 13, 2026, 09:05`.
+    It comes from `@bh/ui`, as `RelativeDate` does.
+
+    RelativeDate counts calendar days in UTC, since a day is the same
+    everywhere. A time of day is not, so the clock reads in the reader's own
+    zone unless `timeZone` names another: `UTC`, or an IANA zone such as
+    `Europe/Tbilisi` for a place's own clock. `seconds` adds the seconds, as
+    a log wants them.
+  - demo: examples/date-and-time.tsx
+    title: One moment, four ways
+  - ref: formatDateTime
+  - h2: In another language
+  - |
+    Each of these writes English until it is given a `locale`, a BCP 47 tag
+    such as `ka`, `en-GB` or `de-CH`: RelativeDate takes it as a prop, and
+    `relativeLabel`, `formatExact` and `formatDateTime` as an option. bh keeps
+    no translations of its own, so an app that translates passes in the
+    locale it already has.
+
+    In a locale the words, their order and the clock are that locale's own,
+    from `Intl`: `in 3 days` is `in 3 Tagen` in `de`, two days back is
+    `vorgestern` rather than `vor 2 Tagen`, and `en-US` writes `2:30 PM`
+    where the English without a locale writes `14:30`. Only the writing
+    changes: days are still counted in UTC, and the clock still reads in the
+    zone it is given. A tag `Intl` cannot read, such as `en_US`, is ignored.
+  - demo: examples/in-another-language.tsx
+    title: The same moment, by locale
+  - callout:
+      type: warning
+      title: The browser has to know the language
+      content: |
+        `Intl` writes only the languages its runtime carries data for, and
+        any other in the runtime's default, with no error. Some Chrome
+        builds carry no Georgian, so there `ka` comes out in English. An app
+        whose language may be missing can ask first:
+        `Intl.DateTimeFormat.supportedLocalesOf(['ka'])` is empty where it is.

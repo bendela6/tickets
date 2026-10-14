@@ -172,12 +172,12 @@ export function AnEstimateSavedOnLeaving() {
 
 ## Keyboard and accessibility
 
-| Key                      | Does                                                                |
-| ------------------------ | ------------------------------------------------------------------- |
-| `ArrowUp` or `ArrowDown` | Steps the value by `step`, as the browser's number field does.      |
-| `Tab`                    | Moves on to the next field. The steppers are not tab stops.         |
-| `Enter`                  | Commits the draft, when the field holds one.                        |
-| `Escape`                 | Drops the draft, when the field holds one, and puts the value back. |
+| Key                      | Does                                                                                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ArrowUp` or `ArrowDown` | Steps the value by `step`, as the browser's number field does.                                                                                     |
+| `Tab`                    | Moves on to the next field. The steppers are not tab stops.                                                                                        |
+| `Enter`                  | Commits the draft, when the field holds one.                                                                                                       |
+| `Escape`                 | Drops the draft, when the field holds one, and puts the value back. In a dialog or a drawer the same press closes it, and the draft never commits. |
 
 The field is an `<input type="number">` with the role `spinbutton`, and
 the ref lands on it. The steppers are buttons named "Increment" and

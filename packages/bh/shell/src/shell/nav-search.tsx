@@ -8,7 +8,7 @@ import { useRef } from 'react';
 import { Search } from 'lucide-react';
 import { cn, Tooltip } from '@bh/ui';
 import { NAV_STYLES } from '../nav';
-import { shortcutLabel } from './shortcut-label';
+import { Kbd } from '@bh/ui';
 import { useSearchShortcut } from './use-search-shortcut';
 
 /** Props for NavSearch component. */
@@ -23,9 +23,6 @@ export interface NavSearchProps {
   /** Opens the app's own search. The shortcut is then AppShell's, not this field's. */
   onSearch?: () => void;
 }
-
-const KBD =
-  'rounded-4 border-gray-6 bg-surface-raised text-12 text-gray-10 shrink-0 border-1 px-5 font-mono leading-16';
 
 /** The search field (or the button to the app's search), or the rail's search button when the sidebar is shut. */
 export function NavSearch({ collapsed, onRequestExpand, onSearch }: NavSearchProps) {
@@ -78,7 +75,7 @@ export function NavSearch({ collapsed, onRequestExpand, onSearch }: NavSearchPro
         >
           <Search size={16} strokeWidth={1.75} className="text-gray-10 shrink-0" />
           <span className="text-13 text-gray-10 min-w-0 flex-1 truncate">Search…</span>
-          <kbd className={KBD}>{shortcutLabel()}</kbd>
+          <Kbd keys="mod+K" className="shrink-0" />
         </button>
       </div>
     );
@@ -101,7 +98,7 @@ export function NavSearch({ collapsed, onRequestExpand, onSearch }: NavSearchPro
           }}
           className="text-13 text-gray-12 caret-indigo-9 placeholder:text-gray-10 min-w-0 flex-1 bg-transparent outline-none"
         />
-        <kbd className={KBD}>{shortcutLabel()}</kbd>
+        <Kbd keys="mod+K" className="shrink-0" />
       </div>
     </div>
   );

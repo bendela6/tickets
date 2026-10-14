@@ -4,8 +4,7 @@
 
 import type { ReactNode } from 'react';
 import { Menu as MenuIcon, Search } from 'lucide-react';
-import { cn } from '@bh/ui';
-import { NAV_STYLES } from '../nav';
+import { Button } from '@bh/ui';
 import type { ShellBrand } from './shell-brand';
 
 /** Props for TopBar component. */
@@ -24,34 +23,24 @@ export interface TopBarProps {
 export function TopBar({ brand, onOpenNav, onSearch, end }: TopBarProps) {
   return (
     <div className="border-gray-6 bg-gray-1 flex h-48 shrink-0 items-center gap-6 border-b-1 px-8">
-      <button
-        type="button"
-        aria-label="Open navigation"
+      <Button
+        variant="ghost"
+        tone="neutral"
+        icon={<MenuIcon size={18} strokeWidth={1.75} />}
+        label="Open navigation"
         onClick={onOpenNav}
-        className={cn(
-          'rounded-8 inline-flex size-36 items-center justify-center',
-          NAV_STYLES.focusRing,
-          NAV_STYLES.resting,
-        )}
-      >
-        <MenuIcon size={18} strokeWidth={1.75} />
-      </button>
+      />
       {brand.mark}
       <span className="text-15 font-600 text-gray-12 flex-1 truncate font-mono">{brand.name}</span>
       {onSearch ? (
-        <button
-          type="button"
-          aria-label="Search"
+        <Button
+          variant="ghost"
+          tone="neutral"
+          icon={<Search size={18} strokeWidth={1.75} />}
+          label="Search"
           aria-haspopup="dialog"
           onClick={onSearch}
-          className={cn(
-            'rounded-8 inline-flex size-36 items-center justify-center',
-            NAV_STYLES.focusRing,
-            NAV_STYLES.resting,
-          )}
-        >
-          <Search size={18} strokeWidth={1.75} />
-        </button>
+        />
       ) : null}
       {end}
     </div>

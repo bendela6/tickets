@@ -39,7 +39,7 @@ its examples and the copy.
 title: Button
 summary: 'Starts an action: save, open a dialog, run a job.'
 order: 1
-related: [CopyButton, Menu]
+related: [useCopy, Menu]
 body:
   - |
     Starts an action: save, open a dialog, run a job.

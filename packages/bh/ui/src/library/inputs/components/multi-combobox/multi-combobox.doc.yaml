@@ -15,7 +15,9 @@ body:
   - |
     Picking an option toggles it, and the list stays open for the next. The
     list's footer selects every option that is not disabled, or clears them
-    all. A chip's × removes it without opening the list.
+    all. A chip's × removes it without opening the list. An option's `icon`
+    leads its row in the list, as in
+    [Combobox](/components/inputs/combobox)'s.
   - demo: examples/picking-several.tsx
   - |
     `maxChips`, 3 by default, caps the chips on the field. The rest collapse

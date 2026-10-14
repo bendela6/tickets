@@ -125,13 +125,13 @@ open, so state inside it belongs in the caller.
 
 ## Props
 
-| Prop                  | Type                                         | Default | Description                                                                                          |
-| --------------------- | -------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `title` (required)    | `ReactNode`                                  |         | The card's title, in its header beside the chevron.                                                  |
-| `summary`             | `ReactNode`                                  |         | Beside the title while folded: what the card holds, cut to one line. Gone once open.                 |
-| `open`                | `boolean`                                    |         | Whether it is open. Leave it out and the card holds its own, from `defaultOpen`.                     |
-| `defaultOpen`         | `boolean`                                    | `false` | Whether it starts open, when `open` is left out.                                                     |
-| `onOpenChange`        | `(open: boolean) => void`                    |         | Called with the new state on every click, whether `open` is given or not.                            |
-| `padding`             | `Padding`: `0`, `1`, `2`, `3`, `4`, `6`, `8` | `4`     | Space around the content, in steps of 4 pixels, as CardBody's: 0 for content that runs to the edges. |
-| `className`           | `string`                                     |         | Added to the card's classes.                                                                         |
-| `children` (required) | `ReactNode`                                  |         | What the card holds, under its header, drawn only while open.                                        |
+| Prop                  | Type                                         | Default | Description                                                                                                                                        |
+| --------------------- | -------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title` (required)    | `ReactNode`                                  |         | The card's title, in its header beside the chevron.                                                                                                |
+| `summary`             | `ReactNode`                                  |         | Beside the title while folded: what the card holds, cut to one line, and cut first in a narrow card, so the title keeps its words. Gone once open. |
+| `open`                | `boolean`                                    |         | Whether it is open. Leave it out and the card holds its own, from `defaultOpen`.                                                                   |
+| `defaultOpen`         | `boolean`                                    | `false` | Whether it starts open, when `open` is left out.                                                                                                   |
+| `onOpenChange`        | `(open: boolean) => void`                    |         | Called with the new state on every click, whether `open` is given or not.                                                                          |
+| `padding`             | `Padding`: `0`, `1`, `2`, `3`, `4`, `6`, `8` | `4`     | Space around the content, in steps of 4 pixels, as CardBody's: 0 for content that runs to the edges.                                               |
+| `className`           | `string`                                     |         | Added to the card's classes.                                                                                                                       |
+| `children` (required) | `ReactNode`                                  |         | What the card holds, under its header, drawn only while open.                                                                                      |

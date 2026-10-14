@@ -1,0 +1,63 @@
+title: LogView
+summary: Reads any app's log, line by line, its ANSI colours drawn, what failed, warned or passed highlighted, and its stack traces folding.
+related: [JsonViewer, Disclosure]
+body:
+  - |
+    Reads any app's log, line by line, in monospace. It knows nothing of the
+    app: the colours its program printed are drawn in the page's tones, and
+    highlight rules, the defaults and the app's own, mark what to look at.
+
+    Pass `lines` as one string, split at each newline, or as an array of
+    lines, each a string or a `LogLine` with a `time` and an `id`. The view
+    grows with the page rather than scrolling in a box of its own.
+  - h2: Import
+  - code: import { LogView } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    By default times are dimmed, failures red (`error`, `failed`, `FAIL`,
+    `[ERROR]`), warnings amber (`warn`, `[WARN]`) and successes green (`OK`,
+    `DONE`, `healthy`). A tone colours the word that earned it; a line with
+    a failure or a warning is also washed in its tone.
+  - demo: examples/highlights.tsx
+  - |
+    ANSI colours are drawn in Instrument's hues, so they follow dark mode:
+    a colour at its rung 11, its bright twin at 9, a background at 3, and a
+    256-colour or 24-bit colour at the nearest hue. Bold, dim, italic and
+    underline are kept. Every other escape code, a cursor move or an erase,
+    is dropped, never shown.
+  - demo: examples/ansi-colors.tsx
+    title: ANSI colours
+  - |
+    `rules` adds highlights of the app's own on top of the defaults, each a
+    `match` (a string or a regular expression), a `tone` (or `quiet`) and,
+    for a line that should stand out, a `level`. Where two rules match the
+    same text, the later one draws it. `defaultRules={false}` leaves only
+    the app's. A line's `time` shows beside it, only where it changes from
+    the line above.
+  - demo: examples/rules-and-times.tsx
+  - |
+    A multi-line entry, a line and the lines indented under it as a stack
+    trace is, folds under its first line at the chevron beside it, which says
+    how many lines it holds; a single line under another is left as it is,
+    since folding it would save nothing. A stack frame (`at …`, `... 3 more`,
+    `Caused by:`) belongs to the trace however it is indented, and a printed
+    object's closing brace stays with the entry that opened it. Entries start
+    open; `entries="folded"` starts them folded, and `entries="flat"` draws
+    them as plain lines.
+  - demo: examples/stack-traces.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Enter, Space]
+        does: Folds or opens the entry whose chevron has the focus.
+  - |
+    The log is a `role="log"` named by `label`, `Log` by default. Its lines
+    are text, so a reader selects and copies them as the program printed
+    them, spacing and all; the times stay out of a selection.
+
+    An entry's chevron is a `<button>` with `aria-expanded`, named by its
+    line and described by its count, and `aria-controls` pointing at the lines
+    it folds while they are drawn. The lines are drawn only while open. The
+    chevron turns, and stops turning for a reader who asks for less motion.
+  - h2: Props
+  - props: LogView

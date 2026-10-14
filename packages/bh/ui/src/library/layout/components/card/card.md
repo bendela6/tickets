@@ -132,9 +132,11 @@ export function Radii() {
 }
 ```
 
-`interactive` lifts the border on hover and shows a pointer, for a card
-that is a link or a button. It doesn't make the card focusable: put it
-inside the link, as here, or give it a `role`.
+A card that is a link or a button is that element itself: `asChild`
+draws the card on the one element it wraps, an `<a>` or a router's link,
+instead of a `<div>`. `interactive` lifts its border on hover and shows
+a pointer. Tab reaches it, and focus lights its border and draws the halo
+the controls draw.
 
 **Link card**
 
@@ -143,12 +145,44 @@ import { Card } from '@bh/ui';
 
 export function LinkCard() {
   return (
-    <a href="#" className="rounded-12 block w-320">
-      <Card interactive padding={4}>
+    <Card asChild interactive padding={4} className="w-320">
+      <a href="#">
         <p className="text-13/19 font-600 text-gray-12">Annual report</p>
         <p className="text-12/17 text-gray-11">report.pdf, 2.4 MB</p>
+      </a>
+    </Card>
+  );
+}
+```
+
+On a `<button>`, the card keeps its text at its left edge, as a card's
+is. A grid's cells give them their width.
+
+**Button card**
+
+```tsx
+import { useState } from 'react';
+import { Card, Icon } from '@bh/ui';
+
+export function ButtonCard() {
+  const [made, setMade] = useState(0);
+  return (
+    <div className="grid w-320 grid-cols-2 gap-8">
+      <Card asChild interactive padding={4}>
+        <button type="button" onClick={() => setMade(made + 1)}>
+          <Icon name="plus" size="lg" className="text-gray-11" />
+          <span className="text-13/19 font-600 text-gray-12 mt-8 block">New folder</span>
+          <span className="text-12/17 text-gray-11 block">{made} made</span>
+        </button>
       </Card>
-    </a>
+      <Card asChild interactive padding={4}>
+        <button type="button" onClick={() => setMade(made + 1)}>
+          <Icon name="file" size="lg" className="text-gray-11" />
+          <span className="text-13/19 font-600 text-gray-12 mt-8 block">New file</span>
+          <span className="text-12/17 text-gray-11 block">Empty, untitled</span>
+        </button>
+      </Card>
+    </div>
   );
 }
 ```
@@ -156,20 +190,25 @@ export function LinkCard() {
 ## Keyboard and accessibility
 
 `CardTitle` is always an `h3`. For another level, put your own heading in
-the `CardHeader`. Other attributes reach the `<div>`, so a card can take a
-`role` and an `aria-label`.
+the `CardHeader`. Other attributes reach the `<div>`, or with `asChild`
+the element it wraps, so a card can take a `role` and an `aria-label`.
+A card that is a link or a button is named by what it holds; a heading
+inside a `<button>` isn't a heading to a screen reader, so a button card
+holds lines of text in spans, as above: a `<button>` holds no `<p>`.
 
 ## Props
 
 ### Card
 
-| Prop          | Type                                         | Default | Description                                                                                                                              |
-| ------------- | -------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `radius`      | `CardRadius`: `'md'`, `'lg'`, `'xl'`         | `'xl'`  | How round the corners are: 6, 8 or 12 pixels.                                                                                            |
-| `padding`     | `Padding`: `0`, `1`, `2`, `3`, `4`, `6`, `8` | `0`     | Space inside the edge, in steps of 4 pixels. Leave it 0 when the card has a CardHeader.                                                  |
-| `interactive` | `boolean`                                    |         | Adds the hover border-lift and pointer cursor for a card that is a link or a button. Does not make it focusable — wrap it or use `role`. |
-| `className`   | `string`                                     |         | Added to its own classes.                                                                                                                |
-| `ref`         | `Ref<HTMLDivElement>`                        |         | Forwarded to the `<div>`.                                                                                                                |
+| Prop          | Type                                         | Default | Description                                                                                                                                                                        |
+| ------------- | -------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius`      | `CardRadius`: `'md'`, `'lg'`, `'xl'`         | `'xl'`  | How round the corners are: 6, 8 or 12 pixels.                                                                                                                                      |
+| `padding`     | `Padding`: `0`, `1`, `2`, `3`, `4`, `6`, `8` | `0`     | Space inside the edge, in steps of 4 pixels. Leave it 0 when the card has a CardHeader.                                                                                            |
+| `interactive` | `boolean`                                    |         | Adds the hover border-lift and pointer cursor for a card that is a link or a button. Does not make a `<div>` focusable: with `asChild`, the card is the link or the button itself. |
+| `asChild`     | `boolean`                                    | `false` | Draws the card on the one element it wraps instead of a `<div>`: a `<button>`, or a router's link, which                                                                           |
+| `className`   | `string`                                     |         | Added to its own classes.                                                                                                                                                          |
+| `children`    | `ReactNode`                                  |         |                                                                                                                                                                                    |
+| `ref`         | `Ref<HTMLDivElement>`                        |         | Forwarded to the `<div>`.                                                                                                                                                          |
 
 Also every `<div>` attribute (`HTMLAttributes<HTMLDivElement>`), passed through.
 

@@ -142,7 +142,7 @@ export function MovingByKeyboard() {
 | `F2`                      | Steps into the cell's first button or link.                                                                                                                                       |
 | `Esc`                     | Steps out of the cell, back to the grid.                                                                                                                                          |
 | `Space`                   | Ticks or unticks the focused row, when the table selects. Shift+Space adds the range.                                                                                             |
-| `Ctrl+C`                  | Copies the focused cell's text.                                                                                                                                                   |
+| `Ctrl+C`                  | Copies the focused cell's text. With @bh/ui's skin, the cell says Copied, or Could not copy, for a moment.                                                                        |
 | `Alt+↓`                   | On a header, clicks its headerAccessory.                                                                                                                                          |
 
 ## Stepping into a cell

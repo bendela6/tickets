@@ -180,7 +180,10 @@ reader is done with it. `commit` says when:
 - `{ after: 800 }`: on those, and after 800 ms without typing.
 
 Until then, what you type is a draft the field holds, and `onDraft` hears
-it at every keystroke. Escape puts the value back. A draft that ends where
+it at every keystroke. Escape puts the value back, inside a
+[Drawer](../../../overlays/components/drawer/drawer.md) or a
+[Dialog](../../../overlays/components/dialog/dialog.md) too, where the same press closes it:
+the draft it dropped never commits on the way out. A draft that ends where
 it started commits nothing. A `value` that changes while nobody is typing,
 an edit made elsewhere, replaces the field without remounting it; while
 somebody is typing, their draft stays. A draft still waiting for its pause
@@ -263,13 +266,14 @@ export function ATitleSavedAfterAPause() {
 
 A "+ add" input keeps its `value` at `''`: each commit adds a task, and
 after it the field shows `value` again, empty. `onDraft` shows the Enter
-hint only while there's something to add.
+hint, a [Kbd](../../../primitives/components/kbd/kbd.md), only while there's something
+to add.
 
 **An add input**
 
 ```tsx
 import { useState } from 'react';
-import { cn, Input } from '@bh/ui';
+import { cn, Input, Kbd } from '@bh/ui';
 
 export function AnAddInput() {
   const [tasks, setTasks] = useState(['Book the room', 'Send the agenda']);
@@ -295,12 +299,49 @@ export function AnAddInput() {
           }
           setTyping(false);
         }}
-        trailing={
-          <kbd className={cn('text-11 text-gray-9 shrink-0 font-mono', !typing && 'invisible')}>
-            Enter
-          </kbd>
-        }
+        trailing={<Kbd keys="enter" className={cn('shrink-0', !typing && 'invisible')} />}
       />
+    </div>
+  );
+}
+```
+
+In a drawer, one Escape drops what you typed and closes the drawer:
+nothing is saved on the way out. Type in the field, then press Escape;
+or press Enter, or Tab away, to save.
+
+**A field in a drawer**
+
+```tsx
+import { useId, useState } from 'react';
+import { Button, Drawer, FieldLabel, Input } from '@bh/ui';
+
+export function AFieldInADrawer() {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [city, setCity] = useState('Lisbon');
+  const [saves, setSaves] = useState(0);
+  return (
+    <div className="flex flex-col items-start gap-8">
+      <Button onClick={() => setOpen(true)}>Edit the city</Button>
+      <p className="text-12/17 text-gray-11 font-sans">
+        Saved <span className="text-gray-12 font-mono">{city}</span>, {saves}{' '}
+        {saves === 1 ? 'time' : 'times'}
+      </p>
+      <Drawer open={open} onOpenChange={setOpen} label="City">
+        <div className="flex flex-col gap-4 p-16">
+          <FieldLabel htmlFor={id}>City</FieldLabel>
+          <Input
+            id={id}
+            value={city}
+            commit="leave"
+            onChange={(next) => {
+              setCity(next);
+              setSaves((count) => count + 1);
+            }}
+          />
+        </div>
+      </Drawer>
     </div>
   );
 }
@@ -311,8 +352,8 @@ export function AnAddInput() {
 It is a native `<input>`, so typing, selecting and Tab are the browser's.
 The ref lands on the `<input>`, with or without `leading` and `trailing`.
 With `commit` other than `'change'`, Enter commits the draft (and still
-submits a form around it) and Escape puts the value back; an Escape with
-nothing to put back reaches a dialog around the field.
+submits a form around it) and Escape puts the value back. A dialog around
+the field hears every Escape: one press drops the draft and closes it.
 
 `readOnly` is HTML's `readonly`, not `aria-readonly`. The count from
 `showCount` is `aria-hidden`. An `Icon` given as `leading` or `trailing`

@@ -3,7 +3,10 @@ import { Checkbox } from '../checkbox';
 import { CONTROL_LADDER, type ControlProps, type Option } from '../../contract';
 
 export type CheckboxGroupProps = ControlProps<string[]> & {
-  /** The choices, a box each, in the order given; a `disabled` option can't be toggled. */
+  /**
+   * The choices, a box each, in the order given; a `disabled` option can't be
+   * toggled. An option's `description` goes under its label.
+   */
   options: Option[];
   /**
    * The group's name, rendered as its `<legend>`.
@@ -61,6 +64,12 @@ export function CheckboxGroup({
   const chosen = reachable.filter((option) => value.includes(option.value));
   const allOn = reachable.length > 0 && chosen.length === reachable.length;
   const someOn = chosen.length > 0 && !allOn;
+  // Decided for the group, not per option, as RadioGroup does: when any option
+  // has a line to say, every label is set in 500, so a box without one still
+  // reads as one of the same list. The weight goes on the row and the label
+  // takes it from there; a box's own line keeps its own.
+  const described = options.some((option) => Boolean(option.description));
+  const row = described ? 'font-500' : undefined;
 
   function toggle(optionValue: string, next: boolean) {
     if (readOnly) {
@@ -100,6 +109,7 @@ export function CheckboxGroup({
             size={size}
             tone={tone}
             readOnly={readOnly}
+            className={row}
             onChange={(next) => toggleAll(next)}
           />
           <hr className="border-gray-6 my-2 border-0 border-t-1" />
@@ -111,11 +121,13 @@ export function CheckboxGroup({
           <Checkbox
             key={option.value}
             label={option.label}
+            description={option.description}
             value={value.includes(option.value)}
             disabled={option.disabled}
             readOnly={readOnly}
             size={size}
             tone={tone}
+            className={row}
             onChange={(next) => toggle(option.value, next)}
           />
         );

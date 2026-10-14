@@ -1,6 +1,5 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
-import { Button } from '../../../primitives/components/button';
 import { cn } from '../../../../style/cn';
 import { useRestoreFocus } from '../../parts/restore-focus';
 
@@ -80,63 +79,5 @@ export function DialogDescription({
     <RadixDialog.Description className={cn('text-13/19 text-gray-11 mt-6 font-sans', className)}>
       {children}
     </RadixDialog.Description>
-  );
-}
-
-interface ConfirmDialogProps {
-  /** Whether the dialog is open. */
-  open: boolean;
-  /** Called with `false` when it closes: by either button, Esc or a click on the dim. */
-  onOpenChange: (open: boolean) => void;
-  /** The question, as the dialog's title. */
-  title: ReactNode;
-  /** A sentence under the title, as the dialog's description. */
-  body?: ReactNode;
-  /** The confirm button's label. */
-  confirmLabel?: string;
-  /** The cancel button's label. */
-  cancelLabel?: string;
-  /** Paints the confirm button in the `danger` tone instead of `primary`. */
-  destructive?: boolean;
-  /** Called when the confirm button is pressed, before the dialog closes. */
-  onConfirm: () => void;
-}
-
-/** A question in a dialog: a title, an optional body, a cancel button and a confirm button. */
-export function ConfirmDialog({
-  open,
-  onOpenChange,
-  title,
-  body,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
-  destructive,
-  onConfirm,
-}: ConfirmDialogProps) {
-  // `open` opens it, so there is no DialogTrigger. DialogContent gives focus
-  // back to whatever had it as it opened, or near there if the confirm
-  // deleted it, as it does a row.
-  return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogTitle>{title}</DialogTitle>
-        {body ? <DialogDescription>{body}</DialogDescription> : null}
-        <div className="mt-16 flex justify-end gap-8">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {cancelLabel}
-          </Button>
-          <Button
-            variant="solid"
-            tone={destructive ? 'danger' : 'primary'}
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
-          >
-            {confirmLabel}
-          </Button>
-        </div>
-      </DialogContent>
-    </DialogRoot>
   );
 }

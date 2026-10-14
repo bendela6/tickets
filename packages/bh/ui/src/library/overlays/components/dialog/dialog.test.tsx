@@ -4,14 +4,8 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { Drawer, DrawerControls } from '../drawer';
 import { SidePanel } from '../side-panel';
-import {
-  ConfirmDialog,
-  DialogClose,
-  DialogContent,
-  DialogRoot,
-  DialogTitle,
-  DialogTrigger,
-} from './dialog';
+import { ConfirmDialog } from './confirm-dialog';
+import { DialogClose, DialogContent, DialogRoot, DialogTitle, DialogTrigger } from './dialog';
 
 test('confirm dialog renders title/body and fires onConfirm', async () => {
   const onConfirm = vi.fn();

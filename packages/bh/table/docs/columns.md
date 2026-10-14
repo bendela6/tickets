@@ -242,7 +242,7 @@ it. Here the funnel keeps the cities over a million.
 ```tsx
 import { useState } from 'react';
 import { Table, sortRows, useTable, type Column } from '@bh/table';
-import { Button, Combobox, Icon, Input, NumberColumn, tableRender } from '@bh/ui';
+import { Button, Combobox, Input, NumberColumn, tableRender } from '@bh/ui';
 
 interface City {
   id: string;
@@ -329,15 +329,13 @@ export function FiltersUnderTheHeader() {
       headerAccessory: (
         <Button
           variant="ghost"
-          size="sm"
+          size="xs"
           tone={large ? 'primary' : 'neutral'}
-          aria-label="Only cities over a million"
+          icon="filter"
+          label="Only cities over a million"
           aria-pressed={large}
-          className="h-24 w-24 p-0"
           onClick={() => setLarge(!large)}
-        >
-          <Icon name="filter" size="sm" />
-        </Button>
+        />
       ),
     },
   ];

@@ -7,6 +7,7 @@ export type {
   RenderScrimCtx,
   CellFocusProps,
   CellPin,
+  CellCopy,
   CellRef,
   RowPins,
   Column,

@@ -3,7 +3,7 @@ import { cn } from '../../../../style';
 import { fieldClass, fieldState } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { ComboboxList } from '../../parts/combobox-list';
-import { triggerWidthClass } from '../../parts/popup/popup';
+import { listWidthClass } from '../../parts/popup/popup';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../overlays/components/popover';
 import {
   readOnlyFieldClass,
@@ -52,6 +52,9 @@ type ComboboxProps = ControlProps<string | null> & {
   'aria-label'?: string;
 };
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
+
+/** The chosen option's icon on the field, a step under the text as on SegmentedControl. */
+const GLYPH: Record<ControlSize, IconSize> = { xs: 'sm', md: 'md', lg: 'lg' };
 
 /** Keys on the closed field that open a list without search, besides Enter and Space. */
 const OPEN_KEYS = new Set(['ArrowDown', 'ArrowUp']);
@@ -186,9 +189,11 @@ export function Combobox({
                 holds exactly one. A coloured option keeps a leading DOT,
                 because the colour is data — a status has one and dropping it
                 loses the only thing the chip was carrying. Found by looking at
-                it: the tests all passed with a pill here. */}
+                it: the tests all passed with a pill here. An option's icon goes
+                first, as in the list, where it leads the row. */}
             {selected ? (
               <span className="flex min-w-0 items-center gap-8">
+                {selected.icon ? <Icon name={selected.icon} size={GLYPH[size]} /> : null}
                 {selected.color ? (
                   <span
                     aria-hidden
@@ -215,9 +220,11 @@ export function Combobox({
           </button>
         </PopoverTrigger>
       </div>
-      {/* Without search the list sits at the field's width, as a select's
-          does. With a search box it keeps a width of its own, room to type. */}
-      <PopoverContent className={cn('p-0', !searchable && triggerWidthClass)}>
+      {/* Without search the list is at least the field's width, as a
+          select's is, and grows with its widest row up to a limit, so a
+          disabled option's reason has room in a narrow field. With a search
+          box it keeps a width of its own, room to type. */}
+      <PopoverContent className={cn('p-0', !searchable && listWidthClass)}>
         <ComboboxList
           options={options}
           searchable={searchable}

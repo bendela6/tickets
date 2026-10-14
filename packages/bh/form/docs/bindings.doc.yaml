@@ -31,7 +31,7 @@ body:
     | `segmented`      | [SegmentedControl](/components/inputs/segmented-control)     | `string`                             | `''`         | `options`, `label`                           |
     | `checkbox-group` | [CheckboxGroup](/components/inputs/checkbox-group)           | `string[]`                           | `[]`         | `options`, `label`, `selectAllLabel`         |
     | `toggle`         | [Switch](/components/inputs/switch)                          | `boolean`                            | `false`      | `label`                                      |
-    | `checkbox`       | [Checkbox](/components/inputs/checkbox)                      | `boolean`                            | `false`      | `label`                                      |
+    | `checkbox`       | [Checkbox](/components/inputs/checkbox)                      | `boolean`                            | `false`      | `label`, `description`                       |
     | `date`           | [DatePicker](/components/inputs/date-picker)                 | `string \| null`, `yyyy-mm-dd`       | `null`       | `placeholder`, `min`, `max`                  |
     | `date-range`     | [DateRangePicker](/components/inputs/date-range-picker)      | `[string \| null, string \| null]`   | `[null, null]` | `placeholder`                              |
     | `time`           | [TimePicker](/components/inputs/time-picker)                 | `string \| null`, `HH:MM`            | `null`       | `stepMinutes`, `placeholder`                 |

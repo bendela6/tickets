@@ -36,6 +36,46 @@ export function Controlled() {
 }
 ```
 
+`description` is a line under the label, saying what checking the box
+does, in a quieter colour. The label is then set in 500 and the box sits
+by its line, as [RadioGroup](../radio-group/radio-group.md) draws an
+option with one. A click on the line toggles the box too.
+
+**Described**
+
+```tsx
+import { useState } from 'react';
+import { Checkbox } from '@bh/ui';
+
+export function Described() {
+  const [copy, setCopy] = useState(true);
+  const [archive, setArchive] = useState(false);
+  return (
+    <div className="flex max-w-320 flex-col gap-12">
+      <Checkbox
+        label="Email me a copy"
+        description="Sent to the address on your profile, as soon as it is saved."
+        value={copy}
+        onChange={setCopy}
+      />
+      <Checkbox
+        label="Archive when done"
+        description="It leaves the board, and stays in search."
+        value={archive}
+        onChange={setArchive}
+      />
+      <Checkbox
+        label="Lock the history"
+        description="Only an owner can turn this off."
+        value
+        onChange={() => {}}
+        disabled
+      />
+    </div>
+  );
+}
+```
+
 `indeterminate` draws a dash, for a box that stands for several others
 when only some of them are on.
 [CheckboxGroup](../checkbox-group/checkbox-group.md) draws one for you with
@@ -181,6 +221,9 @@ It is a native `<input type="checkbox">` inside a `<label>`, so `label`
 names it and a click on the text toggles it. `id`, and any other
 attribute it doesn't take itself, go on the input. `readOnly` sets
 `aria-readonly`; the platform's `readonly` does nothing on a checkbox.
+With a `description`, `label` alone names the box and the line describes
+it, before anything its own `aria-describedby` names, so a screen reader
+says the choice, then what it does.
 `indeterminate` is set on the input's own `indeterminate` property,
 which has no attribute.
 
@@ -195,6 +238,7 @@ names the group and holds the chosen values as one array.
 | Prop                  | Type                                                                                                                                                                                                        | Default     | Description                                                                                                                                                                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `label`               | `string`                                                                                                                                                                                                    |             | The text beside the box; leave it out when `aria-label` or a `<label htmlFor>` names the box instead.                                                                                                                                         |
+| `description`         | `string`                                                                                                                                                                                                    |             | A line under the label, saying what checking it does: muted, and the box's description, so a screen reader reads it after the name.                                                                                                           |
 | `indeterminate`       | `boolean`                                                                                                                                                                                                   | `false`     | Draws a dash for a mixed state, over whatever `value` holds.                                                                                                                                                                                  |
 | `id`                  | `string`                                                                                                                                                                                                    |             | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                                                                                           |
 | `aria-describedby`    | `string`                                                                                                                                                                                                    |             | Identifies the element (or elements) that describes the object. The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |

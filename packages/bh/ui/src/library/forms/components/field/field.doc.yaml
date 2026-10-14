@@ -16,14 +16,13 @@ body:
   - |
     `id` is the control's id, and the label is a
     [FieldLabel](/components/forms/field-label) for it. `hint` is the line
-    under the control, and `required` marks the label. The hint's id is
-    `<id>-hint`, for the control's `aria-describedby`.
+    under the control, which it describes, and `required` marks the label.
   - demo: examples/a-field.tsx
   - |
     An `error` takes the hint's place, as a
-    [FieldError](/components/forms/field-error) at `<id>-error`, so point
-    `aria-describedby` at whichever is shown and give the control
-    `tone="danger"`.
+    [FieldError](/components/forms/field-error), and describes the control
+    in its place. Give the control `tone="danger"` too, for the red halo
+    the message goes with.
   - demo: examples/with-an-error.tsx
   - |
     With no `id` the label names a group of controls, each named by its own
@@ -38,8 +37,11 @@ body:
   - |
     With an `id`, the label is a `<label>` for the control, which it names,
     and a click on it focuses the control. The asterisk is part of the
-    label's text. The control's own `aria-describedby` is the caller's:
-    `<id>-hint` or `<id>-error`. Without an `id`, the field names and
+    label's text. The hint is at `<id>-hint` and the error at `<id>-error`.
+    When the control is the field's own child, the field adds whichever is
+    shown to the control's `aria-describedby`, after any ids it has there
+    already; a control further down, in a row of its own, points its
+    `aria-describedby` at them itself. Without an `id`, the field names and
     describes the group itself. An error is a `role="alert"`, announced when
     it appears.
   - h2: Field or FieldWrapper

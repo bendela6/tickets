@@ -1,11 +1,30 @@
 import { useState } from 'react';
-import { cn, focusRing, TONE_HUE } from '../../../../style';
+import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../../style';
 import {
   CONTROL_LADDER,
   disabledTreatment,
   readOnlyMarkClass,
   type ControlProps,
 } from '../../contract';
+
+/**
+ * A filled mark's colour: rung 8 for a preview, 9 for the committed value.
+ * Through `variants()` because the classes are interpolated per hue, and the
+ * safelist holds `variants()` output only: built in `cn()`, the preview's
+ * `text-${hue}-8` compiled to nothing in an app.
+ */
+const filledClass = variants({
+  base: '',
+  config: {
+    fill: {
+      default: 'value',
+      options: {
+        preview: over(axis('scale', HUES, 'indigo'), (hue) => `text-${hue}-8`),
+        value: over(axis('scale', HUES, 'indigo'), (hue) => `text-${hue}-9`),
+      },
+    },
+  },
+});
 
 export type RatingProps = ControlProps<number> & {
   /** How many marks. Five unless a scale says otherwise. */
@@ -111,9 +130,7 @@ export function Rating({
                 ? // Rung 8 for a preview, 9 for the committed value — the one
                   // pair that tells you whether the mouse has already changed
                   // something or is only offering to.
-                  preview !== null
-                  ? `text-${hue}-8`
-                  : `text-${hue}-9`
+                  filledClass({ fill: preview !== null ? 'preview' : 'value', scale: hue })
                 : 'text-gray-7',
             )}
           >

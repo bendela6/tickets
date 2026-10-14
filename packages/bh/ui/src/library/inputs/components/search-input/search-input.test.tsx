@@ -17,6 +17,18 @@ test('the shortcut shows while empty and gives way to the clear', async () => {
   expect(screen.getByRole('button', { name: 'Clear search' })).toBeInTheDocument();
 });
 
+test('the shortcut is a key hint, named the reader’s platform’s way', () => {
+  vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' });
+  try {
+    render(<SearchInput value="" onChange={() => {}} shortcut="mod+K" aria-label="Search" />);
+    const hint = screen.getByText('Ctrl').closest('kbd')?.parentElement;
+    expect(hint?.tagName).toBe('KBD');
+    expect(hint).toHaveTextContent('Ctrl+K');
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
 test('loading beats the clear, so the target does not move under the pointer', () => {
   // A clear button that vanishes the moment results arrive is a target that
   // moves while you are aiming at it.

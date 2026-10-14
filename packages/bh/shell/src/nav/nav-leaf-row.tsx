@@ -5,6 +5,7 @@
 import { Link } from '@tanstack/react-router';
 import { cn } from '@bh/ui';
 import { EXACT_MATCH } from './exact-match';
+import { navRowName } from './nav-row-name';
 import { NAV_STYLES } from './nav-styles';
 import type { NavLeaf } from './nav-types';
 
@@ -28,6 +29,8 @@ export function NavLeafRow({ leaf, current, atPage, onNavigate }: NavLeafRowProp
       onClick={onNavigate}
       activeOptions={EXACT_MATCH}
       aria-current={atPage ? 'page' : undefined}
+      // Its words apart, "Open, 3": side by side, its parts ran together.
+      aria-label={navRowName(leaf.label, leaf.count)}
       className={cn(
         // pl-40 lines the label up with the parent's label: 14px gutter, 18px
         // icon and the 8px gap between them.

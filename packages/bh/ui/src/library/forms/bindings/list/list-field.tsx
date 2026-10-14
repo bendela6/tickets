@@ -56,36 +56,30 @@ export function ListField(p: InputProps<ListFieldConfig, Item[]>) {
               <Button
                 variant="ghost"
                 tone="neutral"
-                size="sm"
-                aria-label={`Move ${title} up`}
+                size="xs"
+                icon="arrow-up"
+                label={`Move ${title} up`}
                 disabled={(p.disabled ?? false) || index === 0}
                 onClick={() => move(index, index - 1)}
-                className="h-24 px-6"
-              >
-                <Icon name="arrow-up" size="sm" />
-              </Button>
+              />
               <Button
                 variant="ghost"
                 tone="neutral"
-                size="sm"
-                aria-label={`Move ${title} down`}
+                size="xs"
+                icon="arrow-down"
+                label={`Move ${title} down`}
                 disabled={(p.disabled ?? false) || index === items.length - 1}
                 onClick={() => move(index, index + 1)}
-                className="h-24 px-6"
-              >
-                <Icon name="arrow-down" size="sm" />
-              </Button>
+              />
               <Button
                 variant="ghost"
                 tone="neutral"
-                size="sm"
-                aria-label={`Remove ${title}`}
+                size="xs"
+                icon="trash"
+                label={`Remove ${title}`}
                 disabled={p.disabled}
                 onClick={() => set(items.filter((_, at) => at !== index))}
-                className="h-24 px-6"
-              >
-                <Icon name="trash" size="sm" />
-              </Button>
+              />
             </div>
             <NestedFields
               name={`${p.name}.${index}`}

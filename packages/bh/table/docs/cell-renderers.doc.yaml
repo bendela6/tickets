@@ -42,8 +42,8 @@ body:
       `external`.
     - **`ImageColumn`** draws the picture at the value's address, named by
       `fallback(row)`, and an avatar from that name when there is none.
-    - **`ActionsColumn`** draws an icon button for each item, named by its
-      `label` and coloured by its `tone`, shown while the row is hovered or a
+    - **`ActionsColumn`** draws an icon-only Button for each item, named by
+      its `label`, which is also its tooltip, and coloured by its `tone`, shown while the row is hovered or a
       button has keyboard focus. Its column needs no `value`: each item's
       `onClick` is handed the row.
   - |

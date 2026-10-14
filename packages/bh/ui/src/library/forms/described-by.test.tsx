@@ -67,6 +67,17 @@ describe('a form field', () => {
     );
     expect(screen.getByLabelText(/^Width/)).toHaveAccessibleDescription('In pixels.');
   });
+
+  it('of kind checkbox is described by its box’s own line, then by its help', () => {
+    renderField('checkbox', {
+      label: undefined,
+      description: 'Only the team sees it.',
+      config: { label: 'Email me a copy', description: 'Sent to your profile’s address.' },
+    });
+    expect(screen.getByRole('checkbox', { name: 'Email me a copy' })).toHaveAccessibleDescription(
+      'Sent to your profile’s address. Only the team sees it.',
+    );
+  });
 });
 
 describe('a form field whose options fail to load', () => {

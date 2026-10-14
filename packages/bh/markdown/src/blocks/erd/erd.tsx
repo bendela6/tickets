@@ -1,5 +1,5 @@
 import { useId, useState, type PointerEvent } from 'react';
-import { Button, Icon } from '@bh/ui';
+import { Button } from '@bh/ui';
 import { BlockBar, BlockFrame, BlockTitle, Kicker } from '../parts';
 import { extentOf, placeTables, relationsOf } from './layout';
 import type { ErdLayout, ErdModel, Point } from './schema';
@@ -162,38 +162,29 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
           <Button
             variant="ghost"
             tone="neutral"
-            size="sm"
-            aria-label="Zoom out"
-            title="Zoom out"
+            size="xs"
+            icon="minus"
+            label="Zoom out"
             disabled={zoom <= MIN_ZOOM}
             onClick={() => setZoom((before) => clampZoom(before - ZOOM_STEP))}
-            className="h-24 w-24 p-0"
-          >
-            <Icon name="minus" size="sm" />
-          </Button>
+          />
           <Button
             variant="ghost"
             tone="neutral"
-            size="sm"
-            aria-label="Reset zoom and layout"
-            title="Reset zoom and layout"
+            size="xs"
+            icon="refresh"
+            label="Reset zoom and layout"
             onClick={reset}
-            className="h-24 w-24 p-0"
-          >
-            <Icon name="refresh" size="sm" />
-          </Button>
+          />
           <Button
             variant="ghost"
             tone="neutral"
-            size="sm"
-            aria-label="Zoom in"
-            title="Zoom in"
+            size="xs"
+            icon="plus"
+            label="Zoom in"
             disabled={zoom >= MAX_ZOOM}
             onClick={() => setZoom((before) => clampZoom(before + ZOOM_STEP))}
-            className="h-24 w-24 p-0"
-          >
-            <Icon name="plus" size="sm" />
-          </Button>
+          />
         </span>
       </BlockBar>
       <p id={hint} className="sr-only">

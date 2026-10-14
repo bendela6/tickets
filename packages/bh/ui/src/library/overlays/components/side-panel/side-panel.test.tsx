@@ -168,6 +168,50 @@ describe('SidePanel', () => {
     expect(screen.queryByText('Panel body')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show Navigation' })).toBeInTheDocument();
   });
+
+  it('below the breakpoint, puts its button where it docks, clear of a bar above the page', () => {
+    mockViewport(true);
+    // A frame's bar above the page, as AppShell's is on a phone, and the
+    // page's row the panel docks in.
+    render(
+      <>
+        <header>Top bar</header>
+        <div data-testid="row">
+          <SidePanel label="Navigation" collapsible overlayBelow="md">
+            <p>Panel body</p>
+          </SidePanel>
+          <div>Content</div>
+        </div>
+      </>,
+    );
+    const show = screen.getByRole('button', { name: 'Show Navigation' });
+    // jsdom lays nothing out, so this holds what the browser draws from it:
+    // the button floats over its own place in the row, which comes after the
+    // bar, not over the window, whose top the bar holds.
+    expect(show).not.toHaveClass('fixed');
+    expect(show).toHaveClass('absolute');
+    const place = show.parentElement;
+    expect(place).toHaveClass('relative', 'w-0');
+    expect(place?.parentElement).toBe(screen.getByTestId('row'));
+  });
+
+  it('draws no reopen button when the page opens it from its own, and keeps the rail', async () => {
+    const viewport = mockViewport(true);
+    renderPanel({ collapsible: true, overlayBelow: 'md', reopenButton: false });
+    expect(screen.queryByRole('button', { name: 'Show Navigation' })).toBeNull();
+
+    // Docked, the rail is the panel's own and stays.
+    viewport.set(false);
+    await userEvent.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).toBeInTheDocument();
+  });
+
+  it('draws no floating button at the edge either, without one', async () => {
+    mockViewport(false);
+    renderPanel({ collapsible: true, collapsedTo: 'edge', reopenButton: false });
+    await userEvent.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+    expect(screen.queryByRole('button', { name: 'Show Navigation' })).toBeNull();
+  });
 });
 
 describe('SidePanel — controlled', () => {

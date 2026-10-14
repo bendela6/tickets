@@ -396,3 +396,22 @@ test('a grouped list is a listbox of groups of options, as axe reads it', async 
   const detail = results.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.html}`));
   expect(detail).toEqual([]);
 });
+
+test('an option’s icon leads its row, unless the caller draws a leading of its own', () => {
+  const options: Option[] = [
+    { value: 'a', label: 'Alpha', icon: 'circle' },
+    { value: 'b', label: 'Beta', icon: 'circle' },
+  ];
+  render(
+    list({
+      options,
+      // The caller's leading for Alpha; nothing for Beta, where the icon shows.
+      renderLeading: (option) => (option.value === 'a' ? <i data-testid="avatar" /> : null),
+    }),
+  );
+
+  const alpha = screen.getByRole('option', { name: 'Alpha' });
+  expect(within(alpha).getByTestId('avatar')).toBeInTheDocument();
+  expect(alpha.querySelector('svg')).toBeNull();
+  expect(screen.getByRole('option', { name: 'Beta' }).firstElementChild?.tagName).toBe('svg');
+});

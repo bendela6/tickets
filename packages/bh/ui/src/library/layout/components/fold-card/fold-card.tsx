@@ -6,7 +6,10 @@ import { FoldRow, useFoldOpen } from '../disclosure/fold';
 interface FoldCardProps {
   /** The card's title, in its header beside the chevron. */
   title: ReactNode;
-  /** Beside the title while folded: what the card holds, cut to one line. Gone once open. */
+  /**
+   * Beside the title while folded: what the card holds, cut to one line, and
+   * cut first in a narrow card, so the title keeps its words. Gone once open.
+   */
   summary?: ReactNode;
   /**
    * Whether it is open. Leave it out and the card holds its own, from

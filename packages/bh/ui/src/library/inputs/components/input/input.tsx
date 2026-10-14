@@ -100,6 +100,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // cannot drift from the bare one — the bug this component would otherwise
   // grow is a `readOnly` that works until someone adds a trailing icon.
   const control = {
+    // The caller's ref, and the draft's: it hears an Escape aimed at the
+    // field before a dialog around it does.
+    ref: (node: HTMLInputElement | null) => {
+      edit.ref(node);
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    },
     value: edit.draft,
     // The contract's onChange takes the value. Unwrapping the event here is the
     // only translation this component owes the DOM, and the event goes second
@@ -131,7 +141,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     return (
       <input
         {...rest}
-        ref={ref}
         {...control}
         className={fieldClass({
           state: field.state,
@@ -180,7 +189,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {leading}
       <input
         {...rest}
-        ref={ref}
         {...control}
         className="text-gray-12 placeholder:text-gray-9 min-w-0 flex-1 bg-transparent p-0 font-sans outline-none"
       />

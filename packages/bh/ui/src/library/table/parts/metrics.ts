@@ -1,3 +1,4 @@
+import type { CellCopy } from '@bh/table';
 import type { CSSProperties } from 'react';
 
 /**
@@ -254,6 +255,23 @@ export function rowHeightFor(density: Density): number {
  */
 export const CELL_FOCUS_RING =
   'pointer-events-none absolute -top-1 -right-1 -bottom-1 left-0 z-1 border-1 border-indigo-9';
+
+/**
+ * The ring's colour for a moment after Ctrl+C copied the cell: green when it
+ * copied, red when the clipboard refused. It replaces the indigo, so the
+ * same rectangle that said "here" says how the copy went.
+ */
+export const CELL_COPY_RING = {
+  copied: 'border-green-9',
+  failed: 'border-red-9',
+} as const satisfies Record<CellCopy, string>;
+
+/**
+ * Where the copied cell's word sits: over the cell's right end, centred on its
+ * height, above the ring. It covers the end of the content for the moment it
+ * shows, as a tag laid on the cell would, and takes no pointer.
+ */
+export const CELL_COPY_TAG = 'pointer-events-none absolute top-1/2 right-6 z-1 -translate-y-1/2';
 
 /**
  * The focused cell's fill, named so a ROW can set it and a CELL can use it.

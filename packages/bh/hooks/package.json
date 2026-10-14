@@ -1,0 +1,33 @@
+{
+  "name": "@bh/hooks",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check:circular": "bh-madge src",
+    "lint": "bh-lint src/ docs/examples/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@bh/config": "workspace:*",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^29.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "sideEffects": false
+}

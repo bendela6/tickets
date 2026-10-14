@@ -30,8 +30,8 @@ body:
     `destructive` paints an item red, and a `MenuSeparator` sets it apart.
   - demo: examples/destructive.tsx
   - |
-    From an icon button, named with `aria-label`. A `disabled` item is
-    dimmed, and the arrow keys pass over it.
+    From an icon-only Button, named by its `label`, which is also its
+    tooltip. A `disabled` item is dimmed, and the arrow keys pass over it.
   - demo: examples/icon-trigger.tsx
   - |
     A `MenuSub` is a row that opens a second menu beside it: a

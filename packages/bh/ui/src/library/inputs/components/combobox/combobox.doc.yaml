@@ -9,7 +9,8 @@ body:
     `value` is `string | null`, since a single choice can always be empty.
     There is no clear button: a value is changed by picking another. The
     field shows the chosen label as plain text, never a chip, with a dot
-    before it when the option has a `color`, because the colour is data.
+    before it when the option has a `color`, because the colour is data, and
+    its `icon` before that.
   - h2: Import
   - code: import { Combobox } from '@bh/ui';
     lang: tsx
@@ -23,6 +24,11 @@ body:
     An option's `color` puts a dot before the label on the field, and draws
     the option as a pill in the list.
   - demo: examples/coloured-options.tsx
+  - |
+    An option's `icon` leads its row in the list, and the field once it is
+    chosen, before the dot of its `color`. Here, a parcel's stage, without
+    search.
+  - demo: examples/options-with-icons.tsx
   - |
     `groupOf` says which group an option is in, and `groups` names the groups
     in the order the list shows them. Each group gets a heading, and a group
@@ -53,9 +59,9 @@ body:
   - |
     `searchable={false}` makes it a select, for a short, fixed set: over a
     few options a search box is noise, and it costs a keystroke to reach the
-    list. The list opens at the field's width, takes the focus itself, and
-    puts the cursor on the chosen option, so Enter straight away keeps the
-    value. The arrows open it as well as Enter and Space, and typing jumps to
+    list. The list opens at least as wide as the field, takes the focus
+    itself, and puts the cursor on the chosen option, so Enter straight away
+    keeps the value. The arrows open it as well as Enter and Space, and typing jumps to
     the first option whose label starts with what was typed, as on a native
     select. Typing on the closed field opens the list there.
   - demo: examples/without-search.tsx
@@ -64,6 +70,12 @@ body:
     with search. Here, typing "b" goes to Blueberry: Blackberry can't be
     picked, so typing steps over it as the arrows do.
   - demo: examples/grouped-without-search.tsx
+  - |
+    The list grows past a narrow field with its widest option, or a disabled
+    option's reason, up to 320 pixels, so the reason reads in a line or two
+    rather than a word or two a line. A field wider than that keeps its own
+    width.
+  - demo: examples/in-a-narrow-field.tsx
   - |
     With no visible label to point at it, such as a filter under a column
     header, `aria-label` names the field.

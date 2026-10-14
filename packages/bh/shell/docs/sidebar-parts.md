@@ -145,7 +145,8 @@ calls `onToggleCollapsed` to close it.
   icon button after it, as "New order" beside Shop above.
 - **`NavRow`**: one destination, a 42-pixel link with its icon, label,
   count and dots. It runs edge to edge, so the lit fill reaches the
-  sidebar's border, and its focus ring is drawn inside it.
+  sidebar's border, and its focus ring is drawn inside it. Its
+  `aria-label` says its label, count and status apart: "Orders, 12".
 - **`NavBranch`**: a destination with pages: its row, its chevron, and a
   `NavLeafRow` for each page, indented under the label, 32 pixels tall,
   with no icon.
@@ -164,8 +165,10 @@ binds it, and it expands the sidebar and focuses the field. With
 `onSearch`, the field leaves it alone and `AppShell` binds it, since on a
 phone the field is only there while the drawer is open. A frame of your
 own that passes `onSearch` binds the shortcut itself:
-`isAppleShortcutPlatform` says whether it is ⌘K or Ctrl K, and
-`shortcutLabel` is the hint the field shows.
+`isAppleShortcutPlatform` says whether it is ⌘K or Ctrl+K. The field's
+hint is a [Kbd](../../ui/src/library/primitives/components/kbd/kbd.md), `keys="mod+K"`, which names
+the key the same way; draw one for a hint of your own.
+`shortcutLabel`, the hint's text before it, is deprecated.
 
 ## Shared classes
 
@@ -349,6 +352,8 @@ Returns `boolean`.
 shortcutLabel(): string
 ```
 
-The label for the search shortcut on this platform.
+Deprecated: the label the search field's hint showed, `⌘K` or `Ctrl K`. The
+field draws `<Kbd keys="mod+K" />` from `@bh/ui` now, which names the key
+the same way and draws the cap.
 
 Returns `string`.

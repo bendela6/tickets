@@ -24,6 +24,7 @@ import {
 import {
   GROUP_ROW_HEIGHT,
   ROW_HEIGHT,
+  type CellCopy,
   type CellFocusProps,
   type CellPin,
   type CellRef,
@@ -605,6 +606,24 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     onSelectionChange(toggleSelection(selectedIds, id));
   };
 
+  // A copy the skin wrote, and how it went, held for a moment on the cell it
+  // came from: the skin says whether it worked, so only it is told.
+  const [copied, setCopied] = useState<{ cell: CellRef; copy: CellCopy } | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+  const onCopyCell = render.onCopyCell;
+  const copyCell = onCopyCell
+    ? (cell: CellRef, text: string) => {
+        void onCopyCell(text)
+          .catch(() => false)
+          .then((ok) => {
+            clearTimeout(copyTimer.current);
+            setCopied({ cell, copy: ok ? 'copied' : 'failed' });
+            copyTimer.current = setTimeout(() => setCopied(null), COPY_HOLD_MS);
+          });
+      }
+    : undefined;
+
   const focus = useCellFocus({
     // The clip box is the table's DOM root as far as focus is concerned: every
     // cell is inside it, and it is where focus parks when the focused row
@@ -655,6 +674,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
       }
     },
     onSelect: selectable ? selectRow : undefined,
+    onCopy: copyCell,
   });
 
   const gridTemplate = columns.map((c) => trackSize(c, state.widths)).join(' ');
@@ -937,6 +957,10 @@ export function Table<T>(props: TableProps<T>): ReactNode {
                 focusProps: focus.focusPropsFor(rowIndex, col.key),
                 pin: pins.get(col.key),
                 trailing: trailingSpace && colIndex === lastColumn,
+                copy:
+                  copied?.cell.rowIndex === rowIndex && copied.cell.columnKey === col.key
+                    ? copied.copy
+                    : undefined,
               })}
             </Fragment>
           );
@@ -1201,6 +1225,10 @@ const MIN_FRAME_HEIGHT = 200;
 /** How long the scrollbar stays up after the table stops moving. Long enough
  *  to see where you landed, short enough not to sit there. */
 const BAR_LINGER_MS = 900;
+
+/** How long a copied cell says how its copy went: as long as `useCopy` in
+ *  `@bh/ui` holds its own. */
+const COPY_HOLD_MS = 1500;
 
 /** The scrollbar thumb's floor. Proportional below this and a table of a
  *  hundred columns would offer a two-pixel target. */

@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { Icon, type IconName } from '../../../primitives/components/icon';
 import { Combobox } from './combobox';
 import type { Option, OptionGroup } from '../../contract';
 
@@ -550,4 +551,80 @@ test('without search, two on one page keep their own option ids', async () => {
   }
   expect(ids).toHaveLength(TYPES.length * 2);
   expect(new Set(ids).size).toBe(ids.length);
+});
+
+// An option's `icon`: before its label in the list, and on the field once
+// chosen, as a colour's dot is. The same list draws it without search, and
+// under MultiCombobox.
+
+const WITH_ICONS: Option[] = [
+  { value: 'todo', label: 'To do', icon: 'circle' },
+  { value: 'doing', label: 'In progress', icon: 'circle-half', color: 'blue' },
+  { value: 'done', label: 'Done', icon: 'circle-check' },
+  { value: 'later', label: 'Later' },
+];
+
+/** The glyph an Icon draws for `name`, to find it among others. */
+function glyph(name: IconName): string {
+  const { container, unmount } = render(<Icon name={name} />);
+  const drawn = container.querySelector('svg')?.innerHTML ?? '';
+  unmount();
+  return drawn;
+}
+
+/** The glyphs drawn inside an element, in order. */
+function glyphsIn(element: HTMLElement): string[] {
+  return [...element.querySelectorAll('svg')].map((svg) => svg.innerHTML);
+}
+
+test('the list draws an option’s icon before its label', async () => {
+  render(<Combobox options={WITH_ICONS} value={null} onChange={() => {}} placeholder="Status" />);
+  await userEvent.click(screen.getByRole('button', { name: /status/i }));
+
+  const done = await screen.findByRole('option', { name: 'Done' });
+  expect(glyphsIn(done)).toEqual([glyph('circle-check')]);
+  // Before the label: the glyph is the row's first child.
+  expect(done.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+  // An option with none draws none.
+  expect(glyphsIn(screen.getByRole('option', { name: 'Later' }))).toEqual([]);
+});
+
+test('the field draws the chosen option’s icon, then its dot, then its label', () => {
+  render(<Combobox options={WITH_ICONS} value="doing" onChange={() => {}} />);
+  const field = screen.getByRole('button', { name: /in progress/i });
+
+  // The icon, and the chevron after the label.
+  expect(glyphsIn(field)).toEqual([glyph('circle-half'), glyph('chevron-down')]);
+  const value = field.firstElementChild as HTMLElement;
+  expect(value.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+  expect(value.querySelector('.bg-blue-9')).not.toBeNull();
+});
+
+test('without search, the list and the field draw the icon too', async () => {
+  render(<Select options={WITH_ICONS} value="done" />);
+  expect(glyphsIn(screen.getByRole('combobox'))[0]).toBe(glyph('circle-check'));
+
+  await openSelect();
+  expect(glyphsIn(await screen.findByRole('option', { name: 'To do' }))).toEqual([glyph('circle')]);
+});
+
+test('without search, the list is at least the field’s width and grows with its rows, to 320px', async () => {
+  render(<Select />);
+  await openSelect();
+  const popup = screen.getByRole('listbox').closest<HTMLElement>('[role="dialog"]');
+  if (!popup) {
+    throw new Error('the list has no popup around it');
+  }
+  // jsdom lays nothing out, so this holds the contract the browser draws:
+  // as wide as its content, no narrower than the field, no wider than 320.
+  expect(classes(popup)).toEqual(
+    expect.arrayContaining(['w-max', 'min-w-(--radix-popover-trigger-width)', 'max-w-320']),
+  );
+});
+
+test('with search, the list keeps a width of its own', async () => {
+  render(<Combobox options={OPTIONS} value={null} onChange={() => {}} placeholder="Priority" />);
+  await userEvent.click(screen.getByRole('button', { name: /priority/i }));
+  const popup = (await screen.findByRole('listbox')).closest<HTMLElement>('[role="dialog"]');
+  expect(popup && classes(popup)).not.toContain('w-max');
 });

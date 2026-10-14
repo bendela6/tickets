@@ -1,6 +1,13 @@
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { Tooltip as RadixTooltip } from 'radix-ui';
 import { cn } from '../../../../style/cn';
+
+const DELAY = 300;
+
+// Whether a TooltipProvider is above. Radix's Tooltip throws without its
+// Provider, and every Button with a `label` draws a Tooltip, so one outside a
+// provider (a test, a page that never set one up) brings its own instead.
+const Provided = createContext(false);
 
 /** Sets the delay for every Tooltip under it: 300 milliseconds of hover before one shows. */
 export function TooltipProvider({
@@ -9,7 +16,11 @@ export function TooltipProvider({
   /** The app, or the part of it that has tooltips. */
   children: ReactNode;
 }) {
-  return <RadixTooltip.Provider delayDuration={300}>{children}</RadixTooltip.Provider>;
+  return (
+    <Provided.Provider value>
+      <RadixTooltip.Provider delayDuration={DELAY}>{children}</RadixTooltip.Provider>
+    </Provided.Provider>
+  );
 }
 
 interface TooltipProps {
@@ -25,7 +36,8 @@ interface TooltipProps {
 
 /** A short hint that shows when its trigger is hovered or focused. */
 export function Tooltip({ content, children, side = 'top', className }: TooltipProps) {
-  return (
+  const provided = useContext(Provided);
+  const root = (
     <RadixTooltip.Root>
       <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
       <RadixTooltip.Portal>
@@ -43,5 +55,10 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>
+  );
+  return provided ? (
+    root
+  ) : (
+    <RadixTooltip.Provider delayDuration={DELAY}>{root}</RadixTooltip.Provider>
   );
 }

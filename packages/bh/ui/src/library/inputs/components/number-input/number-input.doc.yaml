@@ -49,7 +49,7 @@ body:
       - keys: [Enter]
         does: Commits the draft, when the field holds one.
       - keys: [Escape]
-        does: Drops the draft, when the field holds one, and puts the value back.
+        does: Drops the draft, when the field holds one, and puts the value back. In a dialog or a drawer the same press closes it, and the draft never commits.
   - |
     The field is an `<input type="number">` with the role `spinbutton`, and
     the ref lands on it. The steppers are buttons named "Increment" and

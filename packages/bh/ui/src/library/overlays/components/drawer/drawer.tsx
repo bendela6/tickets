@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { cn } from '../../../../style/cn';
-import { Icon } from '../../../primitives/components/icon';
+import { Button } from '../../../primitives/components/button';
 import {
   usePanelWidth,
   usePersistedFlag,
@@ -140,9 +140,6 @@ export function Drawer({
   );
 }
 
-const CONTROL =
-  'inline-flex size-28 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset hover:text-gray-12';
-
 /** The drawer's Close button, and its Maximize button when it is `maximizable`. Only inside a Drawer. */
 export function DrawerControls({
   className,
@@ -158,18 +155,17 @@ export function DrawerControls({
   return (
     <div className={cn('flex shrink-0 items-center gap-2', className)}>
       {maximizable ? (
-        <button
-          type="button"
-          aria-label={maximized ? 'Restore' : 'Maximize'}
-          title={maximized ? 'Restore' : 'Maximize'}
+        <Button
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          icon={maximized ? 'minimize' : 'maximize'}
+          label={maximized ? 'Restore' : 'Maximize'}
           onClick={() => setMaximized(!maximized)}
-          className={CONTROL}
-        >
-          <Icon name={maximized ? 'minimize' : 'maximize'} size="md" />
-        </button>
+        />
       ) : null}
-      <RadixDialog.Close aria-label="Close" title="Close" className={CONTROL}>
-        <Icon name="x" size="md" />
+      <RadixDialog.Close asChild>
+        <Button variant="ghost" tone="neutral" size="sm" icon="x" label="Close" />
       </RadixDialog.Close>
     </div>
   );

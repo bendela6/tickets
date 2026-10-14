@@ -90,21 +90,19 @@ export function Destructive() {
 }
 ```
 
-From an icon button, named with `aria-label`. A `disabled` item is
-dimmed, and the arrow keys pass over it.
+From an icon-only Button, named by its `label`, which is also its
+tooltip. A `disabled` item is dimmed, and the arrow keys pass over it.
 
 **Icon trigger**
 
 ```tsx
-import { Button, Icon, Menu, MenuContent, MenuItem, MenuTrigger } from '@bh/ui';
+import { Button, Menu, MenuContent, MenuItem, MenuTrigger } from '@bh/ui';
 
 export function IconTrigger() {
   return (
     <Menu>
       <MenuTrigger asChild>
-        <Button variant="ghost" aria-label="More actions" className="w-36 p-0">
-          <Icon name="ellipsis" />
-        </Button>
+        <Button variant="ghost" icon="ellipsis" label="More actions" />
       </MenuTrigger>
       <MenuContent>
         <MenuItem>Open</MenuItem>

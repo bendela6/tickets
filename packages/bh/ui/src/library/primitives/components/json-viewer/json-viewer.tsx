@@ -15,8 +15,8 @@
 
 import { Fragment, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '../../../../style/cn';
-import { useCopy } from '../copy-button';
 import { Icon } from '../icon';
+import { useCopy } from '../use-copy';
 import { JsonLine, type LineEditing } from './parts/json-line';
 import { LineNumber } from './parts/line-number';
 import { RawText } from './parts/raw-text';
@@ -165,7 +165,7 @@ export function JsonViewer({
   const copyText = useMemo(() => {
     return invalid === null ? rowsToText(rows) : (source ?? '');
   }, [invalid, rows, source]);
-  const { copied, copy } = useCopy();
+  const { copied, failed, copy } = useCopy();
 
   const toggle = (index: number, deep: boolean) => {
     const row = rows[index];
@@ -269,7 +269,7 @@ export function JsonViewer({
   const fixingText = invalid !== null && editor !== null;
 
   const header: ReactNode = toolbar && (
-    <div className="border-gray-6 bg-gray-1 flex items-center gap-6 border-b-1 px-10 py-7">
+    <div className="border-gray-6 bg-gray-1 flex h-36 shrink-0 items-center gap-6 border-b-1 px-10">
       <span className="text-10 text-gray-11 min-w-0 flex-1 truncate font-mono">{label}</span>
       {invalid === null && (
         <>
@@ -288,11 +288,13 @@ export function JsonViewer({
       {editable && (
         <>
           <ToolButton
+            icon="undo"
             label="Undo"
             disabled={!history.canUndo}
             onClick={() => history.undo(current)}
           />
           <ToolButton
+            icon="redo"
             label="Redo"
             disabled={!history.canRedo}
             onClick={() => history.redo(current)}
@@ -300,8 +302,9 @@ export function JsonViewer({
         </>
       )}
       <ToolButton
-        icon={copied ? 'check' : 'copy'}
-        label={copied ? 'Copied' : 'Copy'}
+        icon={copied ? 'check' : failed ? 'x' : 'copy'}
+        label={copied ? 'Copied' : failed ? 'Could not copy' : 'Copy'}
+        tone={copied ? 'success' : failed ? 'danger' : 'neutral'}
         onClick={() => void copy(copyText)}
       />
     </div>

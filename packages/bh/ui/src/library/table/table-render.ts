@@ -1,5 +1,6 @@
 import type { TableRender } from '@bh/table';
 import { cn } from '../../style';
+import { copyText } from '../primitives/components/use-copy';
 import { SCROLL_EDGE, TABLE_FRAME } from './parts/metrics';
 import { renderStatusBar } from './parts/render-status-bar';
 import { renderHbar } from './parts/render-hbar';
@@ -68,5 +69,8 @@ export function tableRender<T>(opts: { empty?: EmptyCopy } = {}): TableRender<T>
     hbar: renderHbar,
     resizeGuide: renderResizeGuide,
     scrim: renderScrim,
+    // Ctrl+C on a cell writes through the same `copyText` as every copy
+    // button, and `renderTd` shows how it went.
+    onCopyCell: copyText,
   };
 }

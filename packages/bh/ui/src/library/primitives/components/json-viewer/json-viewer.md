@@ -2,7 +2,7 @@
 title: JsonViewer
 summary: Reads a JSON document, folded and numbered, and edits it when given an
   `onChange`.
-related: [CopyButton, Prose]
+related: [useCopy, Prose]
 ---
 
 [//]: # 'written from json-viewer.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -26,7 +26,8 @@ import { JsonViewer } from '@bh/ui';
 The document is pretty-printed, coloured by kind and numbered. Every
 container folds at its chevron, and Alt-click folds or opens its whole
 branch. The line numbers are the document's, so they skip across a fold.
-Copy, in the toolbar, copies the whole document unfolded.
+Copy, in the toolbar, copies the whole document unfolded, and turns to a
+check, or to a cross when the browser refused.
 
 A value JSON has no spelling for (`undefined`, `NaN`, a function) is drawn
 in red rather than dropped, and a cycle reads `[Circular]`.
@@ -149,10 +150,14 @@ that does not.
 
 The document is a `role="group"` named by `label`, `JSON` by default.
 Each chevron is a button named for its line, such as `Collapse weather`,
-with `aria-expanded`. The line numbers are hidden from assistive tech. A
-parse error is a `role="alert"`, and an editor's field is labelled and
-sets `aria-invalid` while its draft will not parse. After an edit, the
-focus returns to the document, which takes focus but is not a tab stop.
+with `aria-expanded`. The toolbar's tools, and the text editor's Save and
+Cancel, are icon-only buttons, each named by its tooltip: Collapse,
+Expand, Edit as text, Undo, Redo, and Copy, which says Copied or Could
+not copy for a moment after. The line numbers are hidden from assistive
+tech. A parse error is a `role="alert"`, and an editor's field is
+labelled and sets `aria-invalid` while its draft will not parse. After an
+edit, the focus returns to the document, which takes focus but is not a
+tab stop.
 
 ## Props
 

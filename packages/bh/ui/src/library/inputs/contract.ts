@@ -74,10 +74,11 @@ export const CONTROL_LADDER = {
  * ones with nowhere to paint one. `icon` reads the same way: drawn by the
  * controls with room for a glyph beside the label, ignored by the ones without.
  * So does `description`, drawn only where there is room for a line under the
- * label, which is RadioGroup today. On the shared vocabulary rather than a
- * RadioGroup option of its own, because a second option type is what this one
- * replaced, and because a form's `radio` field passes its options straight
- * through: one type is what lets a stored config carry the line too.
+ * label, which is RadioGroup and CheckboxGroup today. On the shared vocabulary
+ * rather than a RadioGroup option of its own, because a second option type is
+ * what this one replaced, and because a form's `radio` and `checkbox-group`
+ * fields pass their options straight through: one type is what lets a stored
+ * config carry the line too.
  */
 export interface Option {
   /** What `onChange` reports when this option is picked. */
@@ -106,8 +107,8 @@ export interface Option {
    */
   icon?: IconName;
   /**
-   * A line under the label, saying what choosing it does: drawn by RadioGroup,
-   * ignored by the controls with no room for it.
+   * A line under the label, saying what choosing it does: drawn by RadioGroup
+   * and CheckboxGroup, ignored by the controls with no room for it.
    *
    * Plain text, as `label` is, so an option stays data a stored config can hold.
    */

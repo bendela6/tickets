@@ -21,14 +21,16 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 
 - [Avatar](../src/library/primitives/components/avatar/avatar.md): Shows a name as its initials in a coloured disc or square.
 - [Button](../src/library/primitives/components/button/button.md): Starts an action: save, open a dialog, run a job.
-- [CopyButton](../src/library/primitives/components/copy-button/copy-button.md): Copies a string to the clipboard and says whether it worked.
 - [Dot](../src/library/primitives/components/dot/dot.md): An 8-pixel disc in any CSS colour, for a colour known only at runtime.
 - [Icon](../src/library/primitives/components/icon/icon.md): Draws one glyph from the icon registry, in the colour of the text around it.
 - [JsonViewer](../src/library/primitives/components/json-viewer/json-viewer.md): Reads a JSON document, folded and numbered, and edits it when given an `onChange`.
+- [Kbd](../src/library/primitives/components/kbd/kbd.md): A key hint: one key, or a chord, drawn as a key cap.
+- [LogView](../src/library/primitives/components/log-view/log-view.md): Reads any app's log, line by line, its ANSI colours drawn, what failed, warned or passed highlighted, and its stack traces folding.
 - [Pill](../src/library/primitives/components/pill/pill.md): A compact label for one fact: a status, a type, a count.
-- [RelativeDate](../src/library/primitives/components/relative-date/relative-date.md): Shows a date as days from now: today, in 3 days, 2 days ago.
+- [RelativeDate](../src/library/primitives/components/relative-date/relative-date.md): Shows a date as days from now (today, in 3 days, 2 days ago); formatDateTime writes one out with its time.
 - [StatusDot](../src/library/primitives/components/status-dot/status-dot.md): Shows whether something is running right now.
 - [TextLink](../src/library/primitives/components/text-link/text-link.md): A link in a line of text: its strongest gray, underlined under the pointer.
+- [useCopy](../src/library/primitives/components/use-copy/use-copy.md): Copies text to the clipboard and says whether it worked, for a button of your own.
 
 ## Layout
 

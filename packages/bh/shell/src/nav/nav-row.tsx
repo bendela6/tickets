@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import { cn } from '@bh/ui';
 import { ActiveBar } from './active-bar';
 import { EXACT_MATCH } from './exact-match';
+import { navRowName } from './nav-row-name';
 import { NavStatusDot } from './nav-status-dot';
 import { NAV_STYLES } from './nav-styles';
 import type { NavItem } from './nav-types';
@@ -52,6 +53,8 @@ export function NavRow({
       onClick={onNavigate}
       activeOptions={exact ? EXACT_MATCH : undefined}
       aria-current={(exact ? atPage : current) ? 'page' : undefined}
+      // Its words apart, "Home, 2": side by side, its parts ran together.
+      aria-label={navRowName(item.label, item.count, item.status)}
       className={cn(
         'rounded-4 text-13 relative flex h-42 shrink-0 items-center gap-8 pl-14',
         endGap ? 'pr-40' : 'pr-12',

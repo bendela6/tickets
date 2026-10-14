@@ -14,6 +14,7 @@ type FieldProps = Pick<
 function Field({ value, onCommit, commit, onDraft, multiline }: FieldProps) {
   const edit = useInlineEdit({ value, onCommit, commit, onDraft });
   const shared = {
+    ref: edit.ref,
     'aria-label': 'Field',
     value: edit.draft,
     onBlur: edit.onBlur,

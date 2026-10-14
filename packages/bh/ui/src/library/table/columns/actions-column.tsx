@@ -1,6 +1,6 @@
 import type { Renderer } from '@bh/table';
 import { Button } from '../../primitives/components/button';
-import { Icon, type IconName } from '../../primitives/components/icon';
+import type { IconName } from '../../primitives/components/icon';
 import type { Tone } from '../../../style';
 
 interface ActionItem {
@@ -29,11 +29,6 @@ interface ActionsColumnOpts {
 // rather than the row. The buttons stay in the tree rather than being
 // conditionally rendered, so they remain keyboard-reachable (via
 // `focus-visible`) when nothing is hovered.
-//
-// Button has no `icon` prop — it only ever renders `children` — so the glyph
-// is passed as a child `<Icon>` rather than a prop. There is also no
-// icon-only size rung, so a size is squared off with `w-<n> p-0` matching that
-// size's height (`sm` is `h-28`, so `w-28 p-0`).
 export function ActionsColumn(opts: ActionsColumnOpts): Renderer<unknown> {
   return ({ row }) => {
     return (
@@ -45,23 +40,21 @@ export function ActionsColumn(opts: ActionsColumnOpts): Renderer<unknown> {
               variant="ghost"
               size="sm"
               tone={item.tone}
-              aria-label={item.label}
-              title={item.label}
+              icon={item.icon}
+              label={item.label}
               // Reached by stepping into the cell (Enter / F2), not by Tab —
               // see LinkColumn. `focus-visible:opacity-100` below still works:
               // a negative tabindex removes it from the tab ORDER, not from
               // being focusable.
               tabIndex={-1}
-              className="w-28 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               onClick={(e) => {
                 // The row opens a drawer on click; without this an action would do
                 // its own job and open the drawer behind it.
                 e.stopPropagation();
                 item.onClick(row);
               }}
-            >
-              <Icon name={item.icon} size="sm" />
-            </Button>
+            />
           );
         })}
       </div>

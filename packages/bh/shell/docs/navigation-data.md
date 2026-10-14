@@ -50,6 +50,9 @@ It may also carry:
 - **`children`**: pages of its own, each a `NavLeaf` with a `label`, a
   `path` and a `count` of its own.
 
+A screen reader reads a row's label, count and status apart, "Orders,
+12" or "Status, Up, with warnings", from the row's own `aria-label`.
+
 **A library**
 
 ```tsx
