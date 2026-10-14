@@ -5,7 +5,8 @@ import {
   createRootRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board, Item, ItemType } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
@@ -174,10 +175,159 @@ test('a ticket under a feature lists its subtickets', async () => {
   expect(screen.getByText('0/1 done')).toBeInTheDocument();
 });
 
-test('an item under a parent with no children of its own shows no children section', async () => {
+// The software scheme: an epic holds tasks, bugs and spikes, a task subtasks;
+// a bug and a spike hold nothing. CORE-7 is a subtask left under a bug from
+// before that rule.
+function softwareBoard(): Board {
+  return makeBoard({
+    plan: false,
+    prefix: 'CORE',
+    typeKeys: ['epic', 'task', 'bug', 'spike', 'subtask'],
+    nesting: [
+      ['epic', 'task'],
+      ['epic', 'bug'],
+      ['epic', 'spike'],
+      ['task', 'subtask'],
+    ],
+    items: [
+      { id: 11, key: 'CORE-1', type: 'epic', parentId: null, title: 'Speed up the board', status: 'todo' },
+      { id: 12, key: 'CORE-2', type: 'task', parentId: 11, title: 'Virtualize the rows', status: 'todo' },
+      { id: 13, key: 'CORE-3', type: 'subtask', parentId: 12, title: 'Measure the scroll', status: 'todo' },
+      { id: 14, key: 'CORE-4', type: 'bug', parentId: null, title: 'Rows jump on resize', status: 'todo' },
+      { id: 15, key: 'CORE-6', type: 'bug', parentId: null, title: 'Offsets reset', status: 'todo' },
+      { id: 16, key: 'CORE-7', type: 'subtask', parentId: 15, title: 'Repro harness', status: 'done' },
+    ],
+  });
+}
+
+function mockCreate() {
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    text: () => Promise.resolve(JSON.stringify({ id: 900, number: 99, key: 'NEW-1' })),
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+// What the add row posted: the new item's type and parent.
+async function created(fetchMock: ReturnType<typeof mockCreate>) {
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  const body = JSON.parse(String(init.body)) as { typeKey: string; parentId: number; values: unknown };
+  return { url, method: init.method, typeKey: body.typeKey, parentId: body.parentId, values: body.values };
+}
+
+test('adding a child to a feature makes a ticket', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = mockCreate();
+  renderItem(planBoard(), 'TK-80');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  // one type a feature holds, so no type to pick
+  expect(screen.queryByRole('combobox', { name: 'Child type' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Add subtask' })).not.toBeInTheDocument();
+  await userEvent.type(screen.getByRole('textbox', { name: 'Add ticket' }), 'Fix the picker{Enter}');
+
+  expect(await created(fetchMock)).toEqual({
+    url: '/api/projects/tk/items',
+    method: 'POST',
+    typeKey: 'ticket',
+    parentId: 2,
+    values: { title: 'Fix the picker' },
+  });
+});
+
+test('a ticket with no subtickets yet shows the row that adds one, and it makes a subticket', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = mockCreate();
   renderItem(planBoard(), 'TK-80.11');
   await screen.findByRole('dialog', { name: 'Item detail' });
 
-  expect(screen.queryByText('Subtasks')).not.toBeInTheDocument();
+  expect(screen.getByText('Subtasks')).toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: /^Status of / })).not.toBeInTheDocument();
+  await userEvent.type(screen.getByRole('textbox', { name: 'Add subticket' }), 'Write the test{Enter}');
+
+  const post = await created(fetchMock);
+  expect(post.typeKey).toBe('subticket');
+  expect(post.parentId).toBe(3);
+});
+
+test('an epic holding several types offers them, the first until another is picked', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = mockCreate();
+  renderItem(softwareBoard(), 'CORE-1');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  const childType = screen.getByRole('combobox', { name: 'Child type' });
+  expect(childType).toHaveTextContent('Task');
+  expect(screen.getByRole('textbox', { name: 'Add task' })).toBeInTheDocument();
+
+  await userEvent.click(childType);
+  expect(await screen.findAllByRole('option')).toHaveLength(3);
+  expect(screen.getByRole('option', { name: 'Task' })).toHaveAttribute('aria-selected', 'true');
+  expect(screen.getByRole('option', { name: 'Spike' })).toBeInTheDocument();
+  // only what an epic holds: never another epic, nor a subtask
+  expect(screen.queryByRole('option', { name: 'Subtask' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'Epic' })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('option', { name: 'Bug' }));
+
+  expect(screen.getByRole('combobox', { name: 'Child type' })).toHaveTextContent('Bug');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Add bug' }), 'Header flickers{Enter}');
+
+  const post = await created(fetchMock);
+  expect(post.typeKey).toBe('bug');
+  expect(post.parentId).toBe(11);
+});
+
+test('a refused child keeps its title and says why', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      text: () => Promise.resolve(JSON.stringify({ error: '"todo" is not a valid starting option' })),
+    }),
+  );
+  renderItem(softwareBoard(), 'CORE-1');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  const input = screen.getByRole('textbox', { name: 'Add task' });
+  await userEvent.type(input, 'Header flickers{Enter}');
+
+  expect(await screen.findByText('"todo" is not a valid starting option')).toBeInTheDocument();
+  expect(input).toHaveValue('Header flickers');
+});
+
+test("a software project's task still adds a subtask", async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = mockCreate();
+  renderItem(softwareBoard(), 'CORE-2');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  expect(childStatus('CORE-3')).toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Child type' })).not.toBeInTheDocument();
+  await userEvent.type(screen.getByRole('textbox', { name: 'Add subtask' }), 'Profile it{Enter}');
+
+  const post = await created(fetchMock);
+  expect(post.typeKey).toBe('subtask');
+  expect(post.parentId).toBe(12);
+});
+
+test('an item whose type holds nothing, with no children, shows no children section', async () => {
+  renderItem(softwareBoard(), 'CORE-4');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  expect(screen.queryByText('Subtasks')).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: /^Add / })).not.toBeInTheDocument();
+});
+
+test('an item whose type holds nothing still lists the children it has, with no add row', async () => {
+  renderItem(softwareBoard(), 'CORE-6');
+  await screen.findByRole('dialog', { name: 'Item detail' });
+
+  expect(childStatus('CORE-7')).toBeInTheDocument();
+  expect(screen.getByText('1/1 done')).toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: /^Add / })).not.toBeInTheDocument();
 });

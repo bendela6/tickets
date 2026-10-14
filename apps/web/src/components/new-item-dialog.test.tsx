@@ -254,7 +254,8 @@ test('skips the picker when only one creatable type exists', () => {
 
 test('SubtaskQuickCreate posts a subtask under the parent on Enter', async () => {
   const fetchMock = mockCreateFetch({ id: 501, number: 129 });
-  const board = makeBoard();
+  // a task holds subtasks only
+  const board = makeBoard({ childTypes: [{ parentTypeId: 1, childTypeId: 3 }] });
   const onCreated = vi.fn();
   renderWithProviders(
     <SubtaskQuickCreate
@@ -265,8 +266,8 @@ test('SubtaskQuickCreate posts a subtask under the parent on Enter', async () =>
       onCreated={onCreated}
     />,
   );
-  // compact type select defaults to the subtask type
-  expect(screen.getByRole('button', { name: 'Subtask' })).toBeInTheDocument();
+  // one type it may hold, so no type to pick
+  expect(screen.queryByRole('button', { name: 'Subtask' })).not.toBeInTheDocument();
 
   const input = screen.getByRole('textbox', { name: 'Subtask title' });
   await userEvent.type(input, 'Audit column-width persistence{Enter}');
@@ -286,4 +287,47 @@ test('SubtaskQuickCreate posts a subtask under the parent on Enter', async () =>
   });
   await waitFor(() => expect(onCreated).toHaveBeenCalledWith({ id: 501, number: 129 }));
   expect(input).toHaveValue('');
+});
+
+test('SubtaskQuickCreate offers the types the parent holds, the first by default', async () => {
+  const fetchMock = mockCreateFetch({ id: 502, number: 130 });
+  // a task here holds bugs and subtasks, never another task
+  const board = makeBoard({
+    childTypes: [
+      { parentTypeId: 1, childTypeId: 3 },
+      { parentTypeId: 1, childTypeId: 2 },
+    ],
+  });
+  renderWithProviders(
+    <SubtaskQuickCreate
+      projectKey="CORE"
+      board={board}
+      indexes={indexBoard(board)}
+      parent={board.items[0]!}
+      onCreated={vi.fn()}
+    />,
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Bug' }));
+  expect(screen.getByRole('option', { name: 'Subtask' })).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'Task' })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('option', { name: 'Subtask' }));
+
+  await userEvent.type(screen.getByRole('textbox', { name: 'Subtask title' }), 'Pin the width{Enter}');
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect((JSON.parse(String(init.body)) as { typeKey: string }).typeKey).toBe('subtask');
+});
+
+test('SubtaskQuickCreate shows nothing under a parent whose type holds no type', () => {
+  const board = makeBoard();
+  renderWithProviders(
+    <SubtaskQuickCreate
+      projectKey="CORE"
+      board={board}
+      indexes={indexBoard(board)}
+      parent={board.items[0]!}
+      onCreated={vi.fn()}
+    />,
+  );
+  expect(screen.queryByRole('textbox', { name: 'Subtask title' })).not.toBeInTheDocument();
 });

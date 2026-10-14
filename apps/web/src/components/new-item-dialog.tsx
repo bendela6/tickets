@@ -516,20 +516,29 @@ export function SubtaskQuickCreate({
   const { userId } = useCurrentUser();
   const createItem = useCreateItem();
 
-  const types = useMemo(() => board.types.filter((type) => !type.archivedAt), [board.types]);
-  const defaultTypeKey =
-    types.find((type) => type.key === SUBTASK_KEY)?.key ?? types[0]?.key ?? SUBTASK_KEY;
+  // What the parent's type may hold (structure.item_type_child_types), the
+  // scheme's first until another is picked: a plan feature's ticket, a
+  // software task's subtask.
+  const types = indexes.childTypesByParent.get(parent.typeId) ?? [];
   const [typeKey, setTypeKey] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const effectiveTypeKey = typeKey ?? defaultTypeKey;
+  const effectiveTypeKey = (types.find((type) => type.key === typeKey) ?? types[0])?.key ?? null;
 
   // Hint only — the server owns numbering; siblings count via the same index
   // the parent detail uses.
   const siblingCount = indexes.childrenByParent.get(parent.id)?.length ?? 0;
-  const nextChildKey = nextKey(board, indexes, { typeKey: effectiveTypeKey, parentId: parent.id });
+  const nextChildKey =
+    effectiveTypeKey !== null
+      ? nextKey(board, indexes, { typeKey: effectiveTypeKey, parentId: parent.id })
+      : null;
 
   const create = async () => {
-    if (userId === null || title.trim().length === 0 || createItem.isPending) {
+    if (
+      userId === null ||
+      effectiveTypeKey === null ||
+      title.trim().length === 0 ||
+      createItem.isPending
+    ) {
       return;
     }
     // A failure keeps the title for a retry; MutationErrorToasts says why.
@@ -548,6 +557,11 @@ export function SubtaskQuickCreate({
     setTitle('');
     onCreated(created);
   };
+
+  // A parent whose type holds nothing has nothing to add.
+  if (effectiveTypeKey === null) {
+    return null;
+  }
 
   return (
     <div
@@ -577,13 +591,15 @@ export function SubtaskQuickCreate({
       <span aria-hidden className="hidden shrink-0 font-mono text-10 text-gray-9 sm:inline">
         ↵ creates {nextChildKey}
       </span>
-      <Combobox
-        size="xs"
-        className="w-120 shrink-0"
-        options={types.map((type) => ({ value: type.key, label: type.label }))}
-        value={effectiveTypeKey}
-        onChange={(next) => setTypeKey(next)}
-      />
+      {types.length > 1 ? (
+        <Combobox
+          size="xs"
+          className="w-120 shrink-0"
+          options={types.map((type) => ({ value: type.key, label: type.label }))}
+          value={effectiveTypeKey}
+          onChange={(next) => setTypeKey(next)}
+        />
+      ) : null}
       <Button
         size="sm"
         loading={createItem.isPending}
