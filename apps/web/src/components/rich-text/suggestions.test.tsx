@@ -15,7 +15,7 @@ const suggestions = {
 };
 
 describe('suggestion popovers', () => {
-  it('typing @ opens the user list (with a PEOPLE section label + ↩ hint on the selected row) and Enter inserts a mention chip', async () => {
+  it('typing @ opens the user list (with a PEOPLE section label + Enter hint on the selected row) and Enter inserts a mention chip', async () => {
     const user = userEvent.setup();
     render(<RichTextEditor value="" onSave={vi.fn()} suggestions={suggestions} />);
     const surface = document.querySelector('[contenteditable="true"]')!;
@@ -23,7 +23,9 @@ describe('suggestion popovers', () => {
     await user.keyboard('@be');
     expect(await screen.findByText('beka')).toBeInTheDocument();
     expect(screen.getByText('PEOPLE')).toBeInTheDocument();
-    expect(screen.getByText('↩')).toBeInTheDocument(); // row 0 ('beka') is selected by default
+    // Row 0 ('beka') is selected by default. The hint is bh's Kbd, which names
+    // the reader's keys: Enter in jsdom, which is no Mac.
+    expect(screen.getByText('Enter')).toBeInTheDocument();
     await user.keyboard('{Enter}');
     expect(document.querySelector('[data-mention="beka"]')).not.toBeNull();
   });
