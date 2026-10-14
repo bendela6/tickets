@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { events, itemValues, items } from '@tickets/db';
+import { events, itemValues, items, optionTransitions, options } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../../test/db';
 import { runCommand } from '../run-command';
 import { itemCreate } from './create';
@@ -64,4 +64,38 @@ it('does not block creation on a required field that has been archived', async (
 
   const itemRows = await testDb.select().from(items).where(eq(items.id, result.id));
   expect(itemRows).toHaveLength(1);
+});
+
+// A bug may only start at triage (its entry edge). tickets' imported options
+// put "todo" before "triage", so the lowest-position to-do the bug allows was
+// "todo", and a bug made without a status, as the detail's add row makes one,
+// was refused: "todo" is not a valid starting option.
+it('starts a type at a status its entry edges allow, whatever the options\' order', async () => {
+  const fx = await seedFixture();
+  await testDb.update(options).set({ position: -1 }).where(eq(options.id, fx.optionIdByKey.get('status:todo')!));
+
+  const result = await runCommand(testDb, itemCreate, env(fx.actorId), {
+    projectKey: fx.projectKey,
+    typeKey: 'bug',
+    values: { title: 'Rows jump on resize' },
+  });
+
+  const [created] = await testDb.select().from(events).where(eq(events.kind, 'item.created'));
+  expect(created!.aggregateId).toBe(result.id);
+  expect((created!.payload as { values: Record<string, unknown> }).values.status).toBe('triage');
+});
+
+it('without entry edges, still starts a type at its lowest-position to-do', async () => {
+  const fx = await seedFixture();
+  await testDb.update(options).set({ position: -1 }).where(eq(options.id, fx.optionIdByKey.get('status:todo')!));
+  await testDb.delete(optionTransitions).where(eq(optionTransitions.toOptionId, fx.optionIdByKey.get('status:triage')!));
+
+  await runCommand(testDb, itemCreate, env(fx.actorId), {
+    projectKey: fx.projectKey,
+    typeKey: 'bug',
+    values: { title: 'Rows jump on resize' },
+  });
+
+  const [created] = await testDb.select().from(events).where(eq(events.kind, 'item.created'));
+  expect((created!.payload as { values: Record<string, unknown> }).values.status).toBe('todo');
 });
