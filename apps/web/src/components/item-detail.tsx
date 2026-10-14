@@ -6,7 +6,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Card, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@bh/ui';
+import { Button, Card, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, TextLink, useCopy } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -240,15 +240,17 @@ export function ItemDetail({
   );
 
   const breadcrumb = parent ? (
-    <button
-      type="button"
-      onClick={() => openItem(parent.key)}
-      className="flex w-fit min-w-0 items-center gap-6 bg-transparent p-0 text-left font-sans text-12/17 font-500 text-indigo-9 hover:underline"
-    >
-      <span aria-hidden>‹</span>
-      <span className="shrink-0 font-mono">{parent.key}</span>
-      <span className="truncate">{String(parent.values['title'] ?? '')}</span>
-    </button>
+    <TextLink asChild>
+      <button
+        type="button"
+        onClick={() => openItem(parent.key)}
+        className="flex w-fit min-w-0 items-center gap-6 text-left font-sans text-12/17 font-500"
+      >
+        <span aria-hidden>‹</span>
+        <span className="shrink-0 font-mono">{parent.key}</span>
+        <span className="truncate">{String(parent.values['title'] ?? '')}</span>
+      </button>
+    </TextLink>
   ) : null;
 
   const descriptionSection = descriptionField ? (
