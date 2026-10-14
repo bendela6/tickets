@@ -1,6 +1,6 @@
 import type { Option as Choice, OptionGroup } from '@bh/ui';
 import type { Option, StatusKind } from '../api/types';
-import { KIND_TONE } from './status';
+import { KIND_ICON, KIND_TONE } from './status';
 
 // The status kinds as a picker's headings, in the order work moves through them.
 export const STATUS_KIND_GROUPS: { key: StatusKind; label: string }[] = [
@@ -19,9 +19,9 @@ export interface StatusChoices {
 
 /**
  * What a status picker offers, for bh's `Combobox` with `searchable={false}`
- * (spread it in): each of a type's statuses under its kind, in its kind's
- * color, and each one the workflow doesn't allow shown but disabled, saying
- * why.
+ * (spread it in): each of a type's statuses under its kind, with its kind's
+ * icon and color, and each one the workflow doesn't allow shown but disabled,
+ * saying why.
  *
  * `legal` is what the workflow allows (legalStatusTargets); `from` is the
  * status the item is in, null for a new item, whose statuses are where the
@@ -39,7 +39,13 @@ export function statusChoices(
   const kindOf = new Map(statuses.map((status) => [status.value, status.kind ?? 'todo']));
   return {
     options: statuses.map((status) => {
-      const choice: Choice = { value: status.value, label: status.label, color: KIND_TONE[status.kind ?? 'todo'] };
+      const kind = status.kind ?? 'todo';
+      const choice: Choice = {
+        value: status.value,
+        label: status.label,
+        icon: KIND_ICON[kind],
+        color: KIND_TONE[kind],
+      };
       if (allowed.has(status.value)) {
         return choice;
       }
