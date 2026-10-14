@@ -1,6 +1,6 @@
 import type { Project } from '../../api/types';
 import { repositoryLink } from '../../utils/repository-link';
-import { cn, CopyButton, Icon, TextLink, Tooltip } from '@bh/ui';
+import { Button, cn, Icon, TextLink, Tooltip, useCopy } from '@bh/ui';
 
 // The project's repository on its page, under its name: a web link (GitHub's,
 // say) opens in a new tab; an ssh or git@host:path link shows as text with a
@@ -8,6 +8,7 @@ import { cn, CopyButton, Icon, TextLink, Tooltip } from '@bh/ui';
 // names no repository; the branch shows only when one is set, since none means
 // the remote's own default.
 export function ProjectRepository({ project, className }: { project: Project; className?: string }) {
+  const { copy, copied, failed } = useCopy();
   if (project.repositoryUrl === null) return null;
   const link = repositoryLink(project.repositoryUrl);
   return (
@@ -31,7 +32,16 @@ export function ProjectRepository({ project, className }: { project: Project; cl
             <Icon name="link" size="sm" />
             <span className="truncate select-all">{link.text}</span>
           </span>
-          <CopyButton value={link.text} label="Copy link" className="shrink-0 py-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            tone={copied ? 'success' : failed ? 'danger' : 'neutral'}
+            onClick={() => void copy(link.text)}
+            className="shrink-0"
+          >
+            <Icon name={copied ? 'check' : failed ? 'x' : 'copy'} size="xs" />
+            {copied ? 'Copied' : failed ? 'Could not copy' : 'Copy link'}
+          </Button>
         </>
       )}
       {project.defaultBranch ? (
