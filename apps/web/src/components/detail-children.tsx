@@ -7,7 +7,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Card, cn, Combobox, Icon, Progress, SectionHeader } from '@bh/ui';
+import { Card, cn, Combobox, Icon, Kbd, Progress, SectionHeader } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { childProgress } from '../utils/child-progress';
 import { nextKey } from '../utils/next-key';
@@ -181,8 +181,8 @@ export function DetailChildren({
               onChange={(event) => setTitle(event.target.value)}
             />
             {title.trim().length > 0 && nextChildKey !== null ? (
-              <span className="shrink-0 font-mono text-10 text-gray-9">
-                ↵ creates {nextChildKey}
+              <span className="inline-flex shrink-0 items-center gap-4 font-mono text-10 text-gray-9">
+                <Kbd keys="enter" size="sm" /> creates {nextChildKey}
               </span>
             ) : null}
             {childTypes.length > 1 ? (

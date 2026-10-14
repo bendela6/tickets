@@ -1,10 +1,11 @@
 import type { Model } from '../../engine/model/types';
-import { Pill } from '@bh/ui';
+import { Kbd, Pill } from '@bh/ui';
 import { Section } from './section';
 import { Stat } from './stat';
 
 export function EmptyState({ model }: { model: Model | null }) {
-  const rows: [string, string][] = [
+  // A gesture is named in a Pill; a key is drawn as one, with bh's Kbd.
+  const rows: [string | { keys: string }, string][] = [
     ['wheel', 'zoom toward the cursor'],
     ['middle-drag', 'pan the canvas'],
     ['left-drag', 'move an entity, group, or subgroup'],
@@ -13,7 +14,7 @@ export function EmptyState({ model }: { model: Model | null }) {
     ['click', 'a group → show only its connections'],
     ['hover', 'a field → light its edges'],
     ['click', 'an edge → isolate that path'],
-    ['Esc', 'empty click → clear focus'],
+    [{ keys: 'esc' }, 'empty click → clear focus'],
   ];
   const groups = model?.groups.filter((g) => !g.parent).length ?? 0;
   const subgroups = model?.groups.filter((g) => g.parent).length ?? 0;
@@ -42,7 +43,11 @@ export function EmptyState({ model }: { model: Model | null }) {
         <div className="flex flex-col gap-8 text-12 leading-relaxed text-gray-11">
           {rows.map(([k, label], i) => (
             <div key={i} className="flex items-baseline gap-8">
-              <Pill variant="outline" size="sm" tone="neutral" label={k} className="font-mono" />
+              {typeof k === 'string' ? (
+                <Pill variant="outline" size="sm" tone="neutral" label={k} className="font-mono" />
+              ) : (
+                <Kbd keys={k.keys} />
+              )}
               <span>{label}</span>
             </div>
           ))}

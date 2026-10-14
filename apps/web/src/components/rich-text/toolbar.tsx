@@ -6,6 +6,7 @@ import {
   cn,
   focusRing,
   Icon,
+  Kbd,
   Menu,
   MenuContent,
   MenuItem,
@@ -389,7 +390,7 @@ function OverflowMenu({
       </MenuTrigger>
       <MenuContent align="end" className="w-216 rounded-12 p-6">
         {ids.has('highlight') ? (
-          <MenuItem className="h-30" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
+          <MenuItem className="h-30" shortcut={<Kbd keys="mod+shift+H" variant="text" />} onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-9">
               <span className="flex h-16 w-16 items-center justify-center rounded-4 bg-highlight font-sans text-12 font-600 text-gray-12">
                 A

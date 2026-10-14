@@ -16,7 +16,7 @@ import { statusChoices } from '../domain/status-choices';
 import { FieldWidget } from '../registry/field-widget';
 import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
+import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Kbd, Pill } from '@bh/ui';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { nextKey } from '../utils/next-key';
@@ -314,14 +314,7 @@ export function NewItemDialog({
                         {requiredCount} required
                       </span>
                     </span>
-                    {index < 9 ? (
-                      <span
-                        aria-hidden
-                        className="shrink-0 rounded-4 border-1 border-gray-6 px-6 py-px font-mono text-11/13 tracking-wider text-gray-9"
-                      >
-                        {index + 1}
-                      </span>
-                    ) : null}
+                    {index < 9 ? <Kbd keys={String(index + 1)} aria-hidden className="shrink-0" /> : null}
                   </button>
                 );
               })}
@@ -466,8 +459,8 @@ export function NewItemDialog({
                   Pick a user in the header first
                 </span>
               ) : (
-                <span aria-hidden className="font-mono text-11/13 tracking-wider text-gray-9">
-                  ⌘↵ create
+                <span aria-hidden className="inline-flex items-center gap-6 font-mono text-11/13 tracking-wider text-gray-9">
+                  <Kbd keys="mod+enter" size="sm" /> create
                 </span>
               )}
               <DialogFooter className="mt-0 border-0 p-0" cancel={<Button variant="ghost" onClick={close}>Cancel</Button>}>
@@ -579,8 +572,8 @@ export function SubtaskQuickCreate({
         }}
         className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-14 text-gray-12 outline-none placeholder:text-gray-9"
       />
-      <span aria-hidden className="hidden shrink-0 font-mono text-10 text-gray-9 sm:inline">
-        ↵ creates {nextChildKey}
+      <span aria-hidden className="hidden shrink-0 items-center gap-4 font-mono text-10 text-gray-9 sm:inline-flex">
+        <Kbd keys="enter" size="sm" /> creates {nextChildKey}
       </span>
       {types.length > 1 ? (
         <Combobox
