@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Card, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs, Tooltip } from '@bh/ui';
+import { Button, Card, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 
@@ -105,40 +105,45 @@ function PlacementRow({
       ) : (
         <span className="font-mono text-12/17 text-gray-9">—</span>
       )}
+      {/* Each glyph button's tooltip says what it does, its name which field. */}
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          tone="neutral"
+          size="xs"
+          icon="arrow-up"
+          label="Move up"
           aria-label={`Move ${field.label} up`}
           disabled={disabled || index === 0}
+          className="text-gray-9"
           onClick={() => move(-1)}
-          className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          ↑
-        </button>
-        <button
-          type="button"
+        />
+        <Button
+          variant="ghost"
+          tone="neutral"
+          size="xs"
+          icon="arrow-down"
+          label="Move down"
           aria-label={`Move ${field.label} down`}
           disabled={disabled || index === placements.length - 1}
+          className="text-gray-9"
           onClick={() => move(1)}
-          className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          ↓
-        </button>
+        />
       </div>
-      <Tooltip content="Unplace field">
-        <button
-          type="button"
-          aria-label={`Unplace ${field.label}`}
-          disabled={disabled}
-          onClick={() => {
-            if (userId === null) return;
-            unplaceField.mutate({ actorId: userId, itemTypeId: typeId, fieldId: field.id });
-          }}
-          className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          ⌫
-        </button>
-      </Tooltip>
+      <Button
+        variant="ghost"
+        tone="neutral"
+        size="xs"
+        icon="x"
+        label="Unplace field"
+        aria-label={`Unplace ${field.label}`}
+        disabled={disabled}
+        className="text-gray-9 hover:text-red-11"
+        onClick={() => {
+          if (userId === null) return;
+          unplaceField.mutate({ actorId: userId, itemTypeId: typeId, fieldId: field.id });
+        }}
+      />
     </div>
   );
 }

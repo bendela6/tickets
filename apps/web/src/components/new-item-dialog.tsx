@@ -90,17 +90,8 @@ function ProjectChip({ project }: { project: Project }) {
 function CloseButton() {
   return (
     <DialogClose asChild>
-      <button
-        type="button"
-        aria-label="Close"
-        className={cn(
-          'flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 bg-transparent',
-          'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
-          'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
-        )}
-      >
-        ×
-      </button>
+      {/* As bh's Drawer draws its own Close. */}
+      <Button variant="ghost" tone="neutral" size="sm" icon="x" label="Close" />
     </DialogClose>
   );
 }

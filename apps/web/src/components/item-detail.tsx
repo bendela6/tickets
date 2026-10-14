@@ -18,10 +18,6 @@ import { DetailLinks } from './detail-links';
 import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
 
-const ICON_BUTTON =
-  'inline-flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 ' +
-  'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
-
 // Click-to-edit title: static heading until clicked, then bh's Input holding
 // the draft (`commit="leave"`): leaving the field or Enter saves it, Escape
 // drops it (and in the drawer closes the drawer too, as it always has).
@@ -227,9 +223,7 @@ export function ItemDetail({
   const archiveMenu = (
     <Menu>
       <MenuTrigger asChild>
-        <button type="button" aria-label="More actions" className={ICON_BUTTON}>
-          ⋯
-        </button>
+        <Button variant="outline" tone="neutral" size="sm" icon="ellipsis" label="More actions" />
       </MenuTrigger>
       <MenuContent align="end">
         <MenuItem disabled={userId === null} onSelect={toggleArchived}>

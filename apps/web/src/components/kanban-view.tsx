@@ -5,7 +5,7 @@ import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, Card, cn, Icon, Pill, RelativeDate, Tooltip } from '@bh/ui';
+import { Avatar, Button, Card, cn, Icon, Pill, RelativeDate, Tooltip } from '@bh/ui';
 import { ItemKey } from './item-key';
 import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';
@@ -339,14 +339,17 @@ export function KanbanView({
               <span className="font-mono text-11 text-gray-9">{cards.length}</span>
               <span className="flex-1" />
               {onNewTicket && startable.has(option.value) ? (
-                <button
-                  type="button"
-                  aria-label={`New item in ${option.label}`}
+                <Button
+                  variant="ghost"
+                  tone="neutral"
+                  size="xs"
+                  icon="plus"
+                  label={`New item in ${option.label}`}
+                  // Overhangs the header's line, so a column with the button
+                  // keeps the same header height as one without.
+                  className="-my-3 text-gray-9"
                   onClick={() => onNewTicket(option.value)}
-                  className="inline-flex size-22 items-center justify-center rounded-6 bg-transparent font-sans text-13/19 text-gray-9 hover:bg-surface-raised hover:text-gray-12"
-                >
-                  ＋
-                </button>
+                />
               ) : null}
             </div>
             {mode === 'illegal' ? (

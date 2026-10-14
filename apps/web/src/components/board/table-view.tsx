@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Combobox, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState, Tooltip } from '@bh/ui';
+import { Button, cn, Combobox, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState, Tooltip } from '@bh/ui';
 import { ItemKey } from '../item-key';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -127,28 +127,33 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
 function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }) {
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
-  const actionClasses =
-    'flex size-30 items-center justify-center rounded-8 border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
       className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex"
       onClick={(event) => event.stopPropagation()}
     >
+      {/* A link, which bh's Button can't be yet (TK-105), drawn as the outline
+          icon-only Button beside it: same box, border and glyph size. */}
       <Tooltip content="Open item page">
         <Link
           to="/p/$projectKey/t/$itemKey"
           params={{ projectKey, itemKey: ticket.key }}
           aria-label="Open item page"
-          className={actionClasses}
+          className="flex size-28 items-center justify-center rounded-6 border-2 border-gray-7 bg-surface-raised text-gray-11 shadow-sm hover:border-gray-8 hover:bg-gray-3"
         >
-          ↗
+          <Icon name="arrow-up-right" size="md" />
         </Link>
       </Tooltip>
       <Menu>
         <MenuTrigger asChild>
-          <button type="button" aria-label="Item actions" className={actionClasses}>
-            ⋯
-          </button>
+          <Button
+            variant="outline"
+            tone="neutral"
+            size="sm"
+            icon="ellipsis"
+            label="Item actions"
+            className="shadow-sm"
+          />
         </MenuTrigger>
         <MenuContent align="end">
           <MenuItem
