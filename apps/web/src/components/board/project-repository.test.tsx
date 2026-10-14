@@ -33,6 +33,16 @@ test('an ssh link shows as text, with a button that copies it', async () => {
   expect(screen.queryByRole('link')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Copy link' }));
   expect(writeText).toHaveBeenCalledWith('git@github.com:bendela6/tickets.git');
+  expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument();
+});
+
+test('a copy the browser refuses says so', async () => {
+  const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  render(<ProjectRepository project={project({ repositoryUrl: 'git@github.com:bendela6/tickets.git' })} />, { wrapper: TooltipProvider });
+
+  await userEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+  expect(screen.getByRole('button', { name: 'Could not copy' })).toBeInTheDocument();
 });
 
 test('the default branch shows when one is set, and not otherwise', () => {
