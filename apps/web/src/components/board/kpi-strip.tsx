@@ -11,6 +11,9 @@ const KIND_ORDER: { kind: StatusKind; label: string }[] = [
   { kind: 'dropped', label: 'Dropped' },
 ];
 
+/** What the Columns popovers' "KPI strip" box turns on, said under its label. */
+export const KPI_STRIP_DESCRIPTION = 'Counts the items by kind of status, above them.';
+
 // Per-kind count tiles per docs/design/03-project-board.html lines 116–125;
 // the trailing × hides the strip (persisted as `kpi: false` in the view
 // config, re-enabled from the Columns popover). Presentational half: callers
