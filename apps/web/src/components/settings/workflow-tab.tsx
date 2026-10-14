@@ -550,6 +550,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     />
                     <Checkbox
                       label="Requires a comment"
+                      description="The item needs a comment before it can make this move."
                       value={edgeRequiresComment}
                       onChange={(next) => setEdgeRequiresComment(next)}
                       disabled={disabled}

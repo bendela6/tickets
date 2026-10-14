@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger, SearchInput } from '@bh/ui';
 import type { SharedField, UnsharedField } from './shared-fields';
 import { canonicalColumns } from './shared-fields';
+import { KPI_STRIP_DESCRIPTION } from '../board/kpi-strip';
 
 const BUILT_IN_ROWS = [
   { id: 'type', label: 'Type', typeLabel: 'built-in' },
@@ -117,6 +118,7 @@ export function ColumnsPopover({
           <div className="px-9 py-4">
             <Checkbox
               label="KPI strip"
+              description={KPI_STRIP_DESCRIPTION}
               value={kpi}
               onChange={(next) => onKpiChange(next)}
             />
