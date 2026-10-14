@@ -37,3 +37,23 @@ test('indexes maps, workflow field, per-type option allowlist, children', () => 
   expect(ix.optionByValue(ix.workflowField(1)!, 'done')!.id).toBe(1002);
   expect(ix.childrenByParent.get(500)!.map((c) => c.id)).toEqual([501]);
 });
+
+test('childTypesByParent: the live types each type may hold, in the scheme order', () => {
+  const base = board();
+  const type = (id: number, key: string, position: number, archivedAt: string | null = null) => ({
+    id, schemeId: 1, key, label: key, position, config: {}, archivedAt,
+  });
+  const ix = indexBoard({
+    ...base,
+    types: [type(1, 'epic', 1), type(2, 'task', 2), type(3, 'bug', 3), type(4, 'spike', 4, 'x'), type(5, 'subtask', 5)],
+    childTypes: [
+      { parentTypeId: 1, childTypeId: 3 },
+      { parentTypeId: 1, childTypeId: 4 },
+      { parentTypeId: 1, childTypeId: 2 },
+      { parentTypeId: 2, childTypeId: 5 },
+    ],
+  });
+  expect(ix.childTypesByParent.get(1)!.map((t) => t.key)).toEqual(['task', 'bug']);
+  expect(ix.childTypesByParent.get(2)!.map((t) => t.key)).toEqual(['subtask']);
+  expect(ix.childTypesByParent.get(3)).toBeUndefined();
+});

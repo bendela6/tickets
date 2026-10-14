@@ -269,19 +269,19 @@ export function ItemDetail({
   ) : null;
 
   // An item lists its children whatever its level: a plan feature under its
-  // epic lists its tickets, a ticket its subtickets. One at the top shows the
-  // section even before it has any, for its add row.
-  const hasChildren = (indexes.childrenByParent.get(item.id)?.length ?? 0) > 0;
-  const childrenSection =
-    item.parentId === null || hasChildren ? (
-      <DetailChildren
-        projectKey={projectKey}
-        board={board}
-        indexes={indexes}
-        item={item}
-        onOpenItem={openItem}
-      />
-    ) : null;
+  // epic lists its tickets, a ticket its subtickets. The section leaves itself
+  // out when the item has none and its type may hold none. Keyed by the item,
+  // so a draft title or a picked type stays with the item it was meant for.
+  const childrenSection = (
+    <DetailChildren
+      key={item.id}
+      projectKey={projectKey}
+      board={board}
+      indexes={indexes}
+      item={item}
+      onOpenItem={openItem}
+    />
+  );
 
   const linksSection = (
     <DetailLinks board={board} indexes={indexes} item={item} onOpenItem={openItem} />

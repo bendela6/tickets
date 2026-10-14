@@ -36,6 +36,18 @@ export function indexBoard(board: Board) {
     }
   }
 
+  // The types each type may hold (structure.item_type_child_types), live ones
+  // only, in the scheme's order: what a new child of an item can be.
+  const childTypesByParent = new Map<number, ItemType[]>();
+  for (const { parentTypeId, childTypeId } of board.childTypes) {
+    const child = typeById.get(childTypeId);
+    if (!child || child.archivedAt) continue;
+    const bucket = childTypesByParent.get(parentTypeId) ?? [];
+    bucket.push(child);
+    childTypesByParent.set(parentTypeId, bucket);
+  }
+  for (const bucket of childTypesByParent.values()) bucket.sort((a, b) => a.position - b.position);
+
   function placement(typeId: number, fieldId: number): ItemTypeField | undefined {
     return placementsByType.get(typeId)?.find((p) => p.fieldId === fieldId);
   }
@@ -59,7 +71,7 @@ export function indexBoard(board: Board) {
 
   return {
     typeById, fieldById, fieldByKey, userById, itemById, itemByNumber, itemByKey, optionById,
-    optionsBySetId, placementsByType, childrenByParent,
+    optionsBySetId, placementsByType, childrenByParent, childTypesByParent,
     placement, workflowField, optionsForField, optionByValue,
   };
 }

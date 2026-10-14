@@ -15,7 +15,12 @@ import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 
 // Subtasks panel: progress header, one row per child (kind glyph, key, title,
-// inline status select), and the always-there "type a title" creator row.
+// inline status select), and the "type a title" row that adds one. A child is
+// one of the types the item's type may hold (structure.item_type_child_types):
+// a plan feature adds a ticket, a ticket a subticket, a software task a
+// subtask; where there are several, the row offers them, the scheme's first
+// until another is picked. An item whose type holds none has no add row, and
+// with no children either, no panel.
 export function DetailChildren({
   projectKey,
   board,
@@ -34,12 +39,17 @@ export function DetailChildren({
   const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
+  const [pickedTypeKey, setPickedTypeKey] = useState<string | null>(null);
 
   const children = [...(indexes.childrenByParent.get(item.id) ?? [])].sort(
     (left, right) => left.number - right.number,
   );
   const progress = childProgress(item, indexes);
-  const nextChildKey = nextKey(board, indexes, { typeKey: 'subtask', parentId: item.id });
+  const childTypes = indexes.childTypesByParent.get(item.typeId) ?? [];
+  const childType = childTypes.find((type) => type.key === pickedTypeKey) ?? childTypes[0];
+  const nextChildKey = childType
+    ? nextKey(board, indexes, { typeKey: childType.key, parentId: item.id })
+    : null;
 
   const setChildStatus = (child: Item, next: string) => {
     if (userId === null) {
@@ -59,6 +69,10 @@ export function DetailChildren({
       { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
     );
   };
+
+  if (children.length === 0 && !childType) {
+    return null;
+  }
 
   return (
     <section>
@@ -96,7 +110,7 @@ export function DetailChildren({
           return (
             <div
               key={child.id}
-              className="flex h-38 cursor-pointer items-center gap-10 border-b-1 border-gray-6 px-12 hover:bg-gray-1"
+              className="flex h-38 cursor-pointer items-center gap-10 border-b-1 border-gray-6 px-12 last:border-b-0 hover:bg-gray-1"
               onClick={() => onOpenItem(child.key)}
             >
               <span aria-hidden className="inline-flex shrink-0">
@@ -131,41 +145,64 @@ export function DetailChildren({
             </div>
           );
         })}
-        <form
-          className="flex h-38 items-center gap-10 bg-gray-1 px-12"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            if (userId === null || title.trim().length === 0) {
-              return;
-            }
-            await createItem.mutateAsync({
-              projectKey,
-              actorId: userId,
-              typeKey: 'subtask',
-              parentId: item.id,
-              values: { title: title.trim() },
-            });
-            setTitle('');
-          }}
-        >
-          <span
-            aria-hidden
-            className="size-9 shrink-0 rounded-full border-1.5 border-dashed border-gray-7"
-          />
-          <input
-            className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 outline-none placeholder:text-gray-9"
-            placeholder="Add subtask — type a title…"
-            aria-label="Add subtask"
-            value={title}
-            disabled={userId === null}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          {title.trim().length > 0 && nextChildKey !== null ? (
-            <span className="shrink-0 font-mono text-10 text-gray-9">
-              ↵ creates {nextChildKey}
-            </span>
-          ) : null}
-        </form>
+        {childType ? (
+          <form
+            className="flex h-38 items-center gap-10 bg-gray-1 px-12"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (userId === null || title.trim().length === 0) {
+                return;
+              }
+              // A refusal keeps the title for a retry and says why below.
+              try {
+                await createItem.mutateAsync({
+                  projectKey,
+                  actorId: userId,
+                  typeKey: childType.key,
+                  parentId: item.id,
+                  values: { title: title.trim() },
+                });
+              } catch {
+                return;
+              }
+              setTitle('');
+            }}
+          >
+            <span
+              aria-hidden
+              className="size-9 shrink-0 rounded-full border-1.5 border-dashed border-gray-7"
+            />
+            <input
+              className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 outline-none placeholder:text-gray-9"
+              placeholder={`Add ${childType.label.toLowerCase()} — type a title…`}
+              aria-label={`Add ${childType.label.toLowerCase()}`}
+              value={title}
+              disabled={userId === null}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+            {title.trim().length > 0 && nextChildKey !== null ? (
+              <span className="shrink-0 font-mono text-10 text-gray-9">
+                ↵ creates {nextChildKey}
+              </span>
+            ) : null}
+            {childTypes.length > 1 ? (
+              <Combobox
+                size="xs"
+                className="w-120 shrink-0"
+                aria-label="Child type"
+                searchable={false}
+                options={childTypes.map((type) => ({ value: type.key, label: type.label }))}
+                value={childType.key}
+                disabled={userId === null}
+                onChange={(next) => {
+                  if (next !== null) {
+                    setPickedTypeKey(next);
+                  }
+                }}
+              />
+            ) : null}
+          </form>
+        ) : null}
       </Card>
       {createItem.isError ? (
         <p className="m-0 mt-6 font-sans text-12/17 text-red-9">
