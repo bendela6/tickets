@@ -9,6 +9,12 @@ export interface CheckboxFieldConfig {
    * sentence here ("Email me about replies") and no caption above it.
    */
   label?: string;
+  /**
+   * A line under `label`, saying what checking the box does. It sits with the
+   * box, where the FieldNode's own `description` is the field's help, under
+   * the whole field; the box is described by both, its own line first.
+   */
+  description?: string;
 }
 
 /**
@@ -27,6 +33,7 @@ export function CheckboxField(p: InputProps<CheckboxFieldConfig, boolean>) {
         aria-describedby={p.describedBy}
         name={p.name}
         label={p.config.label}
+        description={p.config.description}
         value={Boolean(p.value)}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}

@@ -5,7 +5,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate, type NavigateOptions } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
-import { cn } from '@bh/ui';
+import { Button, cn } from '@bh/ui';
 import { PageBreadcrumb, type PageCrumb } from './page-breadcrumb';
 
 /**
@@ -104,14 +104,15 @@ export function PageHeader({
           keeps the line and the actions drop under it. */}
         <div className="flex flex-wrap items-start gap-12">
           {backRoute ? (
-            <button
-              type="button"
-              aria-label="Back"
+            <Button
+              variant="ghost"
+              tone="neutral"
+              size="sm"
+              icon={<ArrowLeft size={16} strokeWidth={1.75} />}
+              label="Back"
               onClick={() => void navigate(backRoute)}
-              className="rounded-6 text-gray-11 hover:bg-surface-inset hover:text-gray-12 mt-2 inline-flex size-28 items-center justify-center"
-            >
-              <ArrowLeft size={16} strokeWidth={1.75} />
-            </button>
+              className="mt-2"
+            />
           ) : null}
           {/* A floor of 180px rather than min-w-0: the title has a flex base of
             0, so beside a row of shrink-0 actions it would otherwise be handed

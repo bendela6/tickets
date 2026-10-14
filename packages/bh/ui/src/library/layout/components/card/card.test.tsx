@@ -1,5 +1,8 @@
+import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import { focusRing } from '../../../../style';
 import { Card, CardBody, CardHeader, CardTitle } from './card';
 
 // Surface, radius, padding and the hover affordance are NOT asserted — those
@@ -98,5 +101,65 @@ describe('Card', () => {
     }
     const { unmount } = render(<Card interactive />);
     unmount();
+  });
+});
+
+describe('Card asChild', () => {
+  it('is the button itself: one element, focusable, that clicks', async () => {
+    const onClick = vi.fn();
+    render(
+      <Card asChild interactive padding={4}>
+        <button type="button" onClick={onClick}>
+          New project
+        </button>
+      </Card>,
+    );
+    const card = screen.getByRole('button', { name: 'New project' });
+    // No div around it, and none inside: the card's look is on the button.
+    expect(card.parentElement).toBe(document.body.firstElementChild);
+    expect(card.querySelector('div')).toBeNull();
+
+    await userEvent.tab();
+    expect(card).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('is the link itself, with the props given to the card', () => {
+    render(
+      <Card asChild interactive aria-describedby="hint">
+        <a href="/reports/annual">Annual report</a>
+      </Card>,
+    );
+    const card = screen.getByRole('link', { name: 'Annual report' });
+    expect(card).toHaveAttribute('href', '/reports/annual');
+    expect(card).toHaveAttribute('aria-describedby', 'hint');
+  });
+
+  it('keeps the child’s own classes, and hands the ref to the child', () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Card asChild ref={ref}>
+        <button type="button" className="w-full">
+          Open
+        </button>
+      </Card>,
+    );
+    const card = screen.getByRole('button', { name: 'Open' });
+    expect(card).toHaveClass('w-full');
+    expect(ref.current).toBe(card);
+  });
+
+  it('draws the focus ring the controls draw', () => {
+    render(
+      <Card asChild>
+        <button type="button">Open</button>
+      </Card>,
+    );
+    // The one class contract here: a tab stop must show where focus is, and
+    // it is the controls' own ring, not one of the card's making.
+    for (const name of focusRing('indigo').split(' ')) {
+      expect(screen.getByRole('button', { name: 'Open' })).toHaveClass(name);
+    }
   });
 });

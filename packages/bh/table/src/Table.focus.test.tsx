@@ -386,6 +386,79 @@ describe('cell focus — copy', () => {
     fireEvent.keyDown(gridOf(container), { key: 'c', ctrlKey: true });
     expect(writeText).toHaveBeenCalledWith('Row 1');
   });
+
+  /** The copy's promise chain takes a few turns of the microtask queue. */
+  async function settle() {
+    for (let turn = 0; turn < 5; turn += 1) {
+      await Promise.resolve();
+    }
+  }
+
+  function withCopy(onCopyCell: (text: string) => Promise<boolean>): TableRender<Row> {
+    return { ...makeStubRender<Row>(), onCopyCell };
+  }
+
+  const copyOf = (c: HTMLElement, row: number, col: string) => {
+    return cellAt(c, row, col)?.getAttribute('data-copy');
+  };
+
+  it("hands a skin's onCopyCell the text, and the cell how it went, for a moment", async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const onCopyCell = vi.fn(() => Promise.resolve(true));
+    const { container } = render(<Harness render={withCopy(onCopyCell)} />);
+    fireEvent.keyDown(gridOf(container), { key: 'ArrowDown' });
+    await act(async () => {
+      fireEvent.keyDown(gridOf(container), { key: 'c', metaKey: true });
+      await settle();
+    });
+    expect(onCopyCell).toHaveBeenCalledWith('Row 1');
+    // The skin writes; the table does not write a second time.
+    expect(writeText).not.toHaveBeenCalled();
+    expect(copyOf(container, 1, 'name')).toBe('copied');
+    expect(copyOf(container, 0, 'name')).toBe('');
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(copyOf(container, 1, 'name')).toBe('');
+    vi.useRealTimers();
+  });
+
+  it('says failed when the skin could not copy, or threw', async () => {
+    const { container, unmount } = render(
+      <Harness render={withCopy(() => Promise.resolve(false))} />,
+    );
+    fireEvent.keyDown(gridOf(container), { key: 'ArrowDown' });
+    await act(async () => {
+      fireEvent.keyDown(gridOf(container), { key: 'c', ctrlKey: true });
+      await settle();
+    });
+    expect(copyOf(container, 1, 'name')).toBe('failed');
+    unmount();
+
+    const thrown = render(<Harness render={withCopy(() => Promise.reject(new Error('denied')))} />);
+    fireEvent.keyDown(gridOf(thrown.container), { key: 'ArrowDown' });
+    await act(async () => {
+      fireEvent.keyDown(gridOf(thrown.container), { key: 'c', ctrlKey: true });
+      await settle();
+    });
+    expect(copyOf(thrown.container, 1, 'name')).toBe('failed');
+  });
+
+  it('tells a skin without onCopyCell nothing', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true,
+    });
+    const { container } = render(<Harness />);
+    fireEvent.keyDown(gridOf(container), { key: 'ArrowDown' });
+    await act(async () => {
+      fireEvent.keyDown(gridOf(container), { key: 'c', ctrlKey: true });
+      await settle();
+    });
+    expect(copyOf(container, 1, 'name')).toBe('');
+  });
 });
 
 /** A filter the PAGE holds, as a page that actually filters does: every

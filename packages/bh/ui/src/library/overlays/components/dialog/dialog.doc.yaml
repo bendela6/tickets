@@ -6,17 +6,21 @@ body:
     A modal window over the page, for a short task or a question.
 
     Build one from its parts, or take `ConfirmDialog`, which puts them
-    together for a question with a cancel button and a confirm button.
+    together for a question with a cancel button and a confirm button. To
+    ask from code and await the answer, in place of `window.confirm()`,
+    take `useConfirm`.
   - h2: Import
   - code: |
       import {
         ConfirmDialog,
+        ConfirmProvider,
         DialogClose,
         DialogContent,
         DialogDescription,
         DialogRoot,
         DialogTitle,
         DialogTrigger,
+        useConfirm,
       } from '@bh/ui';
     lang: tsx
   - h2: Examples
@@ -33,16 +37,59 @@ body:
     button, calling `onConfirm` first. `destructive` paints the confirm
     button in the `danger` tone.
   - demo: examples/confirm-before-deleting.tsx
+  - |
+    When `onConfirm` returns a promise, the dialog waits for it. The confirm
+    button shows a spinner, and nothing closes the dialog until the promise
+    settles, Esc and the cancel button included: the work can't be called
+    back, so the dialog stays to say how it went. It closes when the promise
+    resolves. When it rejects, or `onConfirm` throws, the error's message
+    shows above the buttons and the dialog stays open, to try again or
+    cancel; `describeError` puts a failure in words of your own. This one
+    fails the first time.
+  - demo: examples/waits-for-its-action.tsx
+  - |
+    `children` are a body of your own, under `body` and above the buttons:
+    a choice that changes what the confirm does, or a list of what it
+    touches. They are laid out as you lay them out, 16 pixels under the
+    sentence above. Here the choice changes the confirm button too.
+  - demo: examples/a-body-of-its-own.tsx
+  - |
+    For what can't be undone, `phrase` asks for a word to be typed first,
+    so a stray click can't do it: the confirm button stays disabled until
+    the field holds the phrase exactly, case and spaces included, and Enter
+    in the field confirms once it does. The field takes focus as the dialog
+    opens and starts empty at each opening. Its label reads "Type
+    `photo-archive` to confirm"; `phraseLabel` says it otherwise.
+  - demo: examples/type-to-confirm.tsx
+  - h3: Asking from code
+  - |
+    `useConfirm` asks from code, where `window.confirm()` would: `await
+    confirm({ title, … })` opens a ConfirmDialog and answers `true` once it
+    is confirmed, or `false` when it is cancelled. It takes the dialog's
+    own options, `onConfirm` and `phrase` among them; with an `onConfirm`,
+    it answers `true` only once that has worked, and a failure shows in the
+    dialog as it would in ConfirmDialog.
+
+    Put one `ConfirmProvider` around the app, as you would a
+    [ToastProvider](/components/feedback/toast): the dialog is drawn there,
+    one question at a time, and an ask made while another is open waits
+    for it to close. Being drawn there, a body passed as `children` sees
+    the provider's context rather than the caller's; for a body that needs
+    the caller's, or a choice whose value the confirm reads, render a
+    ConfirmDialog yourself.
+  - demo: examples/asking-from-code.tsx
   - h2: Keyboard and accessibility
   - keyboard:
       - keys: [Enter, Space]
         does: On the trigger, opens the dialog.
+      - keys: [Enter]
+        does: In a ConfirmDialog's phrase field, confirms once the phrase is typed.
       - keys: [Tab]
         does: Moves to the next control in the dialog; from the last, back to the first.
       - keys: [Shift+Tab]
         does: Moves to the previous control in the dialog; from the first, to the last.
       - keys: [Esc]
-        does: Closes the dialog.
+        does: Closes the dialog, unless a ConfirmDialog is waiting for its onConfirm.
   - |
     `DialogContent` has the `dialog` role, named by `DialogTitle` and
     described by `DialogDescription` when there is one. While it is open,
@@ -51,15 +98,23 @@ body:
     it.
 
     Opening moves focus to the first control inside; in `ConfirmDialog`,
-    the cancel button. Closing gives focus back to whatever had it as the
-    dialog opened: `DialogTrigger`, or the row or button that set `open`,
-    which is how `ConfirmDialog` always opens. If that has left the page or
+    the phrase field when it asks for one, else the first control in its
+    `children`, else the cancel button. Closing gives focus back to
+    whatever had it as the dialog opened: `DialogTrigger`, or the row or
+    button that set `open` or called `confirm`, which is how
+    `ConfirmDialog` always opens. If that has left the page or
     can no longer take focus, focus goes to `DialogTrigger`, then to the
     nearest thing still on the page that held it, like the drawer a dialog
     was opened from. If something else has focus by then, it keeps it.
 
     [`useRestoreFocus`](#userestorefocus) does this, for Drawer and
     SidePanel too, and for a surface of your own.
+
+    While `ConfirmDialog` waits for `onConfirm`, its buttons are disabled
+    and the confirm button is marked busy, so focus moves to the dialog
+    itself rather than out of it. A failure is announced as an alert, and
+    focus goes back where it was as the wait began: on the confirm button
+    that was pressed, to try again.
   - h2: When not to use it
   - |
     - For a panel at the page's edge, use [Drawer](/components/overlays/drawer).
@@ -83,6 +138,12 @@ body:
   - props: DialogClose
   - h3: ConfirmDialog
   - props: ConfirmDialog
+  - h3: ConfirmProvider
+  - props: ConfirmProvider
+  - h3: useConfirm
+  - ref: useConfirm
+  - ref: Confirm
+  - ref: ConfirmOptions
   - h3: useRestoreFocus
   - ref: useRestoreFocus
   - ref: RestoreFocus

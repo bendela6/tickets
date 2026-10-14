@@ -11,19 +11,23 @@ related: [DialogFooter, Drawer, Popover]
 A modal window over the page, for a short task or a question.
 
 Build one from its parts, or take `ConfirmDialog`, which puts them
-together for a question with a cancel button and a confirm button.
+together for a question with a cancel button and a confirm button. To
+ask from code and await the answer, in place of `window.confirm()`,
+take `useConfirm`.
 
 ## Import
 
 ```tsx
 import {
   ConfirmDialog,
+  ConfirmProvider,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogRoot,
   DialogTitle,
   DialogTrigger,
+  useConfirm,
 } from '@bh/ui';
 ```
 
@@ -119,14 +123,229 @@ export function ConfirmBeforeDeleting() {
 }
 ```
 
+When `onConfirm` returns a promise, the dialog waits for it. The confirm
+button shows a spinner, and nothing closes the dialog until the promise
+settles, Esc and the cancel button included: the work can't be called
+back, so the dialog stays to say how it went. It closes when the promise
+resolves. When it rejects, or `onConfirm` throws, the error's message
+shows above the buttons and the dialog stays open, to try again or
+cancel; `describeError` puts a failure in words of your own. This one
+fails the first time.
+
+**Waits for its action**
+
+```tsx
+import { useRef, useState } from 'react';
+import { Button, ConfirmDialog } from '@bh/ui';
+
+// Stands in for a request: it takes a second, and fails the first time.
+function deleteOnServer(attempt: number) {
+  return new Promise<void>((resolve, reject) => {
+    setTimeout(() => {
+      if (attempt === 1) {
+        reject(new Error('The server did not answer. Try again.'));
+      } else {
+        resolve();
+      }
+    }, 1200);
+  });
+}
+
+export function WaitsForItsAction() {
+  const [open, setOpen] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const attempts = useRef(0);
+  return (
+    <div className="flex items-center gap-12">
+      <Button
+        tone="danger"
+        disabled={deleted}
+        onClick={() => {
+          attempts.current = 0;
+          setOpen(true);
+        }}
+      >
+        Delete archive.zip
+      </Button>
+      {deleted ? <span className="text-13 text-gray-11">Deleted</span> : null}
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Delete archive.zip?"
+        body="The file is removed from the server."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          attempts.current += 1;
+          await deleteOnServer(attempts.current);
+          setDeleted(true);
+        }}
+      />
+    </div>
+  );
+}
+```
+
+`children` are a body of your own, under `body` and above the buttons:
+a choice that changes what the confirm does, or a list of what it
+touches. They are laid out as you lay them out, 16 pixels under the
+sentence above. Here the choice changes the confirm button too.
+
+**A body of its own**
+
+```tsx
+import { useState } from 'react';
+import { Button, Checkbox, ConfirmDialog } from '@bh/ui';
+
+export function ABodyOfItsOwn() {
+  const [open, setOpen] = useState(false);
+  const [alsoFiles, setAlsoFiles] = useState(false);
+  const [done, setDone] = useState('');
+  return (
+    <div className="flex items-center gap-12">
+      <Button
+        onClick={() => {
+          setAlsoFiles(false);
+          setOpen(true);
+        }}
+      >
+        Remove Holiday photos
+      </Button>
+      {done ? <span className="text-13 text-gray-11">{done}</span> : null}
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Remove Holiday photos?"
+        body="The folder leaves the library. Its 24 files stay on the disk unless you say otherwise."
+        confirmLabel={alsoFiles ? 'Remove and delete' : 'Remove'}
+        destructive={alsoFiles}
+        onConfirm={() => setDone(alsoFiles ? 'Removed, files deleted' : 'Removed')}
+      >
+        <Checkbox label="Also delete the 24 files" value={alsoFiles} onChange={setAlsoFiles} />
+      </ConfirmDialog>
+    </div>
+  );
+}
+```
+
+For what can't be undone, `phrase` asks for a word to be typed first,
+so a stray click can't do it: the confirm button stays disabled until
+the field holds the phrase exactly, case and spaces included, and Enter
+in the field confirms once it does. The field takes focus as the dialog
+opens and starts empty at each opening. Its label reads "Type
+`photo-archive` to confirm"; `phraseLabel` says it otherwise.
+
+**Type to confirm**
+
+```tsx
+import { useState } from 'react';
+import { Button, ConfirmDialog } from '@bh/ui';
+
+export function TypeToConfirm() {
+  const [open, setOpen] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  return (
+    <div className="flex items-center gap-12">
+      <Button tone="danger" disabled={deleted} onClick={() => setOpen(true)}>
+        Delete photo-archive
+      </Button>
+      {deleted ? <span className="text-13 text-gray-11">Deleted</span> : null}
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Delete photo-archive?"
+        body="Its 1,204 files and every share link to them are deleted. This can't be undone."
+        phrase="photo-archive"
+        confirmLabel="Delete project"
+        destructive
+        onConfirm={async () => {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          setDeleted(true);
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Asking from code
+
+`useConfirm` asks from code, where `window.confirm()` would: `await
+confirm({ title, … })` opens a ConfirmDialog and answers `true` once it
+is confirmed, or `false` when it is cancelled. It takes the dialog's
+own options, `onConfirm` and `phrase` among them; with an `onConfirm`,
+it answers `true` only once that has worked, and a failure shows in the
+dialog as it would in ConfirmDialog.
+
+Put one `ConfirmProvider` around the app, as you would a
+[ToastProvider](../../../feedback/components/toast/toast.md): the dialog is drawn there,
+one question at a time, and an ask made while another is open waits
+for it to close. Being drawn there, a body passed as `children` sees
+the provider's context rather than the caller's; for a body that needs
+the caller's, or a choice whose value the confirm reads, render a
+ConfirmDialog yourself.
+
+**Asking from code**
+
+```tsx
+import { useState } from 'react';
+import { Button, ConfirmProvider, useConfirm } from '@bh/ui';
+
+function FileActions() {
+  const { confirm } = useConfirm();
+  const [said, setSaid] = useState('');
+  return (
+    <div className="flex items-center gap-12">
+      <Button
+        onClick={async () => {
+          const ok = await confirm({
+            title: 'Discard your changes to notes.txt?',
+            confirmLabel: 'Discard',
+          });
+          setSaid(ok ? 'Changes discarded' : 'Changes kept');
+        }}
+      >
+        Discard changes
+      </Button>
+      <Button
+        tone="danger"
+        onClick={async () => {
+          const ok = await confirm({
+            title: 'Empty the bin?',
+            body: 'Its 38 files are deleted for good.',
+            phrase: 'empty',
+            confirmLabel: 'Empty the bin',
+            destructive: true,
+            onConfirm: () => new Promise((resolve) => setTimeout(resolve, 800)),
+          });
+          setSaid(ok ? 'Bin emptied' : 'Bin kept');
+        }}
+      >
+        Empty the bin
+      </Button>
+      {said ? <span className="text-13 text-gray-11">{said}</span> : null}
+    </div>
+  );
+}
+
+export function AskingFromCode() {
+  return (
+    <ConfirmProvider>
+      <FileActions />
+    </ConfirmProvider>
+  );
+}
+```
+
 ## Keyboard and accessibility
 
 | Key                | Does                                                                       |
 | ------------------ | -------------------------------------------------------------------------- |
 | `Enter` or `Space` | On the trigger, opens the dialog.                                          |
+| `Enter`            | In a ConfirmDialog's phrase field, confirms once the phrase is typed.      |
 | `Tab`              | Moves to the next control in the dialog; from the last, back to the first. |
 | `Shift+Tab`        | Moves to the previous control in the dialog; from the first, to the last.  |
-| `Esc`              | Closes the dialog.                                                         |
+| `Esc`              | Closes the dialog, unless a ConfirmDialog is waiting for its onConfirm.    |
 
 `DialogContent` has the `dialog` role, named by `DialogTitle` and
 described by `DialogDescription` when there is one. While it is open,
@@ -135,15 +354,23 @@ technology and takes no pointer events, and a click on the dim closes
 it.
 
 Opening moves focus to the first control inside; in `ConfirmDialog`,
-the cancel button. Closing gives focus back to whatever had it as the
-dialog opened: `DialogTrigger`, or the row or button that set `open`,
-which is how `ConfirmDialog` always opens. If that has left the page or
+the phrase field when it asks for one, else the first control in its
+`children`, else the cancel button. Closing gives focus back to
+whatever had it as the dialog opened: `DialogTrigger`, or the row or
+button that set `open` or called `confirm`, which is how
+`ConfirmDialog` always opens. If that has left the page or
 can no longer take focus, focus goes to `DialogTrigger`, then to the
 nearest thing still on the page that held it, like the drawer a dialog
 was opened from. If something else has focus by then, it keeps it.
 
 [`useRestoreFocus`](#userestorefocus) does this, for Drawer and
 SidePanel too, and for a surface of your own.
+
+While `ConfirmDialog` waits for `onConfirm`, its buttons are disabled
+and the confirm button is marked busy, so focus moves to the dialog
+itself rather than out of it. A failure is announced as an alert, and
+focus goes back where it was as the wait began: on the confirm button
+that was pressed, to try again.
 
 ## When not to use it
 
@@ -205,16 +432,69 @@ Also every `<button>` attribute (`ButtonHTMLAttributes<HTMLButtonElement>`), pas
 
 ### ConfirmDialog
 
-| Prop                      | Type                      | Default     | Description                                                                      |
-| ------------------------- | ------------------------- | ----------- | -------------------------------------------------------------------------------- |
-| `open` (required)         | `boolean`                 |             | Whether the dialog is open.                                                      |
-| `onOpenChange` (required) | `(open: boolean) => void` |             | Called with `false` when it closes: by either button, Esc or a click on the dim. |
-| `title` (required)        | `ReactNode`               |             | The question, as the dialog's title.                                             |
-| `body`                    | `ReactNode`               |             | A sentence under the title, as the dialog's description.                         |
-| `confirmLabel`            | `string`                  | `'Confirm'` | The confirm button's label.                                                      |
-| `cancelLabel`             | `string`                  | `'Cancel'`  | The cancel button's label.                                                       |
-| `destructive`             | `boolean`                 |             | Paints the confirm button in the `danger` tone instead of `primary`.             |
-| `onConfirm` (required)    | `() => void`              |             | Called when the confirm button is pressed, before the dialog closes.             |
+| Prop                      | Type                            | Default     | Description                                                                                                                                                                                                                                                                 |
+| ------------------------- | ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open` (required)         | `boolean`                       |             | Whether the dialog is open.                                                                                                                                                                                                                                                 |
+| `onOpenChange` (required) | `(open: boolean) => void`       |             | Called with `false` when it closes: by the cancel button, Esc or a click on the dim, and when `onConfirm` is done. Never while `onConfirm` runs.                                                                                                                            |
+| `title` (required)        | `ReactNode`                     |             | The question, as the dialog's title.                                                                                                                                                                                                                                        |
+| `body`                    | `ReactNode`                     |             | A sentence under the title, as the dialog's description.                                                                                                                                                                                                                    |
+| `children`                | `ReactNode`                     |             | A body of your own, under `body` and above the buttons: a choice that changes what the confirm does, a list of what it touches.                                                                                                                                             |
+| `confirmLabel`            | `string`                        | `'Confirm'` | The confirm button's label.                                                                                                                                                                                                                                                 |
+| `cancelLabel`             | `string`                        | `'Cancel'`  | The cancel button's label.                                                                                                                                                                                                                                                  |
+| `destructive`             | `boolean`                       |             | Paints the confirm button in the `danger` tone instead of `primary`.                                                                                                                                                                                                        |
+| `phrase`                  | `string`                        |             | A phrase to type before confirming, for what can't be undone: a field asks for it, and the confirm button stays disabled until the field holds exactly this, case and spaces included.                                                                                      |
+| `phraseLabel`             | `ReactNode`                     |             | The phrase field's label: by default "Type `phrase` to confirm".                                                                                                                                                                                                            |
+| `onConfirm` (required)    | `() => unknown`                 |             | Called when the confirm button is pressed. Return a promise and the dialog waits, busy, and closes when it resolves; return anything else and it closes at once. If the promise rejects, or this throws, the dialog shows the error and stays open, to try again or cancel. |
+| `describeError`           | `(error: unknown) => ReactNode` |             | What the dialog says when `onConfirm` fails: by default the error's own message.                                                                                                                                                                                            |
+
+### ConfirmProvider
+
+| Prop                  | Type        | Default | Description                                          |
+| --------------------- | ----------- | ------- | ---------------------------------------------------- |
+| `children` (required) | `ReactNode` |         | The part of the app that can ask: usually all of it. |
+
+### useConfirm
+
+```ts
+useConfirm(): Confirm
+```
+
+Returns `confirm`, which asks a question in a ConfirmDialog and answers
+whether it was confirmed: an ask to await, in place of `window.confirm()`.
+Throws outside a `ConfirmProvider`.
+
+Returns `Confirm`: `{ confirm }`, where `await confirm({ title, … })` is `true` or `false`.
+
+```ts
+interface Confirm
+```
+
+What `useConfirm` returns.
+
+| Member               | Type                                            | Default | Description                                                                                                                                                                      |
+| -------------------- | ----------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `confirm` (required) | `(options: ConfirmOptions) => Promise<boolean>` |         | Opens a ConfirmDialog and answers `true` once it is confirmed, and its `onConfirm` has worked, or `false` when it is cancelled: by the cancel button, Esc or a click on the dim. |
+
+```ts
+interface ConfirmOptions extends Omit< ConfirmDialogProps, 'open' | 'onOpenChange' | 'onConfirm' >
+```
+
+What `confirm` asks: ConfirmDialog's props, less the three the provider
+holds. `onConfirm` is optional here, since the answer is often all a
+caller needs.
+
+| Member             | Type                            | Default | Description                                                                                                                                                                                                     |
+| ------------------ | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title` (required) | `ReactNode`                     |         | The question, as the dialog's title.                                                                                                                                                                            |
+| `body`             | `ReactNode`                     |         | A sentence under the title, as the dialog's description.                                                                                                                                                        |
+| `children`         | `ReactNode`                     |         | A body of your own, under `body` and above the buttons: a choice that changes what the confirm does, a list of what it touches.                                                                                 |
+| `confirmLabel`     | `string`                        |         | The confirm button's label.                                                                                                                                                                                     |
+| `cancelLabel`      | `string`                        |         | The cancel button's label.                                                                                                                                                                                      |
+| `destructive`      | `boolean`                       |         | Paints the confirm button in the `danger` tone instead of `primary`.                                                                                                                                            |
+| `phrase`           | `string`                        |         | A phrase to type before confirming, for what can't be undone: a field asks for it, and the confirm button stays disabled until the field holds exactly this, case and spaces included.                          |
+| `phraseLabel`      | `ReactNode`                     |         | The phrase field's label: by default "Type `phrase` to confirm".                                                                                                                                                |
+| `describeError`    | `(error: unknown) => ReactNode` |         | What the dialog says when `onConfirm` fails: by default the error's own message.                                                                                                                                |
+| `onConfirm`        | `() => unknown`                 |         | Run when the confirm button is pressed, as ConfirmDialog runs it: a promise keeps the dialog open, busy, until it settles, and a failure shows in the dialog. `confirm` answers `true` only once it has worked. |
 
 ### useRestoreFocus
 

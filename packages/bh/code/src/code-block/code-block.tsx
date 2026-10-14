@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cn, CopyButton } from '@bh/ui';
+import { Button, cn, useCopy } from '@bh/ui';
 import { highlightLines, isBlankLine } from '../highlight';
 
 export interface CodeBlockProps {
@@ -26,6 +26,7 @@ const NONE: ReadonlySet<number> = new Set();
 export function CodeBlock({ value, lang, file, marked = NONE, numbers = true }: CodeBlockProps) {
   const text = value.replace(/\n$/, '');
   const lines = useMemo(() => highlightLines(text, lang), [text, lang]);
+  const { copied, failed, copy } = useCopy();
 
   return (
     <div
@@ -38,7 +39,14 @@ export function CodeBlock({ value, lang, file, marked = NONE, numbers = true }: 
         ) : null}
         <span className="flex-1" />
         {lang ? <span className="text-11 text-gray-10 font-mono">{lang}</span> : null}
-        <CopyButton value={text} />
+        <Button
+          variant="ghost"
+          tone={copied ? 'success' : failed ? 'danger' : 'neutral'}
+          size="xs"
+          icon={copied ? 'check' : failed ? 'x' : 'copy'}
+          label={copied ? 'Copied' : failed ? 'Could not copy' : 'Copy'}
+          onClick={() => void copy(text)}
+        />
       </div>
       <pre className="text-13/20 text-gray-12 overflow-x-auto py-12 font-mono">
         <code className={cn('grid', numbers ? 'grid-cols-[auto_1fr]' : 'grid-cols-1')}>

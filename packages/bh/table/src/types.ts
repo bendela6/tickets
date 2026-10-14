@@ -519,7 +519,14 @@ export interface RenderTdCtx<T> {
   /** This is the last column AND the table does not fill its frame — see
    *  `RenderThCtx.trailing`. */
   trailing?: boolean;
+  /** Set for a moment after Ctrl+C copied this cell, to say how it went. Only
+   *  a skin with `onCopyCell` is told, since only it says whether the copy
+   *  worked; what that looks like is the skin's to draw. */
+  copy?: CellCopy;
 }
+
+/** How a cell's copy went: `copied`, or `failed` when the clipboard refused. */
+export type CellCopy = 'copied' | 'failed';
 
 /**
  * Every pin in one row, keyed by `Column.key`.
@@ -696,6 +703,16 @@ export interface TableRender<T = unknown> {
    * tall it is; what a fade looks like is the render set's.
    */
   scrim?: (ctx: RenderScrimCtx) => ReactNode;
+  /**
+   * Writes a cell's text to the clipboard when Ctrl+C (Cmd+C) copies the
+   * focused cell, and resolves to whether it did. The table then hands that
+   * cell `RenderTdCtx.copy` for a moment, so `td` can show it worked, or
+   * that it failed.
+   *
+   * Optional: without it the table writes with `navigator.clipboard` itself,
+   * and shows nothing either way, since it cannot draw.
+   */
+  onCopyCell?: (text: string) => Promise<boolean>;
 }
 
 /** What the `resizeGuide` slot is handed while a column is dragged: drawn

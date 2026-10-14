@@ -30,6 +30,13 @@ optional, and a skin without one draws none of what it would:
 fades at hidden edges) and `frameClass` (classes for the frame, given how
 far it is scrolled).
 
+One optional member draws nothing: `onCopyCell`, which writes a cell's
+text when Ctrl+C copies it and resolves to whether it did. The table
+then hands that cell `copy`, `copied` or `failed`, for a moment, and
+`td` shows it: `@bh/ui`'s skin writes with `copyText` and turns the
+ring green or red, with a word. Without it the table writes the text
+itself and shows nothing.
+
 ## A plain skin
 
 This one draws the required parts with plain elements and a few classes,
@@ -393,26 +400,27 @@ A skin: a function per part of the table, each handed what to draw.
 frame, the box that clips the columns, and the dock at the foot. `@bh/ui`'s
 skin is `tableRender()`.
 
-| Member                   | Type                                          | Default | Description                                                                                                                                |
-| ------------------------ | --------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `root` (required)        | `(ctx: RenderRootCtx) => ReactNode`           |         | The element around the whole table: `role="grid"`.                                                                                         |
-| `thead` (required)       | `(ctx: RenderTheadCtx) => ReactNode`          |         | The header row, around its cells.                                                                                                          |
-| `th` (required)          | `(ctx: RenderThCtx<T>) => ReactNode`          |         | One header cell.                                                                                                                           |
-| `tbody` (required)       | `(ctx: RenderTbodyCtx) => ReactNode`          |         | The element that holds the rows.                                                                                                           |
-| `tr` (required)          | `(ctx: RenderTrCtx<T>) => ReactNode`          |         | One data row, around its cells.                                                                                                            |
-| `td` (required)          | `(ctx: RenderTdCtx<T>) => ReactNode`          |         | One cell.                                                                                                                                  |
-| `groupHeader` (required) | `(ctx: RenderGroupHeaderCtx) => ReactNode`    |         | A group's band, and its pinned copy with `stickyGroupHeader`.                                                                              |
-| `skeletonRow` (required) | `(ctx: RenderSkeletonRowCtx<T>) => ReactNode` |         | A placeholder row while the table loads with no rows.                                                                                      |
-| `error` (required)       | `(ctx: RenderErrorCtx) => ReactNode`          |         | The body while the table has an `error`.                                                                                                   |
-| `empty` (required)       | `(ctx: RenderEmptyCtx) => ReactNode`          |         | The body when there are no rows.                                                                                                           |
-| `tfoot` (required)       | `(ctx: RenderTfootCtx<T>) => ReactNode`       |         | The totals row, when a column has a `footer`.                                                                                              |
-| `filterRow`              | `(ctx: RenderFilterRowCtx<T>) => ReactNode`   |         | Optional: a render set without it simply draws no filter row, and a column's `filter` is ignored — the same trade as `selectCell`.         |
-| `selectCell`             | `(ctx: RenderSelectCellCtx) => ReactNode`     |         | Optional: a render set that does not draw checkboxes simply cannot host a `select` column, rather than every existing render set breaking. |
-| `statusBar`              | `(ctx: RenderStatusBarCtx) => ReactNode`      |         | The bar across the bottom of the table: how many rows, what is selected, whatever the caller wants said about the page it is showing.      |
-| `frameClass`             | `(ctx: { scrollX: ScrollX }) => string`       |         | Classes for the FRAME, given how far the table is scrolled sideways.                                                                       |
-| `hbar`                   | `(ctx: RenderHbarCtx) => ReactNode`           |         | The docked horizontal scrollbar — drawn, not native.                                                                                       |
-| `resizeGuide`            | `(ctx: RenderResizeGuideCtx) => ReactNode`    |         | The line and the width chip shown while a column is being resized.                                                                         |
-| `scrim`                  | `(ctx: RenderScrimCtx) => ReactNode`          |         | The soft edge where content passes out of sight: beside a frozen column, and at whichever side of the frame is hiding columns.             |
+| Member                   | Type                                          | Default | Description                                                                                                                                                                                                                       |
+| ------------------------ | --------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root` (required)        | `(ctx: RenderRootCtx) => ReactNode`           |         | The element around the whole table: `role="grid"`.                                                                                                                                                                                |
+| `thead` (required)       | `(ctx: RenderTheadCtx) => ReactNode`          |         | The header row, around its cells.                                                                                                                                                                                                 |
+| `th` (required)          | `(ctx: RenderThCtx<T>) => ReactNode`          |         | One header cell.                                                                                                                                                                                                                  |
+| `tbody` (required)       | `(ctx: RenderTbodyCtx) => ReactNode`          |         | The element that holds the rows.                                                                                                                                                                                                  |
+| `tr` (required)          | `(ctx: RenderTrCtx<T>) => ReactNode`          |         | One data row, around its cells.                                                                                                                                                                                                   |
+| `td` (required)          | `(ctx: RenderTdCtx<T>) => ReactNode`          |         | One cell.                                                                                                                                                                                                                         |
+| `groupHeader` (required) | `(ctx: RenderGroupHeaderCtx) => ReactNode`    |         | A group's band, and its pinned copy with `stickyGroupHeader`.                                                                                                                                                                     |
+| `skeletonRow` (required) | `(ctx: RenderSkeletonRowCtx<T>) => ReactNode` |         | A placeholder row while the table loads with no rows.                                                                                                                                                                             |
+| `error` (required)       | `(ctx: RenderErrorCtx) => ReactNode`          |         | The body while the table has an `error`.                                                                                                                                                                                          |
+| `empty` (required)       | `(ctx: RenderEmptyCtx) => ReactNode`          |         | The body when there are no rows.                                                                                                                                                                                                  |
+| `tfoot` (required)       | `(ctx: RenderTfootCtx<T>) => ReactNode`       |         | The totals row, when a column has a `footer`.                                                                                                                                                                                     |
+| `filterRow`              | `(ctx: RenderFilterRowCtx<T>) => ReactNode`   |         | Optional: a render set without it simply draws no filter row, and a column's `filter` is ignored — the same trade as `selectCell`.                                                                                                |
+| `selectCell`             | `(ctx: RenderSelectCellCtx) => ReactNode`     |         | Optional: a render set that does not draw checkboxes simply cannot host a `select` column, rather than every existing render set breaking.                                                                                        |
+| `statusBar`              | `(ctx: RenderStatusBarCtx) => ReactNode`      |         | The bar across the bottom of the table: how many rows, what is selected, whatever the caller wants said about the page it is showing.                                                                                             |
+| `frameClass`             | `(ctx: { scrollX: ScrollX }) => string`       |         | Classes for the FRAME, given how far the table is scrolled sideways.                                                                                                                                                              |
+| `hbar`                   | `(ctx: RenderHbarCtx) => ReactNode`           |         | The docked horizontal scrollbar — drawn, not native.                                                                                                                                                                              |
+| `resizeGuide`            | `(ctx: RenderResizeGuideCtx) => ReactNode`    |         | The line and the width chip shown while a column is being resized.                                                                                                                                                                |
+| `scrim`                  | `(ctx: RenderScrimCtx) => ReactNode`          |         | The soft edge where content passes out of sight: beside a frozen column, and at whichever side of the frame is hiding columns.                                                                                                    |
+| `onCopyCell`             | `(text: string) => Promise<boolean>`          |         | Writes a cell's text to the clipboard when Ctrl+C (Cmd+C) copies the focused cell, and resolves to whether it did. The table then hands that cell `RenderTdCtx.copy` for a moment, so `td` can show it worked, or that it failed. |
 
 ```ts
 interface RenderRootCtx
@@ -517,16 +525,25 @@ interface RenderTdCtx<T>
 
 What the `td` slot is handed for one cell.
 
-| Member                  | Type             | Default | Description                                                                                                                                              |
-| ----------------------- | ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `column` (required)     | `Column<T>`      |         | The cell's column.                                                                                                                                       |
-| `index` (required)      | `number`         |         | Zero-based column position, matching `RenderThCtx.index` — a cell has to reach the same gutter decision its header did or the two fall out of alignment. |
-| `row` (required)        | `T`              |         | The cell's row.                                                                                                                                          |
-| `children` (required)   | `ReactNode`      |         | The content: `column.render(row)`, else `column.as({ value, row })`, else `column.value(row)` as text; the checkbox in a `select` column.                |
-| `focused`               | `boolean`        |         | This cell holds the grid's focus. The ring is the ADAPTER's to draw.                                                                                     |
-| `focusProps` (required) | `CellFocusProps` |         | MUST be spread onto the cell element.                                                                                                                    |
-| `pin`                   | `CellPin`        |         | Set when `column.pinned` is — see `RenderThCtx.pin`.                                                                                                     |
-| `trailing`              | `boolean`        |         | This is the last column AND the table does not fill its frame — see `RenderThCtx.trailing`.                                                              |
+| Member                  | Type                               | Default | Description                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `column` (required)     | `Column<T>`                        |         | The cell's column.                                                                                                                                                                                 |
+| `index` (required)      | `number`                           |         | Zero-based column position, matching `RenderThCtx.index` — a cell has to reach the same gutter decision its header did or the two fall out of alignment.                                           |
+| `row` (required)        | `T`                                |         | The cell's row.                                                                                                                                                                                    |
+| `children` (required)   | `ReactNode`                        |         | The content: `column.render(row)`, else `column.as({ value, row })`, else `column.value(row)` as text; the checkbox in a `select` column.                                                          |
+| `focused`               | `boolean`                          |         | This cell holds the grid's focus. The ring is the ADAPTER's to draw.                                                                                                                               |
+| `focusProps` (required) | `CellFocusProps`                   |         | MUST be spread onto the cell element.                                                                                                                                                              |
+| `pin`                   | `CellPin`                          |         | Set when `column.pinned` is — see `RenderThCtx.pin`.                                                                                                                                               |
+| `trailing`              | `boolean`                          |         | This is the last column AND the table does not fill its frame — see `RenderThCtx.trailing`.                                                                                                        |
+| `copy`                  | `CellCopy`: `'copied'`, `'failed'` |         | Set for a moment after Ctrl+C copied this cell, to say how it went. Only a skin with `onCopyCell` is told, since only it says whether the copy worked; what that looks like is the skin's to draw. |
+
+```ts
+type CellCopy = 'copied' | 'failed';
+```
+
+How a cell's copy went: `copied`, or `failed` when the clipboard refused.
+
+One of `'copied'`, `'failed'`.
 
 ```ts
 interface RenderGroupHeaderCtx

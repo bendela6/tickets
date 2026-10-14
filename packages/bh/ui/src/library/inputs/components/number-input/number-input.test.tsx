@@ -1,7 +1,9 @@
-import { createRef } from 'react';
+import { createRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { Drawer } from '../../../overlays/components/drawer';
 import { NumberInput } from './number-input';
 
 test('stepper increments and typing updates the value', async () => {
@@ -152,4 +154,29 @@ test('tone danger is what announces invalid, as on every field', () => {
   expect(container.querySelector('[aria-invalid]')).toBeNull();
   rerender(<NumberInput value={8} onChange={() => {}} tone="danger" />);
   expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('Escape in a drawer drops the draft and closes the drawer, in one press', async () => {
+  const onChange = vi.fn();
+  function InADrawer() {
+    const [open, setOpen] = useState(true);
+    return (
+      <Drawer open={open} onOpenChange={setOpen} label="Detail">
+        <NumberInput aria-label="Estimate" commit="leave" value={3} onChange={onChange} />
+      </Drawer>
+    );
+  }
+  render(<InADrawer />);
+  // As a browser does, the drawer's close renders before the key reaches the
+  // field (Input's tests say why jsdom needs telling).
+  const flush = () => flushSync(() => {});
+  document.addEventListener('keydown', flush, { capture: true });
+
+  // A step, not typing: the stepper's draft is dropped all the same.
+  await userEvent.click(screen.getByRole('button', { name: 'Increment' }));
+  await userEvent.keyboard('{Escape}');
+  document.removeEventListener('keydown', flush, { capture: true });
+
+  expect(screen.queryByRole('dialog', { name: 'Detail' })).not.toBeInTheDocument();
+  expect(onChange).not.toHaveBeenCalled();
 });

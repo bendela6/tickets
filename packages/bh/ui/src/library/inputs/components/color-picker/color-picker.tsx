@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { cn, cursorRing, focusRing, HUES, type Hue } from '../../../../style';
+import { axis, cn, cursorRing, focusRing, HUES, over, variants, type Hue } from '../../../../style';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
@@ -9,6 +9,22 @@ const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 
 /** Six across, so eleven hues fall into two rows and Up/Down is one step. */
 const COLUMNS = 6;
+
+/**
+ * The selected swatch's inset dot, in the token its fill was chosen against.
+ * Through `variants()` because the class is interpolated per hue, and the
+ * safelist holds `variants()` output only: built in `cn()`, `bg-${hue}-contrast`
+ * compiled to nothing in an app and the dot was transparent.
+ */
+const markClass = variants({
+  base: 'size-8 rounded-full',
+  config: {
+    mark: {
+      default: 'on',
+      options: { on: over(axis('scale', HUES, 'indigo'), (hue) => `bg-${hue}-contrast`) },
+    },
+  },
+});
 
 /** The hues in rows of `COLUMNS`, the last one short. */
 const ROWS: Hue[][] = [];
@@ -186,12 +202,7 @@ export function ColorPicker({
                         edge and mixes with it, so the colour you are judging stops
                         being the colour you will get. `-contrast` is the token the
                         fill was chosen against, so the dot reads on all eleven. */}
-                    {isSelected ? (
-                      <span
-                        aria-hidden
-                        className={cn('size-8 rounded-full', `bg-${hue}-contrast`)}
-                      />
-                    ) : null}
+                    {isSelected ? <span aria-hidden className={markClass({ scale: hue })} /> : null}
                   </button>
                 );
               })}

@@ -26,8 +26,7 @@ import { Field } from '@bh/ui';
 
 `id` is the control's id, and the label is a
 [FieldLabel](../field-label/field-label.md) for it. `hint` is the line
-under the control, and `required` marks the label. The hint's id is
-`<id>-hint`, for the control's `aria-describedby`.
+under the control, which it describes, and `required` marks the label.
 
 **A field**
 
@@ -45,22 +44,16 @@ export function AField() {
       required
       className="w-320"
     >
-      <Input
-        id="project-name"
-        aria-describedby="project-name-hint"
-        value={name}
-        onChange={setName}
-        placeholder="north-wing"
-      />
+      <Input id="project-name" value={name} onChange={setName} placeholder="north-wing" />
     </Field>
   );
 }
 ```
 
 An `error` takes the hint's place, as a
-[FieldError](../field-error/field-error.md) at `<id>-error`, so point
-`aria-describedby` at whichever is shown and give the control
-`tone="danger"`.
+[FieldError](../field-error/field-error.md), and describes the control
+in its place. Give the control `tone="danger"` too, for the red halo
+the message goes with.
 
 **With an error**
 
@@ -79,13 +72,7 @@ export function WithAnError() {
       error={error}
       className="w-320"
     >
-      <Input
-        id="folder-name"
-        aria-describedby={error ? 'folder-name-error' : 'folder-name-hint'}
-        value={name}
-        onChange={setName}
-        tone={error ? 'danger' : undefined}
-      />
+      <Input id="folder-name" value={name} onChange={setName} tone={error ? 'danger' : undefined} />
     </Field>
   );
 }
@@ -153,8 +140,11 @@ export function Widths() {
 
 With an `id`, the label is a `<label>` for the control, which it names,
 and a click on it focuses the control. The asterisk is part of the
-label's text. The control's own `aria-describedby` is the caller's:
-`<id>-hint` or `<id>-error`. Without an `id`, the field names and
+label's text. The hint is at `<id>-hint` and the error at `<id>-error`.
+When the control is the field's own child, the field adds whichever is
+shown to the control's `aria-describedby`, after any ids it has there
+already; a control further down, in a row of its own, points its
+`aria-describedby` at them itself. Without an `id`, the field names and
 describes the group itself. An error is a `role="alert"`, announced when
 it appears.
 

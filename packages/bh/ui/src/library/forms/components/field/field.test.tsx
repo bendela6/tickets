@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { Input } from '../../../inputs/components/input';
 import { Field } from './field';
 
 describe('Field, with an id', () => {
@@ -21,15 +22,55 @@ describe('Field, with an id', () => {
     expect(screen.getByLabelText('Name *')).toBeInTheDocument();
   });
 
-  it('puts the hint under the control, at an id made from the control’s', () => {
+  it('puts the hint under the control and describes the control by it', () => {
     render(
       <Field id="name" label="Name" hint="Its files are named after it.">
-        <input id="name" aria-describedby="name-hint" />
+        <input id="name" />
+      </Field>,
+    );
+    const control = screen.getByLabelText('Name');
+    expect(control).toHaveAccessibleDescription('Its files are named after it.');
+    // At an id made from the control's, for a control further down to name.
+    expect(control).toHaveAttribute('aria-describedby', 'name-hint');
+  });
+
+  it('describes one of the library’s controls the same way', () => {
+    render(
+      <Field id="name" label="Name" hint="Its files are named after it.">
+        <Input id="name" value="" onChange={() => {}} />
       </Field>,
     );
     expect(screen.getByLabelText('Name')).toHaveAccessibleDescription(
       'Its files are named after it.',
     );
+  });
+
+  it('keeps the control’s own description, and names each id once', () => {
+    render(
+      <>
+        <p id="rules">Up to 24 letters.</p>
+        <Field id="name" label="Name" hint="Its files are named after it.">
+          <input id="name" aria-describedby="rules name-hint" />
+        </Field>
+      </>,
+    );
+    const control = screen.getByLabelText('Name');
+    expect(control).toHaveAttribute('aria-describedby', 'rules name-hint');
+    expect(control).toHaveAccessibleDescription('Up to 24 letters. Its files are named after it.');
+  });
+
+  it('leaves a control further down to point at the ids itself', () => {
+    // The field's child here is a row, not the control the label names, so
+    // nothing is added to it; the control names `<id>-hint` on its own.
+    render(
+      <Field id="port" label="Port" hint="Between 1 and 65535.">
+        <div data-testid="row">
+          <input id="port" aria-describedby="port-hint" />
+        </div>
+      </Field>,
+    );
+    expect(screen.getByTestId('row')).not.toHaveAttribute('aria-describedby');
+    expect(screen.getByLabelText('Port')).toHaveAccessibleDescription('Between 1 and 65535.');
   });
 
   it('takes any node as its hint, a link in it say', () => {
@@ -49,15 +90,31 @@ describe('Field, with an id', () => {
     expect(screen.getByRole('link', { name: 'the rules' })).toBeInTheDocument();
   });
 
-  it('shows the error in the hint’s place, as an alert at its own id', () => {
-    render(
+  it('shows the error in the hint’s place, as an alert the control is described by', () => {
+    const { rerender } = render(
+      <Field id="name" label="Name" hint="Its files are named after it.">
+        <input id="name" />
+      </Field>,
+    );
+    rerender(
       <Field id="name" label="Name" hint="Its files are named after it." error="Use letters only">
-        <input id="name" aria-describedby="name-error" />
+        <input id="name" />
       </Field>,
     );
     expect(screen.queryByText('Its files are named after it.')).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Use letters only');
-    expect(screen.getByLabelText('Name')).toHaveAccessibleDescription('Use letters only');
+    const control = screen.getByLabelText('Name');
+    expect(control).toHaveAccessibleDescription('Use letters only');
+    expect(control).toHaveAttribute('aria-describedby', 'name-error');
+  });
+
+  it('describes the control by nothing with neither a hint nor an error', () => {
+    render(
+      <Field id="name" label="Name">
+        <input id="name" />
+      </Field>,
+    );
+    expect(screen.getByLabelText('Name')).not.toHaveAttribute('aria-describedby');
   });
 
   it('draws nothing under the control with neither a hint nor an error', () => {

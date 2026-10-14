@@ -1,0 +1,692 @@
+---
+title: Writing a hook
+summary: The shape every hook in @bh/hooks takes, options in and state, actions
+  and prop getters out with no markup, and how its tests and its page are laid
+  out.
+order: 2
+related: [Overview, The app names its own, Disclosure, Tree, useTable]
+---
+
+[//]: # 'written from writing-a-hook.doc.yaml by pnpm docs:sync; edit that file, not this one'
+
+# Writing a hook
+
+The shape every hook in `@bh/hooks` takes, so each one reads like the
+last: options in; state, actions and prop getters out; no markup. It
+holds the mechanics and a component draws what it returns, as
+[`useTreeView`](../../ui/src/library/navigation/components/tree/tree.md) and `SegmentedControl`'s
+tile already split them in `@bh/ui`.
+
+> [!NOTE]
+> **Two hooks worked through, before they are built**
+>
+> `useDisclosure` and `usePersistedState` are the worked examples
+> below, written out as the shape they will have. They are not in the
+> package yet: their code here is a sketch, which the docs' type check
+> reads and nothing exports. Some points of the shape still wait on a
+> choice, and are written here as proposed: a hook about one value
+> taking it first, `usePersistedState` returning a pair, prop getters
+> rather than prop objects, the caller's handler running first, a
+> stored value kept in step across tabs, and a disclosure's trigger
+> being a `<button>`.
+
+## The shape
+
+A hook holds one interaction: whether a region is open, a value kept in
+storage, an element's size, a drag. It returns that state, the actions
+that change it, and the props for each element it wires. It draws
+nothing, and imports React alone. Here is `useDisclosure`'s whole
+surface:
+
+```ts
+import type { MouseEvent } from 'react';
+
+/** What `useDisclosure` takes. Every option is optional: `useDisclosure()`. */
+export interface UseDisclosureOptions {
+  /** Whether it is open, for a caller that holds it; it then changes only through `onOpenChange`. */
+  open?: boolean;
+  /** Whether it starts open, while the hook holds it. Read on the first render only. */
+  defaultOpen?: boolean;
+  /** Hears every change, with the new value, whoever holds it. */
+  onOpenChange?: (open: boolean) => void;
+  /** The region's id, for an app that needs a fixed one; `useId()` gives one otherwise. */
+  id?: string;
+}
+
+/** What `useDisclosure` gives back: state, actions, then prop getters. */
+export interface UseDisclosureResult {
+  /** Whether the region is open. */
+  isOpen: boolean;
+  /** Opens it. The same function for the hook's life, as every action is. */
+  open: () => void;
+  /** Folds it. */
+  close: () => void;
+  /** Opens it if folded, folds it if open. */
+  toggle: () => void;
+  /** Opens or folds it. */
+  setOpen: (open: boolean) => void;
+  /** The trigger, a `<button>`: its `type`, `aria-expanded`, `aria-controls` while open, and its click, with yours merged in. */
+  getTriggerProps: (own?: { onClick?: (event: MouseEvent<HTMLButtonElement>) => void }) => {
+    type: 'button';
+    'aria-expanded': boolean;
+    'aria-controls': string | undefined;
+    onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  };
+  /** The region: its `id`, and `hidden` while folded. */
+  getRegionProps: () => { id: string; hidden: boolean };
+}
+
+export declare function useDisclosure(options?: UseDisclosureOptions): UseDisclosureResult;
+```
+
+### Its name
+
+- **`use` and what it holds**: `useDisclosure`, `usePersistedState`,
+  `useElementSize`; never what draws it.
+- **Its types** are `UseDisclosureOptions` and `UseDisclosureResult`, as
+  `useTable`'s and `useTreeView`'s are, exported beside it.
+- **State and actions never share a name.** State says what it is
+  (`isOpen`, `width`), an action is a verb (`open`, `close`, `toggle`,
+  `setOpen`).
+- **One module each**: `src/use-disclosure.ts`, its tests in
+  `src/use-disclosure.test.tsx`, its page in `docs/use-disclosure.doc.yaml`
+  with its examples in `docs/examples/`.
+
+### What it takes
+
+- **One options object**, each option with a line of JSDoc, which the
+  page's reference shows. It is optional when every option is.
+- **A hook about one value takes it first**, as React's own do, with
+  any options after it: `useMediaQuery(query)`,
+  `useDebouncedValue(value, { delay })`.
+- **A value the caller may hold** takes three options: the value, where
+  it starts, and who hears it change: `open`, `defaultOpen` and
+  `onOpenChange`; `value`, `defaultValue` and `onChange` for a hook
+  whose value has no better name.
+- **What it is named under comes from the app**: a storage key, a fixed
+  id. A hook names nothing of its own
+  ([The app names its own](../../../../apps/docs/content/getting-started/app-names-its-own.md)).
+
+### What it gives back
+
+One object, its members in this order:
+
+- **State**: plain values, each the same object until it changes.
+- **Actions**: the functions that change the state, each the same
+  function for the hook's life.
+- **Prop getters**: `get<Part>Props(own?)` for each element it wires,
+  below.
+- **Refs**, for a hook that reads an element and wires no props to it.
+
+A hook that stands in for one of React's returns what React's does:
+`usePersistedState` is `useState` that remembers, so it returns
+`[value, setValue]`.
+
+### Prop getters
+
+A getter returns the props to spread on one element: its `role`,
+`aria-*`, `id`, `tabIndex`, handlers and ref. Never a class or a style:
+how it looks is the caller's. `own` is the caller's props for the same
+element, merged in:
+
+- **Handlers**: the caller's runs first, then the hook's. To stop a
+  change, hold the value instead.
+- **Refs**: the caller's and the hook's both get the node, through
+  `mergeRefs`; the merged ref stays the same function while the
+  caller's ref does, so the node is not handed over again on every
+  render.
+- **`id`, `role` and `aria-*`**: the hook's win, since they point at
+  each other. Anything else passes through.
+
+A getter is a new function when what it returns changes, and returns a
+new object on each call: spread it as you render, and keep nothing it
+gave.
+
+```ts
+import type { Ref, RefCallback } from 'react';
+
+/** One ref that hands the node to each of `refs`, and takes it back from each. */
+export function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
+  return (node) => {
+    const cleanups = refs.map((ref) => {
+      if (typeof ref === 'function') {
+        return ref(node);
+      }
+      if (ref) {
+        ref.current = node;
+      }
+      return undefined;
+    });
+    return () => {
+      refs.forEach((ref, index) => {
+        const cleanup = cleanups[index];
+        if (typeof cleanup === 'function') {
+          cleanup();
+        } else if (typeof ref === 'function') {
+          ref(null);
+        } else if (ref) {
+          ref.current = null;
+        }
+      });
+    };
+  };
+}
+```
+
+### Held by the hook, or by the caller
+
+- **The caller holds it while it passes it**: `open !== undefined`,
+  decided on every render, as `@bh/ui`'s
+  [Disclosure](../../ui/src/library/layout/components/disclosure/disclosure.md) decides.
+- **Held by the caller, the hook keeps no copy.** An action calls
+  `onOpenChange` and the new value comes back as a prop, so a caller
+  that declines a change keeps what it had.
+- **The change callback hears every change**, whoever holds the value:
+  once, with the new value, never during a render and never from
+  inside a state update, which StrictMode runs twice.
+- **`defaultOpen` is read on the first render only.**
+
+### No DOM on the first render
+
+A static build renders each page on a server, where there is no
+window, document, storage or element. A hook's first render touches
+none of them, and gives its **server value**, which its page names:
+folded, the default value, no size yet.
+
+- **Browser state it reads**, a media query or a stored value, goes
+  through `useSyncExternalStore`, with the server value as its server
+  snapshot: an app that renders only in the browser gets the real value
+  on its first render, a hydrated page right after it.
+- **An element is measured in a layout effect**, before the browser
+  paints, so nothing shows at the wrong size first.
+- **What a browser may lack is checked for**: no `ResizeObserver`, a
+  storage that throws. The hook does without, as `SegmentedControl`'s
+  tile does without measuring.
+
+### Cleaning up
+
+- Every listener, observer, timer, frame and pointer capture a hook
+  starts is ended by the cleanup of what started it, at unmount at the
+  latest: a drag cut short by an unmount lets go of the pointer.
+- Setup and cleanup mirror each other, so StrictMode's second run
+  leaves one subscription, not two.
+
+### What keeps its identity
+
+- **Actions**: the same function for the hook's life, so a caller can
+  list one as a dependency, or hand it to a memoised child.
+- **The caller's callbacks** are read when they are called, from a ref
+  the hook writes after each commit, as `useInlineEdit` does in
+  `@bh/ui`. The caller need not memoise them, and changing one
+  re-subscribes nothing.
+- **State**: the same object until it changes; a measurement that comes
+  out the same keeps the object it had.
+- **The result itself** is a new object on each render: destructure
+  it, and never list it as a dependency.
+
+## useDisclosure, worked through
+
+An open-or-folded state, with the props for the button that folds and
+the region it folds. The example holds its sketch of the hook and the
+plain view it drives: two buttons, the paragraphs they fold, and a
+third button that folds both.
+
+**Two plain folds**
+
+```tsx
+import { useCallback, useId, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
+
+// useDisclosure as "Writing a hook" sketches it, beside the plain view it
+// drives: buttons and the regions they fold, with no component of bh's
+// between them. The hook stays unexported here, as an example shows one
+// component; in the package it is its own module.
+
+interface UseDisclosureOptions {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  id?: string;
+}
+
+interface OwnTriggerProps {
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+}
+
+function useDisclosure({ open, defaultOpen = false, onOpenChange, id }: UseDisclosureOptions = {}) {
+  const [held, setHeld] = useState(defaultOpen);
+  const isOpen = open ?? held;
+  const generated = useId();
+  const regionId = id ?? generated;
+
+  // What the actions read when they run, written after each commit: the
+  // caller's latest onOpenChange is the one called, memoised or not.
+  const live = useRef({ isOpen, owned: open !== undefined, onOpenChange });
+  useLayoutEffect(() => {
+    live.current = { isOpen, owned: open !== undefined, onOpenChange };
+  });
+
+  // One identity for the hook's life. An owned value is not copied: the
+  // caller hears the change and passes the new `open` back.
+  const setOpen = useCallback((next: boolean) => {
+    const now = live.current;
+    if (next === now.isOpen) {
+      return;
+    }
+    now.isOpen = next;
+    if (!now.owned) {
+      setHeld(next);
+    }
+    now.onOpenChange?.(next);
+  }, []);
+  const openIt = useCallback(() => setOpen(true), [setOpen]);
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  const toggle = useCallback(() => setOpen(!live.current.isOpen), [setOpen]);
+
+  // New when what they return changes. The caller's own click runs first.
+  const getTriggerProps = useCallback(
+    (props: OwnTriggerProps = {}) => {
+      return {
+        type: 'button' as const,
+        'aria-expanded': isOpen,
+        'aria-controls': isOpen ? regionId : undefined,
+        onClick: (event: MouseEvent<HTMLButtonElement>) => {
+          props.onClick?.(event);
+          toggle();
+        },
+      };
+    },
+    [isOpen, regionId, toggle],
+  );
+  const getRegionProps = useCallback(() => {
+    return { id: regionId, hidden: !isOpen };
+  }, [isOpen, regionId]);
+
+  return { isOpen, open: openIt, close, toggle, setOpen, getTriggerProps, getRegionProps };
+}
+
+const TRIGGER = 'rounded-8 border-gray-6 border-1 px-12 py-6';
+
+export function TwoPlainFolds() {
+  // The hook holds this one.
+  const shipping = useDisclosure();
+  // The page holds this one, and the hook asks it for every change.
+  const [returnsOpen, setReturnsOpen] = useState(true);
+  const returns = useDisclosure({ open: returnsOpen, onOpenChange: setReturnsOpen });
+
+  return (
+    <div className="flex flex-col items-start gap-8">
+      <button className={TRIGGER} {...shipping.getTriggerProps()}>
+        {shipping.isOpen ? 'Hide' : 'Show'} shipping
+      </button>
+      <p className="text-13/19 text-gray-11" {...shipping.getRegionProps()}>
+        Ships in two days, in one box.
+      </p>
+      <button className={TRIGGER} {...returns.getTriggerProps()}>
+        {returns.isOpen ? 'Hide' : 'Show'} returns
+      </button>
+      <p className="text-13/19 text-gray-11" {...returns.getRegionProps()}>
+        Free for thirty days.
+      </p>
+      <button
+        className={TRIGGER}
+        onClick={() => {
+          shipping.close();
+          setReturnsOpen(false);
+        }}
+      >
+        Fold both
+      </button>
+    </div>
+  );
+}
+```
+
+- **Shipping** is held by the hook: it starts at `defaultOpen`, here
+  folded, and `shipping.close()` folds it from outside.
+- **Returns** is held by the page, in its own state: the hook shows
+  `open` and asks `onOpenChange` for each change, so **Fold both** folds
+  it by setting that state.
+- The trigger needs a `<button>`, which the browser makes work with
+  Enter and Space and gives a place in the tab order: the getter only
+  adds `type="button"`.
+- `aria-controls` is set only while open, so a caller that leaves the
+  region out while folded points at nothing that isn't there.
+
+## usePersistedState, worked through
+
+A value kept in `localStorage` under the app's key, read like
+`useState`. It is what `@bh/ui`'s panels, `@bh/table`'s widths and
+`@bh/shell`'s theme each keep a copy of today, with the storage helper
+that guards them.
+
+```ts
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+
+/** What `usePersistedState` takes. */
+export interface UsePersistedStateOptions<T> {
+  /** The app's name for it, as `shop:sidebar`; without one nothing is stored, and it lives as long as the component. */
+  key: string | undefined;
+  /** The value while nothing is stored, and on a server. */
+  defaultValue: T;
+  /** The string stored for a value. `JSON.stringify` unless given. */
+  serialize?: (value: T) => string;
+  /** A stored string's value, or `undefined` for one it can't read, which reads as unset. `JSON.parse` unless given. */
+  parse?: (raw: string) => T | undefined;
+}
+
+export type SetPersisted<T> = (next: T | ((previous: T) => T)) => void;
+
+// Storage throws where site data is blocked, and again when it is full:
+// both read as nothing stored, and the value still changes for this page.
+export function readStored(key: string | undefined): string | null {
+  if (!key) {
+    return null;
+  }
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function writeStored(key: string | undefined, raw: string): void {
+  if (!key) {
+    return;
+  }
+  try {
+    localStorage.setItem(key, raw);
+  } catch {
+    // Not remembered, but still changed: see readStored.
+  }
+}
+
+// What this page wrote under each key, which outlives a storage that
+// refused it, and who to tell when one changes: one key, one value.
+const written = new Map<string, string>();
+const listeners = new Map<string, Set<() => void>>();
+
+function snapshot(key: string): string | null {
+  return written.get(key) ?? readStored(key);
+}
+
+function subscribe(key: string, listener: () => void): () => void {
+  const own = listeners.get(key) ?? new Set<() => void>();
+  own.add(listener);
+  listeners.set(key, own);
+  // Another tab of the app wrote it.
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === key) {
+      written.delete(key);
+      listener();
+    }
+  };
+  window.addEventListener('storage', onStorage);
+  return () => {
+    own.delete(listener);
+    if (own.size === 0) {
+      listeners.delete(key);
+    }
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
+function store(key: string, raw: string): void {
+  written.set(key, raw);
+  writeStored(key, raw);
+  listeners.get(key)?.forEach((listener) => listener());
+}
+
+export function usePersistedState<T>({
+  key,
+  defaultValue,
+  serialize = JSON.stringify,
+  parse = JSON.parse,
+}: UsePersistedStateOptions<T>): [T, SetPersisted<T>] {
+  // Without a key, plain state.
+  const [held, setHeld] = useState(defaultValue);
+  const subscribeToKey = useCallback(
+    (listener: () => void) => (key ? subscribe(key, listener) : () => undefined),
+    [key],
+  );
+  const raw = useSyncExternalStore(
+    subscribeToKey,
+    () => (key ? snapshot(key) : null),
+    // The server value: nothing stored.
+    () => null,
+  );
+  const stored = useMemo(() => {
+    if (raw === null) {
+      return undefined;
+    }
+    try {
+      return parse(raw);
+    } catch {
+      return undefined;
+    }
+  }, [raw, parse]);
+  const value = key ? (stored ?? defaultValue) : held;
+
+  // What the setter reads when it runs: it keeps one identity for the hook's life.
+  const live = useRef({ key, value, serialize });
+  useLayoutEffect(() => {
+    live.current = { key, value, serialize };
+  });
+  const setValue = useCallback<SetPersisted<T>>((next) => {
+    const now = live.current;
+    const resolved = typeof next === 'function' ? (next as (previous: T) => T)(now.value) : next;
+    now.value = resolved;
+    if (now.key) {
+      store(now.key, now.serialize(resolved));
+    } else {
+      setHeld(resolved);
+    }
+  }, []);
+
+  return [value, setValue];
+}
+```
+
+- **No key, nothing stored**: a table the app has not named keeps its
+  widths as long as it is on screen, and writes nothing under a name
+  it made up.
+- **A storage that refuses** (blocked, or full) reads as empty, and the
+  value still changes for the page: it is only not remembered.
+- **One key, one value**: every component on the page using the key
+  changes with it, and so do the app's other tabs.
+- **A stored string that won't parse**, or that `parse` turns down,
+  reads as unset: `parse` is where an app checks a value an older
+  version of it stored.
+- Pass `parse`, and an object `defaultValue`, from outside the
+  component, so they are not new on each render and the value keeps
+  its identity.
+
+## Its tests
+
+One file per hook, `src/use-disclosure.test.tsx`, beside it:
+
+1. **Held by the hook**: where it starts, and each action, through
+   `renderHook` and `act`.
+2. **Held by the caller**: it shows what it is given, and an action only
+   calls the change callback.
+3. **The plain view**: a few plain elements spread with its getters,
+   driven with `user-event` as a reader would, by mouse and by
+   keyboard, and read by role and `aria-*`, never by class.
+4. **Identity**: an action is the same function after a rerender.
+5. **StrictMode**: a change calls back once.
+6. **Cleaning up**: what it added is gone after `unmount`, for a hook
+   that adds listeners, observers or timers.
+
+```tsx
+import { act, render, renderHook, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { StrictMode, type HTMLAttributes } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+
+// In the package: import { useDisclosure } from './use-disclosure';
+declare function useDisclosure(options?: {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}): {
+  isOpen: boolean;
+  toggle: () => void;
+  getTriggerProps: () => HTMLAttributes<HTMLButtonElement>;
+  getRegionProps: () => HTMLAttributes<HTMLElement>;
+};
+
+// The plain view it drives, as on its page: no component of bh's.
+function Fold() {
+  const fold = useDisclosure();
+  return (
+    <>
+      <button {...fold.getTriggerProps()}>Shipping</button>
+      <p {...fold.getRegionProps()}>Ships in two days.</p>
+    </>
+  );
+}
+
+describe('useDisclosure', () => {
+  describe('held by the hook', () => {
+    it('starts at defaultOpen, and toggles', () => {
+      const { result } = renderHook(() => useDisclosure({ defaultOpen: true }));
+      act(() => result.current.toggle());
+      expect(result.current.isOpen).toBe(false);
+    });
+  });
+
+  describe('held by the caller', () => {
+    it('shows open, and asks onOpenChange for a change', () => {
+      const onOpenChange = vi.fn();
+      const { result } = renderHook(() => useDisclosure({ open: false, onOpenChange }));
+      act(() => result.current.toggle());
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+      expect(result.current.isOpen).toBe(false);
+    });
+  });
+
+  describe('the plain view', () => {
+    it('opens from its button, by mouse and by keyboard', async () => {
+      const user = userEvent.setup();
+      render(<Fold />);
+      const button = screen.getByRole('button', { name: 'Shipping' });
+      await user.click(button);
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      await user.keyboard(' ');
+      expect(screen.getByText('Ships in two days.').hidden).toBe(true);
+    });
+  });
+
+  it('keeps each action for its life', () => {
+    const { result, rerender } = renderHook(() => useDisclosure());
+    const { toggle } = result.current;
+    act(() => toggle());
+    rerender();
+    expect(result.current.toggle).toBe(toggle);
+  });
+
+  it('calls back once under StrictMode', () => {
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() => useDisclosure({ onOpenChange }), {
+      wrapper: StrictMode,
+    });
+    act(() => result.current.toggle());
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+And one file for the package, `src/server.test.tsx`, run in Node with
+no DOM: every hook renders there and gives its server value. Each new
+hook adds itself to it.
+
+```tsx
+// @vitest-environment node
+import { renderToString } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+
+// In the package: import { useDisclosure, usePersistedState } from './index';
+declare function useDisclosure(): { isOpen: boolean };
+declare function usePersistedState<T>(options: {
+  key: string | undefined;
+  defaultValue: T;
+}): [T, (next: T) => void];
+
+function EveryHook() {
+  const { isOpen } = useDisclosure();
+  const [width] = usePersistedState({ key: 'test:width', defaultValue: 240 });
+  return <p>{`${String(isOpen)} ${String(width)}`}</p>;
+}
+
+describe('every hook, on a server', () => {
+  it('renders with no DOM, and gives its server value', () => {
+    expect(typeof window).toBe('undefined');
+    expect(renderToString(<EveryHook />)).toBe('<p>false 240</p>');
+  });
+});
+```
+
+## Its page
+
+One page per hook, `docs/use-disclosure.doc.yaml`, in this order:
+
+1. **What it holds**, in a line, then what it leaves to the caller.
+2. **Import**: the one line.
+3. **Examples**: a live demo of the hook driving a plain view, buttons
+   and a `div` with no component of bh's, so what shows is the hook and
+   nothing else; then what to try in it.
+4. **Held by the caller**, for a hook with a value: a second demo, or
+   the first one's second half.
+5. **Rules**: its server value, what it cleans up, what keeps its
+   identity, and its edge cases.
+6. **Reference**: `ref` blocks for the hook and its two types, which
+   read their JSDoc. A component of bh's built on it links here from
+   its own page.
+
+```yaml
+title: useDisclosure
+summary: Open and fold a region from a button, with the props for both and no markup of its own.
+order: 3
+related: [Writing a hook, Disclosure]
+body:
+  - |
+    Open and fold a region from a button, with the props for both and
+    no markup of its own.
+  - h2: Import
+  - code: import { useDisclosure } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/a-plain-fold.tsx
+  - |
+    What the demo shows, and what to try in it.
+  - h2: Held by the caller
+  - demo: examples/folded-from-the-page.tsx
+  - h2: Rules
+  - |
+    - Its server value: folded, or `defaultOpen`.
+    - What keeps its identity: every action.
+  - h2: Reference
+  - ref: useDisclosure
+  - ref: UseDisclosureOptions
+  - ref: UseDisclosureResult
+```
+
+## Rules
+
+- A hook draws nothing, and imports React alone.
+- One options object in, after the one value a hook may be about; one
+  object out, with state, actions and prop getters in that order,
+  unless it stands in for one of React's hooks.
+- A value the caller may hold takes the value, its default and its
+  change callback, and the hook keeps no copy while the caller holds it.
+- No DOM on the first render: it gives its server value there.
+- Everything it starts, it ends, at unmount at the latest.
+- Actions keep their identity; the caller's callbacks need no memoising.
+- Each hook has its test file, a line in `server.test.tsx`, and a page
+  with a live demo of a plain view.

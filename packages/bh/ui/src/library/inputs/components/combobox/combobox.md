@@ -14,7 +14,8 @@ as a select, for a short one.
 `value` is `string | null`, since a single choice can always be empty.
 There is no clear button: a value is changed by picking another. The
 field shows the chosen label as plain text, never a chip, with a dot
-before it when the option has a `color`, because the colour is data.
+before it when the option has a `color`, because the colour is data, and
+its `icon` before that.
 
 ## Import
 
@@ -90,6 +91,36 @@ export function ColouredOptions() {
     <div className="flex w-256 flex-col gap-6">
       <FieldLabel htmlFor={id}>Fruit</FieldLabel>
       <Combobox id={id} options={FRUITS} value={fruit} onChange={setFruit} />
+    </div>
+  );
+}
+```
+
+An option's `icon` leads its row in the list, and the field once it is
+chosen, before the dot of its `color`. Here, a parcel's stage, without
+search.
+
+**Options with icons**
+
+```tsx
+import { useId, useState } from 'react';
+import { Combobox, FieldLabel, type Option } from '@bh/ui';
+
+const STAGES: Option[] = [
+  { value: 'ordered', label: 'Ordered', icon: 'circle-dashed', color: 'gray' },
+  { value: 'packed', label: 'Packed', icon: 'circle', color: 'gray' },
+  { value: 'shipped', label: 'In transit', icon: 'circle-half', color: 'blue' },
+  { value: 'nearby', label: 'Out for delivery', icon: 'circle-dot', color: 'purple' },
+  { value: 'delivered', label: 'Delivered', icon: 'circle-check', color: 'green' },
+];
+
+export function OptionsWithIcons() {
+  const id = useId();
+  const [stage, setStage] = useState<string | null>('shipped');
+  return (
+    <div className="flex w-256 flex-col gap-6">
+      <FieldLabel htmlFor={id}>Parcel</FieldLabel>
+      <Combobox id={id} options={STAGES} value={stage} onChange={setStage} searchable={false} />
     </div>
   );
 }
@@ -320,9 +351,9 @@ export function Danger() {
 
 `searchable={false}` makes it a select, for a short, fixed set: over a
 few options a search box is noise, and it costs a keystroke to reach the
-list. The list opens at the field's width, takes the focus itself, and
-puts the cursor on the chosen option, so Enter straight away keeps the
-value. The arrows open it as well as Enter and Space, and typing jumps to
+list. The list opens at least as wide as the field, takes the focus
+itself, and puts the cursor on the chosen option, so Enter straight away
+keeps the value. The arrows open it as well as Enter and Space, and typing jumps to
 the first option whose label starts with what was typed, as on a native
 select. Typing on the closed field opens the list there.
 
@@ -410,6 +441,45 @@ export function GroupedWithoutSearch() {
         onChange={setFruit}
         groupOf={(option) => KIND[option.value] ?? ''}
         groups={KINDS}
+      />
+    </div>
+  );
+}
+```
+
+The list grows past a narrow field with its widest option, or a disabled
+option's reason, up to 320 pixels, so the reason reads in a line or two
+rather than a word or two a line. A field wider than that keeps its own
+width.
+
+**In a narrow field**
+
+```tsx
+import { useState } from 'react';
+import { Combobox, type Option } from '@bh/ui';
+
+const SIZES: Option[] = [
+  { value: 's', label: 'Small' },
+  { value: 'm', label: 'Medium' },
+  { value: 'l', label: 'Large' },
+  {
+    value: 'xl',
+    label: 'Extra large',
+    disabled: true,
+    disabledReason: 'Sold out in this color. More comes in on Friday.',
+  },
+];
+
+export function InANarrowField() {
+  const [size, setSize] = useState<string | null>('m');
+  return (
+    <div className="w-160">
+      <Combobox
+        aria-label="Size"
+        searchable={false}
+        options={SIZES}
+        value={size}
+        onChange={setSize}
       />
     </div>
   );
@@ -520,20 +590,21 @@ One option vocabulary for every control that offers a choice.
 ones with nowhere to paint one. `icon` reads the same way: drawn by the
 controls with room for a glyph beside the label, ignored by the ones without.
 So does `description`, drawn only where there is room for a line under the
-label, which is RadioGroup today. On the shared vocabulary rather than a
-RadioGroup option of its own, because a second option type is what this one
-replaced, and because a form's `radio` field passes its options straight
-through: one type is what lets a stored config carry the line too.
+label, which is RadioGroup and CheckboxGroup today. On the shared vocabulary
+rather than a RadioGroup option of its own, because a second option type is
+what this one replaced, and because a form's `radio` and `checkbox-group`
+fields pass their options straight through: one type is what lets a stored
+config carry the line too.
 
-| Member             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default | Description                                                                                                                                                                                                                                                                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `value` (required) | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |         | What `onChange` reports when this option is picked.                                                                                                                                                                                                                                                                                         |
-| `label` (required) | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |         | What the option shows.                                                                                                                                                                                                                                                                                                                      |
-| `disabled`         | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |         | Shown, but neither the cursor nor a click can pick it.                                                                                                                                                                                                                                                                                      |
-| `disabledReason`   | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |         | Why a `disabled` option can't be chosen, e.g. "The workflow doesn't go from Done to To do." The list controls (`Combobox`, with search or without, and `MultiCombobox`) print it under the greyed row and make it the row's description, so a screen reader reads it out; the others ignore it. Ignored on an option that isn't `disabled`. |
-| `color`            | `Hue`: `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |         | A scale for the controls that draw a swatch beside the label.                                                                                                                                                                                                                                                                               |
-| `icon`             | `IconName`: `'columns'`, `'filter'`, `'search'`, `'link'`, `'circle'`, `'circle-half'`, `'circle-dot'`, `'circle-dashed'`, `'circle-check'`, `'circle-x'`, `'circle-info'`, `'diamond'`, `'square'`, `'dot'`, `'arc'`, `'triangle-alert'`, `'chevron-up'`, `'chevron-down'`, `'chevron-left'`, `'chevron-right'`, `'arrow-up'`, `'arrow-down'`, `'arrow-up-right'`, `'arrow-up-down'`, `'plus'`, `'x'`, `'check'`, `'minus'`, `'maximize'`, `'minimize'`, `'copy'`, `'pencil'`, `'trash'`, `'refresh'`, `'grip'`, `'ellipsis'`, `'eye'`, `'rows'`, `'rows-compact'`, `'folder'`, `'file'`, `'terminal'`, `'sliders'`, `'calendar'`, `'clock'`, `'tag'`, `'user'`, `'sun'`, `'moon'`, `'monitor'`, `'list'`, `'quote'` |         | A glyph before the label, for the controls with room for one.                                                                                                                                                                                                                                                                               |
-| `description`      | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |         | A line under the label, saying what choosing it does: drawn by RadioGroup, ignored by the controls with no room for it.                                                                                                                                                                                                                     |
+| Member             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Default | Description                                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` (required) | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |         | What `onChange` reports when this option is picked.                                                                                                                                                                                                                                                                                         |
+| `label` (required) | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |         | What the option shows.                                                                                                                                                                                                                                                                                                                      |
+| `disabled`         | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |         | Shown, but neither the cursor nor a click can pick it.                                                                                                                                                                                                                                                                                      |
+| `disabledReason`   | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |         | Why a `disabled` option can't be chosen, e.g. "The workflow doesn't go from Done to To do." The list controls (`Combobox`, with search or without, and `MultiCombobox`) print it under the greyed row and make it the row's description, so a screen reader reads it out; the others ignore it. Ignored on an option that isn't `disabled`. |
+| `color`            | `Hue`: `'red'`, `'orange'`, `'yellow'`, `'green'`, `'teal'`, `'cyan'`, `'blue'`, `'indigo'`, `'purple'`, `'pink'`, `'gray'`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |         | A scale for the controls that draw a swatch beside the label.                                                                                                                                                                                                                                                                               |
+| `icon`             | `IconName`: `'columns'`, `'filter'`, `'search'`, `'link'`, `'circle'`, `'circle-half'`, `'circle-dot'`, `'circle-dashed'`, `'circle-check'`, `'circle-x'`, `'circle-info'`, `'diamond'`, `'square'`, `'dot'`, `'arc'`, `'triangle-alert'`, `'chevron-up'`, `'chevron-down'`, `'chevron-left'`, `'chevron-right'`, `'arrow-up'`, `'arrow-down'`, `'arrow-up-right'`, `'arrow-up-down'`, `'plus'`, `'x'`, `'check'`, `'minus'`, `'maximize'`, `'minimize'`, `'copy'`, `'pencil'`, `'trash'`, `'refresh'`, `'grip'`, `'ellipsis'`, `'undo'`, `'redo'`, `'eye'`, `'rows'`, `'rows-compact'`, `'folder'`, `'file'`, `'terminal'`, `'sliders'`, `'calendar'`, `'clock'`, `'tag'`, `'user'`, `'sun'`, `'moon'`, `'monitor'`, `'list'`, `'quote'` |         | A glyph before the label, for the controls with room for one.                                                                                                                                                                                                                                                                               |
+| `description`      | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |         | A line under the label, saying what choosing it does: drawn by RadioGroup and CheckboxGroup, ignored by the controls with no room for it.                                                                                                                                                                                                   |
 
 ```ts
 interface OptionGroup

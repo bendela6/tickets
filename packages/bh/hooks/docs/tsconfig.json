@@ -1,0 +1,7 @@
+{
+  "extends": "@bh/config/tsconfig/react",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["examples"]
+}

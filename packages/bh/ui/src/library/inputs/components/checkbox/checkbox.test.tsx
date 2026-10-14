@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { Checkbox } from './checkbox';
 
 const noop = () => {};
@@ -126,4 +126,84 @@ test('input keeps size-16 and shrink-0 so it never collapses as a flex item', ()
   const input = screen.getByRole<HTMLInputElement>('checkbox');
   expect(input.className).toContain('size-16');
   expect(input.className).toContain('shrink-0');
+});
+
+describe('a line of description', () => {
+  test('sits under the label, and a click on it still toggles the box', async () => {
+    const onChange = vi.fn();
+    render(
+      <Checkbox
+        label="Email me a copy"
+        description="Sent to the address on your profile."
+        value={false}
+        onChange={onChange}
+      />,
+    );
+    await userEvent.click(screen.getByText('Sent to the address on your profile.'));
+    expect(onChange).toHaveBeenCalledWith(true, expect.anything());
+  });
+
+  test('names the box by its label alone and describes it by the line', () => {
+    // The <label> around the box would otherwise name it by all its text, and
+    // a screen reader would read the line as part of the choice's name.
+    render(
+      <Checkbox
+        label="Email me a copy"
+        description="Sent to the address on your profile."
+        value={false}
+        onChange={noop}
+      />,
+    );
+    const box = screen.getByRole('checkbox', { name: 'Email me a copy' });
+    expect(box).toHaveAccessibleDescription('Sent to the address on your profile.');
+  });
+
+  test('comes before what the caller describes the box by, and keeps it', () => {
+    render(
+      <>
+        <Checkbox
+          label="Email me a copy"
+          description="Sent to the address on your profile."
+          aria-describedby="help"
+          value={false}
+          onChange={noop}
+        />
+        <p id="help">Only the team sees it.</p>
+      </>,
+    );
+    expect(screen.getByRole('checkbox')).toHaveAccessibleDescription(
+      'Sent to the address on your profile. Only the team sees it.',
+    );
+  });
+
+  test('describes a box named from outside, and leaves its name to the caller', () => {
+    render(
+      <Checkbox
+        aria-label="Notify"
+        description="Sent when someone replies."
+        value={false}
+        onChange={noop}
+      />,
+    );
+    const box = screen.getByRole('checkbox', { name: 'Notify' });
+    expect(box).toHaveAccessibleDescription('Sent when someone replies.');
+    expect(box).not.toHaveAttribute('aria-labelledby');
+  });
+
+  test('sets the label in 500 and hangs the box by its first line', () => {
+    const { container } = render(
+      <Checkbox label="Email me a copy" description="Sent to you." value={false} onChange={noop} />,
+    );
+    expect(container.querySelector('label')).toHaveClass('items-start');
+    expect(screen.getByText('Email me a copy')).toHaveClass('font-500');
+  });
+
+  test('leaves a box with none as it was', () => {
+    const { container } = render(<Checkbox label="Plain" value={false} onChange={noop} />);
+    const box = screen.getByRole('checkbox', { name: 'Plain' });
+    expect(box).not.toHaveAttribute('aria-describedby');
+    expect(box).not.toHaveAttribute('aria-labelledby');
+    expect(container.querySelector('label')).toHaveClass('items-center');
+    expect(screen.getByText('Plain')).not.toHaveClass('font-500');
+  });
 });

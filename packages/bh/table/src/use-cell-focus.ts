@@ -61,6 +61,9 @@ export interface UseCellFocusOptions {
   /** Space on a data row. Absent when the table does not select, in which
    *  case Space falls through to the browser. */
   onSelect?: (rowIndex: number, shiftKey: boolean) => void;
+  /** Ctrl+C on a cell, with its text. Absent, the hook writes the text to
+   *  the clipboard itself and says nothing. */
+  onCopy?: (cell: CellRef, text: string) => void;
 }
 
 export interface CellFocusApi {
@@ -101,6 +104,7 @@ export function useCellFocus(opts: UseCellFocusOptions): CellFocusApi {
     scrollRowIntoView,
     onActivate,
     onSelect,
+    onCopy,
   } = opts;
   const [interacting, setInteracting] = useState(false);
   /** Does the grid currently own DOM focus? Kept in a ref rather than state
@@ -285,7 +289,14 @@ export function useCellFocus(opts: UseCellFocusOptions): CellFocusApi {
       const cell = findCell(scrollEl, current);
       if (cell) {
         e.preventDefault();
-        void navigator.clipboard?.writeText(cell.textContent ?? '');
+        const text = cell.textContent ?? '';
+        if (onCopy) {
+          onCopy(current, text);
+        } else {
+          // A refusal has nowhere to go without `onCopy`; it is caught
+          // rather than left as an unhandled rejection.
+          navigator.clipboard?.writeText(text).catch(() => undefined);
+        }
       }
       return;
     }

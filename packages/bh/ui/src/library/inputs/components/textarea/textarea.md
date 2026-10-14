@@ -184,10 +184,10 @@ It is a native `<textarea>`, so typing, Enter for a new line and Tab are
 the browser's. The ref lands on the `<textarea>`. `readOnly` is HTML's
 `readonly`, not `aria-readonly`.
 
-| Key                         | Does                                                                |
-| --------------------------- | ------------------------------------------------------------------- |
-| `Ctrl+Enter` or `Cmd+Enter` | Commits the draft, when the field holds one.                        |
-| `Escape`                    | Drops the draft, when the field holds one, and puts the value back. |
+| Key                         | Does                                                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ctrl+Enter` or `Cmd+Enter` | Commits the draft, when the field holds one.                                                                                                       |
+| `Escape`                    | Drops the draft, when the field holds one, and puts the value back. In a dialog or a drawer the same press closes it, and the draft never commits. |
 
 ## When not to use it
 

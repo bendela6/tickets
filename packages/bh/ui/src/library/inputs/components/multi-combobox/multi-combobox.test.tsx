@@ -420,3 +420,22 @@ test('tone danger is what announces invalid, as on every field', () => {
   );
   expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
 });
+
+test('the list draws an option’s icon before its label, as Combobox’s does', async () => {
+  render(
+    <MultiCombobox
+      options={[
+        { value: 'bug', label: 'bug', icon: 'triangle-alert' },
+        { value: 'docs', label: 'docs' },
+      ]}
+      value={[]}
+      onChange={() => {}}
+      placeholder="Labels"
+    />,
+  );
+  await userEvent.click(screen.getByRole('combobox', { name: /labels/i }));
+
+  const bug = await screen.findByRole('option', { name: 'bug' });
+  expect(bug.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+  expect(screen.getByRole('option', { name: 'docs' }).querySelector('svg')).toBeNull();
+});

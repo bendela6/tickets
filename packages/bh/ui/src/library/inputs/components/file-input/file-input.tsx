@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { cn, focusRing, TONE_HUE } from '../../../../style';
+import { Button } from '../../../primitives/components/button';
 import { Icon } from '../../../primitives/components/icon';
 import { Progress } from '../../../feedback/components/progress';
 import { CONTROL_LADDER, type ControlProps, disabledTreatment } from '../../contract';
@@ -208,17 +209,17 @@ export function FileInput({
                   ) : null}
                 </span>
                 {locked ? null : (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${file.name}`}
+                  <Button
+                    variant="ghost"
+                    tone="neutral"
+                    size="xs"
+                    icon="x"
+                    label={`Remove ${file.name}`}
                     onClick={() => remove(file.id)}
-                    className={cn(
-                      'rounded-3 text-gray-9 hover:text-gray-12 shrink-0 p-2',
-                      focusRing(hue, 'focus-visible', 'inward'),
-                    )}
-                  >
-                    <Icon name="x" size="xs" />
-                  </button>
+                    // A rung quieter than a ghost button's text: the row's own
+                    // words come first.
+                    className="text-gray-9"
+                  />
                 )}
               </li>
             );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn, focusRing } from '../../../../style';
+import { Button } from '../../../primitives/components/button';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
@@ -284,25 +285,25 @@ export function DateRangePicker({
     >
       <div className="p-7" onMouseLeave={() => setPreview(null)}>
         <div className="mb-8 flex items-center justify-between">
-          <button
-            type="button"
-            aria-label={`Previous ${unit}`}
+          <Button
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon="chevron-left"
+            label={`Previous ${unit}`}
             onClick={() => shift(-1)}
-            className="rounded-3 text-gray-11 hover:bg-gray-4 inline-flex size-24 items-center justify-center"
-          >
-            <Icon name="chevron-left" size="xs" />
-          </button>
+          />
           <span className="text-13 font-600 text-gray-12 font-sans">
             {months ? view.year : `${MONTHS[view.month]} ${view.year}`}
           </span>
-          <button
-            type="button"
-            aria-label={`Next ${unit}`}
+          <Button
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon="chevron-right"
+            label={`Next ${unit}`}
             onClick={() => shift(1)}
-            className="rounded-3 text-gray-11 hover:bg-gray-4 inline-flex size-24 items-center justify-center"
-          >
-            <Icon name="chevron-right" size="xs" />
-          </button>
+          />
         </div>
 
         {months ? (

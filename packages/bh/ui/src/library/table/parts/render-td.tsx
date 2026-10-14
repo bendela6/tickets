@@ -1,7 +1,10 @@
 import type { CellPin, RenderTdCtx } from '@bh/table';
 import type { CSSProperties } from 'react';
 import { cn } from '../../../style';
+import { Pill } from '../../primitives/components/pill';
 import {
+  CELL_COPY_RING,
+  CELL_COPY_TAG,
   CELL_FOCUS_FILL,
   CELL_FOCUS_LIFT,
   CELL_FOCUS_RING,
@@ -52,6 +55,7 @@ export function renderTd<T>({
   focusProps,
   pin,
   trailing,
+  copy,
 }: RenderTdCtx<T>) {
   return (
     <div
@@ -104,8 +108,20 @@ export function renderTd<T>({
         <span
           aria-hidden
           data-slot="cell-focus-ring"
-          className={CELL_FOCUS_RING}
+          className={cn(CELL_FOCUS_RING, copy && CELL_COPY_RING[copy])}
           style={CELL_FOCUS_RING_STYLE}
+        />
+      ) : null}
+      {/* For a moment after Ctrl+C, the cell says how its copy went, in words
+          beside the ring's colour. A status, so a screen reader says it too. */}
+      {copy ? (
+        <Pill
+          role="status"
+          size="sm"
+          tone={copy === 'copied' ? 'success' : 'danger'}
+          icon={copy === 'copied' ? 'check' : 'x'}
+          label={copy === 'copied' ? 'Copied' : 'Could not copy'}
+          className={CELL_COPY_TAG}
         />
       ) : null}
     </div>

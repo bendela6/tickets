@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react';
+import { cloneElement, isValidElement, useId, type ReactNode } from 'react';
 import { cn } from '../../../../style/cn';
 import { FieldLabel } from '../field-label';
 import { CAPTION_CLASS, RequiredMark } from '../field-label/caption';
@@ -9,8 +9,10 @@ interface FieldProps {
    * The control's id: the label becomes its `<label>`. Left out, the label
    * names a group of controls instead.
    *
-   * With an id, the hint's id is `<id>-hint` and the error's `<id>-error`, so
-   * the control can point `aria-describedby` at them without asking.
+   * With an id, the hint's id is `<id>-hint` and the error's `<id>-error`.
+   * A control that is the field's child and has this id is described by
+   * whichever is shown; a control further down points its own
+   * `aria-describedby` at them.
    */
   id?: string;
   /** The field's caption, in uppercase above the control. */
@@ -27,6 +29,33 @@ interface FieldProps {
   children: ReactNode;
 }
 
+interface Describable {
+  id?: string;
+  'aria-describedby'?: string;
+}
+
+/**
+ * The control, described by the line under it: its own `aria-describedby`
+ * and the hint's or the error's id, once each.
+ *
+ * Only the field's own child with the field's id: that is the control the
+ * label names, and every control of the library and every native one takes
+ * `aria-describedby` beside its `id`. Anything else, a row that holds the
+ * control, is left as it is.
+ */
+function describe(children: ReactNode, id: string, describedBy: string | undefined): ReactNode {
+  if (
+    describedBy === undefined ||
+    !isValidElement<Describable>(children) ||
+    children.props.id !== id
+  ) {
+    return children;
+  }
+  const own = children.props['aria-describedby']?.split(/\s+/).filter(Boolean) ?? [];
+  const ids = [...new Set([...own, describedBy])].join(' ');
+  return cloneElement(children, { 'aria-describedby': ids });
+}
+
 /**
  * A field laid out by hand: its label, its control, then a hint or an error,
  * stacked.
@@ -40,6 +69,8 @@ export function Field({ id, label, hint, error, required, className, children }:
   const base = id ?? uid;
   const hintId = `${base}-hint`;
   const errorId = `${base}-error`;
+  // The line that is drawn, the error in the hint's place.
+  const described = error ? errorId : hint ? hintId : undefined;
   const column = cn('flex min-w-0 flex-col gap-4', className);
   const message = <FieldMessage hint={hint} error={error} hintId={hintId} errorId={errorId} />;
 
@@ -49,7 +80,7 @@ export function Field({ id, label, hint, error, required, className, children }:
         <FieldLabel htmlFor={id} required={required}>
           {label}
         </FieldLabel>
-        {children}
+        {describe(children, id, described)}
         {message}
       </div>
     );
@@ -61,7 +92,6 @@ export function Field({ id, label, hint, error, required, className, children }:
   // fieldset, since a fieldset's legend is drawn into its border and won't sit
   // in a column like the caption above any other field.
   const captionId = `${uid}-label`;
-  const described = error ? errorId : hint ? hintId : undefined;
   return (
     <div role="group" aria-labelledby={captionId} aria-describedby={described} className={column}>
       <span id={captionId} className={CAPTION_CLASS}>

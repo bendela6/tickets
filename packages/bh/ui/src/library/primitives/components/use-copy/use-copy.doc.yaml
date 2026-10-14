@@ -1,0 +1,45 @@
+title: useCopy
+summary: Copies text to the clipboard and says whether it worked, for a button of your own.
+related: [Button, JsonViewer]
+body:
+  - |
+    Copies text to the clipboard and says whether it worked, for a button of
+    your own.
+
+    `copy(text)` writes the text. Then `copied` is true, or `failed` when the
+    browser refuses the write, until `resetMs` passes: 1.5 seconds unless
+    given. `copy` also resolves to whether it wrote.
+  - h2: Import
+  - code: import { copyText, useCopy } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    Beside the value it copies, an icon-only
+    [`Button`](/components/primitives/button#icon-only) says enough. Its
+    glyph, tone and label follow the copy: a check in green, or a cross in
+    red when the browser refused, and the label, which is its name and its
+    tooltip, says the same.
+  - demo: examples/beside-the-value.tsx
+  - |
+    Away from the value, name what it copies in words.
+  - demo: examples/naming-what-it-copies.tsx
+  - |
+    Any control can hold it: here a button's words alone say which happened.
+  - demo: examples/a-button-of-your-own.tsx
+  - ref: useCopy
+  - ref: CopyState
+  - h2: Outside React
+  - |
+    `copyText(text)` is the write alone, for a caller with no component to
+    hold the state: a table's cell copy, a keyboard shortcut, a menu
+    item's action. It never throws. It resolves to `false` when the browser
+    refuses the write, or has no clipboard, as on a page that is not served
+    over HTTPS.
+  - code: |
+      import { copyText } from '@bh/ui';
+
+      export async function copyLink(url: string, say: (text: string) => void) {
+        say((await copyText(url)) ? 'Link copied' : 'Could not copy the link');
+      }
+    lang: tsx
+  - ref: copyText

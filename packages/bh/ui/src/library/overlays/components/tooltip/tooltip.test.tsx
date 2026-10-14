@@ -16,3 +16,15 @@ test('shows tooltip content when the trigger is focused', async () => {
   });
   expect(await screen.findAllByText('Blocked by CORE-131')).not.toHaveLength(0);
 });
+
+test('outside a TooltipProvider it brings its own, rather than throwing', async () => {
+  render(
+    <Tooltip content="Archived on Monday">
+      <button>archive</button>
+    </Tooltip>,
+  );
+  act(() => {
+    screen.getByRole('button', { name: 'archive' }).focus();
+  });
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Archived on Monday');
+});

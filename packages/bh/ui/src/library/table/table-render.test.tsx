@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Table, type Column } from '@bh/table';
 import { focusRing } from '../../style';
+import { copyText } from '../primitives/components/use-copy';
 import { tableRender } from './table-render';
-import { CELL_FOCUS_LIFT, PINNED_CELL, PINNED_EDGE, SELECT_CELL } from './parts/metrics';
+import {
+  CELL_COPY_RING,
+  CELL_FOCUS_LIFT,
+  PINNED_CELL,
+  PINNED_EDGE,
+  SELECT_CELL,
+} from './parts/metrics';
 
 // jsdom does no layout, so the scroll container's real size is always 0x0 and
 // the virtualizer (which measures via ResizeObserver) would compute an empty
@@ -714,5 +721,61 @@ describe('tableRender — header filters', () => {
     // The label still sorts.
     await userEvent.click(screen.getByRole('button', { name: /^Name/ }));
     expect(onSortChange).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('tableRender — copying a cell', () => {
+  // A focused cell copied with Ctrl+C, in a table that holds its focus, as
+  // useTable's would.
+  function Copying() {
+    const [focused, setFocused] = useState<{ rowIndex: number; columnKey: string } | null>({
+      rowIndex: 1,
+      columnKey: 'name',
+    });
+    return <Harness state={{ sort: [], widths: {}, focused }} onFocusChange={setFocused} />;
+  }
+
+  function clipboard(writeText: (text: string) => Promise<void>) {
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  }
+
+  async function copyTheFocusedCell(container: HTMLElement) {
+    const grid = container.querySelector('[data-slot="table-scroll"]');
+    if (!grid) {
+      throw new Error('no grid to press Ctrl+C in');
+    }
+    fireEvent.keyDown(grid, { key: 'c', ctrlKey: true });
+    // copyText, then the table's own turn of the chain.
+    for (let turn = 0; turn < 5; turn += 1) {
+      await act(() => Promise.resolve());
+    }
+  }
+
+  it('fills onCopyCell with copyText', () => {
+    expect(tableRender<Row>().onCopyCell).toBe(copyText);
+  });
+
+  it('says Copied on the cell, and greens its ring', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    clipboard(writeText);
+    const { container } = render(<Copying />);
+    await copyTheFocusedCell(container);
+    expect(writeText).toHaveBeenCalledWith('Beta');
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Copied');
+    const cell = status.closest('[data-cell-row]');
+    expect(cell).toHaveAttribute('data-cell-row', '1');
+    expect(cell).toHaveAttribute('data-cell-col', 'name');
+    const ring = container.querySelector('[data-slot="cell-focus-ring"]');
+    expect(ring?.className).toContain(CELL_COPY_RING.copied);
+  });
+
+  it('says Could not copy when the clipboard refuses, and reddens the ring', async () => {
+    clipboard(() => Promise.reject(new Error('denied')));
+    const { container } = render(<Copying />);
+    await copyTheFocusedCell(container);
+    expect(screen.getByRole('status')).toHaveTextContent('Could not copy');
+    const ring = container.querySelector('[data-slot="cell-focus-ring"]');
+    expect(ring?.className).toContain(CELL_COPY_RING.failed);
   });
 });

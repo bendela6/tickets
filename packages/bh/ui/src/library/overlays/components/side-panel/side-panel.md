@@ -121,7 +121,10 @@ export function OpenedFromElsewhere() {
 ```
 
 Below `overlayBelow`, `md` or `lg`, the panel is shut, and a button at
-the window's edge opens it as a drawer. Each time the window narrows
+the top of its place in the layout opens it as a drawer. It floats over
+the content beside it, which leaves that corner room, and stays clear of
+whatever is above the page: on a phone, the top bar of
+[AppShell](../../../../../../shell/docs/app-shell.md#on-a-phone). Each time the window narrows
 past it, the drawer starts shut, unless `open` holds the state.
 [Layout](../../../../../docs/foundations/layout.md#breakpoints) has the breakpoints.
 
@@ -141,6 +144,48 @@ export function BelowItsBreakpoint() {
         </div>
       </SidePanel>
       <div className="text-13/19 text-gray-11 flex-1 p-12 pt-64">Content</div>
+    </div>
+  );
+}
+```
+
+A page that opens the panel from a control of its own, given `open`,
+turns that button off with `reopenButton={false}`. On a phone, as here,
+the page's button is the only way in; docked, the panel keeps its rail.
+
+**Opened from its header**
+
+```tsx
+import { useState } from 'react';
+import { Button, SidePanel } from '@bh/ui';
+
+export function OpenedFromItsHeader() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex h-screen flex-col">
+      <div className="border-gray-6 flex items-center justify-between border-b-1 p-8">
+        <span className="text-14 font-600">Map</span>
+        <Button size="sm" aria-expanded={open} onClick={() => setOpen(!open)}>
+          Layers
+        </Button>
+      </div>
+      <div className="flex min-h-0 flex-1">
+        <SidePanel
+          label="Layers"
+          collapsible
+          overlayBelow="md"
+          reopenButton={false}
+          open={open}
+          onOpenChange={setOpen}
+        >
+          <div className="text-13/19 flex flex-col gap-4 p-12">
+            <span>Roads</span>
+            <span>Rivers</span>
+            <span>Contours</span>
+          </div>
+        </SidePanel>
+        <div className="text-13/19 text-gray-11 flex-1 p-12">Content</div>
+      </div>
     </div>
   );
 }
@@ -187,6 +232,7 @@ For a panel the reader opens over the page for a moment, use
 | `storageKey`          | `string`                                    |          | Remembers its width and whether it is collapsed in `localStorage`, under this key with `:width` and `:collapsed` after it. Without one, it remembers nothing.                                                                                                                                |
 | `collapsible`         | `boolean`                                   | `false`  | Adds a button at its top that hides the panel.                                                                                                                                                                                                                                               |
 | `collapsedTo`         | `CollapsedTo`: `'rail'`, `'edge'`, `'none'` | `'rail'` | What a hidden panel leaves: a `rail` to reopen it from, a button at the window's `edge`, or `none`.                                                                                                                                                                                          |
+| `reopenButton`        | `boolean`                                   | `true`   | Whether a shut panel draws the floating button that brings it back: below `overlayBelow`, and at `collapsedTo="edge"`. `false` leaves none, for a page that opens the panel from a control of its own, given `open`. A docked panel's rail stays.                                            |
 | `overlayBelow`        | `PanelBreakpoint`: `'md'`, `'lg'`           |          | Below this breakpoint, the panel floats over the content as a Drawer instead. Without it, the panel stays docked at every width.                                                                                                                                                             |
 | `open`                | `boolean`                                   |          | Open or shut, owned by the caller. With it the panel keeps no open state of its own — neither the persisted docked flag nor the overlay's — so a control elsewhere on the page can open it, and closing it from inside (the hide toggle, the overlay's dismiss) goes through `onOpenChange`. |
 | `onOpenChange`        | `(open: boolean) => void`                   |          | Called with the new open state when `open` is given: from its buttons, or its drawer closing.                                                                                                                                                                                                |

@@ -11,13 +11,7 @@ export function AField() {
       required
       className="w-320"
     >
-      <Input
-        id="project-name"
-        aria-describedby="project-name-hint"
-        value={name}
-        onChange={setName}
-        placeholder="north-wing"
-      />
+      <Input id="project-name" value={name} onChange={setName} placeholder="north-wing" />
     </Field>
   );
 }

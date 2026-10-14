@@ -32,15 +32,24 @@ body:
     default, 12.
   - demo: examples/radii.tsx
   - |
-    `interactive` lifts the border on hover and shows a pointer, for a card
-    that is a link or a button. It doesn't make the card focusable: put it
-    inside the link, as here, or give it a `role`.
+    A card that is a link or a button is that element itself: `asChild`
+    draws the card on the one element it wraps, an `<a>` or a router's link,
+    instead of a `<div>`. `interactive` lifts its border on hover and shows
+    a pointer. Tab reaches it, and focus lights its border and draws the halo
+    the controls draw.
   - demo: examples/link-card.tsx
+  - |
+    On a `<button>`, the card keeps its text at its left edge, as a card's
+    is. A grid's cells give them their width.
+  - demo: examples/button-card.tsx
   - h2: Keyboard and accessibility
   - |
     `CardTitle` is always an `h3`. For another level, put your own heading in
-    the `CardHeader`. Other attributes reach the `<div>`, so a card can take a
-    `role` and an `aria-label`.
+    the `CardHeader`. Other attributes reach the `<div>`, or with `asChild`
+    the element it wraps, so a card can take a `role` and an `aria-label`.
+    A card that is a link or a button is named by what it holds; a heading
+    inside a `<button>` isn't a heading to a screen reader, so a button card
+    holds lines of text in spans, as above: a `<button>` holds no `<p>`.
   - h2: Props
   - h3: Card
   - props: Card

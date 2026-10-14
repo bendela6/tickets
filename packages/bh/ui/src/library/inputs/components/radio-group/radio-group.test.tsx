@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import type { Option } from '../../contract';
 import { RadioGroup } from './radio-group';
 
 const DENSITY = [
@@ -232,6 +233,88 @@ describe('RadioGroup', () => {
     );
     expect(container.querySelectorAll('label svg')).toHaveLength(2);
     expect(screen.getByRole('radio', { name: 'A file' })).toBeInTheDocument();
+  });
+
+  describe('cards with an icon and a line of description, from the keyboard', () => {
+    const SOURCES: Option[] = [
+      { value: 'file', label: 'A file', icon: 'file', description: 'One file.' },
+      { value: 'folder', label: 'A folder', icon: 'folder', description: 'Every file in it.' },
+      { value: 'command', label: 'A command', icon: 'terminal', description: 'What it prints.' },
+    ];
+
+    function Sources({
+      options = SOURCES,
+      chosen = 'file',
+    }: {
+      options?: Option[];
+      chosen?: string;
+    }) {
+      const [value, setValue] = useState(chosen);
+      return (
+        <RadioGroup
+          variant="card"
+          layout="grid"
+          label="Start from"
+          options={options}
+          value={value}
+          onChange={setValue}
+        />
+      );
+    }
+
+    it('names each card by its label alone, the icon hidden, and describes it by its line', () => {
+      render(<Sources />);
+      const group = screen.getByRole('radiogroup', { name: 'Start from' });
+      expect(within(group).getByRole('radio', { name: 'A folder' })).toHaveAccessibleDescription(
+        'Every file in it.',
+      );
+    });
+
+    it('is one tab stop, on the chosen card', async () => {
+      render(
+        <>
+          <button type="button">Before</button>
+          <Sources chosen="folder" />
+          <button type="button">After</button>
+        </>,
+      );
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.tab();
+      expect(screen.getByRole('radio', { name: 'A folder' })).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+    });
+
+    it('moves to the next card and chooses it with the arrows, round from the last', async () => {
+      render(<Sources />);
+      await userEvent.click(screen.getByRole('radio', { name: 'A file' }));
+      await userEvent.keyboard('{ArrowRight}');
+      expect(screen.getByRole('radio', { name: 'A folder' })).toHaveFocus();
+      expect(screen.getByRole('radio', { name: 'A folder' })).toBeChecked();
+      await userEvent.keyboard('{ArrowDown}');
+      expect(screen.getByRole('radio', { name: 'A command' })).toBeChecked();
+      await userEvent.keyboard('{ArrowRight}');
+      expect(screen.getByRole('radio', { name: 'A file' })).toBeChecked();
+      await userEvent.keyboard('{ArrowLeft}');
+      expect(screen.getByRole('radio', { name: 'A command' })).toHaveFocus();
+      expect(screen.getByRole('radio', { name: 'A command' })).toBeChecked();
+      await userEvent.keyboard('{ArrowUp}');
+      expect(screen.getByRole('radio', { name: 'A folder' })).toBeChecked();
+    });
+
+    it('steps over a card that is disabled', async () => {
+      render(
+        <Sources
+          options={SOURCES.map((option) => {
+            return option.value === 'folder' ? { ...option, disabled: true } : option;
+          })}
+        />,
+      );
+      await userEvent.click(screen.getByRole('radio', { name: 'A file' }));
+      await userEvent.keyboard('{ArrowRight}');
+      expect(screen.getByRole('radio', { name: 'A command' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'A folder' })).not.toBeChecked();
+    });
   });
 
   it('lays its options in a row, or in a grid of equal columns', () => {

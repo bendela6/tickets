@@ -12,9 +12,10 @@ related: [CodeEditor, Overview]
 Shows a code fragment to read, its lines numbered and coloured by its
 language.
 
-A strip names its file or its language, with a copy control that copies
-the code without the numbers. The lines a passage is about can be
-marked, and the rest recede.
+A strip names its file or its language, with a copy button that copies
+the code without the numbers, and turns to a check, or to a cross when
+the browser refused. The lines a passage is about can be marked, and the
+rest recede.
 
 ## Import
 
@@ -62,7 +63,8 @@ export function TheLinesThatChanged() {
 
 The code is a `<pre>`, read as text; the line numbers are hidden from
 screen readers and can't be selected, so a copied selection is the code
-alone. The copy control is a button, named Copy.
+alone. The copy control is an icon-only button named by its tooltip:
+Copy, then Copied, or Could not copy, for a moment after a click.
 
 ## When not to use it
 

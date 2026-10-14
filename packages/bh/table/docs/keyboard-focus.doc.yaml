@@ -40,7 +40,7 @@ body:
       - keys: [Space]
         does: Ticks or unticks the focused row, when the table selects. Shift+Space adds the range.
       - keys: [Ctrl+C]
-        does: Copies the focused cell's text.
+        does: "Copies the focused cell's text. With @bh/ui's skin, the cell says Copied, or Could not copy, for a moment."
       - keys: [Alt+↓]
         does: On a header, clicks its headerAccessory.
   - h2: Stepping into a cell

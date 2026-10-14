@@ -63,6 +63,30 @@ export function WithIcons() {
 }
 ```
 
+An option with a `color` draws its icon in that hue: its text rung on
+the chosen segment, a rung dimmer on the others, lifted under the
+pointer, as their labels are. A disabled option keeps its hue and fades
+with its label.
+
+**Colored icons**
+
+```tsx
+import { useState } from 'react';
+import { SegmentedControl, type Option } from '@bh/ui';
+
+const STAGES: Option[] = [
+  { value: 'waiting', label: 'Waiting', icon: 'circle', color: 'gray' },
+  { value: 'moving', label: 'Moving', icon: 'circle-half', color: 'blue' },
+  { value: 'arrived', label: 'Arrived', icon: 'circle-check', color: 'green' },
+  { value: 'lost', label: 'Lost', icon: 'circle-x', color: 'red', disabled: true },
+];
+
+export function ColoredIcons() {
+  const [value, setValue] = useState('moving');
+  return <SegmentedControl label="Stage" options={STAGES} value={value} onChange={setValue} />;
+}
+```
+
 `size` sets the height, 30, 38 or 46 pixels, with the type, the padding
 and the glyph.
 
@@ -198,7 +222,7 @@ and takes the segments out of the tab order.
 
 | Prop                  | Type                                                                                                                                                                                                        | Default     | Description                                                                                                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The segments, in the order given; an option's `icon` is drawn before its label, and a `disabled` option can't be picked.                                                      |
+| `options` (required)  | `Option[]`                                                                                                                                                                                                  |             | The segments, in the order given; an option's `icon` is drawn before its label, in its `color` when it has one, and a `disabled` option can't be picked.                      |
 | `label` (required)    | `string`                                                                                                                                                                                                    |             | The group's accessible name.                                                                                                                                                  |
 | `id`                  | `string`                                                                                                                                                                                                    |             | The control's id. Where it lands, and so what a `<label htmlFor>` names, is on each control's page.                                                                           |
 | `aria-describedby`    | `string`                                                                                                                                                                                                    |             | The ids of what describes the control: its help, or its problem. It lands on the element `id` does. A form's field passes it, for the description or error its wrapper draws. |

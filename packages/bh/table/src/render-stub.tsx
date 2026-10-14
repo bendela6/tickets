@@ -136,7 +136,7 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    td: ({ column, index, children, focused, focusProps, pin, trailing }) => {
+    td: ({ column, index, children, focused, focusProps, pin, trailing, copy }) => {
       return (
         <div
           {...focusProps}
@@ -145,6 +145,7 @@ export function makeStubRender<T>(): TableRender<T> {
           data-pin-shift={pin ? String(pin.shift) : ''}
           data-trailing={String(Boolean(trailing))}
           data-focused={String(Boolean(focused))}
+          data-copy={copy ?? ''}
           data-key={column.key}
           data-column-index={index}
         >

@@ -1,9 +1,10 @@
 import { forwardRef, useState, type InputHTMLAttributes } from 'react';
 import { cn, focusRing } from '../../../../style';
 import { Icon } from '../../../primitives/components/icon';
+import { Kbd, type KbdSize } from '../../../primitives/components/kbd';
 import { Spinner } from '../../../feedback/components/spinner';
 import { Input } from '../input';
-import type { CommitProps, ControlProps } from '../../contract';
+import type { CommitProps, ControlProps, ControlSize } from '../../contract';
 
 export type SearchInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -13,10 +14,14 @@ export type SearchInputProps = Omit<
   CommitProps<string> & {
     /** Results are in flight. The trailing gutter carries a spinner. */
     loading?: boolean;
-    /** Keyboard hint shown while empty — `⌘K`. Dropped as soon as there is a
-     *  value, because by then the field is already open and focused. */
+    /** A key hint shown while empty, drawn as a `Kbd`: `'mod+K'` is ⌘K on a Mac
+     *  and Ctrl+K elsewhere. Dropped as soon as there is a value, because by
+     *  then the field is already open and focused. */
     shortcut?: string;
   };
+
+// The hint's cap at each field height: 16, 18 and 20 pixels in 30, 38 and 46.
+const KBD_SIZE: Record<ControlSize, KbdSize> = { xs: 'sm', md: 'md', lg: 'lg' };
 
 /**
  * A search field: a leading glyph, and one trailing slot that says three
@@ -81,7 +86,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       <Icon name="x" size="xs" />
     </button>
   ) : shortcut ? (
-    <kbd className="text-11 text-gray-9 shrink-0 font-mono">{shortcut}</kbd>
+    <Kbd keys={shortcut} size={KBD_SIZE[rest.size ?? 'md']} className="shrink-0" />
   ) : undefined;
 
   return (

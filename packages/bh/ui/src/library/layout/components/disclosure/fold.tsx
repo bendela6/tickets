@@ -98,7 +98,16 @@ export function FoldRow({
         {title}
       </span>
       {summarised ? (
-        <span id={summaryId} className={cn('min-w-0 truncate', summaryClassName)}>
+        // In a narrow row the summary gives way and the title, which names
+        // the row, keeps its words: the summary starts from nothing and grows
+        // into the room the title leaves, up to its own width (`max-w-fit`),
+        // so the title is cut only once it alone is wider than the row. Its
+        // grow outweighs the rule's, so beside a rule it takes all but the
+        // rule's 24 pixels before it is cut, and the rule has what is left.
+        <span
+          id={summaryId}
+          className={cn('max-w-fit min-w-0 grow-100 basis-0 truncate', summaryClassName)}
+        >
           {summary}
         </span>
       ) : null}

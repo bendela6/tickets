@@ -40,6 +40,13 @@ export interface SidePanelProps {
   /** What a hidden panel leaves: a `rail` to reopen it from, a button at the window's `edge`, or `none`. */
   collapsedTo?: CollapsedTo;
   /**
+   * Whether a shut panel draws the floating button that brings it back:
+   * below `overlayBelow`, and at `collapsedTo="edge"`. `false` leaves none,
+   * for a page that opens the panel from a control of its own, given `open`.
+   * A docked panel's rail stays.
+   */
+  reopenButton?: boolean;
+  /**
    * Below this breakpoint, the panel floats over the content as a Drawer
    * instead. Without it, the panel stays docked at every width.
    */
@@ -63,19 +70,23 @@ const TOGGLE =
   'flex size-28 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Shared by the two states that have no panel on screen to hang a toggle off:
-// collapsedTo="edge" and the narrow overlay. Fixed, so a shut panel costs the
-// content no horizontal space.
+// collapsedTo="edge" and the narrow overlay. Floating, so a shut panel costs
+// the content no horizontal space: over the window at the edge, and over the
+// panel's own place in the layout below the breakpoint.
 function ReopenButton({
   ref,
   label,
   side,
   expanded,
+  over,
   onClick,
 }: {
   ref: Ref<HTMLButtonElement>;
   label: string;
   side: PanelSide;
   expanded: boolean;
+  /** Pinned to the `window`, or to the zero-wide `layout` box the panel would dock in. */
+  over: 'window' | 'layout';
   onClick: () => void;
 }) {
   return (
@@ -86,7 +97,8 @@ function ReopenButton({
       aria-expanded={expanded}
       onClick={onClick}
       className={cn(
-        'rounded-6 fixed top-12 z-40 flex size-36 items-center justify-center',
+        'rounded-6 top-12 flex size-36 items-center justify-center',
+        over === 'window' ? 'fixed z-40' : 'absolute z-10',
         'border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12 border-1 shadow-sm',
         side === 'left' ? 'left-12' : 'right-12',
       )}
@@ -106,6 +118,7 @@ export function SidePanel({
   storageKey,
   collapsible = false,
   collapsedTo = 'rail',
+  reopenButton = true,
   overlayBelow,
   open: controlledOpen,
   onOpenChange,
@@ -178,14 +191,21 @@ export function SidePanel({
     // with radix's focus trap and scroll lock on top.
     return (
       <>
-        {collapsedTo === 'none' ? null : (
-          <ReopenButton
-            ref={reopenRef}
-            label={label}
-            side={side}
-            expanded={overlayOpen}
-            onClick={() => setOverlayOpen(true)}
-          />
+        {collapsedTo === 'none' || !reopenButton ? null : (
+          // In the panel's place in the layout, not over the window: on a
+          // phone the window's top holds the frame's own bar (AppShell's
+          // menu button sat right under this one), and the page's header.
+          // Zero wide, so it still costs the content no column.
+          <div className="relative w-0 shrink-0">
+            <ReopenButton
+              ref={reopenRef}
+              label={label}
+              side={side}
+              expanded={overlayOpen}
+              over="layout"
+              onClick={() => setOverlayOpen(true)}
+            />
+          </div>
         )}
         <Drawer
           open={overlayOpen}
@@ -207,9 +227,16 @@ export function SidePanel({
       return null;
     }
     if (collapsedTo === 'edge') {
-      return (
-        <ReopenButton ref={reopenRef} label={label} side={side} expanded={false} onClick={open} />
-      );
+      return reopenButton ? (
+        <ReopenButton
+          ref={reopenRef}
+          label={label}
+          side={side}
+          expanded={false}
+          over="window"
+          onClick={open}
+        />
+      ) : null;
     }
     return (
       <button

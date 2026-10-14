@@ -20,6 +20,12 @@ body:
     registry, drawn before the label at the control's size.
   - demo: examples/with-icons.tsx
   - |
+    An option with a `color` draws its icon in that hue: its text rung on
+    the chosen segment, a rung dimmer on the others, lifted under the
+    pointer, as their labels are. A disabled option keeps its hue and fades
+    with its label.
+  - demo: examples/colored-icons.tsx
+  - |
     `size` sets the height, 30, 38 or 46 pixels, with the type, the padding
     and the glyph.
   - demo: examples/sizes.tsx

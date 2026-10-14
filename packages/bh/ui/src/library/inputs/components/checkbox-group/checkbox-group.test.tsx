@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { CheckboxGroup } from './checkbox-group';
 
 const FILTERS = [
@@ -119,4 +119,52 @@ test('read-only refuses every toggle but keeps the tab stops', async () => {
   expect(onChange).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Watching')).not.toBeDisabled();
   expect(screen.getByRole('group', { name: 'Filters' })).not.toHaveAttribute('aria-readonly');
+});
+
+describe('an option with a line of description', () => {
+  const NOTICES = [
+    { value: 'replies', label: 'Replies', description: 'When someone answers you.' },
+    { value: 'mentions', label: 'Mentions', description: 'When someone names you.' },
+    { value: 'digest', label: 'Weekly digest' },
+  ];
+
+  test('draws the line under its box, which it describes', () => {
+    render(<CheckboxGroup label="Notices" options={NOTICES} value={[]} onChange={() => {}} />);
+    const replies = screen.getByRole('checkbox', { name: 'Replies' });
+    expect(replies).toHaveAccessibleDescription('When someone answers you.');
+    // An option with nothing to say is named and described as before.
+    expect(
+      screen.getByRole('checkbox', { name: 'Weekly digest' }),
+    ).not.toHaveAccessibleDescription();
+  });
+
+  test('still toggles its option when the line is clicked', async () => {
+    const onChange = vi.fn();
+    render(<CheckboxGroup label="Notices" options={NOTICES} value={[]} onChange={onChange} />);
+    await userEvent.click(screen.getByText('When someone names you.'));
+    expect(onChange).toHaveBeenCalledWith(['mentions']);
+  });
+
+  test('sets every label in one weight, described or not, and leaves the lines in theirs', () => {
+    const { container } = render(
+      <CheckboxGroup
+        label="Notices"
+        options={NOTICES}
+        value={[]}
+        onChange={() => {}}
+        selectAllLabel="Every notice"
+      />,
+    );
+    const rows = [...container.querySelectorAll('label')];
+    expect(rows.map((row) => row.classList.contains('font-500'))).toEqual([true, true, true, true]);
+    expect(screen.getByText('When someone answers you.')).toHaveClass('font-400');
+  });
+
+  test('leaves a group with no descriptions as it was', () => {
+    const { container } = render(
+      <CheckboxGroup label="Filters" options={FILTERS} value={[]} onChange={() => {}} />,
+    );
+    const rows = [...container.querySelectorAll('label')];
+    expect(rows.some((row) => row.classList.contains('font-500'))).toBe(false);
+  });
 });

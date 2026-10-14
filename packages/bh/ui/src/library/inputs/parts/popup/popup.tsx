@@ -27,6 +27,14 @@ export const POPUP_OFFSET = 4;
  */
 export const triggerWidthClass = 'w-[var(--radix-popover-trigger-width)]';
 
+/**
+ * A select's list: at least its trigger's width, and as wide as its widest
+ * row up to 320px, the width of a searchable list's box and a step more. In a
+ * narrow table cell a disabled option's reason then reads in a line or two,
+ * not a word or two a line; a trigger wider than that keeps its width.
+ */
+export const listWidthClass = 'w-max min-w-(--radix-popover-trigger-width) max-w-320';
+
 interface PopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

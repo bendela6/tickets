@@ -13,9 +13,11 @@ body:
     lang: tsx
   - h2: Examples
   - |
-    While the field is empty it shows `shortcut`. Type, and the hint gives way
-    to the clear button, which sets the value to `''`. The hint is only
-    drawn: binding the key is yours.
+    While the field is empty it shows `shortcut`, drawn as a
+    [Kbd](/components/primitives/kbd) the field's size: `mod+K` is ⌘K on a
+    Mac and Ctrl+K elsewhere. Type, and the hint gives way to the clear
+    button, which sets the value to `''`. The hint is only drawn: binding
+    the key is yours.
   - demo: examples/shortcut-and-clear.tsx
   - |
     `loading` puts a spinner in the slot, in place of the clear button or the

@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Option, OptionGroup } from '../../contract';
 import { cn } from '../../../../style/cn';
+import { Icon } from '../../../primitives/components/icon';
 import { Pill } from '../../../primitives/components/pill';
 import { OptionRow } from '../option-row';
 import { GroupHeading, groupRuns, inGroupOrder } from './groups';
@@ -55,7 +56,10 @@ interface ComboboxListProps {
   groups?: OptionGroup[];
   /** Custom rendering for an option's inner content (defaults to Pill/label). */
   renderOption?: (option: Option, selected: boolean) => ReactNode;
-  /** Drawn before an option's content: an avatar, a dot, an icon. */
+  /**
+   * Drawn before an option's content: an avatar, a dot, an icon. Where it
+   * draws nothing, or isn't given, an option's `icon` is drawn there.
+   */
   renderLeading?: (option: Option) => ReactNode;
   /** Drawn after an option's content: a handle, a count. The selection check is drawn apart. */
   renderTrailing?: (option: Option) => ReactNode;
@@ -359,7 +363,11 @@ export function ComboboxList({
         cursor={index === cursorIndex}
         disabled={option.disabled}
         reason={option.disabledReason}
-        leading={renderLeading?.(option)}
+        // The caller's leading first; an option's own icon where it has none.
+        leading={
+          renderLeading?.(option) ??
+          (option.icon ? <Icon name={option.icon} size="md" /> : undefined)
+        }
         trailing={renderTrailing?.(option)}
         onPick={() => pick(index)}
       >

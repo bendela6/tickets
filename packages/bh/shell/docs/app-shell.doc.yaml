@@ -96,6 +96,14 @@ body:
     drawer shuts as the window widens, and stays shut when it narrows again.
     The frame is as tall as the screen shows (`h-dvh`), so a phone's address
     bar never makes the page scroll twice.
+  - |
+    A page's [SidePanel](/components/overlays/side-panel) below its
+    `overlayBelow` is shut, and the button that opens it sits at the top of
+    the panel's place in the page, under the page's header, not over the top
+    bar's menu button.
+  - demo: examples/a-page-with-a-side-panel.tsx
+    width: phone
+    height: 480
   - h2: Search
   - |
     The sidebar's second row is a search field. Without `onSearch` it is a

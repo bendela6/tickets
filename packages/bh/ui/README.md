@@ -5,10 +5,11 @@ that spend them. A token is a CSS custom property generated from
 `tokens/*.tokens.json`; a component is a React component styled with Tailwind
 utilities over those tokens and nothing else. Beside the controls, layout,
 navigation, overlays and feedback, it holds the skins for bh's engines: the
-`@bh/form` registry (`baseInputs`, `FieldWrapper`) and the `@bh/table` render
-set (`tableRender<T>()` and its columns). `@bh/markdown` draws its blocks
-and Prose with this package. The stylesheet is its own export,
-`@bh/ui/tokens.css`.
+`@bh/form` registry (`baseInputs`, `FieldWrapper`), the `@bh/table` render
+set (`tableRender<T>()` and its columns), and the renderers and layouts a
+`@bh/template` template names (`baseRenderers`, `baseTemplateLayouts`).
+`@bh/markdown` draws its blocks and Prose with this package. The stylesheet
+is its own export, `@bh/ui/tokens.css`.
 
 It is one package because the tokens have to be one artefact: a colour ramp,
 a spacing unit and a radius scale are worth having only if every screen
@@ -35,7 +36,7 @@ fails if anything moved. The Tooling guide's `tokens:build` page has the rest.
 
 ## Layer
 
-Built on `@bh/form` and `@bh/table`; an app that takes `ui` takes those
-too. It depends on `radix-ui`, `clsx`, `tailwind-merge` and `valibot`, with
+Built on `@bh/form`, `@bh/table` and `@bh/template`, which is built on
+`@bh/resource`; an app that takes `ui` takes those too. It depends on `radix-ui`, `clsx`, `tailwind-merge` and `valibot`, with
 `react` and `tailwindcss` as peers. `@bh/shell` and `@bh/markdown` are built
 on it.

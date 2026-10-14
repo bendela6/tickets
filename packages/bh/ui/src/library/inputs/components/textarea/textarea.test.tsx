@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { CONTROL_LADDER } from '../../parts/field';
+import { Drawer } from '../../../overlays/components/drawer';
 import { Textarea } from './textarea';
 
 function Controlled({ initial = '', ...props }: { initial?: string } & Record<string, unknown>) {
@@ -193,4 +195,28 @@ test('a locked textarea keeps no resize grip', () => {
 
   rerender(<Textarea value="x" onChange={() => {}} aria-label="a" />);
   expect(screen.getByLabelText('a').className).toContain('resize-y');
+});
+
+test('Escape in a drawer drops the draft and closes the drawer, in one press', async () => {
+  const onChange = vi.fn();
+  function InADrawer() {
+    const [open, setOpen] = useState(true);
+    return (
+      <Drawer open={open} onOpenChange={setOpen} label="Detail">
+        <Textarea aria-label="Notes" commit="leave" value="Draft" onChange={onChange} />
+      </Drawer>
+    );
+  }
+  render(<InADrawer />);
+  // As a browser does, the drawer's close renders before the key reaches the
+  // field (Input's tests say why jsdom needs telling).
+  const flush = () => flushSync(() => {});
+  document.addEventListener('keydown', flush, { capture: true });
+
+  await userEvent.type(screen.getByLabelText('Notes'), ' two');
+  await userEvent.keyboard('{Escape}');
+  document.removeEventListener('keydown', flush, { capture: true });
+
+  expect(screen.queryByRole('dialog', { name: 'Detail' })).not.toBeInTheDocument();
+  expect(onChange).not.toHaveBeenCalled();
 });

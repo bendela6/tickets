@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Table, sortRows, useTable, type Column } from '@bh/table';
 import { Button } from '../primitives/components/button';
-import { Icon } from '../primitives/components/icon';
 import { Input } from '../inputs/components/input';
 import { Combobox } from '../inputs/components/combobox';
 import { rowHeightFor } from './parts/metrics';
@@ -223,14 +222,12 @@ function DemoFunnel({ label, active }: { label: string; active: boolean }) {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="xs"
       tone={active ? 'primary' : 'neutral'}
-      aria-label={`Filter ${label.toLowerCase()}`}
+      icon="filter"
+      label={`Filter ${label.toLowerCase()}`}
       aria-pressed={active}
-      className="h-24 w-24 p-0"
-    >
-      <Icon name="filter" size="sm" />
-    </Button>
+    />
   );
 }
 
@@ -422,9 +419,7 @@ function Example({
             ? () => {
                 return (
                   <span className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex">
-                    <Button variant="outline" size="sm" className="w-28 p-0" aria-label="Open">
-                      <Icon name="arrow-up-right" size="sm" />
-                    </Button>
+                    <Button variant="outline" size="sm" icon="arrow-up-right" label="Open" />
                   </span>
                 );
               }

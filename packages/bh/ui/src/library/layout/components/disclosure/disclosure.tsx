@@ -15,7 +15,10 @@ export type DisclosureSize = 'sm' | 'md';
 interface DisclosureProps {
   /** What it folds, named beside the chevron. */
   title: ReactNode;
-  /** Beside the title while folded: what is in it, cut to one line. Gone once open. */
+  /**
+   * Beside the title while folded: what is in it, cut to one line, and cut
+   * first in a narrow row, so the title keeps its words. Gone once open.
+   */
   summary?: ReactNode;
   /**
    * Whether it is open. Leave it out and the row holds its own, from

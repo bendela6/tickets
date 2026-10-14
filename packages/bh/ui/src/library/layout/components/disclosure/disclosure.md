@@ -169,14 +169,14 @@ keep it in the caller, as a controlled input's already is.
 
 ## Props
 
-| Prop                  | Type                             | Default | Description                                                                         |
-| --------------------- | -------------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `title` (required)    | `ReactNode`                      |         | What it folds, named beside the chevron.                                            |
-| `summary`             | `ReactNode`                      |         | Beside the title while folded: what is in it, cut to one line. Gone once open.      |
-| `open`                | `boolean`                        |         | Whether it is open. Leave it out and the row holds its own, from `defaultOpen`.     |
-| `defaultOpen`         | `boolean`                        | `false` | Whether it starts open, when `open` is left out.                                    |
-| `onOpenChange`        | `(open: boolean) => void`        |         | Called with the new state on every click, whether `open` is given or not.           |
-| `size`                | `DisclosureSize`: `'sm'`, `'md'` | `'md'`  | `md`, a section's 13-pixel title over a hover fill; `sm`, a quiet 12-pixel line.    |
-| `rule`                | `boolean`                        | `false` | Draws a rule from the title to the row's end, to set a section apart from the next. |
-| `className`           | `string`                         |         | Added to the outer element's classes.                                               |
-| `children` (required) | `ReactNode`                      |         | What it folds: under the row, in line with the title, drawn only while open.        |
+| Prop                  | Type                             | Default | Description                                                                                                                                 |
+| --------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title` (required)    | `ReactNode`                      |         | What it folds, named beside the chevron.                                                                                                    |
+| `summary`             | `ReactNode`                      |         | Beside the title while folded: what is in it, cut to one line, and cut first in a narrow row, so the title keeps its words. Gone once open. |
+| `open`                | `boolean`                        |         | Whether it is open. Leave it out and the row holds its own, from `defaultOpen`.                                                             |
+| `defaultOpen`         | `boolean`                        | `false` | Whether it starts open, when `open` is left out.                                                                                            |
+| `onOpenChange`        | `(open: boolean) => void`        |         | Called with the new state on every click, whether `open` is given or not.                                                                   |
+| `size`                | `DisclosureSize`: `'sm'`, `'md'` | `'md'`  | `md`, a section's 13-pixel title over a hover fill; `sm`, a quiet 12-pixel line.                                                            |
+| `rule`                | `boolean`                        | `false` | Draws a rule from the title to the row's end, to set a section apart from the next.                                                         |
+| `className`           | `string`                         |         | Added to the outer element's classes.                                                                                                       |
+| `children` (required) | `ReactNode`                      |         | What it folds: under the row, in line with the title, drawn only while open.                                                                |

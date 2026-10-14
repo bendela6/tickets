@@ -5,15 +5,20 @@ body:
   - |
     A short hint that shows when its trigger is hovered or focused.
 
-    Every Tooltip needs a `TooltipProvider` above it: without one, it
-    throws. Put one near the app's root.
+    Put a `TooltipProvider` near the app's root: it gives every tooltip
+    under it one delay. A Tooltip outside one brings its own.
+
+    A [Button](/components/primitives/button) shows its `label` as a
+    tooltip itself, with no Tooltip around it: an icon-only button that way
+    is named and hinted by one prop.
   - h2: Import
   - code: import { Tooltip, TooltipProvider } from '@bh/ui';
     lang: tsx
   - h2: Examples
   - |
-    On icon buttons, each still named with its own `aria-label`.
-  - demo: examples/icon-buttons.tsx
+    Its content can be more than words: here each hint carries its
+    shortcut.
+  - demo: examples/shortcuts.tsx
   - |
     `side` picks the side of the trigger it shows on: `top` by default.
   - demo: examples/sides.tsx
@@ -43,7 +48,9 @@ body:
   - h3: TooltipProvider
   - |
     It sets the delay for every tooltip under it: a hovered trigger shows
-    its tooltip after 300 milliseconds.
+    its tooltip after 300 milliseconds, and moving on to the next trigger
+    shows the next at once. A Tooltip outside one makes its own, with the
+    same delay, but shares it with no other.
   - props: TooltipProvider
   - code: |
       import type { ReactNode } from 'react';

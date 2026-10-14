@@ -1,12 +1,10 @@
-import { Button, Icon, Menu, MenuContent, MenuItem, MenuTrigger } from '@bh/ui';
+import { Button, Menu, MenuContent, MenuItem, MenuTrigger } from '@bh/ui';
 
 export function IconTrigger() {
   return (
     <Menu>
       <MenuTrigger asChild>
-        <Button variant="ghost" aria-label="More actions" className="w-36 p-0">
-          <Icon name="ellipsis" />
-        </Button>
+        <Button variant="ghost" icon="ellipsis" label="More actions" />
       </MenuTrigger>
       <MenuContent>
         <MenuItem>Open</MenuItem>

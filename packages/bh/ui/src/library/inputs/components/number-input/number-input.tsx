@@ -122,6 +122,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
 
   return (
     <div
+      // The draft hears an Escape aimed anywhere in the control, field or
+      // steppers, before a dialog around it does.
+      ref={edit.ref}
       // Leaving the whole control commits: moving between the field and its
       // steppers is still editing.
       onBlur={(event) => {

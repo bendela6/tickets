@@ -68,7 +68,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   });
   return (
     <textarea
-      ref={ref}
+      // The caller's ref, and the draft's: it hears an Escape aimed at the
+      // field before a dialog around it does.
+      ref={(node) => {
+        edit.ref(node);
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
       value={edit.draft}
       // The contract's onChange takes the value. Unwrapping the event here is
       // the only translation this component owes the DOM.

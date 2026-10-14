@@ -34,8 +34,9 @@ body:
   - h2: Keyboard and accessibility
   - |
     Without `label`, the `<svg>` is `aria-hidden`. With one, it is
-    `role="img"`, named by `label`. An icon-only button takes its name from
-    its own `aria-label`: see [Button](/components/primitives/button).
+    `role="img"`, named by `label`. An icon-only
+    [Button](/components/primitives/button) hides its glyph and takes its
+    name from its own `label`.
   - h2: When not to use it
   - |
     - For something loading, use [Spinner](/components/feedback/spinner): an

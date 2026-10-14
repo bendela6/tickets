@@ -82,7 +82,8 @@ body:
       icon button after it, as "New order" beside Shop above.
     - **`NavRow`**: one destination, a 42-pixel link with its icon, label,
       count and dots. It runs edge to edge, so the lit fill reaches the
-      sidebar's border, and its focus ring is drawn inside it.
+      sidebar's border, and its focus ring is drawn inside it. Its
+      `aria-label` says its label, count and status apart: "Orders, 12".
     - **`NavBranch`**: a destination with pages: its row, its chevron, and a
       `NavLeafRow` for each page, indented under the label, 32 pixels tall,
       with no icon.
@@ -100,8 +101,10 @@ body:
     `onSearch`, the field leaves it alone and `AppShell` binds it, since on a
     phone the field is only there while the drawer is open. A frame of your
     own that passes `onSearch` binds the shortcut itself:
-    `isAppleShortcutPlatform` says whether it is ⌘K or Ctrl K, and
-    `shortcutLabel` is the hint the field shows.
+    `isAppleShortcutPlatform` says whether it is ⌘K or Ctrl+K. The field's
+    hint is a [Kbd](/components/primitives/kbd), `keys="mod+K"`, which names
+    the key the same way; draw one for a hint of your own.
+    `shortcutLabel`, the hint's text before it, is deprecated.
   - h2: Shared classes
   - |
     `NAV_STYLES` holds the classes the rows, the rail and the controls share,

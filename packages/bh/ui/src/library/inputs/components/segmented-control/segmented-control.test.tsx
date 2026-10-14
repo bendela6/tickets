@@ -186,3 +186,29 @@ test('a single disabled option refuses without disabling the group', async () =>
   await userEvent.click(screen.getByRole('radio', { name: 'Board' }));
   expect(onChange).toHaveBeenCalledWith('board');
 });
+
+test('an option’s icon takes its color, dimmed a rung off the chosen segment, as its label is', () => {
+  render(
+    <SegmentedControl
+      label="Stage"
+      options={[
+        { value: 'open', label: 'Open', icon: 'circle', color: 'blue' },
+        { value: 'shut', label: 'Shut', icon: 'circle-check', color: 'green' },
+        { value: 'gone', label: 'Gone', icon: 'circle-x', color: 'red', disabled: true },
+        { value: 'plain', label: 'Plain', icon: 'circle-dashed' },
+      ]}
+      value="open"
+      onChange={() => {}}
+    />,
+  );
+  const glyph = (name: string) => screen.getByRole('radio', { name }).querySelector('svg');
+
+  // jsdom draws no color: these are the rungs the browser paints, and the
+  // safelist test holds that each is in the stylesheet for every hue.
+  expect(glyph('Open')).toHaveClass('text-blue-11');
+  expect(glyph('Shut')).toHaveClass('text-green-10', 'group-hover:text-green-11');
+  // Disabled keeps its hue; the segment's own dimming fades it with the label.
+  expect(glyph('Gone')).toHaveClass('text-red-10');
+  // No color, no hue: the glyph is the label's color, as it always was.
+  expect(glyph('Plain')?.getAttribute('class')).not.toMatch(/text-\w+-\d/);
+});

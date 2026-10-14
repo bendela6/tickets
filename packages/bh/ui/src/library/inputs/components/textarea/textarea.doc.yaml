@@ -51,7 +51,7 @@ body:
       - keys: [Ctrl+Enter, Cmd+Enter]
         does: Commits the draft, when the field holds one.
       - keys: [Escape]
-        does: Drops the draft, when the field holds one, and puts the value back.
+        does: Drops the draft, when the field holds one, and puts the value back. In a dialog or a drawer the same press closes it, and the draft never commits.
   - h2: When not to use it
   - |
     For one line, use [Input](/components/inputs/input).

@@ -10,7 +10,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { Box, Inbox, LayoutDashboard, Plus, Settings } from 'lucide-react';
 import { TooltipProvider } from '@bh/ui';
 import { NavGroup } from './nav-group';
+import { NavLeafRow } from './nav-leaf-row';
 import { NavRow } from './nav-row';
+import { NAV_STATUS } from './nav-status';
 import type { NavItem, NavSection } from './nav-types';
 import { RailNav } from './rail-nav';
 
@@ -190,5 +192,33 @@ describe('RailNav', () => {
       'aria-current',
       'page',
     );
+  });
+});
+
+describe('a row’s accessible name', () => {
+  it('reads its label and its count apart, not run together', () => {
+    render(<NavRow item={BOXES} current={false} />);
+    expect(screen.getByRole('link')).toHaveAccessibleName('Boxes, 12');
+  });
+
+  it('reads its status after them, in words', () => {
+    render(<NavRow item={{ ...BOXES, status: 'up' }} current={false} />);
+    expect(screen.getByRole('link')).toHaveAccessibleName(`Boxes, 12, ${NAV_STATUS.up.label}`);
+  });
+
+  it('reads a page’s count apart from its label too', () => {
+    render(
+      <NavLeafRow
+        leaf={{ label: 'Open', path: '/boxes/open', count: 3 }}
+        current={false}
+        atPage={false}
+      />,
+    );
+    expect(screen.getByRole('link')).toHaveAccessibleName('Open, 3');
+  });
+
+  it('is its label alone when it has neither', () => {
+    render(<NavRow item={INBOX} current={false} />);
+    expect(screen.getByRole('link')).toHaveAccessibleName('Inbox');
   });
 });

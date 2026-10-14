@@ -12,13 +12,7 @@ export function WithAnError() {
       error={error}
       className="w-320"
     >
-      <Input
-        id="folder-name"
-        aria-describedby={error ? 'folder-name-error' : 'folder-name-hint'}
-        value={name}
-        onChange={setName}
-        tone={error ? 'danger' : undefined}
-      />
+      <Input id="folder-name" value={name} onChange={setName} tone={error ? 'danger' : undefined} />
     </Field>
   );
 }

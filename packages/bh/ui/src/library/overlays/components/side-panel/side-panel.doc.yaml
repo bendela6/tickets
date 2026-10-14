@@ -30,10 +30,19 @@ body:
   - demo: examples/opened-from-elsewhere.tsx
   - |
     Below `overlayBelow`, `md` or `lg`, the panel is shut, and a button at
-    the window's edge opens it as a drawer. Each time the window narrows
+    the top of its place in the layout opens it as a drawer. It floats over
+    the content beside it, which leaves that corner room, and stays clear of
+    whatever is above the page: on a phone, the top bar of
+    [AppShell](/shell/app-shell#on-a-phone). Each time the window narrows
     past it, the drawer starts shut, unless `open` holds the state.
     [Layout](/foundations/layout#breakpoints) has the breakpoints.
   - demo: examples/below-its-breakpoint.tsx
+    width: phone
+  - |
+    A page that opens the panel from a control of its own, given `open`,
+    turns that button off with `reopenButton={false}`. On a phone, as here,
+    the page's button is the only way in; docked, the panel keeps its rail.
+  - demo: examples/opened-from-its-header.tsx
     width: phone
   - h2: Keyboard and accessibility
   - keyboard:

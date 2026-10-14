@@ -22,6 +22,13 @@ body:
     `statusBar`, `hbar` (the docked scrollbar), `resizeGuide`, `scrim` (the
     fades at hidden edges) and `frameClass` (classes for the frame, given how
     far it is scrolled).
+  - |
+    One optional member draws nothing: `onCopyCell`, which writes a cell's
+    text when Ctrl+C copies it and resolves to whether it did. The table
+    then hands that cell `copy`, `copied` or `failed`, for a moment, and
+    `td` shows it: `@bh/ui`'s skin writes with `copyText` and turns the
+    ring green or red, with a word. Without it the table writes the text
+    itself and shows nothing.
   - h2: A plain skin
   - |
     This one draws the required parts with plain elements and a few classes,
@@ -98,6 +105,7 @@ body:
   - ref: RenderTbodyCtx
   - ref: RenderTrCtx
   - ref: RenderTdCtx
+  - ref: CellCopy
   - ref: RenderGroupHeaderCtx
   - ref: RenderSkeletonRowCtx
   - ref: RenderErrorCtx

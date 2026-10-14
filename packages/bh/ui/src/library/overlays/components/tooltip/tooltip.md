@@ -10,8 +10,12 @@ related: [Button, Popover]
 
 A short hint that shows when its trigger is hovered or focused.
 
-Every Tooltip needs a `TooltipProvider` above it: without one, it
-throws. Put one near the app's root.
+Put a `TooltipProvider` near the app's root: it gives every tooltip
+under it one delay. A Tooltip outside one brings its own.
+
+A [Button](../../../primitives/components/button/button.md) shows its `label` as a
+tooltip itself, with no Tooltip around it: an icon-only button that way
+is named and hinted by one prop.
 
 ## Import
 
@@ -21,31 +25,37 @@ import { Tooltip, TooltipProvider } from '@bh/ui';
 
 ## Examples
 
-On icon buttons, each still named with its own `aria-label`.
+Its content can be more than words: here each hint carries its
+shortcut.
 
-**Icon buttons**
+**Shortcuts**
 
 ```tsx
-import { Button, Icon, Tooltip } from '@bh/ui';
+import { Button, Tooltip } from '@bh/ui';
 
-export function IconButtons() {
+const ACTIONS = [
+  ['Copy', '⌘C'],
+  ['Paste', '⌘V'],
+  ['Undo', '⌘Z'],
+] as const;
+
+export function Shortcuts() {
   return (
     <div className="flex gap-4">
-      <Tooltip content="Copy, ⌘C">
-        <Button variant="ghost" aria-label="Copy" className="w-36 p-0">
-          <Icon name="copy" />
-        </Button>
-      </Tooltip>
-      <Tooltip content="Rename">
-        <Button variant="ghost" aria-label="Rename" className="w-36 p-0">
-          <Icon name="pencil" />
-        </Button>
-      </Tooltip>
-      <Tooltip content="Delete">
-        <Button variant="ghost" aria-label="Delete" className="w-36 p-0">
-          <Icon name="trash" />
-        </Button>
-      </Tooltip>
+      {ACTIONS.map(([name, keys]) => {
+        return (
+          <Tooltip
+            key={name}
+            content={
+              <>
+                {name} <span className="text-gray-8 font-mono">{keys}</span>
+              </>
+            }
+          >
+            <Button variant="ghost">{name}</Button>
+          </Tooltip>
+        );
+      })}
     </div>
   );
 }
@@ -110,7 +120,9 @@ trigger loses focus.
 ### TooltipProvider
 
 It sets the delay for every tooltip under it: a hovered trigger shows
-its tooltip after 300 milliseconds.
+its tooltip after 300 milliseconds, and moving on to the next trigger
+shows the next at once. A Tooltip outside one makes its own, with the
+same delay, but shares it with no other.
 
 | Prop                  | Type        | Default | Description                                   |
 | --------------------- | ----------- | ------- | --------------------------------------------- |

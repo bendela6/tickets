@@ -383,6 +383,23 @@ describe('JsonViewer', () => {
     expect(written.at(-1)).toBe(JSON.stringify(SAMPLE, null, 2));
   });
 
+  it('says Copied after a copy, and Could not copy when the browser refuses', async () => {
+    const user = userEvent.setup();
+    recordingClipboard();
+    const { unmount } = render(<JsonViewer value={SAMPLE} />);
+    await user.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument();
+    unmount();
+
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: () => Promise.reject(new Error('denied')) },
+      configurable: true,
+    });
+    render(<JsonViewer value={SAMPLE} />);
+    await user.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByRole('button', { name: 'Could not copy' })).toBeInTheDocument();
+  });
+
   it('copies invalid text back exactly as it came in', async () => {
     const user = userEvent.setup();
     const written = recordingClipboard();

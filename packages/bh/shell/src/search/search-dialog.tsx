@@ -5,7 +5,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CornerDownLeft, Search, type LucideIcon } from 'lucide-react';
-import { cn, DialogContent, DialogRoot, DialogTitle } from '@bh/ui';
+import { cn, DialogContent, DialogRoot, DialogTitle, Kbd } from '@bh/ui';
 import { NAV_STYLES } from '../nav';
 
 /** What the dialog shows of a result. The app's own fields ride along to `onSelect`. */
@@ -45,9 +45,6 @@ export interface SearchDialogProps<T extends SearchResult = SearchResult> {
   /** A note at the end of the footer, such as what the search reads. */
   hint?: ReactNode;
 }
-
-const KBD =
-  'rounded-4 border-gray-6 bg-surface-raised text-11 text-gray-10 border-1 px-5 font-mono leading-16';
 
 /**
  * A search in a dialog: type, move with the arrows, open with Enter. The app
@@ -152,7 +149,7 @@ function SearchBody<T extends SearchResult>({
           }}
           className="text-15 text-gray-12 caret-indigo-9 placeholder:text-gray-9 min-w-0 flex-1 bg-transparent outline-none [&::-webkit-search-cancel-button]:hidden"
         />
-        <kbd className={KBD}>esc</kbd>
+        <Kbd keys="esc" />
       </div>
 
       <div className="max-h-[min(24rem,60vh)] overflow-y-auto p-6">
@@ -213,10 +210,10 @@ function SearchBody<T extends SearchResult>({
 
       <div className="border-gray-6 bg-gray-1 text-11 text-gray-9 flex h-36 items-center gap-12 border-t-1 px-16 font-mono">
         <span>
-          <kbd className={KBD}>↑</kbd> <kbd className={KBD}>↓</kbd> move
+          <Kbd keys="up" size="sm" /> <Kbd keys="down" size="sm" /> move
         </span>
         <span>
-          <kbd className={KBD}>↵</kbd> open
+          <Kbd keys="enter" size="sm" /> open
         </span>
         <span className="flex-1" />
         {hint ? <span>{hint}</span> : null}

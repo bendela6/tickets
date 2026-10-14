@@ -74,6 +74,13 @@ so Tailwind writes its rule. That is why a change to a `variants()` call
 needs the command too: a new tone or size has no rule in the stylesheet
 until the safelist names it.
 
+Only `variants()` output reaches it: a class built from a hue in `cn()`
+instead has no rule in an app, though the component's own test, reading
+the class name off the element, passes. `@bh/ui`'s `safelist.test.ts`
+finds every class bh's components build from a hue, `bg-${hue}-contrast`
+and what `focusRing` and `cursorRing` build at each call, and fails
+while the safelist lacks one for any hue.
+
 ## Where the values show
 
 The [Foundations](../../../web/ui/docs/foundations/colours.md) pages draw their tables from the

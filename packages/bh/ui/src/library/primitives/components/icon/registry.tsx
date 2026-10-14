@@ -61,6 +61,10 @@ export const registry = {
   'refresh':        { viewBox: '0 0 16 16', node: <><path d="M13.5 8A5.5 5.5 0 1 1 11.8 4" {...s} /><path d="M13.5 2.5v2.8h-2.8" {...s} /></> },
   'grip':           { viewBox: '0 0 16 16', node: <>{[4, 8, 12].map((y) => [6, 10].map((x) => <circle key={`${x}${y}`} cx={x} cy={y} r="1.1" fill="currentColor" />))}</> },
   'ellipsis':       { viewBox: '0 0 16 16', node: <>{[3.5, 8, 12.5].map((x) => <circle key={x} cx={x} cy="8" r="1.2" fill="currentColor" />)}</> },
+  // A step back along the way it came, and its mirror: the JSON viewer's
+  // Undo and Redo, which have no other glyph that says it.
+  'undo':           { viewBox: '0 0 16 16', node: <path d="M5.5 3.5 2.5 6.5l3 3M2.5 6.5h7.25a3.25 3.25 0 0 1 0 6.5H7" {...s} /> },
+  'redo':           { viewBox: '0 0 16 16', node: <path d="m10.5 3.5 3 3-3 3M13.5 6.5H6.25a3.25 3.25 0 0 0 0 6.5H9" {...s} /> },
   'eye':            { viewBox: '0 0 16 16', node: <><path d="M1.5 8S4 3.8 8 3.8 14.5 8 14.5 8 12 12.2 8 12.2 1.5 8 1.5 8Z" {...s} /><circle cx="8" cy="8" r="2" {...s} /></> },
   // ── objects ──
   'columns':        { viewBox: '0 0 16 16', node: <><rect x="1.5" y="2" width="4" height="12" rx="1" {...s} /><rect x="6.5" y="2" width="4" height="8" rx="1" {...s} /><rect x="11.5" y="2" width="4" height="10" rx="1" {...s} /></> },
