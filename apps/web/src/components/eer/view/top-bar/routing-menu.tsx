@@ -2,7 +2,7 @@
 // modes behind one control meant two clicks to reach the third and no way to
 // see what the others were without landing on them.
 
-import { forwardRef, type ComponentPropsWithoutRef } from 'react';
+import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { Button, Dropdown, Tooltip, cn } from '@bh/ui';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramView } from '../../state/diagram-context';
@@ -16,9 +16,11 @@ const MODES: { mode: RoutingMode; label: string; tip: string }[] = [
 // The trigger: a Button with the mode's tip as its tooltip. A component of its
 // own because the dropdown's trigger hands its props and ref to its child, and
 // a Tooltip around the Button would swallow them; here they reach the Button.
+// Its props are a button's own, not Button's: those are a union with the
+// icon-only form, which takes no chevron.
 const LinesButton = forwardRef<
   HTMLButtonElement,
-  ComponentPropsWithoutRef<typeof Button> & { tip: string }
+  ButtonHTMLAttributes<HTMLButtonElement> & { tip: string }
 >(function LinesButton({ tip, ...rest }, ref) {
   return (
     <Tooltip content={tip}>
