@@ -4,7 +4,7 @@ import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, ScreenState, useToast } from '@bh/ui';
+import { Button, ScreenState, useConfirm, useToast } from '@bh/ui';
 import { DisabledReason } from '../disabled-reason';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
@@ -34,13 +34,20 @@ export function SettingsScreen({ projectKey, tab }: { projectKey: string; tab: S
   const forkScheme = useForkScheme(OWN_ERROR);
   const updateProject = useUpdateProject(OWN_ERROR);
   const { toast } = useToast();
+  const { confirm } = useConfirm();
 
   async function handleFork() {
     if (userId === null || !board) return;
-    const confirmed = window.confirm(
-      `Fork the shared scheme so future changes only affect "${board.project.name}"? Other projects on this scheme are unaffected.`,
-    );
-    if (!confirmed) return;
+    // Not destructive: a fork copies the scheme, and nothing is lost.
+    if (
+      !(await confirm({
+        title: 'Fork the shared scheme?',
+        body: `"${board.project.name}" gets its own copy of the scheme, so future changes here affect it alone. Other projects on this scheme are unaffected.`,
+        confirmLabel: 'Fork',
+      }))
+    ) {
+      return;
+    }
     // Derive a fresh, collision-free scheme key/name from the project's own
     // key/name — a timestamp suffix lets the same project fork more than
     // once without tripping the schemes.key unique constraint.
