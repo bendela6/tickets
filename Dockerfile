@@ -1,26 +1,23 @@
 # Multi-stage build for the tickets stack — one runtime image:
 # nginx (front) + node API + pgweb (self-hosted DB browser), under supervisord.
 
+# every workspace package's manifest at its own path, found rather than listed: a package missing from the
+# install is left unlinked and the web build can't resolve it, and the gateway's bh page adds packages under
+# packages/bh/ as bh grows. This stage reruns on any change; its output, and so the install below, only on
+# a manifest's.
+FROM node:22-alpine AS manifests
+WORKDIR /src
+COPY . .
+RUN find . -name package.json -not -path '*/node_modules/*' \
+      -exec sh -c 'mkdir -p "/manifests/$(dirname "$1")" && cp "$1" "/manifests/$1"' _ {} \;
+
 FROM node:22-alpine AS deps
 RUN corepack enable
 WORKDIR /app
 # manifests first so the install layer caches until dependencies change
 # .npmrc carries the tslib public-hoist needed by radix-ui transitives at build time
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY apps/api/package.json apps/api/
-COPY apps/web/package.json apps/web/
-COPY apps/mcp/package.json apps/mcp/
-COPY packages/db/package.json packages/db/
-COPY packages/web/richtext/package.json packages/web/richtext/
-# every package the gateway's bh page copies in (pnpm-workspace.yaml's packages/bh/*): one missing here
-# is left unlinked by the install, and the web build can't resolve it
-COPY packages/bh/code/package.json packages/bh/code/
-COPY packages/bh/config/package.json packages/bh/config/
-COPY packages/bh/form/package.json packages/bh/form/
-COPY packages/bh/markdown/package.json packages/bh/markdown/
-COPY packages/bh/shell/package.json packages/bh/shell/
-COPY packages/bh/table/package.json packages/bh/table/
-COPY packages/bh/ui/package.json packages/bh/ui/
+COPY --from=manifests /manifests/ ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 
