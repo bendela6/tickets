@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { expect, test, vi } from 'vitest';
 import { Combobox } from '@bh/ui';
 import type { Option, StatusKind } from '../api/types';
+import { KIND_ICON, KIND_TONE } from './status';
 import { statusChoices } from './status-choices';
 
 function status(id: number, value: string, label: string, kind: StatusKind): Option {
@@ -109,4 +110,14 @@ test('a new item says where the workflow starts, and keeps the status it was giv
   );
   expect(screen.getByRole('option', { name: 'Backlog' })).toBeEnabled();
   expect(screen.getByRole('option', { name: 'Blocked' })).toBeEnabled();
+});
+
+test("each status carries its kind's icon and color, for the list and the field to draw", () => {
+  const { options } = statusChoices(STATUSES, STATUSES, 'backlog');
+  expect(options.map(({ label, icon, color }) => ({ label, icon, color }))).toEqual(
+    STATUSES.map((s) => {
+      const kind = s.kind ?? 'todo';
+      return { label: s.label, icon: KIND_ICON[kind], color: KIND_TONE[kind] };
+    }),
+  );
 });

@@ -128,7 +128,8 @@ describe('/schema inside the frame', () => {
     const open = await screen.findByRole('button', { name: 'Outline' });
     // Shut until asked for: on a phone the panel would cover the diagram.
     expect(screen.queryByRole('button', { name: /^Database:/ })).not.toBeInTheDocument();
-    // Nothing of the panel's own is pinned over the frame's top bar.
+    // The panel draws no reopen button of its own: the header's opens it, and
+    // its own would sit under the diagram's toolbar.
     expect(screen.queryByRole('button', { name: 'Show Schema outline' })).not.toBeInTheDocument();
     fireEvent.click(open);
     expect(await screen.findByRole('dialog', { name: 'Schema outline' })).toBeInTheDocument();

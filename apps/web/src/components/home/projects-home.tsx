@@ -16,9 +16,10 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
   const peak = Math.max(1, ...activity);
   const events = activity.reduce((sum, count) => sum + count, 0);
   return (
-    // The link holds the card rather than being it: bh's Card is a div.
-    <Link to="/p/$projectKey" params={{ projectKey: project.key }} className="block rounded-12">
-      <Card interactive padding={4} className="flex flex-col gap-13">
+    // The card is the link itself: bh's Card draws its look and its focus
+    // ring on the router's link.
+    <Card asChild interactive padding={4} className="flex flex-col gap-13">
+      <Link to="/p/$projectKey" params={{ projectKey: project.key }}>
         <div className="flex items-center gap-10">
           <span className="rounded-6 bg-surface-inset px-7 py-3 font-mono text-12/17 font-500 text-gray-12">
             {project.itemPrefix}
@@ -88,8 +89,8 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
               : 'no activity yet'}
           </span>
         </div>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 }
 
@@ -135,15 +136,19 @@ export function ProjectsHome() {
               <Card key={project.id} className="min-h-150 animate-pulse" />
             );
           })}
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="flex min-h-150 cursor-pointer flex-col items-center justify-center gap-6 rounded-12 border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
+          {/* A card with nothing in it yet: dashed, on the page's own floor,
+              its words in its middle. */}
+          <Card
+            asChild
+            interactive
+            className="flex min-h-150 flex-col items-center justify-center gap-6 border-dashed border-gray-7 bg-transparent text-center text-gray-9 hover:border-gray-9 hover:text-gray-11"
           >
-            <span className="font-sans text-20">＋</span>
-            <span className="font-sans text-13/19 font-500">New project</span>
-            <span className="font-mono text-11">key · name · prefix</span>
-          </button>
+            <button type="button" onClick={() => setCreating(true)}>
+              <span className="font-sans text-20">＋</span>
+              <span className="font-sans text-13/19 font-500">New project</span>
+              <span className="font-mono text-11">key · name · prefix</span>
+            </button>
+          </Card>
         </div>
       </PageBody>
 
