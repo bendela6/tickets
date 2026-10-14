@@ -268,8 +268,12 @@ export function ItemDetail({
     </section>
   ) : null;
 
+  // An item lists its children whatever its level: a plan feature under its
+  // epic lists its tickets, a ticket its subtickets. One at the top shows the
+  // section even before it has any, for its add row.
+  const hasChildren = (indexes.childrenByParent.get(item.id)?.length ?? 0) > 0;
   const childrenSection =
-    item.parentId === null ? (
+    item.parentId === null || hasChildren ? (
       <DetailChildren
         projectKey={projectKey}
         board={board}
