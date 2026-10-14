@@ -1,6 +1,5 @@
 import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
-import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
 import {
   Button,
@@ -11,6 +10,9 @@ import {
   MenuContent,
   MenuItem,
   MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
   MenuTrigger,
 } from '@bh/ui';
 
@@ -441,42 +443,39 @@ function applyTextColor(editor: Editor, value: string | null) {
   }
 }
 
-// Text color row: a small inline swatch row appears in a Radix submenu
+// Text color row: a small inline swatch row appears in bh's submenu
 // rather than a separate dedicated color picker — accent / danger /
 // warning / success / default, matching the app's status-kind palette.
 // Each swatch is a menu item, so the arrow keys reach it and Enter picks it;
 // its colour is its fill, so the highlighted one rings instead (Radix focuses
-// whichever item is highlighted, by pointer or by key).
+// whichever item is highlighted, by pointer or by key). The submenu is bh's,
+// not Radix's own: inside bh's Menu, a Radix Sub from the app's install can't
+// find the menu it sits in once the two installs differ.
 function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
-    <DropdownMenu.Sub>
-      <DropdownMenu.SubTrigger asChild>
-        <div className="flex h-30 cursor-pointer items-center gap-9 rounded-6 px-8 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
+    <MenuSub>
+      <MenuSubTrigger className="h-30 py-0">
+        <span className="flex items-center gap-9">
           <span className="font-sans text-[12.5px] leading-[1.15] font-600 text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
           <span className="font-sans text-13/19">Text color</span>
-        </div>
-      </DropdownMenu.SubTrigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.SubContent
-          sideOffset={4}
-          className="z-50 flex items-center gap-6 rounded-8 border-1 border-gray-6 bg-surface-raised p-6 shadow-lg"
-        >
-          {COLOR_SWATCHES.map((swatch) => (
-            <MenuItem
-              key={swatch.id}
-              aria-label={swatch.label}
-              onSelect={() => onPick(swatch.value)}
-              className={cn(
-                'size-22 flex-none rounded-full border-1 border-gray-6 p-0',
-                focusRing('indigo', 'focus'),
-              )}
-              style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
-            />
-          ))}
-        </DropdownMenu.SubContent>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Sub>
+        </span>
+      </MenuSubTrigger>
+      <MenuSubContent className="flex min-w-0 items-center gap-6 p-6">
+        {COLOR_SWATCHES.map((swatch) => (
+          <MenuItem
+            key={swatch.id}
+            aria-label={swatch.label}
+            onSelect={() => onPick(swatch.value)}
+            className={cn(
+              'size-22 flex-none rounded-full border-1 border-gray-6 p-0',
+              focusRing('indigo', 'focus'),
+            )}
+            style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
+          />
+        ))}
+      </MenuSubContent>
+    </MenuSub>
   );
 }
