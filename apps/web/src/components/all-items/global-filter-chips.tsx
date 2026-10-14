@@ -249,14 +249,16 @@ export function GlobalFilterChips({
             <strong className="font-500 text-gray-12">{field?.label ?? rule.fieldKey}</strong>
             {OP_LABELS[rule.op]}
             <RuleValues rule={rule} sharedByKey={sharedByKey} />
-            <button
-              type="button"
-              aria-label="Remove filter"
-              className="cursor-pointer text-gray-9 hover:text-gray-12"
+            <Button
+              variant="ghost"
+              tone="neutral"
+              size="xs"
+              icon="x"
+              label="Remove filter"
+              // A rung quieter than the chip's words, and tucked into its padding.
+              className="-mr-6 text-gray-9"
               onClick={() => onRulesChange(rules.filter((candidate) => candidate !== rule))}
-            >
-              ×
-            </button>
+            />
           </span>
         );
       })}

@@ -600,14 +600,15 @@ export function AllItemsScreen() {
               if (view) selectView(view);
             }}
           />
-          <button
-            type="button"
-            aria-label="New global view"
-            className="cursor-pointer px-10 py-8 font-sans text-13/19 text-gray-9 hover:text-gray-12"
+          <Button
+            variant="ghost"
+            tone="neutral"
+            size="sm"
+            icon="plus"
+            label="New global view"
+            className="text-gray-9"
             onClick={() => setNaming(true)}
-          >
-            ＋
-          </button>
+          />
           <span className="flex-1" />
           <Menu>
             <MenuTrigger asChild>
