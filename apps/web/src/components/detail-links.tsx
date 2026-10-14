@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader, Tooltip } from '@bh/ui';
+import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader, TextLink, Tooltip } from '@bh/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -137,13 +137,15 @@ export function DetailLinks({
                     label={chip.text}
                     className="h-20 rounded-6 text-11/13 tracking-wider"
                   />
-                  <button
-                    type="button"
-                    className="shrink-0"
-                    onClick={() => onOpenItem(other.key)}
-                  >
-                    <ItemKey itemKey={other.key} className="text-11 hover:text-indigo-9" />
-                  </button>
+                  <TextLink asChild>
+                    <button
+                      type="button"
+                      className="shrink-0"
+                      onClick={() => onOpenItem(other.key)}
+                    >
+                      <ItemKey itemKey={other.key} className="text-11" />
+                    </button>
+                  </TextLink>
                   <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
                     {String(other.values['title'] ?? '')}
                   </span>
