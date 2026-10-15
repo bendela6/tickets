@@ -1,13 +1,17 @@
 import {
   buildExtensions,
   DOC_SENTINEL,
+  docToText,
   isDocEmpty,
   parseDoc,
   PRESETS,
   toDisplayDoc,
   toolbarControls,
+  type DocNode,
   type Feature,
 } from '@tickets/richtext';
+import { getSchema } from '@tiptap/core';
+import type { Schema } from '@tiptap/pm/model';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, cn } from '@bh/ui';
@@ -49,6 +53,31 @@ type RichTextEditorProps = {
   suggestions?: RichTextSuggestions;
   composer?: ComposerConfig;
 };
+
+// The document to load for a stored value. One holding what these features
+// leave out (a heading in a comment, written through the API or the MCP
+// server in markdown) is no document to this editor's schema, and Tiptap would
+// load it empty, so the next save would write the empty text over every word
+// of it. It loads as its plain text instead, a paragraph a line, as bh's
+// editor does (@bh/richtext's `loadable`): the words are kept, and a save
+// only happens once it is edited.
+function loadableDoc(schema: Schema, value: string): DocNode {
+  const doc = toDisplayDoc(value);
+  try {
+    schema.nodeFromJSON(doc);
+    return doc;
+  } catch (error) {
+    console.warn(
+      `RichTextEditor: the text holds what this editor's features leave out (${String(error)}), so it shows as plain text.`,
+    );
+    return {
+      type: 'doc',
+      content: docToText(doc)
+        .split('\n')
+        .map((line) => ({ type: 'paragraph', content: line ? [{ type: 'text', text: line }] : [] })),
+    };
+  }
+}
 
 function resolveFeatures(features: RichTextEditorProps['features']): Feature[] {
   if (Array.isArray(features)) {
@@ -276,9 +305,16 @@ export function RichTextEditor({
     composer.onSubmit(JSON.stringify(doc));
   };
 
+  // Read once, with the extensions: the editor loads its value at creation.
+  const content = useMemo(
+    () => loadableDoc(getSchema(extensions), value),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the editor takes its content once, when it is made; a new value doesn't remake it
+    [extensions],
+  );
+
   const editor = useEditor({
     extensions,
-    content: toDisplayDoc(value),
+    content,
     editable: disabled !== true,
     immediatelyRender: true,
     // Tiptap v3 does NOT re-render the consuming component on every
