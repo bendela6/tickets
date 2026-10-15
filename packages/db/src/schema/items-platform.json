@@ -63,7 +63,7 @@
         "x": 80,
         "y": 80,
         "w": 372,
-        "h": 770
+        "h": 1080
       }
     },
     {
@@ -411,6 +411,94 @@
           "refColumns": [
             "id"
           ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "core.agent_reports",
+      "label": "agent_reports",
+      "group": "ws",
+      "description": "What each agent working on the plans last said it is doing: one row per agent, written over by its next word, gone a week after its last. Written directly, not as a command.",
+      "schema": "core",
+      "x": 120,
+      "y": 900,
+      "columns": [
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "The agent: planner, builder, or a worker (worker-tk-7). Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "title": "Role",
+          "description": "planner, builder or worker.",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "title": "State",
+          "description": "What it last said it is: listening, working, done, failed, abandoned or stopped.",
+          "nullable": false
+        },
+        {
+          "name": "item",
+          "type": "text",
+          "title": "Item",
+          "description": "The item it works on, as it named it: a tickets item key (TK-80.3, TK/E4), which links it to that item, or a plans id no item has; null = none.",
+          "nullable": true
+        },
+        {
+          "name": "text",
+          "type": "text",
+          "title": "Words",
+          "description": "What it said it is doing, at most 300 characters.",
+          "nullable": false
+        },
+        {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "title": "At",
+          "description": "When it last said anything.",
+          "nullable": false
+        },
+        {
+          "name": "since",
+          "type": "timestamp with time zone",
+          "title": "Since",
+          "description": "Since when its state and its item have been what they are.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "name"
+          ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "agent_reports_role",
+          "expression": "role IN ('planner', 'builder', 'worker')"
+        },
+        {
+          "id": "k2",
+          "kind": "check",
+          "name": "agent_reports_state",
+          "expression": "state IN ('listening', 'working', 'done', 'failed', 'abandoned', 'stopped')"
+        },
+        {
+          "id": "k3",
+          "kind": "check",
+          "name": "agent_reports_text",
+          "expression": "char_length(text) <= 300"
         }
       ],
       "indexes": []
