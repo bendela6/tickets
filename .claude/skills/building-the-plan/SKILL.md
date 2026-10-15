@@ -52,6 +52,12 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 - Workers for different features run in parallel, unless they share files.
 - Before dispatching, set the feature's status to "In progress".
 - Check `node scripts/tasks-agents.mjs list`: never dispatch a feature a worker is already on.
+- **Pick each worker's model** with the Agent tool's `model`, the cheapest that can do the job well, since it's cheaper and faster (the user, 2026-10-15). Don't leave every worker on Opus.
+  - `haiku`: mechanical work spelled out to the line, such as swapping a component at the call sites a ticket lists, deleting leftovers, a rename, checking a release's tag, a bh-page update call, or a merge with no conflict.
+  - `sonnet`: most builds, such as a component, hook or route from a written plan, tests, docs pages, and a check in the browser.
+  - `opus`: planning a feature from a design, a contract several packages share, a merge with conflicts, a failure to debug, and anything a cheaper worker failed at or got wrong.
+  - A feature's worker takes the model its hardest ready item needs. Name the model in the dispatch line in chat, e.g. "worker-tk-24 (haiku)".
+  - If a cheaper worker fails or its work needs redoing, dispatch the feature again one model up.
 
 Give each worker the whole brief, since it knows nothing else:
 - **Its name and items:** a name like `worker-tk-7`, named after the feature, and every ready item of the feature, in order: their text, their `blockedBy`, their notes (the user's and the planner's replies), and the feature's `chosen`.
