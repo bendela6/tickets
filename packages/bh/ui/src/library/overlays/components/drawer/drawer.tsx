@@ -14,6 +14,9 @@ export const DRAWER_SIZES = { sm: 288, md: 400, lg: 620 } as const;
 
 export type DrawerSize = keyof typeof DRAWER_SIZES;
 
+/** The edge a drawer slides in from: a side, or the bottom, as a phone's sheet. */
+export type DrawerSide = PanelSide | 'bottom';
+
 // Every drawer leaves this much of the page uncovered, so there is always a
 // scrim left to tap on a narrow screen.
 const TAP_STRIP = '3rem';
@@ -34,8 +37,12 @@ export interface DrawerProps {
   onOpenChange: (open: boolean) => void;
   /** Names the drawer for assistive technology, and its resize handle. It is not shown. */
   label: string;
-  /** The edge it slides in from. */
-  side?: PanelSide;
+  /**
+   * The edge it slides in from. From the `bottom` it is a sheet as wide as the
+   * window and as tall as its content, rounded at the top, that can't be
+   * resized: `size`, the widths and `maximizable` don't apply.
+   */
+  side?: DrawerSide;
   /** Its starting width: `sm` 288, `md` 400 or `lg` 620 pixels. */
   size?: DrawerSize;
   /** The narrowest the reader can drag it, in pixels. */
@@ -56,7 +63,7 @@ export interface DrawerProps {
   children: ReactNode;
 }
 
-/** A modal panel that slides in from the left or right edge of the page. */
+/** A modal panel that slides in from the left or right edge of the page, or up from its bottom. */
 export function Drawer({
   open,
   onOpenChange,
@@ -70,8 +77,10 @@ export function Drawer({
   className,
   children,
 }: DrawerProps) {
-  const { width, panelRef, separatorProps } = usePanelWidth({
-    side,
+  const bottom = side === 'bottom';
+  const { width, panelRef, getSeparatorProps } = usePanelWidth({
+    // A sheet has no width to drag; the hook still runs, as hooks must.
+    side: bottom ? 'right' : side,
     defaultWidth: DRAWER_SIZES[size],
     minWidth,
     maxWidth,
@@ -105,27 +114,31 @@ export function Drawer({
         <RadixDialog.Portal>
           <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
           <RadixDialog.Content
-            ref={panelRef as React.RefObject<HTMLDivElement>}
+            ref={panelRef}
             // Radix warns without a description; this drawer's body is
             // arbitrary content, so there is nothing honest to point at.
             aria-describedby={undefined}
             onFocus={restoreFocus.onFocus}
             onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
-            style={{ '--panel-w': panelWidth }}
+            style={
+              bottom ? { maxHeight: `calc(100dvh - ${TAP_STRIP})` } : { '--panel-w': panelWidth }
+            }
             className={cn(
-              'fixed inset-y-0 z-50 flex w-(--panel-w) flex-col outline-none',
+              'fixed z-50 flex flex-col outline-none',
               'border-gray-6 bg-surface-raised text-gray-12 font-sans shadow-lg',
-              side === 'right'
-                ? 'panel-slide-right right-0 border-l-1'
-                : 'panel-slide-left left-0 border-r-1',
+              bottom
+                ? 'panel-slide-bottom rounded-t-16 inset-x-0 bottom-0 border-t-1'
+                : 'inset-y-0 w-(--panel-w)',
+              side === 'right' && 'panel-slide-right right-0 border-l-1',
+              side === 'left' && 'panel-slide-left left-0 border-r-1',
               className,
             )}
           >
             <RadixDialog.Title className="sr-only">{label}</RadixDialog.Title>
             {/* Nothing to drag once the drawer already fills the viewport. */}
-            {maximized || tooNarrowToDrag ? null : (
+            {bottom || maximized || tooNarrowToDrag ? null : (
               <div
-                {...separatorProps}
+                {...getSeparatorProps()}
                 className={cn(
                   'hover:bg-indigo-9 absolute inset-y-0 z-10 w-6 cursor-col-resize',
                   side === 'right' ? 'left-0' : 'right-0',

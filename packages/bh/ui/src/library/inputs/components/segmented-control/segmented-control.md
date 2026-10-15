@@ -87,6 +87,31 @@ export function ColoredIcons() {
 }
 ```
 
+An option's `count`, how many rows hold it, follows its label in IBM
+Plex Mono at 11 pixels, in the label's color, muted, and is part of the
+segment's name: "All 412". Without one, nothing is drawn and no gap is
+left.
+
+**With counts**
+
+```tsx
+import { useState } from 'react';
+import { SegmentedControl, type Option } from '@bh/ui';
+
+const SHOW: Option[] = [
+  { value: 'all', label: 'All', count: 412 },
+  { value: 'unwatched', label: 'Unwatched', count: 138 },
+  { value: 'long-ago', label: 'Watched long ago', count: 61 },
+];
+
+export function WithCounts() {
+  const [value, setValue] = useState('all');
+  return (
+    <SegmentedControl label="Show" options={SHOW} value={value} onChange={setValue} size="lg" />
+  );
+}
+```
+
 `size` sets the height, 30, 38 or 46 pixels, with the type, the padding
 and the glyph.
 

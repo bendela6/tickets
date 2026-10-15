@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { cn, focusRing, TONE_HUE } from '../../../../style';
 import { Button } from '../../../primitives/components/button';
+import { formatBytes } from '../../../primitives/components/format-bytes';
 import { Icon } from '../../../primitives/components/icon';
 import { Progress } from '../../../feedback/components/progress';
 import { CONTROL_LADDER, type ControlProps, disabledTreatment } from '../../contract';
@@ -48,21 +49,6 @@ export type FileInputProps = Omit<ControlProps<UploadFile[]>, 'value' | 'onChang
    */
   label?: string;
 };
-
-/** `1536` → `1.5 KB`. Bytes are unreadable and every user knows their units. */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  const units = ['KB', 'MB', 'GB'];
-  let size = bytes / 1024;
-  let unit = 0;
-  while (size >= 1024 && unit < units.length - 1) {
-    size /= 1024;
-    unit += 1;
-  }
-  return `${size < 10 ? size.toFixed(1) : Math.round(size)} ${units[unit]}`;
-}
 
 /**
  * A drop target that is also a button.

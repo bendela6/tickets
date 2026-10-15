@@ -1,0 +1,367 @@
+title: Columns
+summary: "Define a table's column as JSON: its key, label, width, sort and header filter as plain values, and its cell as a template."
+order: 2
+related: [A view's definition, A view's state, The resource contract]
+body:
+  - |
+    Define a table's column as JSON: its key, label, width, sort and header
+    filter as plain values, and its cell as a template.
+
+    A table view lists its columns in `columns`, in their order ([A view's
+    definition](/views/definition)). A column is JSON with no functions in
+    it, as the view is. What its author registers is kept apart from what a
+    reader changes, the view's state ([A view's state](/views/state)): a
+    width dragged, the order, a column shown, each kept by the column's key. The package imports no React.
+    Every type this page names is defined under [Types](#types).
+  - h2: A column
+  - |
+    A column is a host, as `@bh/template` has it: a few fixed parts, set as
+    plain values, and a template, which is the rest. Its header draws its
+    `label`, the filter row under the header its filter's control, and each
+    row its cell, the template: the same JSON a list item, a tile or a card's
+    body is drawn from ([Templates](/templates/overview)). Three columns, a
+    name, a status and a due date:
+  - code: |
+      [
+        {
+          "fixed": {
+            "key": "name",
+            "label": "Name",
+            "width": { "mode": "fill", "min": 240 },
+            "pinned": "start",
+            "sort": ["project", "number"]
+          },
+          "template": {
+            "layout": "flex",
+            "options": { "gap": 2 },
+            "nodes": [
+              { "text": "{project}-{number}", "options": { "mono": true } },
+              { "field": "title" }
+            ]
+          }
+        },
+        {
+          "fixed": {
+            "key": "status",
+            "label": "Status",
+            "width": { "mode": "fixed", "size": 140, "min": 96 },
+            "sort": "status",
+            "filter": { "field": "status.kind", "op": "in", "control": "toggle-chips" }
+          },
+          "template": { "field": "status", "renderer": "pill" }
+        },
+        {
+          "fixed": {
+            "key": "due",
+            "label": "Due",
+            "align": "end",
+            "sort": "due",
+            "filter": {
+              "field": "due",
+              "range": ["gte", "lte"],
+              "control": "date-range"
+            },
+            "hidden": true
+          },
+          "template": { "field": "due" }
+        }
+      ]
+    lang: json
+  - h2: Its fixed parts
+  - |
+    Only `key` and `label` are needed; the rest say what they do when absent.
+    The label and the filter are drawn; the others are settings.
+
+    | Part     | What it is                                                                    | When absent                |
+    | -------- | ----------------------------------------------------------------------------- | -------------------------- |
+    | `key`    | names it in the view and in its state, never its label; unique in its view    | (needed)                   |
+    | `label`  | what its header says                                                          | (needed)                   |
+    | `width`  | fixed, fill or auto, with the narrowest and widest it gets                    | the table's own width      |
+    | `align`  | where its header and cells sit across it: `start`, `center` or `end`          | `start`                    |
+    | `pinned` | kept in sight at the table's `start` or `end` while the rest scroll           | it scrolls                 |
+    | `sort`   | the field a reader sorts by from its header, or several                       | it doesn't sort            |
+    | `filter` | the filter in its header: a field, an operator, its control and config        | none                       |
+    | `hidden` | hidden when the view opens, until a reader shows it                           | shown                      |
+
+    The state a reader changes is kept by `key`, so two columns may share a
+    label but never a key. The table engine's own column, which draws one, is
+    on [Columns](/tables/columns).
+  - h3: Width
+  - |
+    A width is one of three modes, each with `min` and `max`, the narrowest
+    and the widest it gets, in pixels:
+
+    - **`fixed`**: `size` pixels, until a reader drags it, never past its
+      bounds.
+    - **`fill`**: the room the table has left, shared alike by every fill
+      column.
+    - **`auto`**: as wide as its content, within its bounds.
+
+    A width is more than 0, its `max` no less than its `min`, and a fixed
+    `size` within both. A pinned column is best fixed: the table adds the
+    pinned widths up to know where each one sticks. 140 pixels that a drag
+    takes to 320 at most; the room left, never under 240; and its content's,
+    up to 160:
+  - code: |
+      [
+        { "mode": "fixed", "size": 140, "max": 320 },
+        { "mode": "fill", "min": 240 },
+        { "mode": "auto", "max": 160 }
+      ]
+    lang: json
+  - h3: Sort
+  - |
+    `sort` names a field by its path, as a query's sort does (`"status"`, or an
+    option's attribute, `"status.kind"`), or several, in order: `["project",
+    "number"]` sorts a name by its project, then its number. A reader's click
+    on the header sorts by them all, ascending, then descending. Each path
+    comes once.
+  - h3: Filter
+  - |
+    A column's filter is a control in its header and the part of the query's
+    filter its value writes, as a field of a filter form does. It is one of
+    two shapes, told apart by `range`:
+
+    - **A condition**, `field op value`: `field`, `op`, the operator by its
+      name, and `control`, the input whose value is the operand.
+    - **A range**, `field gte from` and `field lte to`, each half while it is
+      set: `field`, `range`, its two operators, and the control `date-range`.
+
+    A control's empty value writes no condition. `default` is the control's
+    value when the view opens: a value, or a list for a control that holds
+    several; for a range its two halves, null for an open one. `config` is
+    the input's own config, as a form field's is: what it takes beyond what
+    the resource's metadata fills in, a placeholder or a label.
+
+    A condition's `map` turns the control's value into the operand it
+    writes, as a filter form's field does, by the value's text: `null`
+    writes none, and a value it doesn't name is the operand itself. Two
+    options of an attribute on at first; a range from a day on, its end
+    open; and a toggle that, on, keeps the items still open:
+  - code: |
+      [
+        {
+          "field": "status.kind",
+          "op": "in",
+          "control": "toggle-chips",
+          "default": ["active", "waiting"]
+        },
+        {
+          "field": "due",
+          "range": ["gte", "lte"],
+          "control": "date-range",
+          "default": ["2026-10-01", null]
+        },
+        {
+          "field": "status.kind",
+          "op": "in",
+          "control": "toggle",
+          "config": { "label": "Open only" },
+          "map": { "true": ["todo", "active"], "false": null }
+        }
+      ]
+    lang: json
+  - |
+    The control is one of the filter form's inputs that filter one field. Its
+    other two don't: `search` writes the query's search, and `rules` holds
+    conditions on any field.
+
+    | Control                    | Draws                                       | Suits                |
+    | -------------------------- | ------------------------------------------- | -------------------- |
+    | `toggle-chips`             | each option as a chip, several on           | an option            |
+    | `tabs`                     | each option as a tab, one on                | an option            |
+    | `segmented`                | each option as a segment, one on            | an option, a boolean |
+    | `select`, `multi-select`   | one option, or several, from a list         | an option, a ref     |
+    | `user`, `avatars`          | one person, or several by their pictures    | a ref to people      |
+    | `date`                     | a day                                       | a date, a datetime   |
+    | `date-range`               | a range of days                             | a date, a datetime   |
+    | `number`                   | a number, or days back from now (`inLast`) | a number, a date     |
+    | `checkbox`, `toggle`       | on or off                                   | a boolean            |
+    | `text`                     | text                                        | text, a url          |
+  - h2: Checking a column
+  - |
+    `Column` is a column's valibot schema by its shape, its operators any
+    name. `columnOf(registry)` checks each operator is one the app's registry
+    holds (`@bh/resource`'s `createRegistry`): bh's fifteen when none is
+    given, and the app's own beside them. Each problem is reported at its own
+    path, every one at once:
+  - code: |
+      import * as v from 'valibot';
+      import { createRegistry, issuesOf } from '@bh/resource';
+      import { columnOf } from '@bh/view';
+
+      declare const stored: string;
+
+      const registry = createRegistry();
+      const result = v.safeParse(columnOf(registry), JSON.parse(stored));
+      if (!result.success) {
+        // [{ path: ['fixed', 'filter', 'op'], message: 'no operator "between"' }]
+        console.log(issuesOf(result.issues));
+      }
+    lang: ts
+  - |
+    A column's own schema checks what it can alone: its parts' shapes, a
+    width's bounds, each sort path once, a control that fits its filter, an
+    operator that is registered, and a cell that is JSON, a template's node
+    at its root. Whether its fields are the resource's, whether a field
+    allows its operator, and what its cell's parts and layouts hold, the
+    view's check of the whole view says, against the resource's metadata and
+    the template's registries.
+  - h2: Types
+  - |
+    Every type above, as the package exports it. `Column`, `ColumnFixed`,
+    `ColumnWidth`, `ColumnSort`, `ColumnFilter` and `FilterControl` are also
+    valibot schemas of the same names. A column's type takes an app's own
+    layouts for its cell, as a template's does.
+  - code: |
+      import type * as v from 'valibot';
+      import type { FieldPath, Json, Operator, Scalar } from '@bh/resource';
+      import type { Host, HostSpec } from '@bh/template';
+
+      /** A column as a view stores it: its fixed parts, and its cell, a template. */
+      export type Column = Host<ColumnFixed>;
+
+      /** A column's fixed parts: plain values. */
+      export interface ColumnFixed {
+        /** Names it in the view and in its state; unique in its view. */
+        key: string;
+        /** What its header says. */
+        label: string;
+        /** The table's own width when absent. */
+        width?: ColumnWidth;
+        /** Where its header and its cells sit across it; start when absent. */
+        align?: 'start' | 'center' | 'end';
+        /** Kept in sight at the table's start or its end; it scrolls when absent. */
+        pinned?: 'start' | 'end';
+        /** What a reader sorts by from its header; it doesn't sort when absent. */
+        sort?: ColumnSort;
+        /** The filter in its header; none when absent. */
+        filter?: ColumnFilter;
+        /** Hidden when the view opens, until a reader shows it. */
+        hidden?: boolean;
+      }
+
+      /** How wide a column is, its bounds in pixels. */
+      export type ColumnWidth =
+        | { mode: 'fixed'; size: number; min?: number; max?: number }
+        | { mode: 'fill'; min?: number; max?: number }
+        | { mode: 'auto'; min?: number; max?: number };
+
+      /** A field's path, or several, in order. */
+      export type ColumnSort = FieldPath | FieldPath[];
+
+      /** One condition its control's value is the operand of, or a range. */
+      export type ColumnFilter =
+        | {
+            field: FieldPath;
+            op: Operator;
+            control: Exclude<FilterControl, 'date-range'>;
+            /** The input's own config: a placeholder, a label. */
+            config?: Record<string, Json>;
+            /** The control's value, by its text, to its operand; null to none. */
+            map?: Record<string, Scalar | Scalar[] | null>;
+            /** The control's value when the view opens. */
+            default?: Scalar | Scalar[];
+          }
+        | {
+            field: FieldPath;
+            /** Its two halves' operators: ['gte', 'lte']. */
+            range: [Operator, Operator];
+            control: 'date-range';
+            config?: Record<string, Json>;
+            /** Its two halves when the view opens, null for an open one. */
+            default?: [Scalar | null, Scalar | null];
+          };
+
+      /** The filter form's inputs that filter one field, by their names. */
+      export type FilterControl =
+        | 'select'
+        | 'multi-select'
+        | 'segmented'
+        | 'checkbox'
+        | 'toggle'
+        | 'text'
+        | 'number'
+        | 'date'
+        | 'date-range'
+        | 'user'
+        | 'toggle-chips'
+        | 'tabs'
+        | 'avatars';
+
+      /** A column's schema by its shape: any operator's name. */
+      export declare const Column: v.GenericSchema<unknown, Column>;
+
+      /** A column's schema, its operators the registry's: bh's fifteen by default. */
+      export declare function columnOf(
+        registry?: ColumnRegistry,
+      ): v.GenericSchema<unknown, Column>;
+
+      /** The operators an app runs with, by name: createRegistry's, for one. */
+      export interface ColumnRegistry {
+        readonly operators: readonly { readonly name: string }[];
+      }
+
+      /** A column, a kind of host: its label, its filter's control, then its cell. */
+      export declare const columnHost: HostSpec<ColumnFixed>;
+    lang: ts
+  - h3: From the packages under it
+  - |
+    What a column is made of from `@bh/template` (a host, a template) and
+    from `@bh/resource` (a path, an operator, a value, a filter), as each
+    defines it; the [Templates](/templates/overview) guide and [The resource
+    contract](/resources/contract) have them whole.
+  - code: |
+      import type * as v from 'valibot';
+
+      /** A host as a view stores it: its fixed parts, and its template. */
+      export interface Host<F> {
+        fixed: F;
+        template: TemplateNode;
+      }
+
+      /** A kind of host: its fixed parts' schema, and the parts it draws, in order. */
+      export interface HostSpec<F> {
+        fixed: v.GenericSchema<unknown, F>;
+        order: readonly (Extract<keyof F, string> | 'template')[];
+      }
+
+      /** A template: a layout node holding nodes, or a part, a thing a record shows. */
+      export type TemplateNode = LayoutNode | Part;
+
+      /** Nodes laid out by a registered layout: 'flex', 'grid', 'repeat', an app's. */
+      export interface LayoutNode {
+        layout: string;
+        options?: Record<string, Json>;
+        nodes: TemplateNode[];
+        /** It shows only while the record passes it. */
+        when?: Filter;
+      }
+
+      /** A field's value, a constant or a text, drawn by a registered renderer. */
+      export type Part = ({ field: FieldPath } | { value: Json } | { text: string }) & {
+        renderer?: string | { name: string; options: Record<string, Json> };
+        format?: string | { name: string; options: Record<string, Json> };
+        options?: Record<string, Json>;
+        when?: Filter;
+      };
+
+      /** A field's key, 'status', or an option field's attribute, 'status.kind'. */
+      export type FieldPath = string;
+
+      /** A registered operator's name: one of bh's fifteen or an app's own. */
+      export type Operator = string;
+
+      /** One value: text, a finite number, or a boolean. */
+      export type Scalar = string | number | boolean;
+
+      /** Any JSON value. */
+      export type Json = null | Scalar | Json[] | { [key: string]: Json };
+
+      /** Which rows: conditions on their fields, joined by all, any and not. */
+      export type Filter =
+        | { all: Filter[] }
+        | { any: Filter[] }
+        | { not: Filter }
+        | { field: FieldPath; op: Operator; value?: Scalar | Scalar[] };
+    lang: ts

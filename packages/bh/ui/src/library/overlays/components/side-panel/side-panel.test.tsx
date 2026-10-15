@@ -71,9 +71,10 @@ describe('SidePanel', () => {
     mockViewport(false);
     renderPanel();
     const handle = screen.getByRole('separator', { name: 'Resize Navigation' });
-    // jsdom gives every element a zero rect, so a left panel's width is read
-    // straight off clientX.
-    fireEvent.pointerDown(handle, { pointerId: 1 });
+    // A left panel's handle is its right edge, 224 pixels in, where a press
+    // lands; a drag moves the width by as far as the pointer goes. jsdom lays
+    // nothing out, so the drag starts from the width the panel holds.
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 224 });
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 300 });
     expect(aside().style.getPropertyValue('--panel-w')).toBe('300px');
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 5000 });

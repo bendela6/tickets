@@ -1,0 +1,34 @@
+title: formatDuration
+summary: 'Writes a length of time as a person reads it, 2h 30m or 1m 26s, from minutes, seconds or milliseconds.'
+related: [DurationInput, formatBytes]
+body:
+  - |
+    Writes a length of time as a person reads it, in the two largest units
+    it needs: `150` minutes is `2h 30m`, and `86000` milliseconds is
+    `1m 26s`.
+  - h2: Import
+  - code: import { formatDuration } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The number is minutes unless `unit` names another: `ms`, `s` or `h`.
+    Minutes are what [DurationInput](/components/inputs/duration-input)
+    holds, and what an estimate or time spent is counted in; a time measured
+    with `Date.now()` or `performance.now()` is `ms`.
+
+    How it is written depends on how long it is, not on the unit it was
+    counted in. Under a second it is milliseconds, `840ms`; under ten
+    seconds, seconds to a tenth, `2.9s`; under a minute, whole seconds; under
+    an hour, minutes and seconds, `1m 26s`; then hours and minutes,
+    `2h 5m`. A second part that is zero is left off, `3h` rather than
+    `3h 0m`, and a length that rounds up to the next unit is written in it.
+  - demo: examples/any-unit.tsx
+    title: Minutes and milliseconds
+  - h2: Past a day
+  - |
+    A length past a day stays in hours, `76h 5m`, so an estimate reads as
+    one. `days: true` counts whole days and hours instead, as a job that has
+    run for days reads best: `3d 4h`.
+  - demo: examples/past-a-day.tsx
+    title: Seventy-six hours, both ways
+  - ref: formatDuration

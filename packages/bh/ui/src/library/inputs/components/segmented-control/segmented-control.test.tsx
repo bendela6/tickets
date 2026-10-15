@@ -212,3 +212,21 @@ test('an option’s icon takes its color, dimmed a rung off the chosen segment, 
   // No color, no hue: the glyph is the label's color, as it always was.
   expect(glyph('Plain')?.getAttribute('class')).not.toMatch(/text-\w+-\d/);
 });
+
+test("draws an option's count after its label, in the segment's name, and nothing without one", () => {
+  render(
+    <SegmentedControl
+      label="Show"
+      options={[
+        { value: 'all', label: 'All', count: 40 },
+        { value: 'unwatched', label: 'Unwatched' },
+      ]}
+      value="all"
+      onChange={() => {}}
+    />,
+  );
+  const all = screen.getByRole('radio', { name: 'All 40' });
+  expect(all.lastElementChild).toHaveTextContent('40');
+  expect(all.lastElementChild).toHaveClass('font-mono', 'text-11');
+  expect(screen.getByRole('radio', { name: 'Unwatched' }).children).toHaveLength(0);
+});

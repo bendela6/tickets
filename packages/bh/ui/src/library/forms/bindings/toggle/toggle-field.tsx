@@ -1,5 +1,6 @@
 import type { InputProps } from '@bh/form';
 import { Switch } from '../../../inputs/components/switch';
+import { useInlineField } from '../../components/inline-field-wrapper';
 
 export interface ToggleFieldConfig {
   /** Inline copy beside the switch. FieldWrapper renders the field's caption
@@ -10,13 +11,16 @@ export interface ToggleFieldConfig {
 }
 
 export function ToggleField(p: InputProps<ToggleFieldConfig, boolean>) {
+  const inline = useInlineField();
   return (
     <Switch
       id={p.name}
       aria-describedby={p.describedBy}
       name={p.name}
-      label={p.config.label}
+      // In a filter bar's row, the field's label is the text beside it.
+      label={p.config.label ?? inline?.label}
       value={Boolean(p.value)}
+      readOnly={p.readOnly}
       disabled={p.disabled}
       onChange={(next) => {
         p.onChange(next);

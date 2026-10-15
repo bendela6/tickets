@@ -25,9 +25,9 @@ body:
     lang: tsx
   - h2: Examples
   - |
-    `DialogContent` puts the window in a portal, centred over a dim: 448
-    pixels wide at most, and never closer than 16 pixels to the window's
-    sides. [DialogFooter](/components/overlays/dialog-footer) lays out the
+    `DialogContent` puts the window in a portal, centred over a dim: at its
+    default size, `md`, 448 pixels wide at most, and never closer than 16
+    pixels to the window's sides. [DialogFooter](/components/overlays/dialog-footer) lays out the
     buttons, and `DialogClose` closes the dialog from one of them.
     [Elevation](/foundations/elevation) has the layers the dim and the
     window sit on.
@@ -78,6 +78,19 @@ body:
     the caller's, or a choice whose value the confirm reads, render a
     ConfirmDialog yourself.
   - demo: examples/asking-from-code.tsx
+  - h3: Full screen
+  - |
+    `size="fullscreen"` gives the dialog the whole window, for what needs
+    the room: a document to read, or an example beside its code. It sits
+    edge to edge on the page's own ground, with no corners, border, shadow
+    or padding, and lays its children out in a column, so they bring their
+    own bars: here a header with the title and a close button, then a body
+    that takes the rest of the height and scrolls. Its height follows a
+    phone's toolbars as they come and go.
+
+    The rest is any dialog's: Esc closes it, focus stays inside it, and
+    goes back to what opened it on closing.
+  - demo: examples/the-whole-window.tsx
   - h2: Keyboard and accessibility
   - keyboard:
       - keys: [Enter, Space]

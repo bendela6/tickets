@@ -1,4 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import axe from 'axe-core';
+import { Profiler, type ProfilerOnRenderCallback } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { LogView } from './log-view';
@@ -197,5 +199,60 @@ describe('LogView’s multi-line entries', () => {
     await userEvent.click(screen.getByRole('button', { name: 'error: boom' }));
     // The line that said the time is folded away, so the next one shown says it.
     expect(times()).toEqual([clockTime(at)?.clock, clockTime(at + 1000)?.clock]);
+  });
+});
+
+describe('LogView at scale', () => {
+  // Thousands of lines, no fold among them: every one drawn.
+  const at = Date.UTC(2026, 9, 8);
+  const LONG: LogLine[] = Array.from({ length: 3010 }, (_, index) => {
+    return {
+      id: index,
+      time: at + index * 100,
+      text: `#${index} ${ESC}[32mstep${ESC}[0m ${index % 7 === 0 ? '[WARN] slow' : 'fine'}`,
+    };
+  });
+
+  it('draws only what arrives as a log of thousands of lines grows', () => {
+    const renders: { phase: string; actual: number; base: number }[] = [];
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actual, base) => {
+      renders.push({ phase, actual, base });
+    };
+    const view = (count: number) => {
+      return (
+        <Profiler id="log" onRender={onRender}>
+          <LogView lines={LONG.slice(0, count)} streaming />
+        </Profiler>
+      );
+    };
+    const { rerender } = render(view(3000));
+    for (let count = 3001; count <= 3010; count += 1) {
+      act(() => rerender(view(count)));
+    }
+    expect(rows()).toHaveLength(3010);
+    const updates = renders.filter((one) => one.phase === 'update');
+    expect(updates.length).toBeGreaterThanOrEqual(10);
+    // Each line that arrives costs a small part of drawing the whole log
+    // again, which is what React measures the tree would take unmemoised.
+    for (const update of updates) {
+      expect(update.actual).toBeLessThan(update.base / 4);
+    }
+  });
+});
+
+describe('LogView’s accessibility', () => {
+  it('passes axe with sections, an entry, a fold open and the status', async () => {
+    const lines = [
+      '==> migrate',
+      'error: password authentication failed',
+      '    at a (x.js:1:1)',
+      '    at b (x.js:2:1)',
+      '==> done',
+    ];
+    const { container } = render(
+      <LogView lines={lines} sections={[{ match: /^==> / }]} label="Deploy 14" streaming />,
+    );
+    const results = await axe.run(container);
+    expect(results.violations.map((violation) => violation.id)).toEqual([]);
   });
 });

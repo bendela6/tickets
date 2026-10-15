@@ -7,7 +7,8 @@ interface TextColumnOpts {
   mono?: boolean;
   /**
    * Keep the value on one line, fading it out where it runs past the column
-   * and offering the whole of it on hover. Default true.
+   * and offering the whole of it, in a tooltip under the row, on hover or
+   * keyboard focus. Default true.
    *
    * `false` lets the text wrap, which only makes sense alongside a row height
    * that leaves somewhere for it to wrap TO.
@@ -20,7 +21,8 @@ interface TextColumnOpts {
 
 /**
  * A cell of text, on one line, faded where it runs past the column, with the
- * whole of it on hover. An empty value draws nothing.
+ * whole of it in a tooltip on hover or keyboard focus while it is clipped. An
+ * empty value draws nothing.
  */
 export function TextColumn(opts: TextColumnOpts = {}): Renderer<string | null | undefined> {
   const { mono, truncate = true, align } = opts;

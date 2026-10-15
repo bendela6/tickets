@@ -17,6 +17,7 @@ export function DurationField(p: InputProps<DurationFieldConfig, number | null>)
         value={p.value ?? null}
         placeholder={p.config.placeholder}
         budgetMinutes={p.config.budgetMinutes}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

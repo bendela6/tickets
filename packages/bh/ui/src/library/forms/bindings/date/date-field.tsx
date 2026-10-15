@@ -1,5 +1,6 @@
 import type { InputProps } from '@bh/form';
 import { DatePicker } from '../../../inputs/components/date-picker';
+import { useInlineField } from '../../components/inline-field-wrapper';
 
 export interface DateFieldConfig {
   placeholder?: string;
@@ -18,6 +19,8 @@ export interface DateFieldConfig {
  * takes and returns the string form, so this adapter passes it straight through.
  */
 export function DateField(p: InputProps<DateFieldConfig, string | null>) {
+  // In a filter bar's row: the row's size, and the label inside the trigger.
+  const inline = useInlineField();
   return (
     <div onBlur={p.onBlur}>
       <DatePicker
@@ -25,8 +28,11 @@ export function DateField(p: InputProps<DateFieldConfig, string | null>) {
         aria-describedby={p.describedBy}
         value={p.value ?? null}
         placeholder={p.config.placeholder}
+        prefix={inline?.label === undefined ? undefined : `${inline.label}:`}
+        size={inline?.size}
         min={p.config.min}
         max={p.config.max}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

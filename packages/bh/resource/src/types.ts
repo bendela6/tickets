@@ -1,12 +1,18 @@
 import * as v from 'valibot';
-import type { optionSettings, refSettings } from './schemas';
+import type {
+  FileValue,
+  numberSettings,
+  optionSettings,
+  refSettings,
+  textSettings,
+} from './schemas';
 import { FieldValue, type Id, Json, type Scalar } from './values';
 
 // The resource contract's field metadata, as valibot schemas first, their
 // types inferred from them so the two can't drift: per field its key and
 // label, its type (its kind, the settings that kind takes, whether it holds a
 // list), its format, and what a query and a write may do with it. A kind is a
-// registered name, as a format and an operator are: bh registers nine kinds
+// registered name, as a format and an operator are: bh registers fifteen kinds
 // (`baseKinds`) and an app may add its own (`createRegistry`). What the
 // registries hold (KindSpec, OperatorSpec, FormatSpec) carries code and
 // schemas, so it is typed by hand.
@@ -73,7 +79,8 @@ export const FieldType = v.strictObject({
   kind: name,
   /**
    * What its kind takes besides these keys, checked by the kind's settings
-   * schema: an option field's options, a ref field's resource (KindSettings).
+   * schema: an option field's options, a ref field's resource, a number's
+   * range (KindSettings).
    */
   settings: v.optional(v.record(v.string(), Json)),
   /** Holds a list: labels, several assignees; only where its kind allows it. */
@@ -132,7 +139,7 @@ export const FieldKey = v.pipe(
 
 /**
  * A field, of any kind. Its kind (`type.kind`) is a name in the kind registry
- * (KindSpec): one of bh's nine or an app's own. The kind says what the field's
+ * (KindSpec): one of bh's fifteen or an app's own. The kind says what the field's
  * value is, which operators filter it, whether it sorts, groups and holds a
  * list, and what settings it takes.
  */
@@ -165,7 +172,7 @@ export type FieldMeta = v.InferOutput<typeof FieldMeta>;
 /**
  * What the metadata knows of a registered kind, to check a field of it and
  * the queries and writes that name it. An app registers its own beside bh's
- * nine (createRegistry), with its SQL for the database adapter and its default
+ * fifteen (createRegistry), with its SQL for the database adapter and its default
  * renderer.
  */
 export interface KindSpec {
@@ -188,30 +195,49 @@ export interface KindSpec {
   search: boolean;
   /** The format a field of it gets when it names none: 'plain', 'date'. */
   format?: string;
+  /**
+   * How two of its values order, by the contract's rule for the kind: below
+   * 0 when `a` comes first. bh orders by it where it holds the rows itself
+   * (a source that answers every row at once). None → it isn't ordered
+   * there: a ref orders by the title of the row it points at, which only
+   * its source knows.
+   */
+  compare?: (a: Scalar, b: Scalar, settings?: Record<string, Json>) => number;
+  /** The text a search looks in, where bh searches: a rich text's words, never its JSON. None → the value as text. */
+  searchText?: (value: Scalar) => string;
 }
 
 /**
  * The kinds bh registers. Their values are KindValue's, their order Sort's,
- * and each names its operators in its entry of baseKinds; only option and ref
- * take settings (KindSettings).
+ * and each names its operators in its entry of baseKinds; text, number,
+ * option and ref take settings (KindSettings). Each may hold a list, and a
+ * field holding one doesn't sort.
  *
  * ```
- *            many  sort  group  search  format
- * text       yes   yes   -      yes     plain
- * url        yes   yes   -      yes     -
- * number     -     yes   -      -       number
- * boolean    -     yes   yes    -       -
- * date       -     yes   -      -       date
- * datetime   -     yes   -      -       datetime
- * option     yes   yes   yes    -       -
- * ref        yes   yes   yes    -       -
- * json       -     -     -      -       -
+ *            sort  group  search  format
+ * text       yes   -      yes     plain
+ * markdown   -     -      yes     -
+ * richtext   -     -      yes     -
+ * url        yes   -      yes     -
+ * email      yes   -      yes     -
+ * phone      yes   -      yes     -
+ * number     yes   -      -       number
+ * boolean    yes   yes    -       -
+ * date       yes   -      -       date
+ * time       yes   -      -       -
+ * datetime   yes   -      -       datetime
+ * option     yes   yes    -       -
+ * ref        yes   yes    -       -
+ * file       -     -      -       -
+ * json       -     -      -       -
  * ```
  */
 export type BaseKind = keyof KindValue;
 
-/** The settings of bh's kinds that take any. */
+/** The settings of bh's kinds that take any; a text's and a number's are optional. */
 export interface KindSettings {
+  text: NonNullable<v.InferOutput<typeof textSettings>>;
+  number: NonNullable<v.InferOutput<typeof numberSettings>>;
   option: v.InferOutput<typeof optionSettings>;
   ref: v.InferOutput<typeof refSettings>;
 }
@@ -274,21 +300,33 @@ export interface FormatSpec {
 /** The value of each of bh's kinds. */
 export interface KindValue {
   text: string;
+  /** CommonMark, as @bh/markdown reads it. */
+  markdown: string;
+  /** A document as @bh/richtext's editor writes it: its JSON, '{"type":"doc",…}'. */
+  richtext: string;
   /**
    * Absolute, with its scheme ('https://…'), or a path from the root
    * ('/api/users/7/avatar'), which a client resolves against the API's
    * address: a browser on its own, a client outside it by joining the two.
    */
   url: string;
+  /** 'ada@example.com' */
+  email: string;
+  /** E.164, a plus and up to fifteen digits: '+995555123456'. */
+  phone: string;
   number: number;
   boolean: boolean;
   /** '2026-10-12': no time, no zone. */
   date: string;
+  /** '09:30': a time of day, 24 hours, to the minute, no zone. */
+  time: string;
   /** '2026-10-12T09:30:00.000Z': ISO 8601, in UTC. */
   datetime: string;
   /** One of the field's OptionMeta values. */
   option: string;
   /** The id of a row of the resource its `type.settings.of` names. */
   ref: Id;
+  /** A file the app stores: { url, name, size, type }. */
+  file: FileValue;
   json: Json;
 }

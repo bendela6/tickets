@@ -332,6 +332,38 @@ holds, and the adapters' tests compare their SQL with it. It takes the
 metadata to read a path through an option's attributes (`status.kind`), and
 reads a path one key into an object value (`services.name`, inside a
 template's `repeat`); `viewer` is the signed-in user's id, for `isMe`.
+`matchesSearch(term, row, meta, registry)` says whether a query's `search`
+keeps a row, by the same rule as the server: a searched field holds the
+term, case ignored, read by its kind's `searchText`.
+
+`rowOrder(sort, meta, registry, { titleOf })` is the contract's order as a
+comparator of rows: each key by its kind's `compare`, an attribute's path by
+its attribute's, a ref by the title of the row it points at (`titleOf`), rows
+without a value last both ways, then the id (a number by value, text by code
+point, as the adapters break a tie). It answers undefined for a sort it can't
+order here: a kind without `compare`, or a ref without `titleOf`.
+
+## The client
+
+`@bh/resource/client`, an entry of its own beside the contract, holds what a
+client of the routes needs, with no React and no DOM, so a browser and a
+server calling another app's API take the same one:
+
+- `resourceClient({ base, fetch, headers })`: a typed fetcher for the routes,
+  `meta`, `query`, `read`, `create`, `update` and `delete`, each write with an
+  `Idempotency-Key` (a fresh uuid, or the one given). Every error answer
+  throws a `ResourceRequestError`: its status, and its ErrorBody's `code`,
+  `message` and `issues`; a code from the status when the body isn't one.
+- What a list the client holds does with a row it just wrote, without asking
+  the server again: `answerAfterWrite` and `answerAfterDelete` for one page,
+  `pagesAfterWrite` and `pagesAfterDelete` for the pages a cursor brought.
+  The list keeps or drops the row by its query's filter and search
+  (`keepsRow`), puts a kept one in its place by its order (`rowOrder`), and
+  moves its total by what entered or left. They answer undefined where the
+  client can't tell (a grouped answer's counts, an order it can't make here),
+  and the caller asks the server again.
+
+`@bh/resource-query` builds React Query's hooks on it.
 
 ## JSON Schema and OpenAPI
 
@@ -356,14 +388,17 @@ queryOf check) is left out of both; the server still runs it, and answers
 
 ## Docs
 
-One page on the docs site, [The resource contract](docs/contract.md)
+Two pages on the docs site: [The resource contract](docs/contract.md)
 (`/resources/contract`): the routes, every type, a table per kind, the errors,
-the actions and jobs, and three worked examples from tickets. Its source is
-`docs/contract.doc.yaml`; `pnpm docs:sync` writes the markdown copy beside it.
+the actions and jobs, and three worked examples from tickets; and [The
+client](docs/client.md) (`/resources/client`): the fetcher, its errors, and
+what a held list does with a written row. Each source is a `.doc.yaml` beside
+it; `pnpm docs:sync` writes the markdown copies.
 
 ## Layer
 
 It needs no other bh package. It depends on valibot, on
 `@valibot/to-json-schema` for JSON Schema, and on `openapi-types` for the
 OpenAPI document's types. A test holds the main entry to importing those
-alone, and its tests run in Node.
+alone, and the client's (`@bh/resource/client`) to valibot alone, the
+platform's `fetch`, `Headers` and `crypto` beside it; its tests run in Node.

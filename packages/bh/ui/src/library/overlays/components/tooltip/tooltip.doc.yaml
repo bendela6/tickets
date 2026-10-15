@@ -1,6 +1,6 @@
 title: Tooltip
 summary: A short hint that shows when its trigger is hovered or focused.
-related: [Button, Popover]
+related: [Button, Popover, useIsClipped]
 body:
   - |
     A short hint that shows when its trigger is hovered or focused.
@@ -21,7 +21,22 @@ body:
   - demo: examples/shortcuts.tsx
   - |
     `side` picks the side of the trigger it shows on: `top` by default.
+    `align` lines it up with the trigger's start, middle or end along that
+    side: `center` by default.
   - demo: examples/sides.tsx
+  - |
+    Pass `open` and `onOpenChange` to hold it yourself: it then shows only
+    while `open` is true, and asks `onOpenChange` when a hover, a focus, a
+    click or Escape would show or hide it. Here the switch holds it open,
+    and hovering the button still shows and hides it through the same
+    state.
+  - demo: examples/held-by-the-page.tsx
+  - |
+    A tooltip with nothing to say is better left out than held shut: asked
+    to show, one held shut still counts as shown, and the next tooltip
+    skips its delay. A table's text cell draws one only while its text is
+    clipped, as [useIsClipped](/hooks/use-is-clipped) says, and holds it
+    so that the cell's keyboard focus shows it too.
   - h2: Keyboard and accessibility
   - keyboard:
       - keys: [Tab]

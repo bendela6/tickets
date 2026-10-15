@@ -24,6 +24,7 @@ export function PasswordField(p: InputProps<PasswordFieldConfig, string>) {
         name={p.name}
         value={p.value ?? ''}
         placeholder={p.config.placeholder}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

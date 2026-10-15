@@ -25,4 +25,6 @@ them at `/forms/overview`, with the examples live.
 
 Depends on `@tanstack/react-form` and `@standard-schema/spec`, with React as a
 peer; valibot only for its tests (the `./valibot` entry reads a schema's shape
-without importing valibot). Of bh's packages, only `@bh/ui` depends on it.
+without importing valibot). Of bh's packages it builds on `@bh/resource`, for
+the filter tree's and the field metadata's types a filter form folds its
+fields into, and only `@bh/ui` depends on it.

@@ -1,6 +1,6 @@
 title: DurationInput
 summary: A length of time, typed as text and held in minutes.
-related: [TimePicker, NumberInput]
+related: [TimePicker, NumberInput, formatDuration]
 body:
   - |
     A length of time, typed as text and held in minutes.
@@ -47,6 +47,8 @@ body:
   - h2: Props
   - props: DurationInput
   - |
-    The reader and the writer it uses are exported too:
+    The reader it uses is exported too. The writer is
+    [`formatDuration`](/components/primitives/format-duration), which
+    writes a length in minutes as the field does, and one in seconds or
+    milliseconds too.
   - ref: parseDuration
-  - ref: formatDuration

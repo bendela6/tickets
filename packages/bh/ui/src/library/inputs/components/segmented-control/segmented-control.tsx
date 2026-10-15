@@ -9,6 +9,7 @@ import {
   disabledTreatment,
 } from '../../contract';
 import { useSegmentTile } from './use-segment-tile';
+import { OptionCount } from '../../parts/option-count';
 
 // 12 / 14 / 16 — the same three numbers `CONTROL_LADDER` carries as `icon`,
 // said in the glyph ladder's own vocabulary because that is what `Icon` takes.
@@ -91,9 +92,11 @@ export function SegmentedControl({
   const locked = disabled || readOnly;
   const selected = options.some((option) => option.value === value) ? value : null;
   // What the tile has to be re-measured for, beside the selection moving: the
-  // labels themselves. An identity check on `options` would re-measure on every
-  // render of every caller that builds the array inline, which is most of them.
-  const revision = `${size}:${options.map((option) => option.label).join('\u0000')}`;
+  // labels themselves, and their counts. An identity check on `options` would
+  // re-measure on every render of every caller that builds the array inline,
+  // which is most of them.
+  const labels = options.map((option) => `${option.label}\u0001${option.count ?? ''}`);
+  const revision = `${size}:${labels.join('\u0000')}`;
   const { listRef, registerSegment, tile } = useSegmentTile(selected, revision);
 
   return (
@@ -186,6 +189,7 @@ export function SegmentedControl({
               />
             ) : null}
             {option.label}
+            {option.count === undefined ? null : <OptionCount count={option.count} />}
           </button>
         );
       })}

@@ -39,4 +39,11 @@ describe('FormButton', () => {
     render(<FormButton action="submit" label="Save" disabled loading />);
     expect(screen.getByRole('button', { name: /Save/ })).toHaveAttribute('aria-busy', 'true');
   });
+
+  it('says it is a row’s end, and which action it is, for an inline row to place it by', () => {
+    render(<FormButton action="reset" label="Clear" disabled loading={false} />);
+    const clear = screen.getByRole('button', { name: 'Clear' });
+    expect(clear).toHaveAttribute('data-row-end');
+    expect(clear).toHaveAttribute('data-action', 'reset');
+  });
 });

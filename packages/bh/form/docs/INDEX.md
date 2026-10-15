@@ -17,3 +17,4 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [Validation and valibot](../docs/validation.md): Check each field's value with a schema, check the fields against each other, and build a whole form from a valibot schema.
 - [Instrument's bindings](../docs/bindings.md): The inputs, layouts, wrappers and button @bh/ui registers, what each kind holds, and what its config takes.
 - [Writing an input](../docs/writing-an-input.md): Make a control of your own into a kind any form can name.
+- [Filter forms](../docs/filter-form.md): Draw a form as the filters above a list: its value is the query's own { search, filter }, its fields filled from the resource's metadata.

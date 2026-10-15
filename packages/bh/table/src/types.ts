@@ -771,6 +771,7 @@ export interface RenderHbarCtx {
     onPointerMove: (e: ReactPointerEvent<HTMLElement>) => void;
     onPointerUp: (e: ReactPointerEvent<HTMLElement>) => void;
     onPointerCancel: (e: ReactPointerEvent<HTMLElement>) => void;
+    onLostPointerCapture: (e: ReactPointerEvent<HTMLElement>) => void;
   };
   /** Spread onto the track, for click-to-jump. */
   trackProps: {

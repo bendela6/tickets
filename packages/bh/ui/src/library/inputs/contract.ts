@@ -113,6 +113,13 @@ export interface Option {
    * Plain text, as `label` is, so an option stays data a stored config can hold.
    */
   description?: string;
+  /**
+   * How many rows hold it: `ToggleChips` and `SegmentedControl` draw it after
+   * the label, `Combobox` and `MultiCombobox` right-aligned in their list
+   * rows, never on a trigger; a form's `tabs` field as its tab's badge.
+   * Absent, nothing is drawn and no gap is left.
+   */
+  count?: number;
 }
 
 /**

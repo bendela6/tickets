@@ -34,15 +34,16 @@ const DATETIME = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?Z$/;
  * nine digits, so '09:30:00Z' and '09:30:00.000Z' are one instant; a date, a
  * day without a time, as it is.
  */
-function ordered(text: string): string {
+export function ordered(text: string): string {
   const match = DATETIME.exec(text);
   return match ? `${match[1]}.${(match[2] ?? '').padEnd(9, '0')}Z` : text;
 }
 
 /**
  * Where a row's value sits against the operand: below 0 before it, 0 at it,
- * above 0 after it. A number by value; a date by day and a datetime by
- * instant, as their ISO text orders once a datetime's fraction is padded.
+ * above 0 after it. A number by value; a date by day, a time by minute and a
+ * datetime by instant, as their ISO text orders once a datetime's fraction is
+ * padded.
  * Undefined when the two don't compare: no value, a list, or two kinds of
  * value.
  */
@@ -57,10 +58,15 @@ function compare(value: Value, operand: Operand): number | undefined {
   return undefined;
 }
 
-/** Whether the row's value compares with the operand, and sits where `holds` says. */
+/**
+ * Whether the row's value compares with the operand, and sits where `holds`
+ * says: on a many field, one of its values.
+ */
 function sits(value: Value, operand: Operand, holds: (at: number) => boolean): boolean {
-  const at = compare(value, operand);
-  return at !== undefined && holds(at);
+  return listOf(value).some((each) => {
+    const at = compare(each, operand);
+    return at !== undefined && holds(at);
+  });
 }
 
 /** Whether the row holds any of the operand's values: on a many field, any of its own. */
@@ -135,9 +141,9 @@ function days(): v.GenericSchema {
   return v.pipe(v.number(), v.integer('count whole days'), v.minValue(1, 'count at least one day'));
 }
 
-/** A date's and a datetime's words for a range: 'is before', 'is after'. */
+/** A date's, a time's and a datetime's words for a range: 'is before', 'is after'. */
 function onDates(words: string): NonNullable<OperatorSpec['labels']> {
-  return { kinds: { date: words, datetime: words } };
+  return { kinds: { date: words, time: words, datetime: words } };
 }
 
 /** One of bh's operators, frozen, its words too: an app adds its own beside them, never changes them. */
@@ -158,14 +164,16 @@ function operator(spec: OperatorSpec): OperatorSpec {
  *
  * - On a many field, `in` holds when the row holds any of the values, `notIn`
  *   when it holds none of them, and `empty` when it holds none at all;
- *   `contains` and `startsWith` hold when one of its values does. `equals`
- *   and `notEquals` aren't offered there.
+ *   `contains`, `startsWith`, the ranges and `inLast` hold when one of its
+ *   values does, and `notInLast` when none does. `equals` and `notEquals`
+ *   aren't offered there.
  * - `notEquals`, `notIn` and `notInLast` keep the rows that have no value:
  *   "status is not done" keeps the items without a status.
  * - `contains` and `startsWith` ignore case.
- * - `lt`, `lte`, `gt` and `gte` compare a number by value, a date by day and
- *   a datetime by instant, so a month is `gte` its first moment and `lt` the
- *   next month's; a row without a value passes none of them.
+ * - `lt`, `lte`, `gt` and `gte` compare a number by value, a date by day, a
+ *   time by minute and a datetime by instant, so a month is `gte` its first
+ *   moment and `lt` the next month's; a row without a value passes none of
+ *   them.
  * - `inLast` and `notInLast` count whole days back from now, by the
  *   database's clock in SQL and this machine's in `matches`, so a saved "last
  *   7 days" view keeps rolling: a datetime is in the last 7 days when it is at
@@ -237,13 +245,14 @@ export const baseOperators: readonly OperatorSpec[] = Object.freeze([
     name: 'inLast',
     label: 'is in the last',
     operand: days,
-    matches: (a, b) => within(a, b) === true,
+    matches: (a, b) => listOf(a).some((each) => within(each, b) === true),
   }),
   operator({
     name: 'notInLast',
     label: 'is not in the last',
     operand: days,
-    matches: (a, b) => a === null || within(a, b) === false,
+    // No value, or none in the last days: [] and null pass as `every` of none.
+    matches: (a, b) => listOf(a).every((each) => within(each, b) === false),
   }),
   operator({ name: 'empty', label: 'is empty', matches: (a) => listOf(a).length === 0 }),
   operator({ name: 'notEmpty', label: 'is not empty', matches: (a) => listOf(a).length > 0 }),

@@ -1,0 +1,115 @@
+title: useResizeHandle
+summary: A separator dragged, or moved with the arrow keys, to resize what it sits beside, in pixels or as a share of a box, with its props and no markup of its own.
+order: 3
+related: [Writing a hook, useDrag, useElementSize]
+body:
+  - |
+    A separator dragged, or moved with the arrow keys, to resize what it
+    sits beside: the height of a box from its bottom edge, the width of a
+    sidebar, the share of a box two panes split. It holds the value, its
+    bounds and the keys, and hands out the separator's props, over
+    [useDrag](/hooks/use-drag) and [useElementSize](/hooks/use-element-size).
+    It sizes nothing: the caller sets the value on what it resizes, as a
+    height, a width or a grid's columns.
+  - h2: Import
+  - code: import { useResizeHandle } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/a-box-from-its-edge.tsx
+  - |
+    Drag the box's bottom edge, or focus it and press the arrow keys: the
+    height goes from 96 to 320 pixels, 24 at a key. `orientation` says
+    which way the separator lies, and so which keys move it: a
+    `horizontal` separator, a bar across, moves up and down, a `vertical`
+    one left and right. The hook holds the height here, from
+    `defaultValue`, and the box takes it as its `height`.
+
+    `ref` goes on the box. A drag or a key starts from the size the box is
+    laid out at, measured as it starts, so the edge stays under the
+    pointer even where CSS holds the box smaller than its value. With no
+    value set and no default, the value is the box's own size, measured,
+    until the reader moves it.
+  - h2: Held by the caller
+  - demo: examples/a-split-the-page-holds.tsx
+  - |
+    `unit: 'share'` makes the value a share of a box, from 0 to 1, and a
+    drag moves it by as far as the pointer goes over the box's size. The
+    box is the separator's parent here; give `ref` to another element to
+    measure that instead. The page holds the share in its own state, as
+    `value` and `onChange`, so **Split evenly** puts it back by setting
+    that state. A screen reader says a share as a percentage: here
+    `aria-valuenow` goes from 20 to 80.
+  - |
+    `onChange` hears each move of a drag. `onCommit` hears a change once it
+    is done, when the drag is let go and at each key, and is where a value
+    is stored, as `@bh/ui`'s Drawer and SidePanel store their widths under
+    the app's key. A press that moves nothing says nothing.
+  - h2: Which way it grows
+  - |
+    An arrow key moves the separator its way, and a drag follows the
+    pointer. A `share` grows as the separator moves right or down. A `px`
+    value is a size, so it depends which edge of the element the handle
+    is on: `edge: 'end'`, its bottom or right edge, grows it as the handle
+    moves down or right; `edge: 'start'`, its top or left edge, grows it as
+    the handle moves up or left, as a panel docked to the window's right
+    edge grows from its left.
+  - code: |
+      import { useState } from 'react';
+      import { useResizeHandle } from '@bh/hooks';
+
+      export function APanelOnTheRight() {
+        const [width, setWidth] = useState(320);
+        const handle = useResizeHandle<HTMLElement>({
+          orientation: 'vertical',
+          // Docked right: the handle is the panel's left edge.
+          edge: 'start',
+          value: width,
+          onChange: setWidth,
+          min: 180,
+          max: 480,
+        });
+        return (
+          <aside ref={handle.ref} style={{ width }} className="fixed inset-y-0 right-0">
+            <div
+              {...handle.getSeparatorProps({ 'aria-label': 'Resize the panel' })}
+              className="absolute inset-y-0 left-0 w-6 -translate-x-1/2 cursor-col-resize touch-none"
+            />
+          </aside>
+        );
+      }
+    lang: tsx
+  - h2: Rules
+  - |
+    - **Its server value** is the value given, or for a `px` element with
+      none set, `undefined`: it is measured in the browser before it first
+      paints.
+    - **The separator is a window splitter**: role `separator`, its
+      `aria-orientation`, a tab stop, and `aria-valuenow`,
+      `aria-valuemin` and `aria-valuemax`, in pixels or as a percentage. A
+      `px` value with no `max` leaves `aria-valuemax` out. Name it
+      yourself, with `aria-label`, and give it `touch-action: none`
+      (`touch-none`), so a touch drags it rather than scrolling the page.
+    - **Your props merge in**: `getSeparatorProps(own)` runs your handlers
+      first, then its own, and its role and ARIA values win over yours.
+      To keep a change from happening, hold the value and decline it.
+    - **Values are kept** within `min` and `max`, in whole pixels or to
+      four places of a share. `min` is 0 unless given, `max` none for
+      `px` and 1 for a share; a key moves 24 pixels, or 0.05 of the box,
+      unless `step` says otherwise.
+    - **Held by the caller**, it keeps no copy: a change calls `onChange`,
+      and the new value comes back as `value`. `null` is a caller that
+      holds a `px` value and has set none, so the element's own size is
+      the value.
+    - **What keeps its identity**: `setValue` and `ref`, for the hook's
+      life; the callbacks are read when they are called, so they need no
+      `useCallback`.
+    - **Cleaning up**: a drag cut short by an unmount lets go of the
+      pointer and says nothing is done.
+  - h2: Reference
+  - ref: useResizeHandle
+  - ref: UseResizeHandleOptions
+  - ref: UseResizeHandleResult
+  - ref: ResizeSeparatorProps
+  - ref: ResizeOrientation
+  - ref: ResizeUnit
+  - ref: ResizeEdge

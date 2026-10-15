@@ -1,7 +1,8 @@
 import { useId, type ReactNode } from 'react';
+import { useDisclosure } from '@bh/hooks';
 import { cn } from '../../../../style';
 import type { IconSize } from '../../../primitives/components/icon';
-import { FoldRow, useFoldOpen } from './fold';
+import { FoldRow } from './fold';
 
 /**
  * How loud the row is.
@@ -75,12 +76,11 @@ export function Disclosure({
   children,
 }: DisclosureProps) {
   const contentId = `${useId()}content`;
-  const [isOpen, toggle] = useFoldOpen(open, defaultOpen, onOpenChange);
+  const fold = useDisclosure({ open, defaultOpen, onOpenChange, id: contentId });
   return (
     <div className={cn('flex min-w-0 flex-col', className)}>
       <FoldRow
-        open={isOpen}
-        onToggle={toggle}
+        fold={fold}
         title={title}
         summary={summary}
         contentId={contentId}
@@ -92,10 +92,8 @@ export function Disclosure({
         titleClassName={TITLE[size]}
         summaryClassName={SUMMARY[size]}
       />
-      {isOpen ? (
-        <div id={contentId} className={CONTENT[size]}>
-          {children}
-        </div>
+      {fold.isOpen ? (
+        <div {...fold.getRegionProps({ className: CONTENT[size] })}>{children}</div>
       ) : null}
     </div>
   );

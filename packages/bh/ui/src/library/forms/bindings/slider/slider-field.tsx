@@ -38,6 +38,7 @@ export function SliderField(p: InputProps<SliderFieldConfig, number>) {
         max={p.config.max}
         step={p.config.step}
         valueText={p.config.valueText}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

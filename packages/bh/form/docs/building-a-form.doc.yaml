@@ -16,10 +16,16 @@ body:
     - **`label`** and **`description`**: drawn by the field wrapper.
     - **`required`**: marks the label. It checks nothing: a
       [schema](/forms/validation) does.
+    - **`readOnly`**: shown, and still submitted, but changed neither by
+      the reader nor by a reset. Its input is told, and the form ignores
+      its changes: a filter's condition the page sets.
     - **`defaultValue`**: what it starts at, typed as its kind holds it.
     - **`config`**: its input's settings, typed by the kind: a select's
       `options`, a text field's `placeholder`. Always given, `{}` for none.
     - **`when`**: [when it shows](/forms/visibility).
+    - **`filter`**: which part of the query's filter it holds, in a filter
+      form: the condition its value writes, a range, presets, or rules
+      (`FieldFilter`, below). Any other form ignores it.
   - |
     A layout's method takes its props and its children: `b.card({ title },
     [...])`. `@bh/ui`'s layouts are `card` and `group`, each with an
@@ -36,9 +42,12 @@ body:
     drawn where they sit by the registry's
     [`action`](/forms/registry#what-a-registry-holds), or as a plain
     `<button>` without one. A submit checks the values and calls
-    `onSubmit`; a reset puts them back where they started, and waits for a
-    change to put back. Either takes a `when`. `@bh/ui`'s `actions` layout
-    keeps them side by side at their own widths:
+    `onSubmit`; a reset puts them back to what was last submitted, else
+    where they started, and waits for a change to put back. Either takes a
+    `when`. `b.reset({ label, to: 'start' })` always puts them back where
+    they started, after a submit too, and waits for a change from there: a
+    filter's Clear. `@bh/ui`'s `actions` layout keeps them side by side at
+    their own widths:
   - code: |
       import { defineForm, defineRegistry } from '@bh/form';
       import { baseInputs, baseLayouts, FieldWrapper, FormButton } from '@bh/ui';
@@ -60,6 +69,32 @@ body:
           b.actions({}, [b.reset({ label: 'Reset' }), b.submit({ label: 'Save' })]),
         ];
       });
+    lang: tsx
+  - h2: Slots
+  - |
+    `b.slot({ name })` is a place in the form the app fills, holding no
+    value. `<Form slots={{ [name]: node }}>` draws what it's given under that
+    name where the slot sits, inside a layout too, and nothing when it's given
+    none, so one stored form serves a page that fills it and one that doesn't.
+    A slot takes a `when`, and `<Form formApi>` takes `slots` as well. A
+    count beside a filter's fields, or a button of the app's own, is a slot.
+  - code: |
+      import { defineForm, defineRegistry, Form } from '@bh/form';
+      import { baseInputs, baseLayouts, FieldWrapper } from '@bh/ui';
+
+      const registry = defineRegistry({
+        inputs: baseInputs,
+        layouts: baseLayouts,
+        field: { Component: FieldWrapper },
+      });
+
+      const notes = defineForm(registry).build((b) => {
+        return [b.textarea({ name: 'note', label: 'Note', config: {} }), b.slot({ name: 'saved' })];
+      });
+
+      export function Notes({ savedAt }: { savedAt: string }) {
+        return <Form registry={registry} form={notes} slots={{ saved: <p>Saved {savedAt}</p> }} />;
+      }
     lang: tsx
   - h2: Values and checks
   - |
@@ -91,8 +126,9 @@ body:
   - h2: Plain data
   - |
     What the builder returns is plain data: a field is `kind: 'field'` with
-    its `type`, a layout is its own `kind` with `props` and `children`, and
-    a button is `kind: 'action'` with its `action` and `label`. The same
+    its `type`, a layout is its own `kind` with `props` and `children`, a
+    button is `kind: 'action'` with its `action` and `label`, and a slot is
+    `kind: 'slot'` with its `name`. The same
     form can be written without the builder, stored, or generated:
   - code: |
       import type { FormConfig } from '@bh/form';
@@ -124,8 +160,9 @@ body:
     - A field's `config` is always given, `{}` when its input takes none.
     - `required` marks the label and nothing else.
     - The builder throws for a method no kind in the registry names.
-    - `submit` and `reset` are the builder's own: `defineRegistry` throws for
-      an input of either name, and for a layout named `field` or `action`.
+    - `submit`, `reset` and `slot` are the builder's own: `defineRegistry`
+      throws for an input or a layout of those names, and for a layout named
+      `field` or `action`.
     - A button inside a list's item draws nothing: it submits or resets the
       whole form.
   - h2: Reference
@@ -133,10 +170,39 @@ body:
   - ref: Builder
   - ref: FieldOptions
   - ref: ActionOptions
+  - ref: SlotOptions
   - ref: FormConfig
   - ref: FormOptions
   - ref: FieldNode
+  - ref: FieldFilter
+  - ref: Preset
   - ref: ActionNode
+  - ref: ResetTo
+  - ref: SlotNode
   - ref: LayoutNode
   - ref: CustomLayoutNode
   - ref: collectFields
+  - h2: Types
+  - |
+    `FieldFilter` and `Preset` name these, from
+    [`@bh/resource`](/resources/contract):
+  - code: |
+      /** A registered operator's name: one of bh's fifteen or an app's own. */
+      export type Operator = string;
+
+      /** A field's key, or an option field's key, a dot and one of its attributes: 'status.kind'. */
+      export type FieldPath = string;
+
+      /** One value: text, a finite number, or a boolean. */
+      export type Scalar = string | number | boolean;
+
+      /** Which rows: conditions on their fields, joined by all, any and not. */
+      export type Filter = { all: Filter[] } | { any: Filter[] } | { not: Filter } | Condition;
+
+      /** One field, one operator, and what it compares with; no value for an operator that takes none. */
+      export interface Condition {
+        field: FieldPath;
+        op: Operator;
+        value?: Scalar | Scalar[];
+      }
+    lang: ts

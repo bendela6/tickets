@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useForm as useTanstackForm } from '@tanstack/react-form';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormConfig } from '../types/form-config';
@@ -8,7 +8,8 @@ import { collectVisibleFields } from './collect-visible-fields';
 import { createResolverCache } from '../async/resolver-cache';
 import { waitForResolutions } from '../async/wait-for-resolutions';
 import type { Commit } from '../types/commit';
-import { createCommits, type OnCommit } from './commits';
+import { createCommits, NO_DRAFT, type OnCommit, sameValues } from './commits';
+import type { ResetOptions } from '../types/action-node';
 
 /** `useForm`'s options, which `<Form>` passes from its props. */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -23,6 +24,11 @@ export interface UseFormOptions<R extends InputRegistry, L extends LayoutCompone
   registry?: FormRegistry<R, L>;
   /** Values to start at, by field name, over the form's and each field's own. */
   defaultValues?: Record<string, unknown>;
+  /**
+   * Values from outside that the form follows, by field name, apart from
+   * where it started: see `<Form values>`.
+   */
+  values?: Record<string, unknown>;
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
   /**
@@ -275,6 +281,24 @@ export function useForm<R extends InputRegistry, L extends LayoutComponentRegist
     });
   });
 
+  // The values from outside the form follows: each time they change, compared
+  // by what they hold, the fields take them, without running `onCommit`, and a
+  // field holding a draft keeps it. Before paint, so the first frame shows them.
+  const followed = useRef<Record<string, unknown> | undefined>(undefined);
+  useLayoutEffect(() => {
+    const next = options.values;
+    if (next === undefined || (followed.current && sameValues(followed.current, next))) {
+      return;
+    }
+    followed.current = next;
+    for (const [name, value] of Object.entries(next)) {
+      if (commits.draftOf(name) !== NO_DRAFT || sameValues(form.state.values[name], value)) {
+        continue;
+      }
+      form.setFieldValue(name, value, { dontUpdateMeta: true, dontValidate: true });
+    }
+  });
+
   /**
    * Submits as the form's own button does: the drafts commit first, so a Save
    * while typing loses nothing; then it waits for the visible fields' async
@@ -292,15 +316,21 @@ export function useForm<R extends InputRegistry, L extends LayoutComponentRegist
     await form.handleSubmit();
   };
 
-  /** Puts every value back where it started, or to what was last submitted, and forgets the drafts. */
-  const reset = () => {
+  /**
+   * Puts every value back to what was last submitted, else where it started,
+   * or with `to: 'start'` always where it started; and forgets the drafts and
+   * the failed saves. A read-only field keeps its value. A read-only field keeps its value.
+   */
+  const reset = (resetOptions: ResetOptions = {}) => {
+    // A read-only field keeps its value through a reset.
+    const kept = [...latest.current.fields.values()]
+      .filter((field) => field.readOnly)
+      .map((field) => [field.name, form.state.values[field.name]] as const);
     commits.clear();
     form.reset();
-    const submitted = commits.baseline();
-    if (submitted) {
-      for (const [name, value] of Object.entries(submitted)) {
-        form.setFieldValue(name, value, { dontUpdateMeta: true, dontValidate: true });
-      }
+    const submitted = resetOptions.to === 'start' ? undefined : commits.baseline();
+    for (const [name, value] of [...Object.entries(submitted ?? {}), ...kept]) {
+      form.setFieldValue(name, value, { dontUpdateMeta: true, dontValidate: true });
     }
   };
 

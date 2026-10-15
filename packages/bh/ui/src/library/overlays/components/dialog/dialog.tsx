@@ -10,11 +10,36 @@ export const DialogTrigger = RadixDialog.Trigger;
 /** A button that closes the dialog; with `asChild`, the element it wraps. */
 export const DialogClose = RadixDialog.Close;
 
-type DialogContentProps = ComponentPropsWithoutRef<typeof RadixDialog.Content>;
+/** How much of the window a dialog takes. */
+export type DialogSize = 'md' | 'fullscreen';
 
-/** The dialog's window, centred over a dim that covers the page, in a portal. */
+interface DialogContentProps extends ComponentPropsWithoutRef<typeof RadixDialog.Content> {
+  /**
+   * How much of the window it takes. `md` is a window 448 pixels wide at
+   * most, centred over the dim. `fullscreen` is all of it, edge to edge on
+   * the page's own ground, with no padding: its children lay out their own
+   * bars, in a column.
+   */
+  size?: DialogSize;
+}
+
+const SIZES: Record<DialogSize, string> = {
+  md: cn(
+    'top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2',
+    'rounded-12 border-gray-6 bg-surface-raised border-1 p-20 shadow-lg',
+  ),
+  // Nothing of the page shows around it, so there is nothing to stand out
+  // from: no corners, border or shadow, and the page's own ground. `dvh`
+  // follows a phone's toolbars as they come and go.
+  fullscreen: 'bg-gray-1 inset-0 flex h-dvh flex-col overflow-y-auto',
+};
+
+/**
+ * The dialog's window, in a portal over a dim that covers the page: centred,
+ * or the whole window at `size="fullscreen"`.
+ */
 export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(function DialogContent(
-  { className, children, onFocus, onCloseAutoFocus, ...rest },
+  { size = 'md', className, children, onFocus, onCloseAutoFocus, ...rest },
   ref,
 ) {
   // Radix gives focus back only to a DialogTrigger, and a dialog is often
@@ -26,12 +51,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
       <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" />
       <RadixDialog.Content
         ref={ref}
-        className={cn(
-          'fixed top-1/2 left-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2',
-          'rounded-12 border-gray-6 bg-surface-raised text-gray-12 border-1 p-20 shadow-lg outline-none',
-          'font-sans',
-          className,
-        )}
+        className={cn('text-gray-12 fixed z-50 font-sans outline-none', SIZES[size], className)}
         onFocus={(event) => {
           restoreFocus.onFocus(event);
           onFocus?.(event);

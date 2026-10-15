@@ -74,17 +74,23 @@ describe('a page', () => {
     expect(shape({ skip: 40 })).toBe('numbered');
   });
 
-  it('answers its rows, the next page’s cursor and the total, every time', () => {
+  it('answers its rows, the next page’s cursor, whether there is more, and the total', () => {
     const last: QueryResult = {
       rows: [{ id: 7, name: 'TIX-7 Fix the login' }],
-      page: { next: null, total: 41 },
+      page: { next: null, more: false, total: 41 },
     };
-    expectTypeOf<PageResult>().toEqualTypeOf<{ next: string | null; total: number }>();
-    // @ts-expect-error every page answers the total, numbered or not
-    const uncounted: PageResult = { next: 'eyJpZCI6NDJ9' };
+    // A source that doesn't count says so: its total is null, never absent.
+    const uncounted: QueryResult = { rows: [], page: { next: null, more: true, total: null } };
+    expectTypeOf<PageResult>().toEqualTypeOf<{
+      next: string | null;
+      more: boolean;
+      total: number | null;
+    }>();
+    // @ts-expect-error the total is null where it isn't known, never absent
+    const unsaid: PageResult = { next: 'eyJpZCI6NDJ9', more: true };
     // @ts-expect-error the last page's next is null, never absent
-    const ended: PageResult = { total: 41 };
-    expect([last, uncounted, ended]).toHaveLength(3);
+    const ended: PageResult = { more: false, total: 41 };
+    expect([last, uncounted, unsaid, ended]).toHaveLength(4);
   });
 });
 
@@ -168,7 +174,11 @@ describe('grouping', () => {
       filter: { field: 'status', op: 'equals', value: 'todo' },
     };
     const none: Group = { key: null, count: 3, filter: { field: 'status', op: 'empty' } };
-    const answer: QueryResult = { rows: [], groups: [todo, none], page: { next: null, total: 15 } };
+    const answer: QueryResult = {
+      rows: [],
+      groups: [todo, none],
+      page: { next: null, more: false, total: 15 },
+    };
     // A group's rows: the same query with the group's filter added, without `group`.
     const opened: Query = { ...query, filter: { all: [query.filter ?? { all: [] }, todo.filter] } };
     expectTypeOf<Group['key']>().toEqualTypeOf<Scalar | null>();

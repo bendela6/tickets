@@ -1,6 +1,1 @@
-export {
-  DurationInput,
-  parseDuration,
-  formatDuration,
-  type DurationInputProps,
-} from './duration-input';
+export { DurationInput, parseDuration, type DurationInputProps } from './duration-input';

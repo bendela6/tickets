@@ -1,0 +1,42 @@
+title: useMediaQuery
+summary: Whether a CSS media query matches, now and as it changes, for a layout that follows the window or the system's settings.
+order: 3
+related: [Writing a hook, Drawer, Theme]
+body:
+  - |
+    Whether a CSS media query matches, now and as it changes: a narrow
+    window, a dark system theme, a pointer that hovers. What changes with
+    it is the caller's.
+  - h2: Import
+  - code: import { useMediaQuery } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/what-the-browser-says.tsx
+  - |
+    Make the window narrower than 768 pixels, or turn your system's dark
+    mode on: the answers change as you do. The query goes first, as a hook
+    about one value takes it: `useMediaQuery('(max-width: 767px)')`.
+  - |
+    Prefer CSS where CSS can do it: a `md:` class or a `@media` rule needs
+    no render. This is for what a stylesheet can't change, as a panel that
+    docks beside the content or lays over it, or a list that draws fewer
+    rows.
+  - h2: Rules
+  - |
+    - **Its server value is `false`**, or `serverValue`: a server has no
+      window. An app that renders only in the browser has the real answer
+      on its first render, a hydrated page right after it; pass the
+      `serverValue` a static page is most likely to need.
+    - **`undefined` is a query that matches nothing**, since a hook can't
+      be called on a condition: `useMediaQuery(docked ? QUERY : undefined)`.
+    - **A browser with no `matchMedia`** gives the server value.
+    - **Cleaning up**: its `change` listener goes with the component, or
+      with the query when a new one is passed.
+  - |
+    @bh/ui's `useIsNarrow`, which docks a [Drawer](/components/overlays/drawer)
+    or lays it over the content, and @bh/shell's `useTheme`, which follows
+    the system's theme while the reader's choice is `system`, are built on
+    it.
+  - h2: Reference
+  - ref: useMediaQuery
+  - ref: UseMediaQueryOptions

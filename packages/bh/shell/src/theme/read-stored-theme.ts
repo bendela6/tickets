@@ -1,5 +1,6 @@
 // Where the first render gets its theme from: the stored preference, or `system`.
 
+import { readStored } from '@bh/hooks';
 import type { ThemePreference } from './theme-types';
 
 /**
@@ -14,12 +15,7 @@ import type { ThemePreference } from './theme-types';
  * @returns The stored preference, or `system` for none, an unknown value, or no storage.
  */
 export function readStoredTheme(storageKey: string): ThemePreference {
-  let stored: string | null;
-  try {
-    stored = localStorage.getItem(storageKey);
-  } catch {
-    stored = null;
-  }
+  const stored = readStored(storageKey);
   if (stored === 'light' || stored === 'dark' || stored === 'system') {
     return stored;
   }

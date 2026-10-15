@@ -104,3 +104,21 @@ test('the +N chip, pressed, paints from tone too', () => {
     'bg-red-3',
   );
 });
+
+test("draws an option's count after its label, in the chip's name, and nothing without one", () => {
+  render(
+    <ToggleChips
+      label="Status"
+      options={[
+        { value: 'todo', label: 'To do', count: 14 },
+        { value: 'done', label: 'Done' },
+      ]}
+      value={[]}
+      onChange={() => {}}
+    />,
+  );
+  const todo = screen.getByRole('button', { name: 'To do 14' });
+  expect(todo.lastElementChild).toHaveTextContent('14');
+  expect(todo.lastElementChild).toHaveClass('font-mono', 'text-11');
+  expect(screen.getByRole('button', { name: 'Done' }).children).toHaveLength(0);
+});

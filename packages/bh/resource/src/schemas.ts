@@ -250,7 +250,137 @@ export const urlValue: v.GenericSchema<string> = v.pipe(
   ),
 );
 
-export const numberValue: v.GenericSchema<number> = finite;
+/**
+ * A number field's settings, none needed: the least and the most it holds,
+ * both included, and whether it holds whole numbers alone.
+ */
+export const numberSettings = v.optional(
+  v.pipe(
+    v.strictObject({
+      /** The least it holds: 0. */
+      min: v.optional(finite),
+      /** The most it holds: 5. */
+      max: v.optional(finite),
+      /** It holds whole numbers alone. */
+      integer: v.optional(v.literal(true)),
+    }),
+    v.forward(
+      v.check(
+        ({ min, max }) => min === undefined || max === undefined || min <= max,
+        'a number’s max is at least its min',
+      ),
+      ['max'],
+    ),
+  ),
+);
+
+/** A finite number, within the field's settings: its min, its max, a whole one. */
+export function numberValue(settings?: Record<string, Json>): v.GenericSchema<number> {
+  const parsed = v.safeParse(numberSettings, settings);
+  const { min, max, integer } = (parsed.success ? parsed.output : undefined) ?? {};
+  return v.pipe(
+    finite,
+    v.check((value) => integer !== true || Number.isInteger(value), 'a whole number'),
+    v.check((value) => min === undefined || value >= min, `at least ${String(min)}`),
+    v.check((value) => max === undefined || value <= max, `at most ${String(max)}`),
+  );
+}
+
+/** Whether a pattern is a regular expression JavaScript reads, with the u flag. */
+function compiles(pattern: string): boolean {
+  try {
+    new RegExp(pattern, 'u');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A text field's settings, none needed: the most characters it holds, and a
+ * pattern the whole of it matches. The pattern runs on every write, so an app
+ * whose users define its fields keeps it to patterns it trusts.
+ */
+export const textSettings = v.optional(
+  v.strictObject({
+    /** The most characters it holds, by code point: 280. */
+    maxLength: v.optional(v.pipe(v.number(), v.safeInteger(), v.minValue(1))),
+    /** A regular expression the whole value matches, with the u flag: '[A-Z]{2,5}'. */
+    pattern: v.optional(
+      v.pipe(
+        v.string(),
+        v.nonEmpty('a pattern is not empty'),
+        v.maxLength(200, 'a pattern is at most 200 characters'),
+        v.check(compiles, 'a pattern is a regular expression'),
+      ),
+    ),
+  }),
+);
+
+/** Text, within the field's settings: its most characters, its pattern. */
+export function textValue(settings?: Record<string, Json>): v.GenericSchema<string> {
+  const parsed = v.safeParse(textSettings, settings);
+  const { maxLength, pattern } = (parsed.success ? parsed.output : undefined) ?? {};
+  const whole = pattern === undefined ? undefined : new RegExp(`^(?:${pattern})$`, 'u');
+  return v.pipe(
+    v.string(),
+    v.check(
+      (text) => maxLength === undefined || [...text].length <= maxLength,
+      `at most ${String(maxLength)} characters`,
+    ),
+    v.check((text) => whole === undefined || whole.test(text), `text matching ${String(pattern)}`),
+  );
+}
+
+/** Markdown's text: CommonMark, as @bh/markdown reads it. */
+export const markdownValue: v.GenericSchema<string> = v.string();
+
+/** Whether `text` is a Tiptap document's JSON: an object whose type is 'doc'. */
+function isDoc(text: string): boolean {
+  try {
+    const doc: unknown = JSON.parse(text);
+    return typeof doc === 'object' && doc !== null && (doc as { type?: unknown }).type === 'doc';
+  } catch {
+    return false;
+  }
+}
+
+/** '{"type":"doc","content":[…]}': a document as @bh/richtext's editor writes it. */
+export const richtextValue: v.GenericSchema<string> = v.pipe(
+  v.string(),
+  v.check(isDoc, 'a rich text is its doc’s JSON, {"type":"doc",…}'),
+);
+
+/** 'ada@example.com' */
+export const emailValue: v.GenericSchema<string> = v.pipe(
+  v.string(),
+  v.email('an email is an address, name@example.com'),
+);
+
+/** '+995555123456': E.164, a plus and up to fifteen digits, no spaces. */
+export const phoneValue: v.GenericSchema<string> = v.pipe(
+  v.string(),
+  v.regex(/^\+[1-9]\d{1,14}$/, 'a phone number is E.164, +995555123456'),
+);
+
+/** '09:30': a time of day, 24 hours, to the minute, no zone. */
+export const timeValue: v.GenericSchema<string> = v.pipe(
+  v.string(),
+  v.regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'a time is a time of day, HH:mm'),
+);
+
+/** A file the app stores: where it is, its name, its size, its media type. */
+export const FileValue = v.strictObject({
+  /** Where it's served: a url, as the url kind takes it. */
+  url: urlValue,
+  /** 'report.pdf' */
+  name: v.pipe(v.string(), v.nonEmpty('a file’s name is not empty')),
+  /** In bytes. */
+  size: v.pipe(v.number(), v.safeInteger(), v.minValue(0)),
+  /** Its media type: 'application/pdf', 'image/png'. */
+  type: v.pipe(v.string(), v.regex(/^[\w.+-]+\/[\w.+-]+$/, 'a media type, type/subtype')),
+});
+export type FileValue = v.InferOutput<typeof FileValue>;
 
 /** A row's id: a string that isn't empty, or a whole number. */
 export const idValue: v.GenericSchema<Id> = Id;

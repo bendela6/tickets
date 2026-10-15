@@ -46,6 +46,7 @@ export function JsonField(p: InputProps<JsonFieldConfig, string>) {
         spellCheck={false}
         value={p.value ?? ''}
         placeholder={p.config.placeholder}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={error || p.error ? 'danger' : undefined}
         onChange={p.onChange}

@@ -56,6 +56,36 @@ export function FromEitherSide() {
 }
 ```
 
+From the `bottom` it is a sheet, as a phone's: as wide as the window,
+as tall as its content up to 48 pixels short of the top, rounded at the
+top, and not resized, so `size`, the widths and `maximizable` don't
+apply.
+
+**From the bottom**
+
+```tsx
+import { useState } from 'react';
+import { Button, Drawer, DrawerControls } from '@bh/ui';
+
+export function FromTheBottom() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Open a sheet</Button>
+      <Drawer open={open} onOpenChange={setOpen} side="bottom" label="Sort by">
+        <div className="flex shrink-0 items-center gap-8 px-16 pt-12 pb-8">
+          <span className="text-14 font-500 flex-1">Sort by</span>
+          <DrawerControls />
+        </div>
+        <p className="text-13/19 text-gray-11 overflow-y-auto px-16 pb-24">
+          As wide as the window and as tall as what it holds, up to 48 pixels short of the top.
+        </p>
+      </Drawer>
+    </>
+  );
+}
+```
+
 `size` is the width it opens at: 288, 400 or 620 pixels. The reader can
 drag it between `minWidth` and `maxWidth`, 280 and 960 by default.
 
@@ -196,19 +226,19 @@ this.
 
 ### Drawer
 
-| Prop                      | Type                                 | Default   | Description                                                                                                                                                   |
-| ------------------------- | ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `open` (required)         | `boolean`                            |           | Whether the drawer is open.                                                                                                                                   |
-| `onOpenChange` (required) | `(open: boolean) => void`            |           | Called with the new open state: `false` on Esc, a click on the dim or the close button.                                                                       |
-| `label` (required)        | `string`                             |           | Names the drawer for assistive technology, and its resize handle. It is not shown.                                                                            |
-| `side`                    | `PanelSide`: `'left'`, `'right'`     | `'right'` | The edge it slides in from.                                                                                                                                   |
-| `size`                    | `DrawerSize`: `'md'`, `'lg'`, `'sm'` | `'md'`    | Its starting width: `sm` 288, `md` 400 or `lg` 620 pixels.                                                                                                    |
-| `minWidth`                | `number`                             | `280`     | The narrowest the reader can drag it, in pixels.                                                                                                              |
-| `maxWidth`                | `number`                             | `960`     | The widest the reader can drag it, in pixels.                                                                                                                 |
-| `storageKey`              | `string`                             |           | Remembers its width and whether it is maximized in `localStorage`, under this key with `:width` and `:maximized` after it. Without one, it remembers nothing. |
-| `maximizable`             | `boolean`                            | `false`   | Adds a Maximize button to `DrawerControls`, which widens the drawer to the window.                                                                            |
-| `className`               | `string`                             |           | Classes merged onto the panel.                                                                                                                                |
-| `children` (required)     | `ReactNode`                          |           | The drawer's content, laid out as a column.                                                                                                                   |
+| Prop                      | Type                                          | Default   | Description                                                                                                                                                                                                |
+| ------------------------- | --------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open` (required)         | `boolean`                                     |           | Whether the drawer is open.                                                                                                                                                                                |
+| `onOpenChange` (required) | `(open: boolean) => void`                     |           | Called with the new open state: `false` on Esc, a click on the dim or the close button.                                                                                                                    |
+| `label` (required)        | `string`                                      |           | Names the drawer for assistive technology, and its resize handle. It is not shown.                                                                                                                         |
+| `side`                    | `DrawerSide`: `'left'`, `'right'`, `'bottom'` | `'right'` | The edge it slides in from. From the `bottom` it is a sheet as wide as the window and as tall as its content, rounded at the top, that can't be resized: `size`, the widths and `maximizable` don't apply. |
+| `size`                    | `DrawerSize`: `'md'`, `'lg'`, `'sm'`          | `'md'`    | Its starting width: `sm` 288, `md` 400 or `lg` 620 pixels.                                                                                                                                                 |
+| `minWidth`                | `number`                                      | `280`     | The narrowest the reader can drag it, in pixels.                                                                                                                                                           |
+| `maxWidth`                | `number`                                      | `960`     | The widest the reader can drag it, in pixels.                                                                                                                                                              |
+| `storageKey`              | `string`                                      |           | Remembers its width and whether it is maximized in `localStorage`, under this key with `:width` and `:maximized` after it. Without one, it remembers nothing.                                              |
+| `maximizable`             | `boolean`                                     | `false`   | Adds a Maximize button to `DrawerControls`, which widens the drawer to the window.                                                                                                                         |
+| `className`               | `string`                                      |           | Classes merged onto the panel.                                                                                                                                                                             |
+| `children` (required)     | `ReactNode`                                   |           | The drawer's content, laid out as a column.                                                                                                                                                                |
 
 ### DrawerControls
 

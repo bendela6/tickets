@@ -1,6 +1,7 @@
 import type { InputProps } from '@bh/form';
 import type { Commit } from '../../../inputs/contract';
 import { NumberInput } from '../../../inputs/components/number-input';
+import { useInlineField } from '../../components/inline-field-wrapper';
 
 export interface NumberFieldConfig {
   min?: number;
@@ -39,15 +40,21 @@ function clamp(value: number, min?: number, max?: number): number {
  * that policy.
  */
 export function NumberField(p: InputProps<NumberFieldConfig, number | null>) {
+  // In a filter bar's row, the row's size.
+  const inline = useInlineField();
   return (
     <div onBlur={p.onBlur} className="flex items-center gap-8">
       <NumberInput
         id={p.name}
+        size={inline?.size}
+        // A few digits' width in a row, which has no column to fill.
+        className={inline ? 'w-80' : undefined}
         aria-describedby={p.describedBy}
         value={p.value ?? null}
         min={p.config.min}
         max={p.config.max}
         step={p.config.step}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         commit={p.config.commit ?? p.commit}

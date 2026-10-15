@@ -1,0 +1,264 @@
+/* The look of rich text, `.rt`: the editor's text, and Prose's, which draws
+   the editor's documents and markdown in it, so a text reads as it edits.
+   Element by element, and by the data attributes the editor's nodes carry
+   (a callout's `data-callout`, a mention's `data-mention`), so the two draw
+   alike from the same markup. An app's own nodes bring their own rules.
+
+   It came from @bh/ui's tokens.css (2026-10-15). It carries its own
+   `@layer components` wrapper, so it keeps its cascade position wherever it
+   is imported: @bh/richtext/styles.css imports it, and so does
+   @bh/markdown/styles.css, for Prose. */
+@layer components {
+  .rt {
+    @apply text-14/22 text-gray-12 font-sans;
+  }
+  .rt .ProseMirror {
+    @apply outline-none;
+  }
+  /* The text's first and last blocks sit flush with its box: the editor's,
+     and Prose's, which draws them straight into its `.rt`. */
+  .rt .ProseMirror > :first-child,
+  .rt > :first-child {
+    @apply mt-0;
+  }
+  .rt .ProseMirror > :last-child,
+  .rt > :last-child {
+    @apply mb-0;
+  }
+  /* A document Prose draws keeps its spaces and breaks a long word, as the
+     editor's own sheet (ProseMirror's) has it, so its lines wrap where the
+     editor's do. */
+  .rt[data-rt-doc] {
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    font-variant-ligatures: none;
+  }
+  .rt[data-rt-doc] pre {
+    white-space: pre-wrap;
+  }
+  .rt p {
+    @apply my-8;
+  }
+  .rt h1,
+  .rt h2,
+  .rt h3,
+  .rt h4,
+  .rt h5,
+  .rt h6 {
+    @apply font-600 text-gray-12 font-sans;
+    @apply mx-0 mt-12 mb-8;
+  }
+  .rt h1 {
+    @apply text-16;
+    @apply mx-0 mt-16 mb-8;
+  }
+  .rt h2 {
+    @apply text-14;
+  }
+  /* The editor stops at H3; markdown that goes deeper reads as one. */
+  .rt h3,
+  .rt h4,
+  .rt h5,
+  .rt h6 {
+    @apply text-13;
+  }
+  .rt ul,
+  .rt ol {
+    @apply my-8 pl-20;
+  }
+  .rt ul {
+    @apply list-disc;
+  }
+  .rt ol {
+    @apply list-decimal;
+  }
+  .rt li {
+    @apply my-4;
+  }
+  .rt code {
+    @apply rounded-4 bg-surface-inset;
+    @apply text-12 font-mono;
+    @apply px-6 py-2;
+  }
+  .rt pre {
+    @apply overflow-x-auto;
+    @apply rounded-8 bg-surface-inset;
+    @apply text-12/18 font-mono;
+    @apply my-8 p-12;
+  }
+  .rt pre code {
+    @apply rounded-none bg-transparent;
+    @apply p-0;
+  }
+  .rt a {
+    @apply text-indigo-9;
+  }
+  .rt a:hover {
+    @apply underline;
+  }
+  .rt .is-editing-link {
+    @apply rounded-4 bg-indigo-3;
+    @apply px-4 py-2;
+  }
+  .rt strong {
+    @apply font-600 text-gray-12;
+  }
+  .rt mark {
+    @apply rounded-4 bg-highlight;
+    @apply text-gray-12;
+    @apply px-2 py-0;
+  }
+  .rt blockquote {
+    @apply border-gray-6 border-l-2;
+    @apply text-gray-11;
+    @apply my-8 pl-12;
+  }
+  .rt table {
+    @apply border-collapse;
+    @apply text-12;
+    @apply my-8;
+  }
+  .rt th,
+  .rt td {
+    @apply border-gray-6 border-1;
+    @apply text-gray-11 text-left;
+    @apply px-8 py-4;
+  }
+  .rt th {
+    @apply text-11 font-500 text-gray-9 tracking-wider uppercase;
+  }
+  .rt img {
+    @apply max-w-full;
+    @apply rounded-6;
+  }
+  .rt hr {
+    @apply border-gray-6 border-t-1;
+    @apply my-12;
+  }
+
+  .rt [data-callout] {
+    @apply relative;
+    @apply rounded-8 bg-blue-3;
+    @apply my-8 py-12 pr-12 pl-36;
+  }
+  .rt [data-callout]::before {
+    @apply absolute top-12 left-12 size-16;
+    @apply bg-blue-9 mask-contain mask-center mask-no-repeat;
+    content: '';
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+  }
+  .rt [data-callout] p {
+    @apply m-0;
+  }
+  .rt [data-callout] p + p {
+    @apply mt-4;
+  }
+  .rt [data-callout='warning'] {
+    @apply bg-orange-3;
+  }
+  .rt [data-callout='warning']::before {
+    @apply bg-orange-9;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+  }
+  .rt [data-callout='success'] {
+    @apply bg-green-3;
+  }
+  .rt [data-callout='success']::before {
+    @apply bg-green-9;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
+  }
+  .rt [data-callout='danger'] {
+    @apply bg-red-3;
+  }
+  .rt [data-callout='danger']::before {
+    @apply bg-red-9;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
+  }
+
+  .rt [data-mention] {
+    @apply inline-flex items-center;
+    @apply bg-indigo-3 rounded-full;
+    @apply text-13 font-500 text-indigo-9 font-sans;
+    @apply gap-6 py-2 pr-8 pl-4;
+  }
+  .rt [data-mention-avatar] {
+    @apply inline-flex size-16 flex-none items-center justify-center;
+    @apply bg-cyan-3 rounded-full;
+    @apply text-9 font-600 text-cyan-9 font-sans;
+  }
+
+  .rt ul[data-type='taskList'] {
+    @apply list-none pl-0;
+  }
+  /* A task is a row: its box, then its text. Spaced as a list's items are,
+     its box centred on the first line. */
+  .rt ul[data-type='taskList'] li {
+    @apply flex items-start;
+    @apply my-8 gap-6;
+  }
+  .rt ul[data-type='taskList'] li > div {
+    @apply min-w-0 flex-1;
+  }
+  .rt ul[data-type='taskList'] li > div > :first-child {
+    @apply mt-0;
+  }
+  .rt ul[data-type='taskList'] li > div > :last-child {
+    @apply mb-0;
+  }
+  /* The box is the label. The checkbox lies over it, unseen, so a press lands
+     on it; the span beside it is the editor's, holding the checkbox's words
+     for a screen reader, and the editor hides it. */
+  .rt ul[data-type='taskList'] li > label {
+    @apply relative inline-flex size-16 flex-none;
+    @apply rounded-4 border-gray-7 bg-surface-raised border-2;
+    @apply mt-3;
+  }
+  .rt ul[data-type='taskList'] li > label input[type='checkbox'] {
+    @apply absolute -inset-2 m-0 cursor-pointer opacity-0;
+  }
+  .rt ul[data-type='taskList'] li > label input[type='checkbox']:disabled {
+    @apply cursor-default;
+  }
+  .rt ul[data-type='taskList'] li > label:has(input[type='checkbox']:focus-visible) {
+    @apply outline-indigo-9 outline-2 outline-offset-1;
+  }
+  .rt ul[data-type='taskList'] li > label:has(input[type='checkbox']:checked) {
+    @apply border-indigo-9 bg-indigo-9;
+  }
+  .rt ul[data-type='taskList'] li > label:has(input[type='checkbox']:checked)::after {
+    @apply absolute inset-2;
+    @apply bg-indigo-contrast mask-contain mask-center mask-no-repeat;
+    content: '';
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  }
+  .rt ul[data-type='taskList'] li[data-checked='true'] > div {
+    @apply text-gray-9 line-through;
+  }
+
+  .rt details {
+    @apply rounded-8 border-gray-6 border-1;
+    @apply my-8 px-12 py-8;
+  }
+  .rt details > summary {
+    @apply cursor-pointer;
+    @apply font-500 text-gray-11;
+  }
+  .rt details > summary:hover {
+    @apply text-gray-12;
+  }
+
+  .rt .ProseMirror-selectednode {
+    @apply rounded-4 outline-indigo-9 outline-2 outline-offset-1;
+  }
+
+  .rt .is-editor-empty:first-child::before {
+    @apply pointer-events-none float-left h-0;
+    @apply text-gray-9;
+    content: attr(data-placeholder);
+  }
+}

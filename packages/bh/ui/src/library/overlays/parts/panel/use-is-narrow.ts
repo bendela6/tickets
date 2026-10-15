@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMediaQuery } from '@bh/hooks';
 import { BREAKPOINTS } from '../../../../style/generated';
 
 // Below these a docked panel cannot sit beside the content without squeezing it.
@@ -19,26 +19,8 @@ const QUERIES = {
 
 export type PanelBreakpoint = keyof typeof QUERIES;
 
-function useMediaQuery(query: string | undefined): boolean {
-  // Drawn on a server (a site's static build) there is no viewport: wide,
-  // until the browser's first effect asks.
-  const [matches, setMatches] = useState(() => {
-    return query && typeof window !== 'undefined' ? window.matchMedia(query).matches : false;
-  });
-  useEffect(() => {
-    if (!query) {
-      setMatches(false);
-      return;
-    }
-    const media = window.matchMedia(query);
-    const onChange = () => setMatches(media.matches);
-    media.addEventListener('change', onChange);
-    onChange();
-    return () => media.removeEventListener('change', onChange);
-  }, [query]);
-  return matches;
-}
-
+// Drawn on a server (a site's static build) there is no viewport: wide,
+// useMediaQuery's server value, until the browser asks.
 export function useIsNarrow(breakpoint: PanelBreakpoint | undefined): boolean {
   return useMediaQuery(breakpoint && QUERIES[breakpoint]);
 }

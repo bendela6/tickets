@@ -2,7 +2,7 @@
 title: FileInput
 summary: Takes files by drop or by browse, and lists them with their size,
   progress or error.
-related: [Progress, Input]
+related: [Progress, Input, formatBytes]
 ---
 
 [//]: # 'written from file-input.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -62,9 +62,11 @@ export function ChoosingFiles() {
 ```
 
 A file shows its `error` if it has one, else a progress bar while
-`progress` is set, else its `size`. An error belongs to its file and
-leaves the others alone. The progress bars, the focus ring and the target
-under a dragged file take `tone`, `primary` by default.
+`progress` is set, else its `size`, which
+[`formatBytes`](../../../primitives/components/format-bytes/format-bytes.md) writes. An error
+belongs to its file and leaves the others alone. The progress bars, the
+focus ring and the target under a dragged file take `tone`, `primary` by
+default.
 
 **Errors per file**
 

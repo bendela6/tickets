@@ -19,7 +19,7 @@ function Host({
   storageKey,
   maximizable = false,
 }: {
-  side?: 'left' | 'right';
+  side?: 'left' | 'right' | 'bottom';
   storageKey?: string;
   maximizable?: boolean;
 }) {
@@ -151,6 +151,15 @@ describe('Drawer', () => {
     // size="lg" is 620px; the cap is expressed in CSS so both bounds survive a
     // resize without JS re-measuring.
     expect(widthOf()).toBe('min(620px, 100vw - 3rem)');
+  });
+
+  it('rises from the bottom as a sheet, as tall as its content and never resized', async () => {
+    render(<Host side="bottom" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Open it' }));
+    const sheet = screen.getByRole('dialog', { name: 'Detail' });
+    expect(sheet).toHaveClass('panel-slide-bottom', 'inset-x-0', 'bottom-0', 'rounded-t-16');
+    expect(sheet.style.maxHeight).toBe('calc(100dvh - 3rem)');
+    expect(screen.queryByRole('separator')).toBeNull();
   });
 
   it('resizes by keyboard, mirrored for the side it is docked to', async () => {

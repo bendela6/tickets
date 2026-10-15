@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, test, vi } from 'vitest';
-import { DurationInput, formatDuration, parseDuration } from './duration-input';
+import { formatDuration } from '../../../primitives/components/format-duration';
+import { DurationInput, parseDuration } from './duration-input';
 
 describe('parseDuration', () => {
   it('reads the four spellings of the same duration as one number', () => {
@@ -34,16 +35,12 @@ describe('parseDuration', () => {
   });
 });
 
-describe('formatDuration', () => {
-  it('drops the empty half rather than padding it', () => {
-    expect(formatDuration(150)).toBe('2h 30m');
-    expect(formatDuration(180)).toBe('3h');
-    expect(formatDuration(45)).toBe('45m');
-  });
-
-  it('shows a stored zero rather than nothing', () => {
-    expect(formatDuration(0)).toBe('0m');
-  });
+test('it reads back every whole number of minutes it writes', () => {
+  // The field writes its value with formatDuration and reads it back on blur,
+  // so a length it wrote and could not read would turn into an error unedited.
+  for (let minutes = 0; minutes <= 3000; minutes += 1) {
+    expect(parseDuration(formatDuration(minutes))).toBe(minutes);
+  }
 });
 
 test('a length is not a clock time', async () => {

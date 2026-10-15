@@ -6,3 +6,9 @@ export * from './field-label';
 export * from './field-error';
 export * from './field-wrapper';
 export * from './field';
+// A field in a row, as a filter bar lays its fields out: the inline layout's wrapper.
+export * from './inline-field-wrapper';
+// What a filter form draws besides its fields: the registry's filter parts.
+export * from './filter-count';
+export * from './filter-changes';
+export * from './filter-sheet';

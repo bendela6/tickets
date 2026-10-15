@@ -1,10 +1,12 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useDrag } from '@bh/hooks';
 
 export interface HbarHandlers {
   onPointerDown: (e: ReactPointerEvent<HTMLElement>) => void;
   onPointerMove: (e: ReactPointerEvent<HTMLElement>) => void;
   onPointerUp: (e: ReactPointerEvent<HTMLElement>) => void;
   onPointerCancel: (e: ReactPointerEvent<HTMLElement>) => void;
+  onLostPointerCapture: (e: ReactPointerEvent<HTMLElement>) => void;
 }
 
 export interface HbarDrag {
@@ -26,11 +28,9 @@ export interface HbarDrag {
  * one conversion plus the bookkeeping to keep a drag alive while the pointer
  * leaves the thumb.
  *
- * Pointer capture rather than window listeners, for the reason every drag
- * wants it: the thumb keeps receiving moves once the pointer has slid off it,
- * and the browser cleans up if the gesture is interrupted. It is called
- * defensively because jsdom implements neither half of the API and a test
- * renderer should not have to.
+ * The drag is @bh/hooks' useDrag: pointer capture rather than window
+ * listeners, so the thumb keeps receiving moves once the pointer has slid off
+ * it, and the browser cleans up if the gesture is interrupted.
  */
 export function useHbarDrag(options: {
   /** How far the table is scrolled now. */
@@ -43,47 +43,29 @@ export function useHbarDrag(options: {
   onChange: (sx: number) => void;
 }): HbarDrag {
   const { sx, maxSx, span, thumbWidth, onChange } = options;
-  const start = useRef<{ x: number; sx: number } | null>(null);
-  const [dragging, setDragging] = useState(false);
 
   // Pixels of table per pixel of thumb. A span of zero means the thumb fills
   // the track, which only happens when there is nothing to scroll.
   const ratio = span > 0 ? maxSx / span : 0;
   const clamp = (next: number) => Math.max(0, Math.min(maxSx, Math.round(next)));
 
-  const end = (e: ReactPointerEvent<HTMLElement>) => {
-    if (!start.current) {
-      return;
-    }
-    start.current = null;
-    setDragging(false);
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
-  };
+  // From the offset the table had when the thumb was grabbed.
+  const drag = useDrag<number>({
+    onStart: ({ event }) => {
+      if (ratio === 0) {
+        return false;
+      }
+      // Stops the track's own handler from also firing and jumping the
+      // table to wherever the thumb was grabbed.
+      event.stopPropagation();
+      return sx;
+    },
+    onMove: ({ dx, from }) => onChange(clamp(from + dx * ratio)),
+  });
 
   return {
-    dragging,
-    thumbProps: {
-      onPointerDown: (e) => {
-        if (ratio === 0) {
-          return;
-        }
-        // Stops the track's own handler from also firing and jumping the
-        // table to wherever the thumb was grabbed.
-        e.stopPropagation();
-        e.preventDefault();
-        start.current = { x: e.clientX, sx };
-        setDragging(true);
-        e.currentTarget.setPointerCapture?.(e.pointerId);
-      },
-      onPointerMove: (e) => {
-        if (!start.current) {
-          return;
-        }
-        onChange(clamp(start.current.sx + (e.clientX - start.current.x) * ratio));
-      },
-      onPointerUp: end,
-      onPointerCancel: end,
-    },
+    dragging: drag.isDragging,
+    thumbProps: drag.getHandleProps(),
     trackProps: {
       // Clicking the track centres the thumb where you clicked, which is what
       // every native scrollbar on this platform does with a primary click.

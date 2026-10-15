@@ -5,8 +5,8 @@ app after app, wrote again for itself. A hook holds state and behaviour and
 draws nothing: no component, no markup and no stylesheet. The component that
 calls it draws, with the styles of whichever package it is in.
 
-It is new, and so far holds no hook: each moves in from the package that
-wrote it, with its tests and its page.
+Its hooks are listed on its [overview](docs/overview.md). Each moved in from
+the package that wrote it, with its tests and its page.
 
 ## Docs
 
@@ -17,8 +17,8 @@ at `/hooks/overview`.
 
 ## Layer
 
-It is below every other bh package: `@bh/ui`, `@bh/table` and `@bh/shell`
-import it, and it imports none of them. Its code imports React alone, a peer,
+It is below every other bh package: `@bh/ui`, `@bh/table`, `@bh/code`,
+`@bh/shell` and `@bh/markdown` import it, and it imports none of them. Its code imports React alone, a peer,
 and its files are `.ts`, where no JSX can be written; a test
 (`hooks-only.test.ts`) reads them to keep it so, and the lint holds it to no
 other `@bh/*` import.

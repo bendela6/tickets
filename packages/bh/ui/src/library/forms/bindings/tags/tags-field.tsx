@@ -21,6 +21,7 @@ export function TagsField(p: InputProps<TagsFieldConfig, string[]>) {
         value={p.value ?? []}
         suggestions={p.config.suggestions}
         placeholder={p.config.placeholder}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

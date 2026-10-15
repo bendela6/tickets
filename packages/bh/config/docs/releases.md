@@ -13,7 +13,7 @@ related: [Versions and updates, Adding bh to an app, 'tokens:build']
 How bh's commits make its versions: the release workflow, the script it
 runs, and `pnpm release:next`.
 
-bh has one version for all its packages: a tag such as `v1.4.0` on the
+bh has one version for all its packages: a tag such as `v0.4.0` on the
 commit it was made from, and a GitHub release beside it. What an app does
 with one is in Getting started:
 [Versions and updates](../../../../apps/docs/content/getting-started/versions.md). This page is the
@@ -55,18 +55,22 @@ Each is read by its subject, written as a conventional commit:
 
 | The commit                                                                    | Makes                               |
 | ----------------------------------------------------------------------------- | ----------------------------------- |
-| `fix:`, `perf:`                                                               | a patch: `1.4.0` to `1.4.1`         |
-| `feat:`                                                                       | a minor version: `1.4.0` to `1.5.0` |
-| `!` before the colon, any type (`feat(ui)!:`), or a `BREAKING CHANGE:` footer | a major version: `1.4.0` to `2.0.0` |
+| `fix:`, `perf:`, `feat:`                                                      | a patch: `0.4.0` to `0.4.1`         |
+| `!` before the colon, any type (`feat(ui)!:`), or a `BREAKING CHANGE:` footer | a minor version: `0.4.0` to `0.5.0` |
 | Any other type: `refactor:`, `docs:`, `chore:`, `test:`                       | none of its own                     |
 
 The largest among them wins. Commits that make none go out with the next
 version that is made, and are in its notes. With no tag yet, the first
-version is `1.0.0`.
+version is `0.1.0`.
+
+bh is below `1.0.0`, so the middle number moves only for a breaking
+change. `1.0.0` is tagged by hand when bh is ready, with its release, and
+the script counts from the newest tag as always: from then on `feat:`
+makes a minor version and a breaking change a major one.
 
 ## What a release holds
 
-- **The tag**, `v1.5.0`, on the commit the push ended at. A push whose
+- **The tag**, `v0.4.1`, on the commit the push ended at. A push whose
   `HEAD` has a version's tag already makes none, so running the workflow
   again is safe.
 - **A GitHub release** of the same name, whose notes list the commits
@@ -87,6 +91,14 @@ version is `1.0.0`.
 The packages' own `version` in bh is a placeholder, never bumped. The tag
 is the version: the gateway writes it into each copy's `package.json`
 when it copies the release into an app.
+
+## The versions before 0.x
+
+bh's first four versions were numbered `1.0.0`, `1.1.0`, `2.0.0` and
+`3.0.0`. On 2026-10-14 they were renamed `0.1.0`, `0.2.0`, `0.3.0` and
+`0.4.0`: the same commits and notes, their tags and releases made again
+under the new names, and each app's copy saying the new name of the
+version it has.
 
 ## copy.json
 

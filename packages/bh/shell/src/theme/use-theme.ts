@@ -3,6 +3,7 @@
 // is reflected everywhere else without a shared store.
 
 import { useEffect, useState } from 'react';
+import { useMediaQuery } from '@bh/hooks';
 import { applyTheme } from './apply-theme';
 import { DARK_MEDIA_QUERY } from './resolve-theme';
 import type { Theme, ThemePreference } from './theme-types';
@@ -59,19 +60,12 @@ export function useTheme(storageKey: string): ThemeState {
   // While the preference is `system` the OS owns the answer, so the app has to
   // follow it as it changes rather than only at boot. Re-applying (instead of
   // setting state) keeps the root attribute authoritative for every consumer.
+  const system: Theme = useMediaQuery(DARK_MEDIA_QUERY) ? 'dark' : 'light';
   useEffect(() => {
-    if (state.preference !== 'system') {
-      return;
-    }
-    const mediaQuery = window.matchMedia(DARK_MEDIA_QUERY);
-    const handleChange = () => {
+    if (state.preference === 'system' && state.theme !== system) {
       applyTheme('system', storageKey);
-    };
-    mediaQuery.addEventListener('change', handleChange);
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [state.preference, storageKey]);
+    }
+  }, [state.preference, state.theme, system, storageKey]);
 
   return {
     ...state,

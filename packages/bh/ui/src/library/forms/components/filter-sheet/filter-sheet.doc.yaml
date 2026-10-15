@@ -1,0 +1,31 @@
+title: FilterSheet
+summary: "A filter form's fields on a phone: a Filters button that opens a sheet from the bottom."
+related: [FilterCount, InlineFieldWrapper, Drawer]
+body:
+  - |
+    A filter form's fields on a phone: a 44-pixel Filters button, with how
+    many conditions they hold on its badge, that opens a
+    [Drawer](/components/overlays/drawer) from the bottom. It is the
+    registry's `filter.sheet` ([The registry](/forms/registry)): below the
+    width its `inline` layout's `narrow` names, a filter form keeps a few
+    fields in its bar and gives the rest to the sheet, as a form of their
+    own over the same value.
+  - h2: Import
+  - code: import { FilterSheet } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The sheet has a grabber, its title and a Close button, then its form,
+    which scrolls inside it. The form's buttons, an `actions` row, stay at
+    the sheet's foot as the fields scroll under them. The sheet is
+    portaled, so its form isn't nested in the bar's, though the bar holds
+    the button.
+  - demo: examples/on-a-phone.tsx
+    width: phone
+  - h2: Keyboard and accessibility
+  - |
+    The button says how many conditions there are, "Filters, 3 filters",
+    and opens a modal dialog named by the title. Escape, the dim and Close
+    shut it, and the focus goes back to the button.
+  - h2: Props
+  - props: FilterSheet

@@ -17,6 +17,7 @@ import type {
 } from '../types/registry';
 import type { LayoutNode } from '../types/layout-node';
 import type { ActionNode } from '../types/action-node';
+import type { SlotNode } from '../types/slot-node';
 import type { FieldNode } from '../types/field-node';
 import type { WhenClause } from '../types/when';
 import { evaluateWhen } from '../when/evaluate-when';
@@ -27,6 +28,8 @@ import { FormContext } from './form-context';
 import { shallowEqual } from '../utils/shallow-equal';
 import { CommitContext } from './commit-context';
 import { useChanged } from './use-changed';
+import { SlotsContext } from './slots-context';
+import { FieldWrapperContext } from './field-wrapper-context';
 
 export interface WalkProps<I extends InputRegistry, L extends LayoutComponentRegistry> {
   nodes: LayoutNode<I, L>[];
@@ -52,6 +55,9 @@ function keyFor<I extends InputRegistry, L extends LayoutComponentRegistry>(
   if (node.kind === 'field') {
     return `f:${(node as FieldNode<I>).name}`;
   }
+  if (node.kind === 'slot') {
+    return `s:${(node as SlotNode).name}`;
+  }
   return `${String(node.kind)}:${i}`;
 }
 
@@ -68,6 +74,9 @@ function NodeRenderer<I extends InputRegistry, L extends LayoutComponentRegistry
   }
   if (props.node.kind === 'action') {
     return <ActionRenderer node={props.node as ActionNode} action={props.registry.action} />;
+  }
+  if (props.node.kind === 'slot') {
+    return <SlotRenderer name={(props.node as SlotNode).name} />;
   }
   const childNodes = 'children' in props.node ? props.node.children : [];
   // Cast: past the field and action kinds it's a layout node, but with generics
@@ -123,7 +132,8 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
     throw new Error(`<Form>: registry has no entry for type "${String(props.field.type)}"`);
   }
   const Component = def.Component;
-  const { name } = props.field;
+  const { name, readOnly } = props.field;
+  const wrapper = useContext(FieldWrapperContext);
   const { commits, commit } = useCommitScope();
   const saving = useSyncExternalStore(commits.subscribe, () => commits.saving(name));
   const commitError = useSyncExternalStore(commits.subscribe, () => commits.error(name));
@@ -140,9 +150,18 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
       name={props.field.name}
       label={props.field.label}
       value={fieldState.value}
-      onChange={(next: unknown) => commits.commit(name, next)}
+      // A read-only field takes no change from its input.
+      onChange={(next: unknown) => {
+        if (!readOnly) {
+          commits.commit(name, next);
+        }
+      }}
       commit={commit}
-      onDraft={(draft: unknown) => commits.draft(name, draft)}
+      onDraft={(draft: unknown) => {
+        if (!readOnly) {
+          commits.draft(name, draft);
+        }
+      }}
       saving={saving}
       onBlur={fieldState.markTouched}
       config={resolved}
@@ -150,14 +169,16 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
       loading={loading}
       configError={configError}
       disabled={isSubmitting}
+      readOnly={readOnly}
       describedBy={ids.describedBy}
     />
   );
 
-  const FieldWrapper = props.registry.field.Component;
+  const FieldWrapper = (wrapper ?? props.registry.field).Component;
   return (
     <FieldWrapper
       name={props.field.name}
+      type={props.field.type as string}
       label={props.field.label}
       description={props.field.description}
       required={props.field.required ?? false}
@@ -190,12 +211,12 @@ function ActionRenderer(props: { node: ActionNode; action?: ActionDefinition }):
   );
   const { commits, reset: resetForm } = useCommitScope();
   // Whether a reset has anything to put back: the values differ from where
-  // they started, or from what was last submitted.
-  const changed = useChanged(form, commits);
-  const { action, label } = props.node;
+  // they started, or from what was last submitted, as its `to` says.
+  const { action, label, to } = props.node;
+  const changed = useChanged(form, commits, to);
   const reset = action === 'reset';
   const disabled = isSubmitting || (reset && !changed);
-  const onClick = reset ? resetForm : undefined;
+  const onClick = reset ? () => resetForm({ to }) : undefined;
   const Button = props.action?.Component;
   if (Button) {
     return (
@@ -223,10 +244,16 @@ function useCommitScope() {
   return scope;
 }
 
-/** A node past the field and action kinds: a layout. */
+/** What the app gave `<Form slots>` under this name, where the slot sits; nothing when it gave none. */
+function SlotRenderer(props: { name: string }): ReactNode {
+  const slots = useContext(SlotsContext);
+  return slots[props.name] ?? null;
+}
+
+/** A node past the field, action and slot kinds: a layout. */
 type LayoutOf = Exclude<
   LayoutNode<InputRegistry, LayoutComponentRegistry>,
-  FieldNode<InputRegistry> | ActionNode
+  FieldNode<InputRegistry> | ActionNode | SlotNode
 >;
 
 function LayoutWrapper(props: {
@@ -252,7 +279,13 @@ function renderForKind(
     return children;
   }
   const Layout = def.Component;
-  return <Layout props={(node as { props: unknown }).props}>{children}</Layout>;
+  const drawn = <Layout props={(node as { props: unknown }).props}>{children}</Layout>;
+  // Its fields, at any depth, get the wrapper it names, until another names its own.
+  return def.field ? (
+    <FieldWrapperContext.Provider value={def.field}>{drawn}</FieldWrapperContext.Provider>
+  ) : (
+    drawn
+  );
 }
 
 interface FieldMetaShape {

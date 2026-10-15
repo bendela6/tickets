@@ -14,6 +14,7 @@ export function PinField(p: InputProps<PinFieldConfig, string>) {
         aria-describedby={p.describedBy}
         value={p.value ?? ''}
         length={p.config.length}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

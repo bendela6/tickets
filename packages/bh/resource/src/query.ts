@@ -136,6 +136,9 @@ const take = v.optional(
  *   row added or removed before the page between two requests shifts every
  *   later page by one, so a row can show twice or not at all, and a deep page
  *   is slow, since the database walks past every skipped row.
+ * - A resource serves the shapes its source can (ResourceMeta.serves.page):
+ *   any skip, a whole page's (a multiple of take), or none; a cursor or
+ *   none; and at most its `max` rows a page, 100 or its `max` when absent.
  * - A cursor serves a list that grows as it scrolls: every answer carries
  *   `page.next`, however its page was asked for, and a query that passes it
  *   back starts right after the last row it got. Rows written between two
@@ -179,14 +182,20 @@ export type Page = v.InferOutput<typeof Page>;
 
 /** Where an answered page sits: QueryResult.page. */
 export const PageResult = v.strictObject({
-  /** The cursor of the page after this one; null on the last page. */
+  /**
+   * The cursor of the page after this one; null on the last page, and on
+   * every page of a resource that serves no cursor (ResourceMeta.serves).
+   */
   next: v.nullable(v.string()),
+  /** Whether a page follows this one, however it was asked for. */
+  more: v.boolean(),
   /**
    * Every row the filter and search keep, on every page, numbered or not: a
    * table numbers its pages by it ("page 3 of 12"), and a scrolling list says
-   * how many there are.
+   * how many there are. Null where the resource's source doesn't count them
+   * (`serves.page.total` is false), as many APIs don't.
    */
-  total: v.pipe(v.number(), v.safeInteger(), v.minValue(0)),
+  total: v.nullable(v.pipe(v.number(), v.safeInteger(), v.minValue(0))),
 });
 export type PageResult = v.InferOutput<typeof PageResult>;
 

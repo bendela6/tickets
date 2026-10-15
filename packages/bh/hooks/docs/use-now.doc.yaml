@@ -1,0 +1,45 @@
+title: useNow
+summary: The time now, ticking every second or every interval it is given, on one timer for every clock on the page, for a countdown or a "saved 3 minutes ago".
+order: 3
+related: [Writing a hook, RelativeDate]
+body:
+  - |
+    The time now, in milliseconds as `Date.now()` gives it, ticking every
+    second or every `interval` it is given: a "saved 3 minutes ago", a
+    countdown, a clock. How the time is shown is the caller's.
+  - h2: Import
+  - code: import { useNow } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/saved-a-while-ago.tsx
+  - |
+    Click **Save**, and the line above says how long ago, again each
+    second. **Stop the clock** passes `enabled: false`, and the line keeps
+    the time it last had; started again, it says the time at once. The
+    time under the buttons ticks every minute, on the minute.
+  - |
+    It returns a number, so the time since something is a subtraction:
+    `now - savedAt`. `new Date(now)` gives it as a date to format.
+  - |
+    For a moment in words, [RelativeDate](/components/primitives/relative-date)
+    with `smallestUnit="minute"` already does this: it holds a `useNow` at
+    the slowest interval its label can change at, a minute under an hour
+    away and an hour under a day, and none beyond.
+  - h2: Rules
+  - |
+    - **Its server value is the time it renders at.** A page built ahead
+      of time shows its build's time until the browser takes it over, so
+      mark the element that shows it with `suppressHydrationWarning`.
+    - **It ticks on a whole multiple of the interval**, as a clock's
+      second hand does, not an interval after it mounted: every `useNow`
+      on the page with the same interval ticks on one timer, together, and
+      a minute's clock turns on the minute.
+    - **A tab coming back into view** says the time at once, since a
+      browser slows the timers of a tab in the background.
+    - **`enabled: false`** keeps the time it last had, and ticks nothing;
+      an `interval` that is no positive number never ticks either.
+    - **Cleaning up**: its share of the timer goes with the component, and
+      the timer with the last clock at its interval.
+  - h2: Reference
+  - ref: useNow
+  - ref: UseNowOptions

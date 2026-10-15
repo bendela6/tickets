@@ -1,7 +1,7 @@
 title: Overview
 summary: Show a code fragment and write one, coloured the same way, from one syntax map.
 order: 1
-related: [CodeBlock, CodeEditor, Prose]
+related: [CodeBlock, CodeEditor, ExamplePanel, Prose]
 body:
   - |
     Show a code fragment and write one, coloured the same way, from one
@@ -10,7 +10,8 @@ body:
     Everything an app shows as code comes from here: `CodeBlock` shows a
     fragment, `CodeEditor` writes one, and both colour it through the same
     roles, so a script on a page and the same script being edited look the
-    same. `@bh/markdown`'s code block is this `CodeBlock`.
+    same. `@bh/markdown`'s code block is this `CodeBlock`. `ExamplePanel`
+    shows what a piece of code draws beside the code.
   - h2: Import
   - code: |
       import { CodeBlock, CodeEditor } from '@bh/code';
@@ -26,12 +27,16 @@ body:
   - h2: The parts
   - |
     1. **[`CodeBlock`](/code/code-block)**: a fragment to read, with a strip
-       naming its file or language and a copy control, its lines numbered
-       and the ones a passage is about marked.
+       naming its file or language and a copy control, its lines numbered,
+       the ones a passage is about marked and those a problem is on in its
+       tone.
     2. **[`CodeEditor`](/code/code-editor)**: a fragment to write, with a
        strip naming it, its line count and where the caret is. It grows with
-       its text.
-    3. **The syntax map**: `SYNTAX_CLASSES` gives each role (keyword, type,
+       its text, and marks a problem's lines as a code block does.
+    3. **[`ExamplePanel`](/code/example-panel)**: what a piece of code
+       draws, beside the code, which the app's editor can take; with its
+       problems listed, a split and a height that drag, and full screen.
+    4. **The syntax map**: `SYNTAX_CLASSES` gives each role (keyword, type,
        string, number, comment, name, punctuation) its colour, and
        `SYNTAX_TAGS` says which Lezer tags take which role.
        `SYNTAX_HIGHLIGHTER` is the two as a Lezer highlighter, for an editor
@@ -41,9 +46,10 @@ body:
   - |
     A code block colours `ts`, `tsx`, `js`, `jsx`, `json`, `yaml` (or `yml`),
     `css`, `sh` (or `shell`, `bash`) and `dockerfile`. The editor colours
-    `shell` (or `sh`, `bash`), `dockerfile` and `yaml` (or `yml`). Any other
-    language shows, or edits, plain. `LANGUAGES` and `EDITOR_LANGUAGES` list
-    them.
+    `ts`, `tsx`, `js`, `jsx`, `yaml` (or `yml`), `shell` (or `sh`, `bash`),
+    `dockerfile` and `markdown` (or `md`), whose fences' code it colours in
+    these too. Any other language shows, or edits, plain. `LANGUAGES` and
+    `EDITOR_LANGUAGES` list them.
   - h2: Rules
   - |
     - Code is never wrapped: a long line scrolls sideways inside its frame,
@@ -55,3 +61,7 @@ body:
   - h2: Reference
   - ref: SyntaxRole
   - ref: Grammar
+  - ref: LineProblems
+  - ref: ProblemSeverity
+  - ref: CodeProblem
+  - ref: FenceLanguage

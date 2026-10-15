@@ -1,0 +1,84 @@
+title: Pager
+summary: Link a page to the pages either side of it in reading order, at its foot.
+order: 8
+related: [Pages, OnThisPage]
+body:
+  - |
+    Link a page to the pages either side of it in reading order, at its
+    foot.
+
+    The order is the app's: a guide's chapters, the pages of a sidebar
+    from top to bottom. The app works out the page before this one and the
+    page after it, and hands the two in; the pager draws a link to each,
+    under a rule, the previous on the left and the next on the right.
+  - h2: Import
+  - code: import { Pager, type PagerPage } from '@bh/shell/layout';
+    lang: tsx
+  - h2: The two pages
+  - |
+    `previous` and `next` are each a `PagerPage`: the `label` the link
+    says, under the way it lies, and the `path` it goes to, through the
+    router. Leave `previous` out on the first page and `next` on the last:
+    the next page keeps to the right with or without one before it. With
+    neither, the pager draws nothing.
+
+    Below, the guide keeps the chapter on screen in state, and
+    `onNavigate`, called with the page the reader followed, says which.
+    Follow **Next** to the end and back.
+  - demo: examples/a-guide-in-chapters.tsx
+    width: tablet
+    height: 300
+  - |
+    `label` names the pair for a screen reader, `Previous and next` unless
+    given, and `className` places it at the foot of the page: the docs
+    site sets it 64 pixels under the page's last section.
+  - h2: In an app
+  - |
+    The page on screen is the route's, so the app finds it in its order by
+    the path, and passes the pages either side. `onNavigate` is left out:
+    the route changing is all there is to it.
+  - code: |
+      import { useRouterState } from '@tanstack/react-router';
+      import { Pager, type PagerPage } from '@bh/shell/layout';
+
+      // The guide's chapters in reading order: the app's own.
+      const CHAPTERS: readonly PagerPage[] = [
+        { label: 'Choosing a book', path: '/mending/choosing' },
+        { label: 'Loose pages', path: '/mending/loose-pages' },
+        { label: 'A torn page', path: '/mending/a-torn-page' },
+      ];
+
+      export function ChapterPager() {
+        const pathname = useRouterState({ select: (state) => state.location.pathname });
+        const at = CHAPTERS.findIndex((chapter) => chapter.path === pathname);
+        if (at === -1) {
+          return null;
+        }
+        return <Pager previous={CHAPTERS[at - 1]} next={CHAPTERS[at + 1]} className="mt-64" />;
+      }
+    lang: tsx
+    file: src/mending/chapter-pager.tsx
+  - h2: Keyboard and accessibility
+  - keyboard:
+      - keys: [Tab]
+        does: Moves to the previous page's link, then the next's.
+      - keys: [Enter]
+        does: Goes to the focused link's page.
+  - |
+    The pair is a navigation landmark, named by `label`. Each link is named
+    by the way it lies and the page's name, `Next, Loose pages`, since
+    stacked the two would be read as one word, and carries `rel="prev"` or
+    `rel="next"`.
+  - h2: Rules
+  - |
+    - **The order is the app's.** The pager knows only the two pages it is
+      handed.
+    - **A link is a route.** It goes to its `path` through the router, as
+      a breadcrumb's step does.
+    - **The previous on the left, the next on the right**, whichever of
+      them there is.
+    - **Neither draws nothing**, so a page that stands alone needs no
+      condition.
+  - h2: Reference
+  - props: Pager
+  - ref: PagerPage

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../../../style';
-import { fieldClass, fieldState } from '../../parts/field';
+import { fieldClass, fieldState, triggerPrefixClass } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { ComboboxList } from '../../parts/combobox-list';
 import { listWidthClass } from '../../parts/popup/popup';
@@ -27,6 +27,12 @@ type ComboboxProps = ControlProps<string | null> & {
   options: Option[];
   /** Shown on the field while `value` is `null`. */
   placeholder?: string;
+  /**
+   * Words before the value on the field, in the muted tone, as a filter bar
+   * names a field inside its control: "Type:" in "Type: any". With one, the
+   * placeholder reads as a value would.
+   */
+  prefix?: string;
   /**
    * Whether the open list offers a search box. Default true. Turn it off for a
    * short fixed set — over three options a search field is noise, and it costs
@@ -74,6 +80,7 @@ export function Combobox({
   value,
   onChange,
   placeholder = 'Select…',
+  prefix,
   size = 'md',
   tone,
   disabled,
@@ -193,6 +200,7 @@ export function Combobox({
                 first, as in the list, where it leads the row. */}
             {selected ? (
               <span className="flex min-w-0 items-center gap-8">
+                {prefix ? <span className={triggerPrefixClass}>{prefix}</span> : null}
                 {selected.icon ? <Icon name={selected.icon} size={GLYPH[size]} /> : null}
                 {selected.color ? (
                   <span
@@ -201,6 +209,12 @@ export function Combobox({
                   />
                 ) : null}
                 <span className="truncate">{selected.label}</span>
+              </span>
+            ) : prefix ? (
+              // With a prefix the placeholder reads as a value: "Type: any".
+              <span className="flex min-w-0 items-center gap-5">
+                <span className={triggerPrefixClass}>{prefix}</span>
+                <span className="truncate">{placeholder}</span>
               </span>
             ) : (
               <span className="text-gray-9 truncate">{placeholder}</span>

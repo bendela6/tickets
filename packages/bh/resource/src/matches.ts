@@ -8,7 +8,8 @@ import type { Json, Row, Scalar } from './values';
 // Whether a row passes a filter, in plain JavaScript, by each operator's
 // `matches`: a client keeps or drops a row it just wrote from a list it holds
 // (TK-12.3), a template shows a part while its `when` holds (TK-79.1), and the
-// adapters' tests compare their SQL with it (TK-12.4).
+// adapters' tests compare their SQL with it (TK-12.4). And whether a query's
+// search keeps it, by the same rule as the server.
 
 /** What an operator's `matches` takes: one value, a list of them, or null. */
 type Matched = Scalar | Scalar[] | null;
@@ -29,7 +30,7 @@ function isObject(value: Json | undefined): value is Record<string, Json> {
  *   template's `repeat` shows one entry of a list field at a time, and a
  *   `when` inside it reads into that entry (TK-79.1).
  */
-function valueAt(path: string, row: Row, meta: ResourceMeta): Matched {
+export function valueAt(path: string, row: Row, meta: ResourceMeta): Matched {
   const [key = '', name] = path.split('.');
   const value = row[key] ?? null;
   if (name === undefined) {
@@ -80,4 +81,41 @@ export function matchesFilter(
     throw new Error(`No operator is registered as "${filter.op}".`);
   }
   return operator.matches(valueAt(filter.field, row, meta), filter.value, viewer);
+}
+
+/** A value's entries: a list's, one value as a list of one, none as []. */
+function entriesOf(value: Json | undefined): Json[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * Whether a query's `search` keeps `row`: a field whose `query.search` is
+ * true holds the term, case ignored, matched whole, as one piece of text. A
+ * kind's `searchText` says what is read (a rich text's words, never its
+ * JSON); the value as text when it says nothing. On a many field, one of its
+ * values holds it.
+ */
+export function matchesSearch(
+  term: string,
+  row: Row,
+  meta: ResourceMeta,
+  registry: Registry,
+): boolean {
+  const looked = term.toLowerCase();
+  return meta.fields.some((field) => {
+    if (!field.query.search) {
+      return false;
+    }
+    const kind = registry.kinds.find((spec) => spec.name === field.type.kind);
+    return entriesOf(row[field.key]).some((each) => {
+      if (typeof each === 'object' || each === null) {
+        return false;
+      }
+      const text = kind?.searchText ? kind.searchText(each) : String(each);
+      return text.toLowerCase().includes(looked);
+    });
+  });
 }

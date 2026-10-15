@@ -22,6 +22,16 @@ body:
   - |
     `file` names the strip, and `marked` the lines the passage is about.
   - demo: examples/the-lines-that-changed.tsx
+  - |
+    `problems` marks the lines a problem is on, as an editor marks them: the
+    number in the problem's tone with a bar beside it, and the line tinted,
+    red for an error and orange for a warning. The other lines stay as they
+    are.
+  - demo: examples/the-line-that-failed.tsx
+  - |
+    `bare` draws the lines alone, with no strip, no border and no copy
+    control, for a pane that names and frames the code itself, as the docs
+    site's examples do.
   - h2: Keyboard and accessibility
   - |
     The code is a `<pre>`, read as text; the line numbers are hidden from

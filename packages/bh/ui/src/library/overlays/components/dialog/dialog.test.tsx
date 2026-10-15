@@ -5,7 +5,14 @@ import { describe, expect, test, vi } from 'vitest';
 import { Drawer, DrawerControls } from '../drawer';
 import { SidePanel } from '../side-panel';
 import { ConfirmDialog } from './confirm-dialog';
-import { DialogClose, DialogContent, DialogRoot, DialogTitle, DialogTrigger } from './dialog';
+import {
+  DialogClose,
+  DialogContent,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+  type DialogSize,
+} from './dialog';
 
 test('confirm dialog renders title/body and fires onConfirm', async () => {
   const onConfirm = vi.fn();
@@ -118,6 +125,79 @@ describe('DialogContent gives focus back', () => {
     const opener = screen.getByRole('button', { name: 'Rename from here' });
     await user.click(opener);
     await user.keyboard('{Escape}');
+    expect(opener).toHaveFocus();
+  });
+});
+
+describe('DialogContent sizes', () => {
+  function Open({ size, className }: { size?: DialogSize; className?: string }) {
+    return (
+      <DialogRoot open>
+        <DialogContent size={size} className={className} aria-describedby={undefined}>
+          <DialogTitle>Read the guide</DialogTitle>
+        </DialogContent>
+      </DialogRoot>
+    );
+  }
+
+  // Where it sits is the stylesheet's, which jsdom does not lay out: these
+  // read the classes that place it.
+  const CENTRED = ['top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2'];
+  const FRAMED = ['rounded-12', 'border-1', 'p-20', 'shadow-lg'];
+
+  test('md, the default, is a window centred over the dim', () => {
+    render(<Open />);
+    const dialog = screen.getByRole('dialog', { name: 'Read the guide' });
+    expect(dialog).toHaveClass('fixed', ...CENTRED, ...FRAMED, 'bg-surface-raised');
+    expect(dialog).not.toHaveClass('inset-0');
+  });
+
+  test('fullscreen covers the window edge to edge, as a column', () => {
+    render(<Open size="fullscreen" />);
+    const dialog = screen.getByRole('dialog', { name: 'Read the guide' });
+    expect(dialog).toHaveClass('fixed', 'inset-0', 'h-dvh', 'flex', 'flex-col', 'bg-gray-1');
+    for (const name of [...CENTRED, ...FRAMED, 'bg-surface-raised']) {
+      expect(dialog).not.toHaveClass(name);
+    }
+  });
+
+  test('a class of the caller’s still wins at fullscreen', () => {
+    render(<Open size="fullscreen" className="bg-surface-inset" />);
+    const dialog = screen.getByRole('dialog', { name: 'Read the guide' });
+    expect(dialog).toHaveClass('bg-surface-inset');
+    expect(dialog).not.toHaveClass('bg-gray-1');
+  });
+
+  test('fullscreen is still a modal dialog: Esc closes it, and focus goes back', async () => {
+    function Reader() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Read
+          </button>
+          <DialogRoot open={open} onOpenChange={setOpen}>
+            <DialogContent size="fullscreen" aria-describedby={undefined}>
+              <DialogTitle>Caring for old books</DialogTitle>
+              <DialogClose>Close</DialogClose>
+            </DialogContent>
+          </DialogRoot>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<Reader />);
+    const opener = screen.getByRole('button', { name: 'Read' });
+    await user.click(opener);
+    expect(screen.getByRole('dialog', { name: 'Caring for old books' })).toBeInTheDocument();
+    // The page behind is hidden from assistive technology while it is open.
+    expect(screen.queryByRole('button', { name: 'Read' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    // Focus stays inside: from the one control, Tab comes back to it.
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
     expect(opener).toHaveFocus();
   });
 });

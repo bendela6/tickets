@@ -168,7 +168,7 @@ marks. A fence is a code block, a `:::` line or a `:mark[…]` is text,
 and raw HTML draws nothing. It is for what the app didn't write, such as
 a note a tool left, where a fence must never reach a renderer.
 
-[Prose](prose.md) is `MarkdownText` in `@bh/ui`'s look. It also draws a link whose scheme isn't `http`,
+[Prose](prose.md) is `MarkdownText` in the rich text editor's look. It also draws a link whose scheme isn't `http`,
 `https` or `mailto` as text, and gives headings no id.
 
 ## Rules

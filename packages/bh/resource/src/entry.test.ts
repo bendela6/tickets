@@ -50,3 +50,27 @@ describe('the package’s main entry', () => {
     }
   });
 });
+
+describe('the client’s entry (@bh/resource/client)', () => {
+  const { files, packages } = graphOf(resolve(SRC, 'client/index.ts'));
+
+  // A browser and a server calling another app's API take the same client:
+  // the platform's fetch, Headers and crypto, and nothing of React or the DOM.
+  it('imports valibot alone', () => {
+    expect([...packages].sort()).toEqual(['valibot']);
+  });
+
+  it('touches nothing of the DOM', () => {
+    expect(files.length).toBeGreaterThan(1);
+    for (const file of files) {
+      const code = readFileSync(file, 'utf8').replace(COMMENT, '');
+      expect(DOM.exec(code)?.[0], file).toBeUndefined();
+    }
+  });
+
+  it('is not part of the main entry, which holds the contract', () => {
+    const client = resolve(SRC, 'client');
+    const main = graphOf(resolve(SRC, 'index.ts')).files;
+    expect(main.filter((file) => file.startsWith(client))).toEqual([]);
+  });
+});

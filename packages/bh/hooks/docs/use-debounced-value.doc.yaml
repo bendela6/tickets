@@ -1,0 +1,40 @@
+title: useDebouncedValue
+summary: A value that follows another once it has stopped changing for a delay, as a search follows its field once the typing stops.
+order: 3
+related: [Writing a hook, useDebouncedCallback]
+body:
+  - |
+    A value that follows another once it has stopped changing for a
+    delay: a search that follows its field once the typing stops, rather
+    than on every key. What is done with it is the caller's.
+  - h2: Import
+  - code: import { useDebouncedValue } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/searched-once-the-typing-stops.tsx
+  - |
+    Type in the field: the list follows the text 400 milliseconds after
+    the last key, and the line under the field says whether it has caught
+    up. The value goes first and the options after it, as a hook about one
+    value takes them: `useDebouncedValue(text, { delay: 400 })`.
+  - |
+    It returns the value alone, as React's `useDeferredValue` does: it is
+    behind while it differs from what it follows. To act on each settled
+    value, a request sent once the typing stops, list it as an effect's
+    dependency, or call [useDebouncedCallback](/hooks/use-debounced-callback)
+    from the field's `onChange` instead.
+  - h2: Rules
+  - |
+    - **It starts at the value**, on its first render and on a server, so
+      a page drawn with a query already in its field searches for it at
+      once.
+    - **Each change starts the wait again**, so pass a value that is the
+      same while it means the same: a string or a number, or an object
+      kept outside the render. An object made new on each render never
+      settles.
+    - **A new `delay`** starts the wait again too.
+    - **Cleaning up**: its one timer goes with each change and with the
+      component.
+  - h2: Reference
+  - ref: useDebouncedValue
+  - ref: UseDebouncedValueOptions

@@ -11,7 +11,11 @@ body:
     - **`inputs`**: by kind, the component that draws a field of that kind
       and the value it starts at. A field names its kind as its `type`.
     - **`layouts`**: by kind, the component that draws a layout node around
-      its children: a card, a row. `{}` for none.
+      its children: a card, a row. `{}` for none. A layout may name a `field`
+      wrapper of its own, which its fields get, at any depth until another
+      layout names one: a filter bar's fields named inside their controls.
+      A form inside a field (a list's item, an object) starts at the
+      registry's again.
     - **`field`**: the wrapper drawn around every field: its label, the input,
       and its help or its problem.
     - **`root`**, if any: the wrapper drawn around the whole form. Without one,
@@ -19,6 +23,10 @@ body:
     - **`action`**, if any: the button drawn for a form's
       [submit and reset](/forms/building-a-form#buttons). Without one, a
       plain `<button>`.
+    - **`filter`**, if any: what a filter form draws besides its fields,
+      its `count` ("12 of 40 items"), its `changes` ("1 change waiting")
+      and its `sheet`, the Filters button and the sheet that holds its
+      fields on a phone. `@bh/form` draws none of them itself.
   - |
     An app builds one registry and draws every form with it. `@bh/ui` has a
     piece for each slot ([Instrument's bindings](/forms/bindings)), so most
@@ -128,3 +136,7 @@ body:
   - ref: RootWrapperDefinition
   - ref: ActionDefinition
   - ref: ActionProps
+  - ref: FilterDefinition
+  - ref: FilterCountProps
+  - ref: FilterChangesProps
+  - ref: FilterSheetProps

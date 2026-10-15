@@ -17,7 +17,11 @@ each kind of field its starting value.
 - **`inputs`**: by kind, the component that draws a field of that kind
   and the value it starts at. A field names its kind as its `type`.
 - **`layouts`**: by kind, the component that draws a layout node around
-  its children: a card, a row. `{}` for none.
+  its children: a card, a row. `{}` for none. A layout may name a `field`
+  wrapper of its own, which its fields get, at any depth until another
+  layout names one: a filter bar's fields named inside their controls.
+  A form inside a field (a list's item, an object) starts at the
+  registry's again.
 - **`field`**: the wrapper drawn around every field: its label, the input,
   and its help or its problem.
 - **`root`**, if any: the wrapper drawn around the whole form. Without one,
@@ -25,6 +29,10 @@ each kind of field its starting value.
 - **`action`**, if any: the button drawn for a form's
   [submit and reset](building-a-form.md#buttons). Without one, a
   plain `<button>`.
+- **`filter`**, if any: what a filter form draws besides its fields,
+  its `count` ("12 of 40 items"), its `changes` ("1 change waiting")
+  and its `sheet`, the Filters button and the sheet that holds its
+  fields on a phone. `@bh/form` draws none of them itself.
 
 An app builds one registry and draws every form with it. `@bh/ui` has a
 piece for each slot ([Instrument's bindings](bindings.md)), so most
@@ -230,8 +238,8 @@ defineRegistry<I extends InputRegistry, L extends LayoutComponentRegistry>(regis
 Types a registry: the inputs a form may name, its layouts, the wrappers
 drawn around each field and around the form, and its button. Returns it as
 given; the types are what `defineForm` builds against. Throws on an input
-named `submit` or `reset`, which are the builder's buttons, and a layout
-named for a node's own kind.
+or a layout named `submit`, `reset` or `slot`, which are the builder's own,
+and a layout named for a node's own kind.
 
 | Parameter             | Type                 | Default | Description |
 | --------------------- | -------------------- | ------- | ----------- |
@@ -245,13 +253,14 @@ interface FormRegistry<I extends InputRegistry, L extends LayoutComponentRegistr
 
 What a form is drawn with: an input per kind, a layout per kind, and the wrappers.
 
-| Member               | Type                     | Default | Description                                                                      |
-| -------------------- | ------------------------ | ------- | -------------------------------------------------------------------------------- |
-| `inputs` (required)  | `I`                      |         | The inputs a field may name, by kind.                                            |
-| `layouts` (required) | `L`                      |         | The layouts a node may name, by kind; `{}` for none.                             |
-| `field` (required)   | `FieldWrapperDefinition` |         | The wrapper drawn around every field.                                            |
-| `root`               | `RootWrapperDefinition`  |         | The wrapper drawn around the whole form; without one, the fields are drawn bare. |
-| `action`             | `ActionDefinition`       |         | The button drawn for a submit or reset node; without one, a plain `<button>`.    |
+| Member               | Type                     | Default | Description                                                                       |
+| -------------------- | ------------------------ | ------- | --------------------------------------------------------------------------------- |
+| `inputs` (required)  | `I`                      |         | The inputs a field may name, by kind.                                             |
+| `layouts` (required) | `L`                      |         | The layouts a node may name, by kind; `{}` for none.                              |
+| `field` (required)   | `FieldWrapperDefinition` |         | The wrapper drawn around every field.                                             |
+| `root`               | `RootWrapperDefinition`  |         | The wrapper drawn around the whole form; without one, the fields are drawn bare.  |
+| `action`             | `ActionDefinition`       |         | The button drawn for a submit or reset node; without one, a plain `<button>`.     |
+| `filter`             | `FilterDefinition`       |         | What a filter form draws besides its fields: its count, and its sheet on a phone. |
 
 ```ts
 interface InputDefinition<TConfigResolved, TValue>
@@ -268,11 +277,12 @@ An input kind in a registry: the component that draws it, and the value it start
 interface LayoutComponentDefinition<TProps>
 ```
 
-A layout kind in a registry: the component that draws it.
+A layout kind in a registry: the component that draws it, and the wrapper its fields get.
 
-| Member                 | Type                                          | Default | Description                                                |
-| ---------------------- | --------------------------------------------- | ------- | ---------------------------------------------------------- |
-| `Component` (required) | `ComponentType<LayoutComponentProps<TProps>>` |         | The layout, given the node's props and its drawn children. |
+| Member                 | Type                                          | Default | Description                                                                                                                                                                                                                                                          |
+| ---------------------- | --------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Component` (required) | `ComponentType<LayoutComponentProps<TProps>>` |         | The layout, given the node's props and its drawn children.                                                                                                                                                                                                           |
+| `field`                | `FieldWrapperDefinition`                      |         | The wrapper drawn around each field inside it, at any depth until another layout names its own, in place of the registry's `field`: a filter bar's fields read "Type: any" inside the control, while the same fields in a sheet keep the app's wrapper, label above. |
 
 ```ts
 interface LayoutComponentProps<TProps>
@@ -301,20 +311,21 @@ interface FieldWrapperProps
 
 What a form gives the wrapper it draws around each field.
 
-| Member                | Type        | Default | Description                                                                                                                         |
-| --------------------- | ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                              |
-| `label`               | `string`    |         | The field's label, from its definition.                                                                                             |
-| `description`         | `string`    |         | Help text for the field, from its definition.                                                                                       |
-| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                                 |
-| `error`               | `string`    |         | The field's problem: its validation message, once the field has been left or a submit tried, or why its last commit failed to save. |
-| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                                   |
-| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place.            |
-| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                                          |
-| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                           |
-| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                                |
-| `saving`              | `boolean`   |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                      |
-| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                                         |
+| Member                | Type        | Default | Description                                                                                                                                   |
+| --------------------- | ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                                        |
+| `type`                | `string`    |         | The field's kind, as its input is registered: 'select', 'search'. A wrapper may place the label its own way per kind, as a filter bar's does. |
+| `label`               | `string`    |         | The field's label, from its definition.                                                                                                       |
+| `description`         | `string`    |         | Help text for the field, from its definition.                                                                                                 |
+| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                                           |
+| `error`               | `string`    |         | The field's problem: its validation message, once the field has been left or a submit tried, or why its last commit failed to save.           |
+| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                                             |
+| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place.                      |
+| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                                                    |
+| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                                     |
+| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                                          |
+| `saving`              | `boolean`   |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                                |
+| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                                                   |
 
 ```ts
 interface RootWrapperDefinition
@@ -349,3 +360,52 @@ What a form gives the button it draws for a submit or reset node.
 | `disabled` (required) | `boolean`                           |         | A reset with nothing to put back, and either while a submit runs.                      |
 | `loading` (required)  | `boolean`                           |         | A submit running: the submit button shows it.                                          |
 | `onClick`             | `() => void`                        |         | A reset's: puts the values back. A submit is a `type="submit"` button, and needs none. |
+
+```ts
+interface FilterDefinition
+```
+
+A registry's filter parts: what a filter form draws besides its fields.
+
+| Member               | Type                                | Default | Description                                                                   |
+| -------------------- | ----------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| `count` (required)   | `ComponentType<FilterCountProps>`   |         | "12 of 40 items", in the count slot.                                          |
+| `changes` (required) | `ComponentType<FilterChangesProps>` |         | "1 change waiting", in the changes slot of a form that applies with a button. |
+| `sheet` (required)   | `ComponentType<FilterSheetProps>`   |         | The Filters button and the sheet it opens, for a narrow window.               |
+
+```ts
+interface FilterCountProps
+```
+
+What a filter form gives the count of the rows its filter lets through.
+
+| Member               | Type                             | Default | Description                                                            |
+| -------------------- | -------------------------------- | ------- | ---------------------------------------------------------------------- |
+| `shown`              | `number`                         |         | How many rows the filter lets through; unknown while it is counted.    |
+| `total`              | `number`                         |         | How many rows there are in all; unknown when the app doesn't say.      |
+| `label` (required)   | `{ one: string; other: string }` |         | The resource's name for one row and for several: `ResourceMeta.label`. |
+| `loading` (required) | `boolean`                        |         | The count is being asked for.                                          |
+
+```ts
+interface FilterChangesProps
+```
+
+What a filter form gives the words saying it holds changes not applied yet.
+
+| Member             | Type     | Default | Description                                                                    |
+| ------------------ | -------- | ------- | ------------------------------------------------------------------------------ |
+| `count` (required) | `number` |         | How many of its fields hold a change its Apply hasn't applied yet; 0 for none. |
+
+```ts
+interface FilterSheetProps
+```
+
+What a filter form gives the sheet that holds its fields on a phone.
+
+| Member                    | Type                      | Default | Description                                                                  |
+| ------------------------- | ------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `title` (required)        | `string`                  |         | The sheet's title: "Filters".                                                |
+| `count` (required)        | `number`                  |         | How many conditions the sheet's fields hold, on its button's badge.          |
+| `open` (required)         | `boolean`                 |         | Whether the sheet is open.                                                   |
+| `onOpenChange` (required) | `(open: boolean) => void` |         | Called with the new open state: from its button, Escape, or its own buttons. |
+| `children` (required)     | `ReactNode`               |         | The sheet's own form: its fields, then its buttons.                          |

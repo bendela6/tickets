@@ -134,17 +134,18 @@ yourself.
 
 ## Props
 
-| Prop                  | Type        | Default | Description                                                                                                                         |
-| --------------------- | ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                              |
-| `label`               | `string`    |         | The field's label, from its definition.                                                                                             |
-| `description`         | `string`    |         | Help text for the field, from its definition.                                                                                       |
-| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                                 |
-| `error`               | `string`    |         | The field's problem: its validation message, once the field has been left or a submit tried, or why its last commit failed to save. |
-| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                                   |
-| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place.            |
-| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                                          |
-| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                           |
-| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                                |
-| `saving`              | `boolean`   |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                      |
-| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                                         |
+| Prop                  | Type        | Default | Description                                                                                                                                   |
+| --------------------- | ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name` (required)     | `string`    |         | The field's name in the form's values.                                                                                                        |
+| `type`                | `string`    |         | The field's kind, as its input is registered: 'select', 'search'. A wrapper may place the label its own way per kind, as a filter bar's does. |
+| `label`               | `string`    |         | The field's label, from its definition.                                                                                                       |
+| `description`         | `string`    |         | Help text for the field, from its definition.                                                                                                 |
+| `required` (required) | `boolean`   |         | Whether the field is required, from its definition.                                                                                           |
+| `error`               | `string`    |         | The field's problem: its validation message, once the field has been left or a submit tried, or why its last commit failed to save.           |
+| `descriptionId`       | `string`    |         | The id for the element that holds `description`, which the input is described by.                                                             |
+| `errorId`             | `string`    |         | The id for the element that holds `error`, or `configError`'s message: the input is described by it in the help's place.                      |
+| `touched` (required)  | `boolean`   |         | Whether the reader has left the field yet.                                                                                                    |
+| `loading` (required)  | `boolean`   |         | Whether the field's config is still resolving, as while its options load.                                                                     |
+| `configError`         | `Error`     |         | Why the field's config failed to resolve, if it did.                                                                                          |
+| `saving`              | `boolean`   |         | Whether the field's last commit is still being saved by the form's `onCommit`.                                                                |
+| `children` (required) | `ReactNode` |         | The field's input, drawn from the registry.                                                                                                   |

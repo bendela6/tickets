@@ -82,7 +82,11 @@ export function parseAnsi(raw: string): AnsiSegment[] {
   return segments;
 }
 
-/** A line's text with every escape sequence and control character taken out. */
+/**
+ * A line's text with every escape sequence and control character taken out.
+ *
+ * @param raw The line as it was printed, escape codes and all.
+ */
 export function stripAnsi(raw: string): string {
   return parseAnsi(raw)
     .map((segment) => segment.text)

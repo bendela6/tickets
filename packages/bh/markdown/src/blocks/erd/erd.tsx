@@ -1,4 +1,5 @@
-import { useId, useState, type PointerEvent } from 'react';
+import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useDrag } from '@bh/hooks';
 import { Button } from '@bh/ui';
 import { BlockBar, BlockFrame, BlockTitle, Kicker } from '../parts';
 import { extentOf, placeTables, relationsOf } from './layout';
@@ -35,11 +36,9 @@ const onCanvas = ([x, y]: Point): Point => [Math.max(0, x), Math.max(0, y)];
 
 const same = (a: Point, b: Point): boolean => a[0] === b[0] && a[1] === b[1];
 
-/** A drag in progress: the card, where the pointer went down, and where the card was. */
-interface Drag {
+/** A card taken up by the pointer: its name, and where it was. */
+interface Grab {
   name: string;
-  x: number;
-  y: number;
   from: Point;
 }
 
@@ -59,7 +58,8 @@ export interface ErdProps {
  */
 export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
   const [moved, setMoved] = useState<ErdLayout>({});
-  const [drag, setDrag] = useState<Drag | null>(null);
+  // The card being dragged, which lifts, and whose wires are drawn active.
+  const [held, setHeld] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const id = useId();
   const hint = `${id}-hint`;
@@ -88,49 +88,50 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
   // The pointer moves in screen pixels and a card in the unscaled scene, so
   // the distance is divided by the zoom. Measured from where the drag began
   // rather than summed per event, so no rounding builds up.
-  const dragged = (from: Drag, event: PointerEvent): Point => {
-    return onCanvas([
-      from.from[0] + (event.clientX - from.x) / zoom,
-      from.from[1] + (event.clientY - from.y) / zoom,
-    ]);
+  const dragged = (grab: Grab, dx: number, dy: number): Point => {
+    return onCanvas([grab.from[0] + dx / zoom, grab.from[1] + dy / zoom]);
   };
 
+  // One drag for every card: a card's own press says which it is, just
+  // before the drag starts from it. The handle captures the pointer, so the
+  // card follows a pointer that outruns it off the canvas.
+  const grabbed = useRef<Grab | null>(null);
+  const drag = useDrag<Grab>({
+    onStart: () => {
+      const grab = grabbed.current;
+      if (!grab) {
+        return false;
+      }
+      setHeld(grab.name);
+      return grab;
+    },
+    onMove: ({ dx, dy, from }) => move(from.name, dragged(from, dx, dy)),
+    onEnd: ({ dx, dy, from }) => {
+      setHeld(null);
+      const to = dragged(from, dx, dy);
+      if (!same(to, from.from)) {
+        move(from.name, to);
+        keep(from.name, to);
+      }
+    },
+    onCancel: (from) => {
+      setHeld(null);
+      const at = placed.find((table) => table.name === from.name)?.at;
+      if (at && !same(at, from.from)) {
+        keep(from.name, at);
+      }
+    },
+  });
+
   const handleOf = (name: string, at: Point): CardHandle => {
-    return {
-      onPointerDown: (event) => {
-        if (event.button !== 0) {
-          return;
-        }
-        // Captured, so the card follows a pointer that outruns it off the canvas.
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag({ name, x: event.clientX, y: event.clientY, from: at });
+    return drag.getHandleProps({
+      onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
+        grabbed.current = { name, from: at };
+        // The drag prevents the press's default, focus with it: the card
+        // takes focus itself, so the arrow keys move it after a click.
+        event.currentTarget.focus({ preventScroll: true });
       },
-      onPointerMove: (event) => {
-        if (drag?.name === name) {
-          move(name, dragged(drag, event));
-        }
-      },
-      onPointerUp: (event) => {
-        if (drag?.name !== name) {
-          return;
-        }
-        setDrag(null);
-        const to = dragged(drag, event);
-        if (!same(to, drag.from)) {
-          move(name, to);
-          keep(name, to);
-        }
-      },
-      onPointerCancel: () => {
-        if (drag?.name !== name) {
-          return;
-        }
-        setDrag(null);
-        if (!same(at, drag.from)) {
-          keep(name, at);
-        }
-      },
-      onKeyDown: (event) => {
+      onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
         const arrow = ARROWS.get(event.key);
         if (!arrow) {
           return;
@@ -141,7 +142,7 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
         move(name, to);
         keep(name, to);
       },
-    };
+    });
   };
 
   return (
@@ -194,7 +195,7 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
       <div
         data-testid="erd-canvas"
         data-zoom={zoom}
-        data-dragging={drag ? 'true' : undefined}
+        data-dragging={held === null ? undefined : 'true'}
         role="group"
         aria-label={model.title ? `${model.title} diagram` : 'Entity relationship diagram'}
         className="bg-gray-2 relative overflow-auto data-[dragging=true]:select-none"
@@ -230,7 +231,7 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
               id={id}
               relations={relations}
               placed={placed}
-              active={drag?.name}
+              active={held ?? undefined}
               width={width}
               height={height}
             />
@@ -241,7 +242,7 @@ export function Erd({ model, layout = NO_LAYOUT, onLayoutChange }: ErdProps) {
                   name={name}
                   table={table}
                   at={at}
-                  dragging={drag?.name === name}
+                  dragging={held === name}
                   hint={hint}
                   handle={handleOf(name, at)}
                 />

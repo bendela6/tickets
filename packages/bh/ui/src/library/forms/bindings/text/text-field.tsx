@@ -2,6 +2,7 @@ import type { InputProps } from '@bh/form';
 import { cn } from '../../../../style';
 import type { Commit } from '../../../inputs/contract';
 import { Input } from '../../../inputs/components/input';
+import { useInlineField } from '../../components/inline-field-wrapper';
 
 export interface TextFieldConfig {
   placeholder?: string;
@@ -18,6 +19,8 @@ export interface TextFieldConfig {
 }
 
 export function TextField(p: InputProps<TextFieldConfig, string>) {
+  // In a filter bar's row, the row's size.
+  const inline = useInlineField();
   return (
     <div className="flex items-stretch gap-8">
       {p.config.prefix ? (
@@ -27,6 +30,7 @@ export function TextField(p: InputProps<TextFieldConfig, string>) {
       ) : null}
       <Input
         id={p.name}
+        size={inline?.size}
         aria-describedby={p.describedBy}
         name={p.name}
         type="text"
@@ -34,6 +38,7 @@ export function TextField(p: InputProps<TextFieldConfig, string>) {
         // undefined `value` would flip the input to uncontrolled mid-life.
         value={p.value ?? ''}
         placeholder={p.config.placeholder}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         // Wrapped rather than passed straight through, to drop the event the
@@ -44,7 +49,8 @@ export function TextField(p: InputProps<TextFieldConfig, string>) {
         commit={p.config.commit ?? p.commit}
         onDraft={p.onDraft}
         onBlur={p.onBlur}
-        className={cn(p.config.mono && 'text-13 font-mono')}
+        // A few words' width in a row, which has no column to fill.
+        className={cn(p.config.mono && 'text-13 font-mono', inline && 'w-160')}
       />
     </div>
   );

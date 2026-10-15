@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { cn } from '../../../../style';
-import { fieldClass, fieldState } from '../../parts/field';
+import { fieldClass, fieldState, triggerPrefixClass } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { Chip } from '../../parts/chip';
 import { ComboboxList } from '../../parts/combobox-list';
@@ -25,8 +25,19 @@ import {
 type MultiComboboxProps = ControlProps<string[]> & {
   /** The choices, in the order the list shows them; with `onSearchChange`, the current matches. */
   options: Option[];
-  /** Shown on the field while nothing is chosen, and the field's accessible name. */
+  /** Shown on the field while nothing is chosen, and its accessible name without `aria-label`. */
   placeholder?: string;
+  /**
+   * Words before the value on the field, in the muted tone, as a filter bar
+   * names a field inside its control: "Type:" in "Type: any". With one, the
+   * placeholder reads as a value would.
+   */
+  prefix?: string;
+  /**
+   * The field's accessible name. A `<label htmlFor>` can't name the field, which
+   * is no button but a combobox drawn on a div, so a form names it with this.
+   */
+  'aria-label'?: string;
   /** Max chips shown on the trigger before collapsing to +N. */
   maxChips?: number;
   /**
@@ -60,6 +71,8 @@ export function MultiCombobox({
   value,
   onChange,
   placeholder = 'Select…',
+  prefix,
+  'aria-label': ariaLabel,
   size = 'md',
   // No default. An unset tone is the resting neutral field, NOT a synonym for
   // `primary` — `fieldState` reads the difference and only a named tone paints
@@ -149,7 +162,7 @@ export function MultiCombobox({
           // Radix already says `aria-haspopup="dialog"` and `aria-expanded`,
           // and "dialog" is the honest word: the popup is a search box, a
           // listbox and a footer, not a bare listbox.
-          aria-label={placeholder}
+          aria-label={ariaLabel ?? placeholder}
           // The words each state actually means, both legal on a combobox:
           // read-only keeps its tab stop and the value keeps its place in a
           // submission; disabled drops the tab stop.
@@ -179,8 +192,11 @@ export function MultiCombobox({
           })}
         >
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-6">
+            {prefix ? <span className={triggerPrefixClass}>{prefix}</span> : null}
             {selectedOptions.length === 0 ? (
-              <span className={cn('text-gray-9 truncate font-sans')}>{placeholder}</span>
+              <span className={cn('truncate font-sans', !prefix && 'text-gray-9')}>
+                {placeholder}
+              </span>
             ) : null}
             {/* Chips became removable here, reversing an earlier call. The
                 objection then was that an X on the trigger "puts a 12px target

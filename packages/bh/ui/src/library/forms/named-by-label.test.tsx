@@ -20,7 +20,13 @@ const OPTIONS = [
 const CASES: [InputKind, string, object][] = [
   ['radio', 'radiogroup', { options: OPTIONS }],
   ['checkbox-group', 'group', { options: OPTIONS }],
+  // A combobox drawn on a div, named by its own aria-label, not its placeholder.
+  ['multi-select', 'combobox', { options: OPTIONS, placeholder: 'Choose' }],
   ['segmented', 'radiogroup', { options: OPTIONS }],
+  ['toggle-chips', 'group', { options: OPTIONS }],
+  ['tabs', 'group', { options: OPTIONS }],
+  ['avatars', 'group', {}],
+  ['rules', 'group', {}],
   ['rating', 'radiogroup', {}],
   ['slider', 'slider', {}],
   ['range', 'slider', {}],

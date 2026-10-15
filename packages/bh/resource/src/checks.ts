@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { ActionInput, type ActionMeta } from './actions';
 import { issuesOf } from './errors';
-import { ResourceMeta } from './meta';
+import { ResourceMeta, type Serves } from './meta';
 import { Query, type Condition, type Filter } from './query';
 import type { Registry } from './registry';
 import { optionSettings, pathTo, type AttributeMeta } from './schemas';
@@ -360,6 +360,38 @@ function checkRoles(meta: ResourceMeta, report: Report): void {
   }
 }
 
+/** What a sort naming more fields than the resource serves is told. */
+function sortLimit(max: number): string {
+  return max === 1
+    ? 'a sort names one field here'
+    : `a sort names at most ${String(max)} fields here`;
+}
+
+/**
+ * Checks what the resource says it serves against its fields: no field set
+ * by a write it doesn't serve, its own sort no longer than a query's may be.
+ */
+function checkServes(meta: ResourceMeta, report: Report): void {
+  const { serves } = meta;
+  for (const [index, field] of meta.fields.entries()) {
+    if (field.write.create && !serves.create) {
+      report('a create sets it, but the resource serves none', 'fields', index, 'write', 'create');
+    }
+    if (field.write.update && !serves.update) {
+      report(
+        'a patch changes it, but the resource serves none',
+        'fields',
+        index,
+        'write',
+        'update',
+      );
+    }
+  }
+  if (meta.sort.length > serves.sort.max) {
+    report(sortLimit(serves.sort.max), 'sort');
+  }
+}
+
 /** Checks a list of sort keys: each path reaches a field that sorts. */
 function checkSort(
   sort: readonly { field: string }[],
@@ -395,6 +427,7 @@ export function metaOf(registry: Registry): v.GenericSchema<ResourceMeta> {
     checkFields(meta.fields, registry, report, 'fields');
     checkRoles(meta, report);
     checkSort(meta.sort, meta.fields, registry, report, 'sort');
+    checkServes(meta, report);
     const repeated = twice(meta.actions.map((action) => action.name));
     if (repeated) {
       report(`two actions are "${repeated.key}"`, 'actions', repeated.at, 'name');
@@ -445,13 +478,38 @@ function checkFilter(
       checkFilter(each, meta, registry, report, [...at, 'all', index]);
     }
   } else if ('any' in filter) {
+    if (!meta.serves.filter.any) {
+      report('the resource joins conditions by "all" alone, never "any"', ...at, 'any');
+    }
     for (const [index, each] of filter.any.entries()) {
       checkFilter(each, meta, registry, report, [...at, 'any', index]);
     }
   } else if ('not' in filter) {
+    if (!meta.serves.filter.not) {
+      report('the resource joins conditions by "all" alone, never "not"', ...at, 'not');
+    }
     checkFilter(filter.not, meta, registry, report, [...at, 'not']);
   } else {
     checkCondition(filter, meta, registry, report, at);
+  }
+}
+
+/** Checks a page against the shapes the resource serves (ResourceMeta.serves.page). */
+function checkPage(page: Query['page'], serves: Serves['page'], report: Report): void {
+  if (page?.take !== undefined && page.take > serves.max) {
+    report(`a page takes at most ${String(serves.max)} rows here`, 'page', 'take');
+  }
+  if (page?.cursor !== undefined) {
+    if (!serves.cursor) {
+      report('the resource pages by number, never by cursor', 'page', 'cursor');
+    }
+  } else if (page?.skip !== undefined && page.skip > 0) {
+    const take = page.take ?? Math.min(100, serves.max);
+    if (serves.numbered === 'none') {
+      report('the resource pages by cursor, never by number', 'page', 'skip');
+    } else if (serves.numbered === 'pages' && page.skip % take !== 0) {
+      report(`the resource skips whole pages: a multiple of ${String(take)}`, 'page', 'skip');
+    }
   }
 }
 
@@ -459,13 +517,19 @@ function checkFilter(
  * A query, checked against the resource's metadata: each field it names is
  * there and allows its operator, sort or group; each operator is registered,
  * and each operand passes its OperatorSpec's schema for the field's kind; a
- * search has a field to look in; `fields` names keys.
+ * search has a field to look in; `fields` names keys. It asks no more than
+ * the resource serves: its filter joined as `serves.filter` allows, its sort
+ * no longer than `serves.sort.max`, its page a shape `serves.page` takes.
  */
 export function queryOf(meta: ResourceMeta, registry: Registry): v.GenericSchema<Query> {
   return checked(Query, (query, report) => {
     if (query.filter) {
       checkFilter(query.filter, meta, registry, report, ['filter']);
     }
+    if (query.sort && query.sort.length > meta.serves.sort.max) {
+      report(sortLimit(meta.serves.sort.max), 'sort');
+    }
+    checkPage(query.page, meta.serves.page, report);
     if (query.search !== undefined) {
       const searched = meta.fields.some((field) => {
         return field.query.search && kindOf(registry, field.type.kind)?.search === true;

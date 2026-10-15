@@ -628,3 +628,25 @@ test('with search, the list keeps a width of its own', async () => {
   const popup = (await screen.findByRole('listbox')).closest<HTMLElement>('[role="dialog"]');
   expect(popup && classes(popup)).not.toContain('w-max');
 });
+
+test("draws an option's count right-aligned in its list row, never on the trigger", async () => {
+  render(
+    <Combobox
+      options={[
+        { value: 'high', label: 'High', count: 7 },
+        { value: 'low', label: 'Low' },
+      ]}
+      value="high"
+      onChange={() => {}}
+    />,
+  );
+  const trigger = screen.getByRole('button', { name: /High/ });
+  expect(trigger).not.toHaveTextContent('7');
+  await userEvent.click(trigger);
+  const high = screen.getByRole('option', { name: 'High 7' });
+  // After the label, which fills the row, and before the selection's check.
+  const count = within(high).getByText('7');
+  expect(count).toHaveClass('font-mono', 'text-11');
+  expect(count.previousElementSibling).toHaveClass('flex-1');
+  expect(screen.getByRole('option', { name: 'Low' })).not.toHaveTextContent(/\d/);
+});

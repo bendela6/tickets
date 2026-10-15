@@ -2,10 +2,17 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import { isAsyncResolver } from '../types/async-config';
 import type { FieldNode } from '../types/field-node';
 import type { LayoutNode } from '../types/layout-node';
-import type { FormRegistry, InputRegistry, LayoutComponentRegistry } from '../types/registry';
+import type { SlotNode } from '../types/slot-node';
+import type {
+  FieldWrapperDefinition,
+  FormRegistry,
+  InputRegistry,
+  LayoutComponentRegistry,
+} from '../types/registry';
 import { evaluateWhen } from '../when/evaluate-when';
 import { fieldIds } from './field-ids';
 import { CommitContext } from './commit-context';
+import { SlotsContext } from './slots-context';
 
 // A form inside a field: the fields of one object (a nested object, or one
 // item of a list), drawn with the registry of the <Form> around them. The
@@ -76,6 +83,8 @@ export interface NestedFieldsProps {
   name: string;
   /** Disables every input, as while the form submits. */
   disabled?: boolean;
+  /** Makes every input read-only, as its field is: shown, never changed. */
+  readOnly?: boolean;
 }
 
 /**
@@ -89,16 +98,23 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
   // commits, and with it the list, when the form's fields do.
   const commit = useContext(CommitContext)?.commit;
   const [left, setLeft] = useState<ReadonlySet<string>>(new Set());
+  const slots = useContext(SlotsContext);
 
-  const draw = (nodes: readonly AnyNode[]): ReactNode => {
+  // A form inside a field starts at the registry's wrapper; a layout of its
+  // own that names one gives it to the fields inside it.
+  const draw = (nodes: readonly AnyNode[], wrapper: FieldWrapperDefinition): ReactNode => {
     return nodes.map((node, index) => {
       // A button submits or resets the whole form: an item has neither.
       if (node.kind === 'action' || (node.when && !evaluateWhen(node.when, props.value))) {
         return null;
       }
+      if (node.kind === 'slot') {
+        const { name } = node as SlotNode;
+        return <Keyed key={`s:${name}:${index}`}>{slots[name] ?? null}</Keyed>;
+      }
       if (!isField(node)) {
-        const children = 'children' in node ? draw(node.children) : null;
         const layout = registry.layouts[node.kind];
+        const children = 'children' in node ? draw(node.children, layout?.field ?? wrapper) : null;
         if (!layout) {
           return <Keyed key={`${node.kind}:${index}`}>{children}</Keyed>;
         }
@@ -114,9 +130,10 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
         throw new Error(`<NestedFields>: registry has no entry for type "${String(node.type)}"`);
       }
       const Input = input.Component;
-      const Wrapper = registry.field.Component;
+      const Wrapper = wrapper.Component;
       const name = `${props.name}.${node.name}`;
       const value = props.value[node.name] ?? node.defaultValue ?? input.defaultValue;
+      const readOnly = (props.readOnly ?? false) || node.readOnly;
       const touched = left.has(node.name);
       const error = touched ? problemOf(node, value) : undefined;
       const ids = fieldIds(name, node.description, error);
@@ -124,6 +141,7 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
         <Wrapper
           key={`f:${node.name}`}
           name={name}
+          type={node.type}
           label={node.label}
           description={node.description}
           required={node.required ?? false}
@@ -137,13 +155,18 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
             name={name}
             label={node.label}
             value={value}
-            onChange={(next: unknown) => props.onChange({ ...props.value, [node.name]: next })}
+            onChange={(next: unknown) => {
+              if (!readOnly) {
+                props.onChange({ ...props.value, [node.name]: next });
+              }
+            }}
             commit={commit}
             onBlur={() => setLeft((now) => new Set(now).add(node.name))}
             config={plainConfig(node.config as Record<string, unknown>)}
             error={error}
             loading={false}
             disabled={props.disabled}
+            readOnly={readOnly}
             describedBy={ids.describedBy}
           />
         </Wrapper>
@@ -151,7 +174,7 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
     });
   };
 
-  return <>{draw(props.nodes)}</>;
+  return <>{draw(props.nodes, registry.field)}</>;
 }
 
 function Keyed({ children }: { children: ReactNode }) {

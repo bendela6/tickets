@@ -17,6 +17,7 @@ export function ColorField(p: InputProps<ColorFieldConfig, string | null>) {
         value={p.value ?? null}
         placeholder={p.config.placeholder}
         label={p.config.label}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

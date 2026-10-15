@@ -1,0 +1,14 @@
+{
+  "extends": "@bh/config/tsconfig/react",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@bh/ui": ["../../ui/src/index.ts"],
+      "@bh/markdown": ["../../markdown/src/index.ts"],
+      "@bh/richtext": ["../src/index.ts"],
+      "@bh/richtext/editor": ["../src/editor/index.ts"]
+    },
+    "types": ["../../ui/node_modules/vite/client"]
+  },
+  "include": ["examples"]
+}

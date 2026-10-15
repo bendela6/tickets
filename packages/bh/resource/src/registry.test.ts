@@ -32,20 +32,26 @@ const color: KindSpec = {
 };
 
 describe('createKindRegistry', () => {
-  it('holds bh’s nine, in their table’s order', () => {
+  it('holds bh’s fifteen, in their table’s order', () => {
     const registry = createKindRegistry();
     expect(registry.kinds.map((spec) => spec.name)).toEqual([
       'text',
+      'markdown',
+      'richtext',
       'url',
+      'email',
+      'phone',
       'number',
       'boolean',
       'date',
+      'time',
       'datetime',
       'option',
       'ref',
+      'file',
       'json',
     ]);
-    expect(registry.get('option')).toBe(baseKinds[6]);
+    expect(registry.get('option')).toBe(baseKinds[11]);
   });
 
   it('knows no user kind: a person is a ref of users', () => {

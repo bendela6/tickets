@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { readStored, writeStored } from './safe-storage';
+import { useCallback, useState } from 'react';
+import { usePersistedState, useResizeHandle } from '@bh/hooks';
 
 export type PanelSide = 'left' | 'right';
 
@@ -7,12 +7,9 @@ export const PANEL_KEY_STEP = 24;
 
 const clamp = (px: number, min: number, max: number) => Math.min(max, Math.max(min, px));
 
-function readWidth(key: string | undefined): number | undefined {
-  const stored = readStored(key);
-  if (stored === null) {
-    return undefined;
-  }
-  const px = Number(stored);
+/** A stored width: a positive number of pixels, or unset. */
+function parseWidth(raw: string): number | undefined {
+  const px = Number(raw);
   return Number.isFinite(px) && px > 0 ? px : undefined;
 }
 
@@ -31,86 +28,65 @@ export function usePanelWidth({
   storageKey?: string;
   label: string;
 }) {
-  const panelRef = useRef<HTMLElement>(null);
   // A stored width wins over the default — that is the point of persisting it —
   // but it is clamped on read, so narrowing the bounds later cannot restore a
-  // width the panel can no longer take.
-  const [width, setWidthState] = useState(() => {
-    return clamp(readWidth(storageKey) ?? defaultWidth, minWidth, maxWidth);
+  // width the panel can no longer take. Every panel under the key, on the page
+  // and in the app's other tabs, has the one stored width.
+  const [stored, store] = usePersistedState({
+    key: storageKey,
+    defaultValue: defaultWidth,
+    parse: parseWidth,
   });
+  // The width set but not yet stored: a drag's, until it ends.
+  const [unstored, setUnstored] = useState<number | null>(null);
+  const width = clamp(unstored ?? stored, minWidth, maxWidth);
 
   const setWidth = useCallback(
     (px: number) => {
       const next = clamp(px, minWidth, maxWidth);
-      setWidthState(next);
+      setUnstored(next);
       return next;
     },
     [minWidth, maxWidth],
   );
 
-  const persist = useCallback(
-    (px: number) => {
-      writeStored(storageKey, String(px));
+  // @bh/hooks' resize handle: the drag (the handle captures the pointer, so a
+  // fast drag that outruns it keeps resizing), the arrow keys and the
+  // separator's ARIA values. The handle is the panel's inner edge, so "wider"
+  // is always away from the edge the panel is docked to: a left panel's
+  // handle is its end edge, a right panel's its start.
+  const { getSeparatorProps: getHandleProps, ref: panelRef } = useResizeHandle<HTMLElement>({
+    orientation: 'vertical',
+    edge: side === 'left' ? 'end' : 'start',
+    value: width,
+    onChange: setUnstored,
+    // Let go, taken by the browser, or moved by a key, the width is stored.
+    onCommit: (px) => {
+      store(px);
+      setUnstored(null);
     },
-    [storageKey],
+    min: minWidth,
+    max: maxWidth,
+    step: PANEL_KEY_STEP,
+  });
+
+  const getSeparatorProps = useCallback(
+    <Own extends object>(own?: Own) => {
+      return getHandleProps({ ...own, 'aria-label': `Resize ${label}` });
+    },
+    [getHandleProps, label],
   );
-
-  // Pointer capture on the handle, so a fast drag that outruns the pointer
-  // keeps resizing instead of dropping the gesture.
-  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const handle = event.currentTarget;
-    handle.setPointerCapture(event.pointerId);
-    let latest = width;
-    const move = (e: PointerEvent) => {
-      const rect = panelRef.current?.getBoundingClientRect();
-      if (!rect) {
-        return;
-      }
-      // The dragged edge is the panel's inner edge, so the outer edge is the
-      // fixed reference: a left panel grows rightward from its own left edge,
-      // a right panel leftward from its right.
-      latest = setWidth(side === 'left' ? e.clientX - rect.left : rect.right - e.clientX);
-    };
-    const end = (e: PointerEvent) => {
-      handle.releasePointerCapture(e.pointerId);
-      handle.removeEventListener('pointermove', move);
-      handle.removeEventListener('pointerup', end);
-      persist(latest);
-    };
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', end);
-  };
-
-  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    // "Wider" is always away from the edge the panel is docked to.
-    const widen = side === 'left' ? 'ArrowRight' : 'ArrowLeft';
-    const narrow = side === 'left' ? 'ArrowLeft' : 'ArrowRight';
-    if (event.key !== widen && event.key !== narrow) {
-      return;
-    }
-    event.preventDefault();
-    persist(setWidth(width + (event.key === widen ? PANEL_KEY_STEP : -PANEL_KEY_STEP)));
-  };
 
   return {
     width,
     setWidth,
+    /** Goes on the panel: a drag or a key starts from the width it is laid out at. */
     panelRef,
-    separatorProps: {
-      role: 'separator' as const,
-      'aria-orientation': 'vertical' as const,
-      'aria-label': `Resize ${label}`,
-      // A focusable separator is the window-splitter form of the role, and
-      // ARIA requires `aria-valuenow` on it: without one the widget is invalid
-      // and arrow-key resizing is silent to a screen reader. The value is the
-      // panel width in pixels, which is exactly what the arrows change.
-      'aria-valuenow': width,
-      'aria-valuemin': minWidth,
-      'aria-valuemax': maxWidth,
-      tabIndex: 0,
-      onPointerDown,
-      onKeyDown,
-    },
+    /**
+     * The props for the separator that resizes the panel, with yours merged
+     * in: its role and ARIA values (the width in pixels, which the arrows
+     * change), a tab stop, the arrow keys, and the drag.
+     */
+    getSeparatorProps,
   };
 }

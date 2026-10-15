@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '../../../../style';
+import { formatDuration } from '../../../primitives/components/format-duration';
 import { type ControlProps, readOnlyFieldClass } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
 
@@ -61,24 +62,6 @@ export function parseDuration(raw: string): number | null {
     minutes += unit === 'h' ? Number(amount) * 60 : Number(amount);
   }
   return Math.round(minutes);
-}
-
-/**
- * `150` → `2h 30m`. Zero is `0m`, not an empty string: a stored zero is a real
- * answer and has to look different from nothing having been entered.
- *
- * @param minutes The length, in minutes.
- */
-export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) {
-    return `${rest}m`;
-  }
-  if (rest === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${rest}m`;
 }
 
 /**

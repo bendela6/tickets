@@ -208,6 +208,7 @@ What a form gives the input it draws for a field.
 | `config` (required)   | `TConfigResolved`         |         | The field's config, with every async key resolved; one still loading is left out.                                                                                                                              |
 | `error`               | `string`                  |         | The field's problem, once the field has been left or a submit tried, or why its last commit failed to save.                                                                                                    |
 | `disabled`            | `boolean`                 |         | Whether the form is submitting, when every input takes no changes.                                                                                                                                             |
+| `readOnly`            | `boolean`                 |         | Whether the field is read-only: shown, and still submitted, but the reader can't change it. Pass it to the control's `readOnly`; the form ignores the field's `onChange` meanwhile.                            |
 | `loading` (required)  | `boolean`                 |         | Whether the field's async config is still loading.                                                                                                                                                             |
 | `configError`         | `Error`                   |         | Why the field's async config failed to load, if it did.                                                                                                                                                        |
 | `describedBy`         | `string`                  |         | The id of what describes the field now, its problem or else its help: put it on the focusable element as `aria-describedby`.                                                                                   |
@@ -230,6 +231,7 @@ An input kind in a registry: the component that draws it, and the value it start
 | `onChange` (required) | `(next: Record<string, unknown>) => void`                       |         | Called with the whole object, one field's value changed.                             |
 | `name` (required)     | `string`                                                        |         | The field these belong to, which each name is made unique under: `shortcuts.0.keys`. |
 | `disabled`            | `boolean`                                                       |         | Disables every input, as while the form submits.                                     |
+| `readOnly`            | `boolean`                                                       |         | Makes every input read-only, as its field is: shown, never changed.                  |
 
 ```ts
 useFormRegistry(): FormRegistry<InputRegistry, LayoutComponentRegistry>

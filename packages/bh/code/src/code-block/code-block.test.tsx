@@ -24,6 +24,34 @@ describe('CodeBlock', () => {
     expect(container.querySelectorAll('[data-code] span').length).toBeGreaterThan(0);
   });
 
+  it('marks each line with a problem in its tone, and leaves the rest as they are', () => {
+    const { container } = render(
+      <CodeBlock
+        value={'a\nb\nc'}
+        problems={
+          new Map([
+            [2, 'error'],
+            [3, 'warning'],
+          ])
+        }
+      />,
+    );
+    expect(rows(container).map((row) => row.getAttribute('data-problem'))).toEqual([
+      null,
+      'error',
+      'warning',
+    ]);
+    // A problem doesn't dim the other lines, as a passage's marked lines do.
+    expect(container.querySelector('.opacity-50')).toBeNull();
+  });
+
+  it('draws the lines alone when bare: no strip, no copy control', () => {
+    const { container } = render(<CodeBlock value={'a\nb'} lang="sh" file="setup" bare />);
+    expect(rows(container)).toHaveLength(2);
+    expect(screen.queryByText('setup')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
   describe('its copy button', () => {
     afterEach(() => vi.unstubAllGlobals());
 

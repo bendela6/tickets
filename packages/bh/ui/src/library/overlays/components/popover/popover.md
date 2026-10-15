@@ -180,7 +180,7 @@ Also every `<div>` attribute (`PopperAnchorProps<HTMLDivElement>`), passed throu
 | `children`  | `ReactNode`           |         |                           |
 | `ref`       | `Ref<HTMLDivElement>` |         | Forwarded to the `<div>`. |
 
-Also every `<div>` attribute (`DismissableLayerProps<HTMLDivElement>`), passed through.
+Also every `<div>` attribute (`PopperContentProps<HTMLDivElement>`), passed through.
 
 ### PopoverClose
 

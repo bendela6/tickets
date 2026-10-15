@@ -1,5 +1,5 @@
-import { useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useDrag } from '@bh/hooks';
 
 /** `useColumnResize`'s options: the width a drag starts from, its floor, and
  *  where the widths go. */
@@ -21,6 +21,10 @@ export interface UseColumnResizeHandlers {
   onPointerMove: (e: ReactPointerEvent<HTMLElement>) => void;
   /** Ends the drag. */
   onPointerUp: (e: ReactPointerEvent<HTMLElement>) => void;
+  /** Ends the drag when the browser takes the pointer. */
+  onPointerCancel: (e: ReactPointerEvent<HTMLElement>) => void;
+  /** Ends the drag when the handle loses the pointer it captured. */
+  onLostPointerCapture: (e: ReactPointerEvent<HTMLElement>) => void;
 }
 
 /**
@@ -42,7 +46,7 @@ export interface UseColumnResizeHandlers {
  * Falls back to `startWidth` when there is nothing to measure — a detached
  * handle, or jsdom, where every rect is 0×0.
  */
-function measuredWidth(handle: HTMLElement): number | null {
+function measuredWidth(handle: Element): number | null {
   const cell = handle.closest<HTMLElement>('[data-cell-col]');
   const width = cell ? cell.getBoundingClientRect().width : 0;
   return width > 0 ? Math.round(width) : null;
@@ -58,27 +62,11 @@ function measuredWidth(handle: HTMLElement): number | null {
  */
 export function useColumnResize(opts: UseColumnResizeOptions): UseColumnResizeHandlers {
   const { startWidth, minWidth = 64, onChange } = opts;
-  const startX = useRef<number | null>(null);
-  const startWidthRef = useRef(startWidth);
-
-  return {
-    onPointerDown(e) {
-      e.preventDefault();
-      startX.current = e.clientX;
-      startWidthRef.current = measuredWidth(e.currentTarget) ?? startWidth;
-      e.currentTarget.setPointerCapture(e.pointerId);
-    },
-    onPointerMove(e) {
-      if (startX.current === null) {
-        return;
-      }
-      const delta = e.clientX - startX.current;
-      const next = Math.max(minWidth, startWidthRef.current + delta);
-      onChange(next);
-    },
-    onPointerUp(e) {
-      startX.current = null;
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    },
-  };
+  // @bh/hooks' drag: the handle captures the pointer, and each move is
+  // measured from where it went down.
+  const drag = useDrag<number>({
+    onStart: ({ event }) => measuredWidth(event.currentTarget) ?? startWidth,
+    onMove: ({ dx, from }) => onChange(Math.max(minWidth, from + dx)),
+  });
+  return drag.getHandleProps();
 }

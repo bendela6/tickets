@@ -1,7 +1,10 @@
 import type { LayoutComponentProps } from '@bh/form';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { cn } from '../../style';
 import { Card, CardBody, CardHeader } from '../layout/components/card';
 import { Row } from '../layout/components/row';
 import { Stack } from '../layout/components/stack';
+import { InlineRowContext } from './inline-row';
 
 /**
  * TODO: move all those layout components to separate folder with individual files
@@ -130,8 +133,96 @@ export function ColumnLayout({ children }: LayoutComponentProps<BareProps>) {
  *  width is its label's. */
 export function ActionsLayout({ children }: LayoutComponentProps<BareProps>) {
   return (
-    <Row gap={2} className="mt-8 flex-wrap">
+    // `data-actions`: a filter sheet keeps a form's buttons at its foot by it.
+    <Row gap={2} data-actions="" className="mt-8 flex-wrap">
       {children}
     </Row>
+  );
+}
+
+/**
+ * How an `inline` row holds more than fits on one line: `wrap` onto more
+ * lines; `scroll`, one line that scrolls sideways, fading at the end while
+ * there is more; or `{ collapse: n }`, a `rules` field's first `n` chips and
+ * a "+3 more" button that shows the rest.
+ */
+export type InlineOverflow = 'wrap' | 'scroll' | { collapse: number };
+
+export interface InlineLayoutProps {
+  /** More than fits: `wrap` (the default), `scroll` or `{ collapse: n }`. */
+  overflow?: InlineOverflow;
+  /**
+   * Below `below` pixels of the filter form's own width, only the fields
+   * named in `keep` stay in the row and the rest move to a sheet. A filter
+   * form reads it; the row itself doesn't.
+   */
+  narrow?: { below: number; keep: string[] };
+}
+
+// `inline-row`: its count, its changes and its buttons sit at its end, by it.
+const ROW = 'inline-row flex min-w-0 items-center gap-6';
+
+// The last 56 pixels of a row that scrolls fade out while there is more past them.
+const FADE = 'linear-gradient(to right, black calc(100% - 56px), transparent)';
+
+/** One line that scrolls sideways, fading at its end while there is more to see. */
+function ScrollingRow({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const row = ref.current;
+    if (!row) {
+      return undefined;
+    }
+    const measure = () => {
+      setMore(row.scrollLeft + row.clientWidth < row.scrollWidth - 1);
+    };
+    measure();
+    row.addEventListener('scroll', measure, { passive: true });
+    // The row's own size, and its fields', which change what there is to scroll.
+    const observer =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+    observer?.observe(row);
+    for (const child of Array.from(row.children)) {
+      observer?.observe(child);
+    }
+    return () => {
+      row.removeEventListener('scroll', measure);
+      observer?.disconnect();
+    };
+  }, []);
+  return (
+    <div
+      ref={ref}
+      data-overflow="scroll"
+      // Whether there is more past the end, which fades out.
+      data-more={more || undefined}
+      // Room above and below for a focus ring, which a scrolling box clips.
+      className={cn(ROW, '-my-4 flex-nowrap overflow-x-auto py-4 *:shrink-0')}
+      style={more ? { maskImage: FADE } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Fields side by side in one row, each at its own width and named by
+ * `InlineFieldWrapper`, as a filter bar lays them out: 6 pixels apart and
+ * centred on the row. A filter's count and changes and the form's buttons
+ * sit at its end, past the free space, and a reset with nothing to reset
+ * isn't drawn. More than fits wraps onto more lines, scrolls sideways, or
+ * collapses a `rules` field's chips, as `overflow` says.
+ */
+export function InlineLayout({ props, children }: LayoutComponentProps<InlineLayoutProps>) {
+  const overflow = props.overflow ?? 'wrap';
+  if (overflow === 'scroll') {
+    return <ScrollingRow>{children}</ScrollingRow>;
+  }
+  const collapse = typeof overflow === 'object' ? overflow.collapse : undefined;
+  return (
+    <InlineRowContext value={collapse === undefined ? {} : { collapse }}>
+      <div className={cn(ROW, 'flex-wrap')}>{children}</div>
+    </InlineRowContext>
   );
 }

@@ -21,6 +21,7 @@ export function FileField(p: InputProps<FileFieldConfig, UploadFile[]>) {
         accept={p.config.accept}
         multiple={p.config.multiple}
         onSelect={p.config.onSelect}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

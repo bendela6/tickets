@@ -169,6 +169,8 @@ Column widths, saved per table under `${storageKey}:widths`: the state a
 
 Without a `storageKey` the widths live as long as the component. A storage
 that can't be read or written (turned off, or full) is treated as empty.
+Two tables under one key, on the page or in the app's other tabs, share
+their widths.
 
 | Parameter    | Type             | Default | Description                                           |
 | ------------ | ---------------- | ------- | ----------------------------------------------------- |
@@ -213,8 +215,10 @@ interface UseColumnResizeHandlers
 
 Pointer handlers to spread onto a resize handle.
 
-| Member                     | Type                                          | Default | Description                                                          |
-| -------------------------- | --------------------------------------------- | ------- | -------------------------------------------------------------------- |
-| `onPointerDown` (required) | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Starts a drag: captures the pointer and measures the starting width. |
-| `onPointerMove` (required) | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Reports the width the drag has reached, while one is running.        |
-| `onPointerUp` (required)   | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Ends the drag.                                                       |
+| Member                            | Type                                          | Default | Description                                                          |
+| --------------------------------- | --------------------------------------------- | ------- | -------------------------------------------------------------------- |
+| `onPointerDown` (required)        | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Starts a drag: captures the pointer and measures the starting width. |
+| `onPointerMove` (required)        | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Reports the width the drag has reached, while one is running.        |
+| `onPointerUp` (required)          | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Ends the drag.                                                       |
+| `onPointerCancel` (required)      | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Ends the drag when the browser takes the pointer.                    |
+| `onLostPointerCapture` (required) | `(e: ReactPointerEvent<HTMLElement>) => void` |         | Ends the drag when the handle loses the pointer it captured.         |

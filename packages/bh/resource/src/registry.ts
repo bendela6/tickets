@@ -10,9 +10,9 @@ export interface OperatorRegistry {
   get(name: Operator): OperatorSpec | undefined;
 }
 
-/** The kinds an app runs with: bh's nine and its own, by name. */
+/** The kinds an app runs with: bh's fifteen and its own, by name. */
 export interface KindRegistry {
-  /** bh's nine, in their table's order, then the app's own, in the order given. */
+  /** bh's fifteen, in their table's order, then the app's own, in the order given. */
   readonly kinds: readonly KindSpec[];
   /** The kind registered by this name; undefined when none is. */
   get(name: FieldKind): KindSpec | undefined;
@@ -117,7 +117,7 @@ export function createOperatorRegistry(own: readonly OperatorSpec[] = []): Opera
 }
 
 /**
- * The registry of kinds: bh's nine, and the app's own beside them, each a
+ * The registry of kinds: bh's fifteen, and the app's own beside them, each a
  * KindSpec with its settings and value schemas, its operators and its flags.
  * A field's `type.kind` names one of them. Throws on an app's kind named as
  * one of bh's or as another of its own, so no kind is replaced unseen; and on
@@ -153,7 +153,7 @@ export function createKindRegistry(
  * back as they went in.
  */
 export interface Registry<Format extends FormatSpec = FormatSpec> {
-  /** bh's nine, in their table's order, then the app's own. */
+  /** bh's fifteen, in their table's order, then the app's own. */
   readonly kinds: readonly KindSpec[];
   /** The formats passed in, in their order. */
   readonly formats: readonly Format[];
@@ -192,7 +192,7 @@ function checkFormat(spec: FormatSpec, kinds: KindRegistry): void {
 }
 
 /**
- * The registry an app runs with: bh's nine kinds and fifteen operators, its
+ * The registry an app runs with: bh's fifteen kinds and fifteen operators, its
  * own beside them, and the formats it passes in. It is checked as it is
  * built, so a mistake fails at start, not in a query: every name a word and
  * none twice or one of bh's; every operator a kind allows registered; every
