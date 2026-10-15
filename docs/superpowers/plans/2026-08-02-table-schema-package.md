@@ -1,5 +1,31 @@
 # Table Schema Package Implementation Plan
 
+> **Superseded (2026-10-15): don't build from this plan.** It was never
+> built, and `@tickets/table-schema` won't be. Its model moved to bh, as JSON
+> checked with valibot rather than TypeScript types alone, and tickets takes
+> it as copies under `packages/bh/`:
+>
+> - **The cell model and the registries** became `@bh/template` (TK-79), in
+>   bh's `packages/shared/template`: one template for a table's cell, a list
+>   item, a tile and a card's body, as parts in registered layouts (for
+>   `CellPart` and `CellDef`'s `lines`/`inline`/`wrap`/`grid`); the renderer
+>   registry, its components in `@bh/ui` (for the `cells` registry); a link's
+>   route template (for `routes`); and, to come, the format registry. There
+>   are no `fns` and no bindings: a template holds no code, and anything
+>   computed is added to the record first. The `fields`, `operators`,
+>   `datasets` and `actions` registries are `@bh/resource`'s metadata and its
+>   kind and operator registries (TK-11), and filter evaluation is its
+>   `matchesFilter`.
+> - **The table definition** becomes `@bh/view` (TK-16), in bh's
+>   `packages/shared/view`: `ColumnDef` is its column, a host with fixed parts
+>   and a cell template (TK-16.2); `TableDef` its view (TK-16.1), with the
+>   reader's state kept apart (TK-16.4); `validateDef` its `validateView`
+>   (TK-16.5).
+>
+> The tasks are TK-16 and TK-79 in `tasks/tickets.json`; the docs are bh's
+> docs site, under Templates and Views. The plan below is kept as it was
+> written, for its history.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A pure-TypeScript package that turns a declarative table definition into compiled columns, validates it against injected registries, and evaluates filters — with no React, no DOM and no ticket-domain knowledge.
