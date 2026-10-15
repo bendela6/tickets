@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
@@ -18,13 +18,10 @@ import { DetailLinks } from './detail-links';
 import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
 
-const ICON_BUTTON =
-  'inline-flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 ' +
-  'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
-
 // Click-to-edit title: static heading until clicked, then bh's Input holding
 // the draft (`commit="leave"`): leaving the field or Enter saves it, Escape
-// drops it (and in the drawer closes the drawer too, as it always has).
+// drops it (and in the drawer closes the drawer too, in the same press, with
+// nothing saved: bh's Input drops the draft before the drawer hears the key).
 // Either way the heading returns.
 function InlineTitle({
   value,
@@ -38,26 +35,6 @@ function InlineTitle({
   onSave: (next: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const field = useRef<HTMLInputElement>(null);
-  // Whether Escape dropped this edit's draft. In the drawer the dialog hears
-  // Escape first (on the document, capturing) and closes, and the Input
-  // commits a draft it still holds as it unmounts: the edit Escape dropped
-  // would be saved. The window hears the key before the document does, so it
-  // is noted there and that commit refused.
-  const dropped = useRef(false);
-  useEffect(() => {
-    if (!editing) {
-      return;
-    }
-    dropped.current = false;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && event.target === field.current) {
-        dropped.current = true;
-      }
-    };
-    window.addEventListener('keydown', onKeyDown, { capture: true });
-    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
-  }, [editing]);
 
   if (!editing) {
     return (
@@ -80,14 +57,13 @@ function InlineTitle({
   return (
     <div className="-mx-9 -my-5">
       <Input
-        ref={field}
         autoFocus
         aria-label="Title"
         commit="leave"
         value={value}
         onChange={(next) => {
           const title = next.trim();
-          if (!dropped.current && title.length > 0 && title !== value) {
+          if (title.length > 0 && title !== value) {
             onSave(title);
           }
         }}
@@ -227,9 +203,7 @@ export function ItemDetail({
   const archiveMenu = (
     <Menu>
       <MenuTrigger asChild>
-        <button type="button" aria-label="More actions" className={ICON_BUTTON}>
-          ⋯
-        </button>
+        <Button variant="outline" tone="neutral" size="sm" icon="ellipsis" label="More actions" />
       </MenuTrigger>
       <MenuContent align="end">
         <MenuItem disabled={userId === null} onSelect={toggleArchived}>

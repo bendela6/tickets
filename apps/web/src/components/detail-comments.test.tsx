@@ -7,6 +7,12 @@ import { CurrentUserProvider } from '../state/current-user-context';
 import { indexBoard } from '../utils/index-board';
 import { DetailComments } from './detail-comments';
 
+// The submit hint is bh's Kbd for mod+Enter, which names the reader's keys:
+// Ctrl+Enter in jsdom, which is no Mac.
+function isSubmitHint(_content: string, element: Element | null): boolean {
+  return element?.tagName === 'KBD' && element.textContent === 'Ctrl+Enter';
+}
+
 const createdAt = '2026-01-01T00:00:00.000Z';
 
 function makeBoard(): Board {
@@ -75,12 +81,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('composer renders the Comment button and ⌘↩ hint inside the editor container', () => {
+test('composer renders the Comment button and mod+Enter hint inside the editor container', () => {
   mockCommentFetch({ id: 1, itemId: 100, authorId: 7, parentId: null, body: 'hi', createdAt });
   renderComments();
 
   const button = screen.getByRole('button', { name: 'Comment' });
-  expect(screen.getByText('⌘↩')).toBeInTheDocument();
+  expect(screen.getByText(isSubmitHint)).toBeInTheDocument();
   // Composer relayout: the button lives inside the same bordered editor
   // container as the content surface, not below it in a separate row.
   const container = document.querySelector('.rt')!.parentElement!;

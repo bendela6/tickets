@@ -17,9 +17,10 @@ const OUTLINE_STORAGE_KEY = 'tickets-schema-outline';
  * Whether the outline is open, and how to open or shut it. Beside the diagram
  * it stays where the reader left it; on a phone it is an overlay, shut
  * whenever the page narrows, opened from the header's Outline button. The
- * panel is controlled because that button is outside it: an uncontrolled
- * panel's overlay can only be opened from its own button, which on a phone
- * would sit on top of the frame's menu button.
+ * panel is controlled because that button is outside it, and draws no reopen
+ * button of its own: on a phone that one sits at the top of the panel's
+ * place, under the header, where the diagram's toolbar (Lines, Fit,
+ * Rearrange) covers it.
  */
 function useOutlineOpen() {
   const narrow = useIsNarrow('md');
@@ -94,7 +95,7 @@ function SchemaPage() {
             label="Schema outline"
             storageKey={OUTLINE_STORAGE_KEY}
             collapsible
-            collapsedTo={outline.narrow ? 'none' : 'rail'}
+            reopenButton={false}
             overlayBelow="md"
             open={outline.open}
             onOpenChange={outline.setOpen}

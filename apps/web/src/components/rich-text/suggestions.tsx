@@ -4,7 +4,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { Avatar, cn, TONE_HUE } from '@bh/ui';
+import { Avatar, cn, Kbd, TONE_HUE } from '@bh/ui';
 import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
@@ -58,7 +58,7 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
       <span className="truncate font-sans text-13/19 font-500 text-gray-12">{item.label}</span>
       <span className="shrink-0 font-mono text-12/17 text-gray-9">{agent ? 'agent' : deriveHandle(item.label)}</span>
       <span className="flex-1" />
-      {selected ? <span className="shrink-0 font-mono text-11 text-gray-9">↩</span> : null}
+      {selected ? <Kbd keys="enter" variant="text" aria-hidden className="shrink-0 text-gray-9" /> : null}
     </>
   );
 }

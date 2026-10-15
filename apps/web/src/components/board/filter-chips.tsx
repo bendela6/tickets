@@ -276,14 +276,16 @@ export function FilterChips({
             </strong>
             {OP_LABELS[rule.op]}
             <RuleValues rule={rule} indexes={indexes} />
-            <button
-              type="button"
-              aria-label="Remove filter"
-              className="cursor-pointer text-gray-9 hover:text-gray-12"
+            <Button
+              variant="ghost"
+              tone="neutral"
+              size="xs"
+              icon="x"
+              label="Remove filter"
+              // A rung quieter than the chip's words, and tucked into its padding.
+              className="-mr-6 text-gray-9"
               onClick={() => onRulesChange(rules.filter((candidate) => candidate !== rule))}
-            >
-              ×
-            </button>
+            />
           </span>
         );
       })}
