@@ -1,10 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import * as v from 'valibot';
-import { agentReports, commands, events, outbox } from '@tickets/db';
+import { eq } from 'drizzle-orm';
+import { agentReports, commands, events, optionTransitions, outbox } from '@tickets/db';
 import { resetDb, seedFixture, testDb, type Fixture } from '../test/db';
 import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
-import { KEPT_FOR_MS, agentWordInput, listReports, saveReport } from './reports';
+import { itemUpdate } from '../command/item/update';
+import { KEPT_FOR_MS, agentWordInput, dismissReport, listReports, saveReport } from './reports';
 
 beforeEach(resetDb);
 afterAll(resetDb);
@@ -26,7 +28,8 @@ describe('an agent\'s word', () => {
     const worker = await say({ name: 'worker-tk-7', state: 'working', item: 'TK-7.2', text: 'Writing the Sort type' });
     const planner = await say({ name: 'planner', state: 'listening' });
     expect(worker).toEqual({
-      name: 'worker-tk-7', role: 'worker', state: 'working', item: 'TK-7.2', itemId: null,
+      name: 'worker-tk-7', role: 'worker', state: 'working', shown: { state: 'working', dismissible: false },
+      item: 'TK-7.2', itemId: null,
       text: 'Writing the Sort type', at: T0.toISOString(), since: T0.toISOString(),
     });
     expect(planner).toMatchObject({ role: 'planner', item: null, text: '' });
@@ -123,5 +126,67 @@ describe('the reports', () => {
     await say({ name: 'worker-tk-8', state: 'working' });
     const names = (await listReports(testDb, later(5 * MINUTE))).map((r) => r.name);
     expect(names).toEqual(['planner', 'builder', 'worker-tk-8', 'worker-tk-9', 'worker-tk-7']);
+  });
+});
+
+// The rules themselves are shown.test.ts's; these check what the reports
+// answer with them, its item's status read from the database.
+describe('what the screens show', () => {
+  // A software project whose status moves freely (the seed installs entry-only edges).
+  async function freeSoftware() {
+    const fx = await seedFixture();
+    await testDb.delete(optionTransitions).where(eq(optionTransitions.fieldId, fx.fieldIdByKey.get('status')!));
+    return fx;
+  }
+
+  async function setStatus(fx: Fixture, item: { id: number; updatedAt: string }, status: string) {
+    return runCommand(testDb, itemUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+      id: item.id, expectedUpdatedAt: item.updatedAt, values: { status },
+    });
+  }
+
+  const shownAt = async (name: string, now: Date) =>
+    (await listReports(testDb, now)).find((r) => r.name === name)?.shown;
+
+  it('is answered beside the state the agent said', async () => {
+    await say({ name: 'builder', state: 'listening' });
+    await say({ name: 'worker-tk-7', state: 'working', item: 'TK-7' });
+    const reports = await listReports(testDb, later(31 * MINUTE));
+    expect(reports.map((r) => [r.name, r.state, r.shown])).toEqual([
+      ['builder', 'listening', { state: 'not-running', dismissible: false }],
+      ['worker-tk-7', 'working', { state: 'quiet', dismissible: true }],
+    ]);
+  });
+
+  it('a worker on a tickets item: finished for 15 minutes once the item is done', async () => {
+    const fx = await freeSoftware();
+    const item = await makeItem(fx);
+    await say({ name: 'worker-tst-1', state: 'working', item: item.key });
+    expect(await shownAt('worker-tst-1', later(MINUTE))).toEqual({ state: 'working', dismissible: false });
+    await setStatus(fx, item, 'done');
+    expect(await shownAt('worker-tst-1', later(MINUTE))).toEqual({ state: 'finished', dismissible: false });
+    expect(await shownAt('worker-tst-1', later(15 * MINUTE))).toBeNull();
+  });
+
+  it('a failed worker stays until its item is done, and an item cancelled is not done', async () => {
+    const fx = await freeSoftware();
+    const item = await makeItem(fx);
+    await say({ name: 'worker-tst-1', state: 'failed', item: item.key });
+    const cancelled = await setStatus(fx, item, 'cancelled');
+    expect(await shownAt('worker-tst-1', later(3 * 24 * 60 * MINUTE))).toEqual({ state: 'failed', dismissible: true });
+    await setStatus(fx, { id: item.id, updatedAt: cancelled.updatedAt! }, 'done');
+    expect(await shownAt('worker-tst-1', later(MINUTE))).toBeNull();
+  });
+
+  it('a worker on a plans id no tickets item has: its item is never done', async () => {
+    await say({ name: 'worker-tk-7', state: 'abandoned', item: 'TK-7.2' });
+    expect(await shownAt('worker-tk-7', later(6 * 24 * 60 * MINUTE))).toEqual({ state: 'abandoned', dismissible: true });
+  });
+
+  it('a dismissed agent is gone', async () => {
+    await say({ name: 'worker-tk-7', state: 'failed', item: 'TK-7' });
+    expect(await dismissReport(testDb, 'worker-tk-7')).toBe(true);
+    expect(await listReports(testDb, T0)).toEqual([]);
+    expect(await dismissReport(testDb, 'worker-tk-7')).toBe(false);
   });
 });
