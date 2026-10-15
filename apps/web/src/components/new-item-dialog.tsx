@@ -16,7 +16,7 @@ import { statusChoices } from '../domain/status-choices';
 import { FieldWidget } from '../registry/field-widget';
 import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@bh/ui';
+import { Button, Card, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Kbd, Pill } from '@bh/ui';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { nextKey } from '../utils/next-key';
@@ -90,17 +90,8 @@ function ProjectChip({ project }: { project: Project }) {
 function CloseButton() {
   return (
     <DialogClose asChild>
-      <button
-        type="button"
-        aria-label="Close"
-        className={cn(
-          'flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 bg-transparent',
-          'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
-          'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
-        )}
-      >
-        ×
-      </button>
+      {/* As bh's Drawer draws its own Close. */}
+      <Button variant="ghost" tone="neutral" size="sm" icon="x" label="Close" />
     </DialogClose>
   );
 }
@@ -303,35 +294,26 @@ export function NewItemDialog({
                 const candidateRows = rowsForType(indexes, candidate);
                 const requiredCount = candidateRows.filter((row) => row.placement.required).length;
                 return (
-                  <button
+                  <Card
                     key={candidate.id}
-                    type="button"
-                    onClick={() => pick(candidate)}
-                    className={cn(
-                      'flex w-full items-center gap-12 rounded-12 border-1 border-gray-6 bg-transparent px-16 py-14 text-left',
-                      'hover:border-gray-7 hover:bg-gray-1',
-                      'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
-                    )}
+                    asChild
+                    interactive
+                    className="flex w-full items-center gap-12 bg-transparent px-16 py-14 hover:bg-gray-1"
                   >
-                    <TypeIcon type={candidate} />
-                    <span className="flex min-w-0 flex-1 flex-col gap-2">
-                      <span className="font-sans text-14 font-600 text-gray-12">
-                        {candidate.label}
+                    <button type="button" onClick={() => pick(candidate)}>
+                      <TypeIcon type={candidate} />
+                      <span className="flex min-w-0 flex-1 flex-col gap-2">
+                        <span className="font-sans text-14 font-600 text-gray-12">
+                          {candidate.label}
+                        </span>
+                        <span className="font-sans text-12/17 text-gray-11">
+                          {candidateRows.length} {candidateRows.length === 1 ? 'field' : 'fields'} ·{' '}
+                          {requiredCount} required
+                        </span>
                       </span>
-                      <span className="font-sans text-12/17 text-gray-11">
-                        {candidateRows.length} {candidateRows.length === 1 ? 'field' : 'fields'} ·{' '}
-                        {requiredCount} required
-                      </span>
-                    </span>
-                    {index < 9 ? (
-                      <span
-                        aria-hidden
-                        className="shrink-0 rounded-4 border-1 border-gray-6 px-6 py-px font-mono text-11/13 tracking-wider text-gray-9"
-                      >
-                        {index + 1}
-                      </span>
-                    ) : null}
-                  </button>
+                      {index < 9 ? <Kbd keys={String(index + 1)} aria-hidden className="shrink-0" /> : null}
+                    </button>
+                  </Card>
                 );
               })}
               {subtaskType ? (
@@ -475,8 +457,8 @@ export function NewItemDialog({
                   Pick a user in the header first
                 </span>
               ) : (
-                <span aria-hidden className="font-mono text-11/13 tracking-wider text-gray-9">
-                  ⌘↵ create
+                <span aria-hidden className="inline-flex items-center gap-6 font-mono text-11/13 tracking-wider text-gray-9">
+                  <Kbd keys="mod+enter" size="sm" /> create
                 </span>
               )}
               <DialogFooter className="mt-0 border-0 p-0" cancel={<Button variant="ghost" onClick={close}>Cancel</Button>}>
@@ -588,8 +570,8 @@ export function SubtaskQuickCreate({
         }}
         className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-14 text-gray-12 outline-none placeholder:text-gray-9"
       />
-      <span aria-hidden className="hidden shrink-0 font-mono text-10 text-gray-9 sm:inline">
-        ↵ creates {nextChildKey}
+      <span aria-hidden className="hidden shrink-0 items-center gap-4 font-mono text-10 text-gray-9 sm:inline-flex">
+        <Kbd keys="enter" size="sm" /> creates {nextChildKey}
       </span>
       {types.length > 1 ? (
         <Combobox

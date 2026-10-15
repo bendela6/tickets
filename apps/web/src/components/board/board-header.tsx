@@ -1,6 +1,7 @@
 import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs, Tooltip } from '@bh/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
+import { KPI_STRIP_DESCRIPTION } from './kpi-strip';
 
 type UpdateConfig = (mutate: (current: ViewConfig) => ViewConfig) => void;
 
@@ -48,6 +49,7 @@ function ColumnChecklist({
       <div className="-mx-12 my-2 h-px bg-gray-6" />
       <Checkbox
         label="KPI strip"
+        description={KPI_STRIP_DESCRIPTION}
         value={config.kpi}
         onChange={(next) => {
           const kpi = next;

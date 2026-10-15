@@ -30,7 +30,6 @@ import {
   ScreenState,
   SegmentedControl,
   Tabs,
-  Tooltip,
 } from '@bh/ui';
 import type { SettingsTabProps } from './types-tab';
 
@@ -56,7 +55,8 @@ function EntryPill() {
 }
 
 // One of the five kinds, as bh's segmented control: a choice of one among a
-// few short words, read without opening anything.
+// few short words, read without opening anything, each with its kind's icon
+// in its kind's color.
 function KindPicker({
   value,
   onChange,
@@ -73,6 +73,7 @@ function KindPicker({
         value: kind,
         label: kind.charAt(0).toUpperCase() + kind.slice(1),
         icon: KIND_ICON[kind],
+        color: KIND_TONE[kind],
       }))}
       value={value}
       onChange={(next) => onChange(KIND_ORDER.find((kind) => kind === next) ?? value)}
@@ -506,17 +507,17 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             </span>
                           ) : null}
                           <span className="flex-1" />
-                          <Tooltip content="Remove transition">
-                            <button
-                              type="button"
-                              aria-label={`Remove transition ${transitionLabel(t)}`}
-                              disabled={disabled || deleteTransition.isPending}
-                              className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
-                              onClick={() => void removeEdge(t).catch(toasted)}
-                            >
-                              ×
-                            </button>
-                          </Tooltip>
+                          <Button
+                            variant="ghost"
+                            tone="neutral"
+                            size="xs"
+                            icon="x"
+                            label="Remove transition"
+                            aria-label={`Remove transition ${transitionLabel(t)}`}
+                            disabled={disabled || deleteTransition.isPending}
+                            className="text-gray-9 hover:text-red-11"
+                            onClick={() => void removeEdge(t).catch(toasted)}
+                          />
                         </div>
                       );
                     })
@@ -551,6 +552,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     />
                     <Checkbox
                       label="Requires a comment"
+                      description="The item needs a comment before it can make this move."
                       value={edgeRequiresComment}
                       onChange={(next) => setEdgeRequiresComment(next)}
                       disabled={disabled}

@@ -116,6 +116,7 @@ function CreateForm({
         </div>
         <Checkbox
           label="Directional"
+          description="The target item reads the inward label. Off, both items read the outward one."
           value={draft.directional}
           onChange={(next) => onChange({ ...draft, directional: next })}
         />
@@ -170,6 +171,7 @@ function EditForm({
         </div>
         <Checkbox
           label="Directional"
+          description="The target item reads the inward label. Off, both items read the outward one."
           value={draft.directional}
           onChange={(next) => onChange({ ...draft, directional: next })}
         />

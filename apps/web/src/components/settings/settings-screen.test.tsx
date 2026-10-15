@@ -119,6 +119,13 @@ async function tabLink(label: string) {
   return within(nav).findByRole('link', { name: label });
 }
 
+const FORK_DIALOG_TITLE = 'Fork the shared scheme?';
+
+/** The dialog Fork for this project asks in before it forks anything. */
+function findForkDialog() {
+  return screen.findByRole('dialog', { name: FORK_DIALOG_TITLE });
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
@@ -195,7 +202,6 @@ test('clicking Fork forks the scheme then repoints the project to the forked sch
   localStorage.setItem('tickets-user-id', '7');
   const board = makeBoard();
   const fetchMock = mockRoutedFetch(board, 42);
-  vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
   renderSettings();
   await screen.findByRole('heading', { name: 'Types' });
@@ -204,7 +210,10 @@ test('clicking Fork forks the scheme then repoints the project to the forked sch
   expect(forkButton).not.toBeDisabled();
   await userEvent.click(forkButton);
 
-  expect(confirm).toHaveBeenCalledTimes(1);
+  // Nothing is forked until the confirm dialog is answered.
+  const dialog = await findForkDialog();
+  expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(false);
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Fork' }));
 
   await waitFor(() => {
     expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(true);
@@ -231,14 +240,18 @@ test('declining the confirm dialog does not call the fork endpoint', async () =>
   localStorage.setItem('tickets-user-id', '7');
   const board = makeBoard();
   const fetchMock = mockRoutedFetch(board, 42);
-  vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
 
   renderSettings();
   await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
 
-  expect(confirm).toHaveBeenCalledTimes(1);
+  const dialog = await findForkDialog();
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog', { name: FORK_DIALOG_TITLE })).not.toBeInTheDocument();
+  });
   expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(false);
 });
 
@@ -320,12 +333,12 @@ test('surfaces a toast and does not throw when the fork request fails', async ()
     return Promise.reject(new Error(`unexpected fetch: ${url}`));
   });
   vi.stubGlobal('fetch', fetchMock);
-  vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
   renderSettings();
   await screen.findByRole('heading', { name: 'Types' });
 
   await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
+  await userEvent.click(within(await findForkDialog()).getByRole('button', { name: 'Fork' }));
 
   expect(await screen.findByText(/Fork failed/i)).toBeInTheDocument();
   // The repoint PATCH must never fire once the fork itself has failed — the

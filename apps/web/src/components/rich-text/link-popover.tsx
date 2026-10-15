@@ -1,6 +1,6 @@
 import { getMarkRange, posToDOMRect, type Editor } from '@tiptap/react';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Icon } from '@bh/ui';
+import { Button, Icon } from '@bh/ui';
 
 // Forces a re-render whenever the given Tiptap editor fires a transaction or
 // selection-update event. RichTextEditor already re-renders on every
@@ -183,25 +183,18 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         </>
       )}
       <span className="h-14 w-px shrink-0 bg-gray-6" />
-      <button
-        type="button"
-        aria-label="Edit link"
+      <Button
+        variant="ghost"
+        tone="neutral"
+        size="xs"
+        icon="pencil"
+        label="Edit link"
         onClick={() => {
           setDraft(href);
           setEditing(true);
         }}
-        className="flex size-22 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
-      >
-        <Icon name="pencil" size="sm" />
-      </button>
-      <button
-        type="button"
-        aria-label="Remove link"
-        onClick={remove}
-        className="flex size-22 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
-      >
-        <Icon name="trash" size="sm" />
-      </button>
+      />
+      <Button variant="ghost" tone="neutral" size="xs" icon="trash" label="Remove link" onClick={remove} />
     </div>
   );
 }

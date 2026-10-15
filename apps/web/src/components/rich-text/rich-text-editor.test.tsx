@@ -5,6 +5,12 @@ import { RichTextEditor } from './rich-text-editor';
 import { RichTextView } from './rich-text-view';
 import { FakeXHR } from './test-fake-xhr';
 
+// The submit hint is bh's Kbd for mod+Enter, which names the reader's keys:
+// Ctrl+Enter in jsdom, which is no Mac.
+function isSubmitHint(_content: string, element: Element | null): boolean {
+  return element?.tagName === 'KBD' && element.textContent === 'Ctrl+Enter';
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -138,7 +144,7 @@ describe('RichTextEditor', () => {
     expect(document.querySelector('.rt')!.className).toContain('cursor-default');
   });
 
-  it('composer renders the toolbar in a bottom action row with the submit button and ⌘↩ hint', () => {
+  it('composer renders the toolbar in a bottom action row with the submit button and mod+Enter hint', () => {
     const onSubmit = vi.fn();
     render(
       <RichTextEditor
@@ -148,7 +154,7 @@ describe('RichTextEditor', () => {
         composer={{ onSubmit }}
       />,
     );
-    expect(screen.getByText('⌘↩')).toBeInTheDocument();
+    expect(screen.getByText(isSubmitHint)).toBeInTheDocument();
     const button = screen.getByRole('button', { name: 'Comment' });
     expect(button).toBeInTheDocument();
     // Bottom row, not top: the editor content comes BEFORE the toolbar in
