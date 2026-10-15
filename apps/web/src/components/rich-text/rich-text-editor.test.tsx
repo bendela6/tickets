@@ -28,6 +28,58 @@ describe('RichTextEditor', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Legacy');
   });
 
+  // A comment written through the API or the MCP server can hold a heading,
+  // which a comment's features leave out: Tiptap would load it empty, and the
+  // next save would write the empty text over the comment.
+  it('loads a comment holding a heading as its plain text, rather than empty, and saves nothing unedited', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onSave = vi.fn();
+    const stored = JSON.stringify({
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Steps' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Run the migration first.' }] },
+      ],
+    });
+    render(<RichTextEditor value={stored} onSave={onSave} features="compact" />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect([...surface.querySelectorAll('p')].map((p) => p.textContent)).toEqual([
+      'Steps',
+      'Run the migration first.',
+    ]);
+    expect(warn).toHaveBeenCalledOnce();
+    fireEvent.blur(surface);
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('loads markdown holding a heading in a comment as its plain text too', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<RichTextEditor value={'## Steps\n\nRun it.'} onSave={vi.fn()} features="compact" />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect([...surface.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['Steps', 'Run it.']);
+  });
+
+  it('saves the kept words once edited, not an empty comment', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onSave = vi.fn();
+    const user = userEvent.setup();
+    const stored = JSON.stringify({
+      type: 'doc',
+      content: [{ type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Kept' }] }],
+    });
+    render(<RichTextEditor value={stored} onSave={onSave} features="compact" />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    await user.type(surface, ' words');
+    fireEvent.blur(surface);
+    expect(onSave).toHaveBeenCalledOnce();
+    const saved = onSave.mock.calls[0]![0] as string;
+    expect(saved).toContain('Kept');
+    expect(saved).toContain('words');
+    expect(saved).not.toContain('heading');
+  });
+
   it('renders stored doc JSON and saves doc JSON on blur when changed', () => {
     const onSave = vi.fn();
     render(<RichTextEditor value={storedDoc} onSave={onSave} />);
