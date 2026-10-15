@@ -1,8 +1,7 @@
+import { readStored, writeStored } from '@bh/hooks';
 import type { BoardIndexes } from '../../utils/index-board';
-import { readLocal } from '../../utils/read-local';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { FilterRule } from '../../utils/view-config';
-import { writeLocal } from '../../utils/write-local';
 
 // Cross-project filter rules address fields by KEY: field ids are per-project,
 // but a shared field (same key + type in every project) is identified by its
@@ -113,7 +112,7 @@ export function cloneConfig(config: GlobalViewConfig): GlobalViewConfig {
 // resource on the server and there is no cross-project view API, so the
 // workspace-wide tabs persist client-side under 'tickets-global-views'.
 export function readGlobalViews(): GlobalView[] {
-  const raw = readLocal(STORAGE_KEYS.globalViews);
+  const raw = readStored(STORAGE_KEYS.globalViews);
   if (!raw) {
     return [];
   }
@@ -142,7 +141,7 @@ export function readGlobalViews(): GlobalView[] {
 }
 
 export function writeGlobalViews(views: GlobalView[]): void {
-  writeLocal(STORAGE_KEYS.globalViews, JSON.stringify(views));
+  writeStored(STORAGE_KEYS.globalViews, JSON.stringify(views));
 }
 
 export function newViewId(): string {

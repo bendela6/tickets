@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { Database, FolderKanban, House, Plus, Rows3, Settings } from 'lucide-react';
 import type { NavItem, NavSection } from '@bh/shell';
+import { readStored } from '@bh/hooks';
 import { useProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
 import type { Project } from '../../api/types';
-import { readLocal } from '../../utils/read-local';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
 import { SETTINGS_TABS } from '../settings/settings-tabs';
 
@@ -22,7 +22,7 @@ export interface NavActions {
  * the one last opened, else the first; none while there is no project.
  */
 function settingsProjectKey(projects: Project[], onScreen: string | undefined) {
-  const last = readLocal(STORAGE_KEYS.lastProject);
+  const last = readStored(STORAGE_KEYS.lastProject);
   const known = (key: string | null | undefined) => {
     return projects.some((project) => project.key === key) ? key : undefined;
   };
