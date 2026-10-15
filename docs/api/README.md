@@ -32,7 +32,8 @@ Postgres; see [database tables](../database.md).
 | [List users](list-users.md) | `GET /api/users` | All users, humans and agents |
 | [Create user](create-user.md) | `POST /api/users` | Create a user; idempotent by name |
 | [Agent reports](agent-reports.md) | `POST /api/agents` | An agent's word: what it is doing, on which item; not a command |
-| [Agent reports](agent-reports.md#read-them) | `GET /api/agents` | Every agent's last word from the past week |
+| [Agent reports](agent-reports.md#read-them) | `GET /api/agents` | Every agent's last word from the past week, with what the screens show for it now |
+| [Agent reports](agent-reports.md#dismiss-one) | `DELETE /api/agents/:name` | Dismiss an agent: forget its report |
 | [Create view](create-view.md) | `POST /api/projects/:key/views` | Save a table view for a project |
 | [Update view](update-view.md) | `PATCH /api/views/:id` | Rename, reconfigure, or archive a view |
 | [Create field](create-field.md) | `POST /api/projects/:key/fields` | Define a field, optionally attaching it to ticket types |

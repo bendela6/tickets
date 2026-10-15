@@ -55,8 +55,25 @@ describe('GET /api/agents', () => {
     const res = await app.inject({ method: 'GET', url: '/api/agents' });
     await app.close();
     expect(res.statusCode).toBe(200);
-    const data = res.json().data as { name: string; state: string; at: string; since: string }[];
-    expect(data.map((r) => [r.name, r.state])).toEqual([['builder', 'listening'], ['worker-tk-7', 'failed']]);
+    const data = res.json().data as { name: string; state: string; shown: unknown; at: string; since: string }[];
+    expect(data.map((r) => [r.name, r.state, r.shown])).toEqual([
+      ['builder', 'listening', { state: 'listening', dismissible: false }],
+      ['worker-tk-7', 'failed', { state: 'failed', dismissible: true }],
+    ]);
     expect(Number.isNaN(Date.parse(data[0]!.at))).toBe(false);
+  });
+});
+
+describe('DELETE /api/agents/:name', () => {
+  it('dismisses the agent, and 404s one it does not know', async () => {
+    await post({ name: 'worker-tk-7', state: 'failed', item: 'TK-7' });
+    const app = buildApp({ db: testDb });
+    const gone = await app.inject({ method: 'DELETE', url: '/api/agents/worker-tk-7' });
+    expect(gone.statusCode).toBe(204);
+    expect(await testDb.select().from(agentReports)).toEqual([]);
+    const again = await app.inject({ method: 'DELETE', url: '/api/agents/worker-tk-7' });
+    expect(again.statusCode).toBe(404);
+    expect(again.json().error).toBe('no agent worker-tk-7');
+    await app.close();
   });
 });

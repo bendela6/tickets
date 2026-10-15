@@ -1,14 +1,16 @@
 import * as v from 'valibot';
 import { and, eq, getTableColumns, gte, lt, sql } from 'drizzle-orm';
 import type { Db, DbExecutor } from '@tickets/db';
-import { AGENT_ROLES, AGENT_STATES, agentReports, items } from '@tickets/db';
+import { AGENT_ROLES, AGENT_STATES, agentReports, fields, itemValues, items, options } from '@tickets/db';
+import { shownOf, type Shown } from './shown';
 
 // What each agent working on the plans last said it is doing (TK-84.1), in
 // place of the task viewer's `/agents`: one row per agent (core.agent_reports),
 // written over by its next word. Not a command: an agent speaks at every step
 // and the builder every 20 seconds, which would fill the history with
 // nothing, so these write the table directly and leave events, commands and
-// the outbox alone.
+// the outbox alone. What the screens show for each word now is worked out here
+// too (TK-84.2, shown.ts).
 
 export type AgentRole = (typeof AGENT_ROLES)[number];
 export type AgentState = (typeof AGENT_STATES)[number];
@@ -67,7 +69,10 @@ export type AgentWord = v.InferOutput<typeof agentWordInput>;
 export type AgentReport = {
   name: string;
   role: AgentRole;
+  // What it last said it is.
   state: AgentState;
+  // What the screens show for it now; null when they show it no more.
+  shown: Shown | null;
   // The item as the agent named it.
   item: string | null;
   // The tickets item with that key; null when no item has it (a plans id).
@@ -127,30 +132,52 @@ export async function saveReport(db: Db, word: AgentWord, now: Date): Promise<Ag
 
 const RANK: Record<string, number> = { planner: 0, builder: 1, worker: 2 };
 
-// Every agent's last word from the past week (or the one agent's): the
-// planner, the builder, then the workers by when they took up what they are
-// doing.
+// Whether the report's item is in a done status: its workflow field's option
+// has kind done. False when no tickets item has the report's item (a plans id).
+const itemDone = sql<boolean>`EXISTS (
+  SELECT 1 FROM ${itemValues}
+  JOIN ${fields} ON ${fields.id} = ${itemValues.fieldId}
+  JOIN ${options} ON ${options.id} = ${itemValues.optionId}
+  WHERE ${itemValues.itemId} = ${items.id}
+    AND ${fields.config} @> '{"workflow": true}'::jsonb
+    AND ${options.kind} = 'done'
+)`;
+
+// Every agent's last word from the past week (or the one agent's), with what
+// the screens show for it at `now`: the planner, the builder, then the
+// workers by when they took up what they are doing.
 export async function listReports(db: DbExecutor, now: Date, name?: string): Promise<AgentReport[]> {
   const rows = await db
-    .select({ ...getTableColumns(agentReports), itemId: items.id })
+    .select({ ...getTableColumns(agentReports), itemId: items.id, itemDone })
     .from(agentReports)
     .leftJoin(items, eq(items.key, agentReports.item))
     .where(and(gte(agentReports.at, keptFrom(now)), name === undefined ? undefined : eq(agentReports.name, name)));
   return rows
-    .map((row) => ({
-      name: row.name,
-      role: row.role as AgentRole,
-      state: row.state as AgentState,
-      item: row.item,
-      itemId: row.itemId,
-      text: row.text,
-      at: row.at.toISOString(),
-      since: row.since.toISOString(),
-    }))
+    .map((row) => {
+      const role = row.role as AgentRole;
+      const state = row.state as AgentState;
+      return {
+        name: row.name,
+        role,
+        state,
+        shown: shownOf({ role, state, at: row.at, itemDone: row.itemDone }, now),
+        item: row.item,
+        itemId: row.itemId,
+        text: row.text,
+        at: row.at.toISOString(),
+        since: row.since.toISOString(),
+      };
+    })
     .sort(
       (a, b) =>
         (RANK[a.role] ?? 3) - (RANK[b.role] ?? 3) ||
         a.since.localeCompare(b.since) ||
         a.name.localeCompare(b.name),
     );
+}
+
+// Dismisses an agent: forgets its report. False when there was none.
+export async function dismissReport(db: DbExecutor, name: string): Promise<boolean> {
+  const gone = await db.delete(agentReports).where(eq(agentReports.name, name)).returning({ name: agentReports.name });
+  return gone.length > 0;
 }
