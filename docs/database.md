@@ -25,15 +25,16 @@ model and that test are the actual spec.
 
 The schema is organised into four groups
 ([`schema-groups.ts`](../packages/db/src/schema/schema-groups.ts)), 22 tables
-total.
+total, besides `attachments` and `agent_reports`.
 
-## Workspace (3 tables)
+## Workspace (4 tables)
 
 | Table | Purpose | Key constraints |
 | ----- | ------- | --------------- |
 | `users` | Actors for mutations and comments — humans and agents | `name` unique; `kind` is [`user_kind`](#user_kind) |
 | `projects` | Workspace container bound to one structure scheme | `key` unique |
 | `views` | Saved board/table lens scoped to a project; `config` holds `{ columns, sort, filters }` | — |
+| `agent_reports` | What each agent working on the plans last said it is doing ([agent reports](api/agent-reports.md)): one row per agent, written over by its next word, gone a week after its last. `item` is the item as the agent named it, a tickets item's key or a plans id no item has; it is matched to `items.key` as it is read. Written directly, never as a command | PK `name`; checks `agent_reports_role`, `agent_reports_state`, `agent_reports_text` (at most 300 characters) |
 
 ## Structure (10 tables)
 

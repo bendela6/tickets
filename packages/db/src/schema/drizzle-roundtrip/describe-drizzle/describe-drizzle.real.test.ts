@@ -4,10 +4,10 @@ import * as schema from '../../index';
 
 import { describeDrizzle } from './describe-drizzle';
 
-it('describes the real 23-table schema with no unsupported constructs', () => {
+it('describes the real 24-table schema with no unsupported constructs', () => {
   const d = describeDrizzle(schema as Record<string, unknown>, []);
-  // 23 = the items platform's 22 + records.attachments.
-  expect(d.tables).toHaveLength(23);
+  // 24 = the items platform's 22 + records.attachments + core.agent_reports.
+  expect(d.tables).toHaveLength(24);
   // 3 = user_kind, status_kind, field_type.
   expect(d.enums).toHaveLength(3);
   expect(d.unsupported).toEqual([]); // no relations/$defaultFn/$onUpdate in this repo

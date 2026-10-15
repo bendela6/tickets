@@ -110,20 +110,21 @@ async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknow
   }
 }
 
-// ---- gate 1: the real 23-table @tickets/db schema ----
+// ---- gate 1: the real 24-table @tickets/db schema ----
 
 it('round-trips @tickets/db with nothing lost', async () => {
   const { model, report } = await runRoundtripGate(realSchema as Record<string, unknown>);
 
   expect(report.blocksExport).toBe(false);
-  // 23 tables / 3 enums: the 22 items-platform tables plus records.attachments
-  // (the terminal, agent and workdir tables left with those subsystems). The
+  // 24 tables / 3 enums: the 22 items-platform tables plus records.attachments
+  // and core.agent_reports
+  // (the terminal, agent-session and workdir tables left with those subsystems). The
   // round trip carries each table's and enum's `schema` through export ->
   // import, and every table lives in core/structure/records/history, so
   // nothing round-trips with an empty schema.
-  expect(model.entities).toHaveLength(23);
+  expect(model.entities).toHaveLength(24);
   expect(model.enums).toHaveLength(3);
-  expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(2);
+  expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(3); // + agent_reports
   expect(model.entities.filter((e) => e.schema === 'structure')).toHaveLength(11);
   expect(model.entities.filter((e) => e.schema === 'records')).toHaveLength(6); // + attachments
   expect(model.entities.filter((e) => e.schema === 'history')).toHaveLength(4);
