@@ -11,6 +11,7 @@ import type { ResolverCache } from '../async/resolver-cache';
 import type { Commit } from '../types/commit';
 import type { Commits, OnCommit } from './commits';
 import { useChanged } from './use-changed';
+import type { ResetOptions } from '../types/action-node';
 
 /** A form held outside `<Form>`: its state, and what a button of its own can do. */
 export interface FormApi {
@@ -43,8 +44,11 @@ export interface FormApi {
    * still saving, checks, then calls `onSubmit`.
    */
   submit: () => Promise<void>;
-  /** Puts every value back to where it started, or to what was last submitted. */
-  reset: () => void;
+  /**
+   * Puts every value back to what was last submitted, else to where it
+   * started; with `{ to: 'start' }`, always to where it started.
+   */
+  reset: (options?: ResetOptions) => void;
   /** Every value now, hidden fields' too. */
   getValues: () => Record<string, unknown>;
   /** What `<Form formApi>` draws from; not for an app's own code. */
@@ -73,6 +77,8 @@ export interface UseStandaloneFormOptions<
   registry?: FormRegistry<R, L>;
   /** Values to start at, by field name, over the form's and each field's own. */
   defaultValues?: Record<string, unknown>;
+  /** Values from outside that the form follows, apart from where it started. See `<Form values>`. */
+  values?: Record<string, unknown>;
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
   /**
@@ -102,6 +108,7 @@ export function useStandaloneForm<
     form: options.form,
     registry,
     defaultValues: options.defaultValues,
+    values: options.values,
     onSubmit: options.onSubmit,
     onCommit: options.onCommit,
     commit: options.commit,

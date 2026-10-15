@@ -30,19 +30,43 @@ interface TooltipProps {
   children: ReactNode;
   /** The side of the trigger it shows on. */
   side?: 'top' | 'right' | 'bottom' | 'left';
+  /** Where along that side it lines up with the trigger: their starts, their middles or their ends. */
+  align?: 'start' | 'center' | 'end';
+  /**
+   * Whether it shows. Leave it out and the tooltip holds its own, shown while
+   * its trigger is hovered or has keyboard focus.
+   */
+  open?: boolean;
+  /** Whether it starts shown, when `open` is left out. */
+  defaultOpen?: boolean;
+  /**
+   * Called with the new state when a hover, a focus, a click, Escape or a
+   * scroll would show or hide it, whether `open` is given or not.
+   */
+  onOpenChange?: (open: boolean) => void;
   /** Classes merged onto the tooltip. */
   className?: string;
 }
 
 /** A short hint that shows when its trigger is hovered or focused. */
-export function Tooltip({ content, children, side = 'top', className }: TooltipProps) {
+export function Tooltip({
+  content,
+  children,
+  side = 'top',
+  align = 'center',
+  open,
+  defaultOpen,
+  onOpenChange,
+  className,
+}: TooltipProps) {
   const provided = useContext(Provided);
   const root = (
-    <RadixTooltip.Root>
+    <RadixTooltip.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
       <RadixTooltip.Portal>
         <RadixTooltip.Content
           side={side}
+          align={align}
           sideOffset={5}
           className={cn(
             'rounded-6 bg-gray-12 text-12/17 text-gray-1 z-50 max-w-256 px-8 py-4 font-sans',

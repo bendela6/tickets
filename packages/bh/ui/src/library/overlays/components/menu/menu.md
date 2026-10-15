@@ -236,7 +236,7 @@ least 190 pixels wide.
 | `children`  | `ReactNode`           |         |                           |
 | `ref`       | `Ref<HTMLDivElement>` |         | Forwarded to the `<div>`. |
 
-Also every `<div>` attribute (`MenuContentImplProps<HTMLDivElement>`), passed through.
+Also every `<div>` attribute (`PopperContentProps<HTMLDivElement>`), passed through.
 
 ### MenuItem
 

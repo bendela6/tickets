@@ -216,21 +216,28 @@ export const baseRendererSpecs: {
 
 /**
  * The renderer a part showing a field of each of bh's kinds gets when it
- * names none, so a field shows the same everywhere: text as text (plain,
- * markdown or rich, by its format), a url as a link, a number or a date as
- * text in its format, a boolean as a check, an option as a pill in its color,
- * a ref as the row it points at, json as code. An app's own kind adds its
- * default beside them: `{ ...baseDefaultRenderers, color: 'swatch' }`.
+ * names none, so a field shows the same everywhere: text, markdown and rich
+ * text as text, a url, an email, a phone number and a file as a link, a
+ * number, a date or a time as text in its format, a boolean as a check, an
+ * option as a pill in its color, a ref as the row it points at, json as code.
+ * An app's own kind adds its default beside them:
+ * `{ ...baseDefaultRenderers, color: 'swatch' }`.
  */
 export const baseDefaultRenderers: Readonly<Record<BaseKind, keyof BaseRenderers>> = Object.freeze({
   text: 'text',
+  markdown: 'text',
+  richtext: 'text',
   url: 'link',
+  email: 'link',
+  phone: 'link',
   number: 'number',
   boolean: 'check',
   date: 'date',
+  time: 'text',
   datetime: 'date',
   option: 'pill',
   ref: 'user',
+  file: 'link',
   json: 'code',
 });
 

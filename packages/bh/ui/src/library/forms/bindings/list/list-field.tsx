@@ -53,56 +53,64 @@ export function ListField(p: InputProps<ListFieldConfig, Item[]>) {
           >
             <div className="flex items-center gap-4">
               <span className="text-12/17 font-600 text-gray-11 flex-1 font-sans">{title}</span>
-              <Button
-                variant="ghost"
-                tone="neutral"
-                size="xs"
-                icon="arrow-up"
-                label={`Move ${title} up`}
-                disabled={(p.disabled ?? false) || index === 0}
-                onClick={() => move(index, index - 1)}
-              />
-              <Button
-                variant="ghost"
-                tone="neutral"
-                size="xs"
-                icon="arrow-down"
-                label={`Move ${title} down`}
-                disabled={(p.disabled ?? false) || index === items.length - 1}
-                onClick={() => move(index, index + 1)}
-              />
-              <Button
-                variant="ghost"
-                tone="neutral"
-                size="xs"
-                icon="trash"
-                label={`Remove ${title}`}
-                disabled={p.disabled}
-                onClick={() => set(items.filter((_, at) => at !== index))}
-              />
+              {/* Read-only, a list offers nothing that changes it. */}
+              {p.readOnly ? null : (
+                <>
+                  <Button
+                    variant="ghost"
+                    tone="neutral"
+                    size="xs"
+                    icon="arrow-up"
+                    label={`Move ${title} up`}
+                    disabled={(p.disabled ?? false) || index === 0}
+                    onClick={() => move(index, index - 1)}
+                  />
+                  <Button
+                    variant="ghost"
+                    tone="neutral"
+                    size="xs"
+                    icon="arrow-down"
+                    label={`Move ${title} down`}
+                    disabled={(p.disabled ?? false) || index === items.length - 1}
+                    onClick={() => move(index, index + 1)}
+                  />
+                  <Button
+                    variant="ghost"
+                    tone="neutral"
+                    size="xs"
+                    icon="trash"
+                    label={`Remove ${title}`}
+                    disabled={p.disabled}
+                    onClick={() => set(items.filter((_, at) => at !== index))}
+                  />
+                </>
+              )}
             </div>
             <NestedFields
               name={`${p.name}.${index}`}
               nodes={p.config.item.nodes}
               value={item}
+              readOnly={p.readOnly}
               disabled={p.disabled}
               onChange={(next) => set(items.map((old, at) => (at === index ? next : old)))}
             />
           </section>
         );
       })}
-      <div>
-        <Button
-          variant="outline"
-          tone="neutral"
-          size="sm"
-          disabled={p.disabled}
-          onClick={() => set([...items, defaultValuesOf(p.config.item.nodes, registry)])}
-        >
-          <Icon name="plus" size="sm" />
-          Add {noun.toLowerCase()}
-        </Button>
-      </div>
+      {p.readOnly ? null : (
+        <div>
+          <Button
+            variant="outline"
+            tone="neutral"
+            size="sm"
+            disabled={p.disabled}
+            onClick={() => set([...items, defaultValuesOf(p.config.item.nodes, registry)])}
+          >
+            <Icon name="plus" size="sm" />
+            Add {noun.toLowerCase()}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

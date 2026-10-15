@@ -1,15 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, test, vi } from 'vitest';
-import { FileInput, formatBytes, type UploadFile } from './file-input';
-
-describe('formatBytes', () => {
-  it('uses units people read, not bytes', () => {
-    expect(formatBytes(512)).toBe('512 B');
-    expect(formatBytes(1536)).toBe('1.5 KB');
-    expect(formatBytes(5 * 1024 * 1024)).toBe('5.0 MB');
-  });
-});
+import { expect, test, vi } from 'vitest';
+import { FileInput, type UploadFile } from './file-input';
 
 const FILES: UploadFile[] = [
   { id: '1', name: 'design.png', size: 1536 },
@@ -51,7 +43,7 @@ test('an error belongs to its file, not to the control', () => {
 
 test('a file in flight shows progress; a settled one shows its size', () => {
   render(<FileInput value={FILES} onChange={() => {}} />);
-  expect(screen.getByText('1.5 KB')).toBeInTheDocument();
+  expect(screen.getByText('1.5 KiB')).toBeInTheDocument();
   expect(screen.getByRole('progressbar')).toBeInTheDocument();
 });
 

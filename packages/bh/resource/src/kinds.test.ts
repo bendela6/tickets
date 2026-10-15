@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { baseKinds } from './kinds';
 import { baseOperators } from './operators';
 import type { BaseKind, KindSettings, KindSpec, KindValue } from './types';
-import type { Json } from './values';
+import type { Json, Scalar } from './values';
 
 function kind(name: BaseKind): KindSpec {
   const spec = baseKinds.find((each) => each.name === name);
@@ -30,14 +30,20 @@ function settles(name: BaseKind, settings: unknown): boolean {
 // The table above BaseKind: what each of bh's kinds allows.
 const TABLE: Record<BaseKind, Pick<KindSpec, 'many' | 'sort' | 'group' | 'search' | 'format'>> = {
   text: { many: true, sort: true, group: false, search: true, format: 'plain' },
+  markdown: { many: true, sort: false, group: false, search: true },
+  richtext: { many: true, sort: false, group: false, search: true },
   url: { many: true, sort: true, group: false, search: true },
-  number: { many: false, sort: true, group: false, search: false, format: 'number' },
-  boolean: { many: false, sort: true, group: true, search: false },
-  date: { many: false, sort: true, group: false, search: false, format: 'date' },
-  datetime: { many: false, sort: true, group: false, search: false, format: 'datetime' },
+  email: { many: true, sort: true, group: false, search: true },
+  phone: { many: true, sort: true, group: false, search: true },
+  number: { many: true, sort: true, group: false, search: false, format: 'number' },
+  boolean: { many: true, sort: true, group: true, search: false },
+  date: { many: true, sort: true, group: false, search: false, format: 'date' },
+  time: { many: true, sort: true, group: false, search: false },
+  datetime: { many: true, sort: true, group: false, search: false, format: 'datetime' },
   option: { many: true, sort: true, group: true, search: false },
   ref: { many: true, sort: true, group: true, search: false },
-  json: { many: false, sort: false, group: false, search: false },
+  file: { many: true, sort: false, group: false, search: false },
+  json: { many: true, sort: false, group: false, search: false },
 };
 
 // The operators each of bh's kinds names in its entry, as the query's
@@ -50,13 +56,19 @@ const LAST = ['inLast', 'notInLast'];
 const EMPTY = ['empty', 'notEmpty'];
 const ALLOWS: Record<BaseKind, string[]> = {
   text: [...EQUALS, ...IN, ...TEXT, ...EMPTY],
+  markdown: ['contains', ...EMPTY],
+  richtext: [...EMPTY],
   url: [...EQUALS, ...IN, ...TEXT, ...EMPTY],
-  number: [...EQUALS, ...IN, ...RANGE, ...EMPTY],
-  date: [...EQUALS, ...RANGE, ...LAST, ...EMPTY],
+  email: [...EQUALS, ...IN, ...TEXT, ...EMPTY],
+  phone: [...EQUALS, ...IN, ...TEXT, ...EMPTY],
+  date: [...EQUALS, ...IN, ...RANGE, ...LAST, ...EMPTY],
+  time: [...EQUALS, ...IN, ...RANGE, ...EMPTY],
   datetime: [...RANGE, ...LAST, ...EMPTY],
-  boolean: ['equals', ...EMPTY],
   option: [...EQUALS, ...IN, ...EMPTY],
+  number: [...EQUALS, ...IN, ...RANGE, ...EMPTY],
+  boolean: ['equals', ...IN, ...EMPTY],
   ref: [...EQUALS, ...IN, ...EMPTY, 'isMe'],
+  file: [...EMPTY],
   json: [...EMPTY],
 };
 
@@ -89,9 +101,13 @@ const STATUS: KindSettings['option'] = {
 };
 
 describe('bh’s kinds', () => {
-  it('are the nine of KindValue, each once', () => {
+  it('are the fifteen of KindValue, each once, in the table’s order', () => {
     const names: (keyof KindValue)[] = Object.keys(TABLE) as BaseKind[];
-    expect(baseKinds.map((spec) => spec.name).sort()).toEqual([...names].sort());
+    expect(baseKinds.map((spec) => spec.name)).toEqual(names);
+  });
+
+  it('each may hold a list', () => {
+    expect(baseKinds.filter((spec) => !spec.many)).toEqual([]);
   });
 
   it.each(Object.entries(TABLE))('registers %s with the table’s flags', (name, flags) => {
@@ -110,27 +126,34 @@ describe('bh’s kinds', () => {
     }
   });
 
-  it('let every field be found empty or not, and json nothing more', () => {
+  it('let every field be found empty or not, and rich text, a file and json nothing more', () => {
     for (const spec of baseKinds) {
       expect(spec.operators).toEqual(expect.arrayContaining(['empty', 'notEmpty']));
     }
-    expect(kind('json').operators).toEqual(['empty', 'notEmpty']);
+    for (const name of ['richtext', 'file', 'json'] as const) {
+      expect(kind(name).operators, name).toEqual(['empty', 'notEmpty']);
+    }
   });
 
   it('look into text only where a kind is text, and compare by range only where it orders by value', () => {
     const allowing = (operator: string) => {
       return baseKinds.filter((spec) => spec.operators.includes(operator)).map((spec) => spec.name);
     };
-    expect(allowing('contains')).toEqual(['text', 'url']);
-    expect(allowing('startsWith')).toEqual(['text', 'url']);
-    expect(allowing('lt')).toEqual(['number', 'date', 'datetime']);
+    expect(allowing('contains')).toEqual(['text', 'markdown', 'url', 'email', 'phone']);
+    expect(allowing('startsWith')).toEqual(['text', 'url', 'email', 'phone']);
+    expect(allowing('lt')).toEqual(['number', 'date', 'time', 'datetime']);
+    expect(allowing('inLast')).toEqual(['date', 'datetime']);
   });
 
-  it('give settings to option and ref alone', () => {
+  it('give settings to text, number, option and ref, text’s and number’s none needed', () => {
     expect(baseKinds.filter((spec) => spec.settings).map((spec) => spec.name)).toEqual([
+      'text',
+      'number',
       'option',
       'ref',
     ]);
+    expect(settles('text', undefined)).toBe(true);
+    expect(settles('number', undefined)).toBe(true);
   });
 
   it('are frozen: an app adds its own beside them, never changes them', () => {
@@ -145,6 +168,39 @@ describe('bh’s kinds', () => {
 describe('each kind’s value', () => {
   const cases: Record<BaseKind, { takes: unknown[]; refuses: unknown[] }> = {
     text: { takes: ['Fix the login', ''], refuses: [7, true, null, ['a'], undefined] },
+    markdown: { takes: ['# Fix\n\nThe **login**', ''], refuses: [7, null, { type: 'doc' }] },
+    richtext: {
+      takes: ['{"type":"doc","content":[]}', '{"type":"doc"}'],
+      refuses: ['', 'plain words', '{"type":"paragraph"}', '[]', '{', { type: 'doc' }, null],
+    },
+    email: {
+      takes: ['ada@example.com', 'a.b+tag@mail.example.co'],
+      refuses: ['ada', 'ada@', '@example.com', 'mailto:ada@example.com', '', null],
+    },
+    phone: {
+      takes: ['+995555123456', '+14155550123'],
+      refuses: ['555123456', '+0555', '+995 555 12 34 56', '+1234567890123456', '', 995, null],
+    },
+    time: {
+      takes: ['09:30', '00:00', '23:59'],
+      refuses: ['9:30', '24:00', '09:60', '09:30:00', '09:30Z', 930, null],
+    },
+    file: {
+      takes: [
+        { url: '/api/files/7', name: 'report.pdf', size: 1536, type: 'application/pdf' },
+        { url: 'https://cdn.example.com/a.png', name: 'a.png', size: 0, type: 'image/png' },
+      ],
+      refuses: [
+        '/api/files/7',
+        { url: '/api/files/7', name: 'report.pdf' },
+        { url: 'files/7', name: 'report.pdf', size: 1, type: 'application/pdf' },
+        { url: '/api/files/7', name: '', size: 1, type: 'application/pdf' },
+        { url: '/api/files/7', name: 'a', size: 1.5, type: 'application/pdf' },
+        { url: '/api/files/7', name: 'a', size: 1, type: 'pdf' },
+        { url: '/api/files/7', name: 'a', size: 1, type: 'image/png', extra: true },
+        null,
+      ],
+    },
     url: {
       takes: ['https://example.com/a?b=1', 'mailto:me@example.com', '/api/users/7/avatar'],
       refuses: ['//example.com/x', 'x/y', 'example.com', '', 7, null],
@@ -316,6 +372,90 @@ describe('an option field’s settings', () => {
         attributes: [{ key: 'kind', label: 'Group', kind: 'option' }],
       }),
     ).toBe(false);
+  });
+});
+
+describe('how each kind orders, where bh holds the rows itself', () => {
+  const order = (name: BaseKind, a: Scalar, b: Scalar, settings?: Record<string, Json>) => {
+    const compare = kind(name).compare;
+    if (!compare) {
+      throw new Error(`the kind "${name}" orders nothing alone`);
+    }
+    return Math.sign(compare(a, b, settings));
+  };
+
+  it('orders text case ignored, a number by value, false before true', () => {
+    expect(order('text', 'apple', 'Banana')).toBe(-1);
+    expect(order('email', 'B@example.com', 'a@example.com')).toBe(1);
+    expect(order('url', '/a', '/A')).toBe(0);
+    expect(order('number', 2, 10)).toBe(-1);
+    expect(order('boolean', true, false)).toBe(1);
+  });
+
+  it('orders a day, a time and an instant by value, whatever an instant’s fraction', () => {
+    expect(order('date', '2026-10-12', '2026-10-13')).toBe(-1);
+    expect(order('time', '09:30', '14:00')).toBe(-1);
+    expect(order('datetime', '2026-10-12T09:30:00Z', '2026-10-12T09:30:00.000Z')).toBe(0);
+    expect(order('datetime', '2026-10-12T09:30:00.5Z', '2026-10-12T09:30:00.123Z')).toBe(1);
+  });
+
+  it('orders an option by its order, never its label, one the field lacks last', () => {
+    const settings = STATUS as unknown as Record<string, Json>;
+    expect(order('option', 'done', 'todo', settings)).toBe(1);
+    expect(order('option', 'in-progress', 'done', settings)).toBe(-1);
+    expect(order('option', 'gone', 'wontfix', settings)).toBe(1);
+  });
+
+  it('gives every kind that sorts an order, but a ref, which its source orders by title', () => {
+    const unordered = baseKinds.filter((spec) => spec.sort && !spec.compare);
+    expect(unordered.map((spec) => spec.name)).toEqual(['ref']);
+  });
+
+  it('searches a rich text by its words, never its JSON', () => {
+    const doc = JSON.stringify({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Fix the' },
+            { type: 'text', text: 'login' },
+          ],
+        },
+      ],
+    });
+    expect(kind('richtext').searchText?.(doc)).toBe('Fix the login');
+    expect(kind('richtext').searchText?.('{')).toBe('');
+  });
+});
+
+describe('a number field’s settings', () => {
+  it('take a min, a max and integer, and hold its values to them', () => {
+    expect(settles('number', { min: 1, max: 5, integer: true })).toBe(true);
+    expect(settles('number', {})).toBe(true);
+    expect(settles('number', { min: 5, max: 1 })).toBe(false);
+    expect(settles('number', { integer: false })).toBe(false);
+    expect(settles('number', { step: 1 })).toBe(false);
+    const rating = { min: 1, max: 5, integer: true };
+    expect(takes('number', 3, rating)).toBe(true);
+    expect(takes('number', 0, rating)).toBe(false);
+    expect(takes('number', 6, rating)).toBe(false);
+    expect(takes('number', 2.5, rating)).toBe(false);
+    expect(takes('number', 2.5, { min: 0 })).toBe(true);
+  });
+});
+
+describe('a text field’s settings', () => {
+  it('take a most length, by code point, and a pattern the whole value matches', () => {
+    expect(settles('text', { maxLength: 280, pattern: '[A-Z]{2,5}' })).toBe(true);
+    expect(settles('text', { maxLength: 0 })).toBe(false);
+    expect(settles('text', { pattern: '(' })).toBe(false);
+    expect(settles('text', { pattern: '' })).toBe(false);
+    expect(takes('text', '😀😀', { maxLength: 2 })).toBe(true);
+    expect(takes('text', 'abc', { maxLength: 2 })).toBe(false);
+    expect(takes('text', 'TIX', { pattern: '[A-Z]{2,5}' })).toBe(true);
+    expect(takes('text', 'TIX-12', { pattern: '[A-Z]{2,5}' })).toBe(false);
+    expect(takes('text', 'xTIX', { pattern: '[A-Z]{2,5}' })).toBe(false);
   });
 });
 

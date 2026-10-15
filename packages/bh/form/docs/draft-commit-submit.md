@@ -241,6 +241,17 @@ by, and while it's true, or a field holds a draft, the form asks before
 the page is left. A form with no `onSubmit` is never dirty: it saves as it
 goes. `hasDrafts` says a field holds a draft, which a Save would commit.
 
+## Resetting
+
+A reset (`b.reset()`, or `FormApi`'s `reset()`) puts the values back to
+what was last submitted, else where the form started: Undo after a Save
+goes back to what was saved. With `to: 'start'` (`b.reset({ label, to:
+'start' })`, `reset({ to: 'start' })`) it always goes back where the form
+started, its `defaultValues` and each field's default, after a Save too:
+a filter's Clear empties it after an Apply. Either forgets the drafts
+and the failed saves, and its button waits for a change to put back, by
+its own rule: from what was submitted, or from the start.
+
 ## Rules
 
 - A field's draft is the field's: it reaches the form's values only when
@@ -249,8 +260,9 @@ goes. `hasDrafts` says a field holds a draft, which a Save would commit.
   passes.
 - Only the latest commit of a field speaks for it: an older save that
   settles later neither marks it saving nor fails it.
-- A reset puts the values back where they started, or to what was last
-  submitted, and forgets the drafts and the failed saves.
+- A reset puts the values back to what was last submitted, else where
+  they started; with `to: 'start'`, always where they started. Either
+  forgets the drafts and the failed saves.
 - `commit`: a field's config, then `<Form>` or `useStandaloneForm`, then
   the form's own, then `'change'`.
 
@@ -300,3 +312,22 @@ commit on leaving only gets when it's left. For anything drawn inside
 | `name` (required) | `string` |         |             |
 
 Returns `T`.
+
+```ts
+interface ResetOptions
+```
+
+What a reset takes: where it puts the values.
+
+| Member | Type                                | Default | Description                               |
+| ------ | ----------------------------------- | ------- | ----------------------------------------- |
+| `to`   | `ResetTo`: `'start'`, `'submitted'` |         | `'submitted'` (the default) or `'start'`. |
+
+```ts
+type ResetTo = 'start' | 'submitted';
+```
+
+Where a reset puts the values: `'submitted'`, to what was last submitted,
+else to where the form started; `'start'`, always to where it started.
+
+One of `'start'`, `'submitted'`.

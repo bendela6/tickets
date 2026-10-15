@@ -3,7 +3,7 @@ title: Pages
 summary: Frame a page with Page and PageHeader, lay its body out in a PageBody
   or a CardGrid, and give it tabs that are routes.
 order: 5
-related: [AppShell, Card, SectionHeader, Tabs]
+related: [AppShell, Card, SectionHeader, Tabs, OnThisPage, Pager]
 ---
 
 [//]: # 'written from pages.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -147,6 +147,10 @@ export function CaringForOldBooks() {
   );
 }
 ```
+
+Beside a reading page, [OnThisPage](on-this-page.md) lists its
+sections and lights the one being read, and at its foot,
+[Pager](pager.md) links the pages either side of it.
 
 ## The body
 

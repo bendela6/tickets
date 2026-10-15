@@ -1,14 +1,15 @@
 title: ScreenState
-summary: 'What a screen shows in place of its content: empty, not found, or an error.'
-related: [Spinner, Card, Toast]
+summary: 'What a screen shows in place of its content: loading, empty, not found, or an error.'
+related: [Spinner, CardState, Card, Toast]
 body:
   - |
-    What a screen shows in place of its content: empty, not found, or an
-    error.
+    What a screen shows in place of its content: loading, empty, not found,
+    or an error.
 
     One component draws them all, and `tone` and `icon` tell them apart: the
     icon sits in a disc of the tone, above a title, a line of body and an
-    action, each optional but the title.
+    action, each optional but the title. `state="loading"` puts a spinner in
+    the disc while the content is on its way.
   - h2: Import
   - code: import { ScreenState } from '@bh/ui';
     lang: tsx
@@ -23,10 +24,39 @@ body:
   - |
     Without `icon`, there is no disc.
   - demo: examples/not-found.tsx
+  - |
+    `state="loading"` stands in while the content is on its way: a spinner
+    in the disc, and a title, `Loading…` unless you say what is loading.
+    `body`, `action` and `tone` work as they do in the other states; `icon`
+    doesn't, since the spinner takes its place.
+  - demo: examples/loading.tsx
+  - |
+    It waits 400 milliseconds before it shows, so a load that answers sooner
+    flashes nothing; `delay` sets the wait, and `0` shows it at once. Until
+    then it is drawn but invisible, at the height it shows at. The spinner
+    sits in the disc an icon would, so going from loading to a state with an
+    icon and the same lines keeps the height too.
+
+    Below, a load of 0.2 seconds goes straight to the empty state, and one of
+    2 seconds shows the spinner first. The card keeps its height either way.
+  - demo: examples/a-fast-load.tsx
   - h2: Keyboard and accessibility
   - |
     The title is a plain `div`, not a heading, and the block is not a live
     region: a screen reader reads it in place but doesn't announce it when it
     appears.
+
+    While loading, the block is `aria-busy`, and its title and body sit in a
+    `status` region, which a screen reader announces politely when the delay
+    is up; until then, nothing in it can be reached. The spinner is unnamed,
+    since the title says what is loading. For a reader who asked for less
+    motion, it fades in place instead of turning.
+  - h2: When not to use it
+  - |
+    - For a card that loads, use [CardState](/components/feedback/card-state):
+      it waits, fails and comes up empty in one place.
+    - For something loading inside a line or a control, use a
+      [Spinner](/components/feedback/spinner), or a
+      [Button](/components/primitives/button)'s `loading`.
   - h2: Props
   - props: ScreenState

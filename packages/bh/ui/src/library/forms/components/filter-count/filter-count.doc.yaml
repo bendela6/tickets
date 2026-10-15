@@ -1,0 +1,27 @@
+title: FilterCount
+summary: 'How many rows a filter lets through: "12 of 40 items", "Counting" while it counts.'
+related: [InlineFieldWrapper, Spinner]
+body:
+  - |
+    How many rows a filter lets through: "12 of 40 items", or "40 items"
+    when it lets every one through. It is the registry's `filter.count`
+    ([The registry](/forms/registry)), drawn in a filter form's `count`
+    slot, which gives it the count, the total and the resource's name for
+    its rows.
+  - h2: Import
+  - code: import { FilterCount } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    The numbers are in IBM Plex Mono, and the rows' name agrees with the
+    total: "1 of 40 items", "1 item". With no total it gives the count
+    alone. While the count is asked for it says "Counting" with a spinner,
+    and when nothing matches the count is in the danger tone.
+  - demo: examples/counts.tsx
+  - h2: Keyboard and accessibility
+  - |
+    It is an `<output aria-live="polite">`, a `status`: a screen reader
+    reads a new count when it is done with what it was saying. While it
+    counts it is `aria-busy`, so what is read is the count, not "Counting".
+  - h2: Props
+  - props: FilterCount

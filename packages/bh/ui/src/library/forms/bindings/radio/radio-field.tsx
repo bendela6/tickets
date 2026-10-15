@@ -41,6 +41,7 @@ export function RadioField(p: InputProps<RadioFieldConfig, string>) {
         // A radio group HAS a selection or has none; the primitive takes a
         // plain string, and '' is the spelling for "nothing chosen".
         value={p.value ?? ''}
+        readOnly={p.readOnly}
         disabled={(p.disabled ?? false) || p.loading}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

@@ -237,6 +237,13 @@ describe('erd', () => {
     expect(seen).toEqual([]);
   });
 
+  it('focuses a card as it is pressed, so the arrow keys move it next', () => {
+    const { ctx } = host();
+    render(<MarkdownDoc source={src} registry={registry} ctx={ctx} />);
+    dragBy('users', 0, 0);
+    expect(handle('users')).toHaveFocus();
+  });
+
   it('stops a card at the canvas’s top and left edges', () => {
     const { ctx, seen } = host();
     render(<MarkdownDoc source={src} registry={registry} ctx={ctx} />);

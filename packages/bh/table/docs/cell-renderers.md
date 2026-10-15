@@ -234,9 +234,12 @@ export function EveryRenderer() {
 ```
 
 - **`TextColumn`** keeps the text on one line and fades it out where it
-  runs past the column, showing the whole of it on hover. `mono` sets it
-  in the mono face; `truncate: false` lets it wrap, beside a `rowHeight`
-  that leaves room.
+  runs past the column. Only then does its cell have a
+  [Tooltip](../../ui/src/library/overlays/components/tooltip/tooltip.md) with the whole of it, under
+  the row, shown on hover or when the cell has keyboard focus
+  ([useIsClipped](../../hooks/docs/use-is-clipped.md) says when). `mono` sets it in
+  the mono face, the tooltip too; `truncate: false` lets it wrap,
+  beside a `rowHeight` that leaves room.
 - **`NumberColumn`** right-aligns digits that line up: `integer`,
   `decimal` (up to six places, or `fractionDigits`), or `currency` with a
   `currency` code. Give its column `align: 'right'`, which puts the cell
@@ -352,14 +355,15 @@ TextColumn(opts?: TextColumnOpts): Renderer<string | null | undefined>
 ```
 
 A cell of text, on one line, faded where it runs past the column, with the
-whole of it on hover. An empty value draws nothing.
+whole of it in a tooltip on hover or keyboard focus while it is clipped. An
+empty value draws nothing.
 
-| Parameter       | Type                                                             | Default | Description                                                                                                                  |
-| --------------- | ---------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `opts`          | `TextColumnOpts`                                                 | `{}`    |                                                                                                                              |
-| `opts.mono`     | `boolean`                                                        |         | Sets the value in the mono face, at 12 pixels: ids, codes, paths.                                                            |
-| `opts.truncate` | `boolean`                                                        |         | Keep the value on one line, fading it out where it runs past the column and offering the whole of it on hover. Default true. |
-| `opts.align`    | `'left' \| 'right' \| 'center'`: `'left'`, `'right'`, `'center'` |         | Follows the column's own alignment, so a right-aligned value fades at the end it actually runs off.                          |
+| Parameter       | Type                                                             | Default | Description                                                                                                                                                                 |
+| --------------- | ---------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `opts`          | `TextColumnOpts`                                                 | `{}`    |                                                                                                                                                                             |
+| `opts.mono`     | `boolean`                                                        |         | Sets the value in the mono face, at 12 pixels: ids, codes, paths.                                                                                                           |
+| `opts.truncate` | `boolean`                                                        |         | Keep the value on one line, fading it out where it runs past the column and offering the whole of it, in a tooltip under the row, on hover or keyboard focus. Default true. |
+| `opts.align`    | `'left' \| 'right' \| 'center'`: `'left'`, `'right'`, `'center'` |         | Follows the column's own alignment, so a right-aligned value fades at the end it actually runs off.                                                                         |
 
 Returns `Renderer<string \| null \| undefined>`.
 

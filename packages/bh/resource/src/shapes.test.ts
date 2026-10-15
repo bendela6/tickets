@@ -45,6 +45,15 @@ const items: ResourceMeta = {
   roles: { idField: 'id', titleField: 'name' },
   fields: [status],
   sort: [{ field: 'status', dir: 'asc' }],
+  serves: {
+    read: true,
+    create: true,
+    update: true,
+    delete: true,
+    filter: { any: true, not: true },
+    sort: { max: 10 },
+    page: { numbered: 'any', cursor: true, total: true, max: 500 },
+  },
   actions: [{ name: 'archive', label: 'Archive', on: 'row', input: [], long: false }],
 };
 
@@ -62,7 +71,11 @@ describe('each shape’s type, inferred from its schema', () => {
       all?: boolean;
     }>();
     expectTypeOf<Group>().toEqualTypeOf<{ key: Scalar | null; count: number; filter: Filter }>();
-    expectTypeOf<PageResult>().toEqualTypeOf<{ next: string | null; total: number }>();
+    expectTypeOf<PageResult>().toEqualTypeOf<{
+      next: string | null;
+      more: boolean;
+      total: number | null;
+    }>();
     expectTypeOf<Query>().toEqualTypeOf<{
       filter?: Filter;
       search?: string;
@@ -161,7 +174,7 @@ describe('the shapes, for any resource', () => {
       groups: [
         { key: 'todo', count: 12, filter: { field: 'status', op: 'equals', value: 'todo' } },
       ],
-      page: { next: null, total: 12 },
+      page: { next: null, more: false, total: 12 },
     };
     expect(refusals(QueryResult, answer)).toEqual([]);
     expect(takes(QueryResult, { rows: [], page: { next: null } })).toBe(false);

@@ -3,7 +3,7 @@ import { cn, focusRing } from '../../../../style';
 import { Button } from '../../../primitives/components/button';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
-import { fieldClass, fieldState } from '../../parts/field';
+import { fieldClass, fieldState, triggerPrefixClass } from '../../parts/field';
 import { Popup } from '../../parts/popup';
 
 const MONTHS = [
@@ -37,6 +37,12 @@ export type DateRangePickerProps = Omit<ControlProps<DateRange>, 'value' | 'onCh
   onChange: (value: DateRange) => void;
   /** Shown in the field while no start is picked. */
   placeholder?: string;
+  /**
+   * Words before the value on the field, in the muted tone, as a filter bar
+   * names a field inside its control: "Type:" in "Type: any". With one, the
+   * placeholder reads as a value would.
+   */
+  prefix?: string;
   /**
    * What one pick is. `day` (the default) holds each end as an ISO instant,
    * `2026-08-04T00:00:00Z`; `month` holds it as `2026-08`, for a span a
@@ -95,6 +101,7 @@ export function DateRangePicker({
   value,
   onChange,
   placeholder = 'Set a range…',
+  prefix,
   granularity = 'day',
   openEnd,
   'aria-label': ariaLabel,
@@ -230,35 +237,38 @@ export function DateRangePicker({
         focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8 font-sans',
-          start ? 'text-gray-12' : 'text-gray-9',
+          start || prefix ? 'text-gray-12' : 'text-gray-9',
           readOnly && readOnlyFieldClass,
           className,
         ),
       })}
     >
-      {start ? (
-        // One line whatever the width: in a narrow table cell a date that
-        // wraps reads as two ("1" over "Sep"), so a range too wide is clipped.
-        <span className="flex min-w-0 items-center gap-6 overflow-hidden whitespace-nowrap">
-          <span className="font-mono tabular-nums">{short(start, granularity)}</span>
-          {/* An arrow at rung 9, not a hyphen: a hyphen between two dates reads
+      <span className="flex min-w-0 items-center gap-5">
+        {prefix ? <span className={triggerPrefixClass}>{prefix}</span> : null}
+        {start ? (
+          // One line whatever the width: in a narrow table cell a date that
+          // wraps reads as two ("1" over "Sep"), so a range too wide is clipped.
+          <span className="flex min-w-0 items-center gap-6 overflow-hidden whitespace-nowrap">
+            <span className="font-mono tabular-nums">{short(start, granularity)}</span>
+            {/* An arrow at rung 9, not a hyphen: a hyphen between two dates reads
               as a subtraction or a typo, and a range has a direction. */}
-          <span aria-hidden className="text-gray-9">
-            →
+            <span aria-hidden className="text-gray-9">
+              →
+            </span>
+            {end ? (
+              <span className="font-mono tabular-nums">{short(end, granularity)}</span>
+            ) : openEnd !== undefined && !picking ? (
+              <span className="font-sans">{openEnd}</span>
+            ) : (
+              // The pending half is a PLACEHOLDER, not blank. "4 Aug →" with
+              // nothing after it looks broken; "4 Aug → end" is waiting for you.
+              <span className="text-gray-9 font-sans">end</span>
+            )}
           </span>
-          {end ? (
-            <span className="font-mono tabular-nums">{short(end, granularity)}</span>
-          ) : openEnd !== undefined && !picking ? (
-            <span className="font-sans">{openEnd}</span>
-          ) : (
-            // The pending half is a PLACEHOLDER, not blank. "4 Aug →" with
-            // nothing after it looks broken; "4 Aug → end" is waiting for you.
-            <span className="text-gray-9 font-sans">end</span>
-          )}
-        </span>
-      ) : (
-        placeholder
-      )}
+        ) : (
+          placeholder
+        )}
+      </span>
       {readOnly ? null : (
         <Icon name="chevron-down" size={CHEVRON[size]} className="text-gray-9 shrink-0" />
       )}

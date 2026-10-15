@@ -59,7 +59,7 @@ export function Sidebar({
   onSearch,
   inDrawer = false,
 }: SidebarProps) {
-  const { width, panelRef, separatorProps } = usePanelWidth({
+  const { width, panelRef, getSeparatorProps } = usePanelWidth({
     side: 'left',
     defaultWidth: 240,
     minWidth: 180,
@@ -82,7 +82,7 @@ export function Sidebar({
     >
       {docked ? (
         <div
-          {...separatorProps}
+          {...getSeparatorProps()}
           className="hover:bg-indigo-9 absolute inset-y-0 right-0 z-10 w-6 cursor-col-resize"
         />
       ) : null}

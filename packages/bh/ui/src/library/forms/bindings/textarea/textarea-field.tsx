@@ -23,6 +23,7 @@ export function TextAreaField(p: InputProps<TextAreaFieldConfig, string>) {
       rows={p.config.rows ?? 4}
       value={p.value ?? ''}
       placeholder={p.config.placeholder}
+      readOnly={p.readOnly}
       disabled={p.disabled}
       tone={p.error ? 'danger' : undefined}
       onChange={p.onChange}

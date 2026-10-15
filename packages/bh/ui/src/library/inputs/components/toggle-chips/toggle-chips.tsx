@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants, type Hue } from '../../../../style';
 import { ComboboxList } from '../../parts/combobox-list';
+import { OptionCount } from '../../parts/option-count';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../overlays/components/popover';
 import {
   CONTROL_LADDER,
@@ -79,7 +80,8 @@ const dotClass = variants({
 export type ToggleChipsProps = ControlProps<string[]> & {
   /**
    * The chips, in the order given; an option's `color` draws a dot before its
-   * label and paints it when pressed, and a `disabled` option can't be pressed.
+   * label and paints it when pressed, its `count` follows the label, and a
+   * `disabled` option can't be pressed.
    */
   options: Option[];
   /**
@@ -179,6 +181,7 @@ export function ToggleChips({
           >
             {option.color ? <span aria-hidden className={dotClass({ scale })} /> : null}
             {option.label}
+            {option.count === undefined ? null : <OptionCount count={option.count} />}
           </button>
         );
       })}

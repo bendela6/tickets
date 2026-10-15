@@ -127,7 +127,8 @@ export function ExportingYourList() {
   typed blocks is drawn with `DocView` and a registry. Text the app
   didn't write, such as a note from a tool, is drawn with
   `MarkdownText`, which takes no blocks: [Prose](prose.md) is
-  it, in `@bh/ui`'s look.
+  it, in the rich text editor's look, and draws that editor's
+  documents too.
 
 ## Rules
 
@@ -139,7 +140,8 @@ export function ExportingYourList() {
   throw) shows the error card in its place, and the rest of the page
   still draws.
 - The engine draws plain HTML, or the host's own elements. The blocks,
-  the error card and Prose are drawn with `@bh/ui`, the one bh package
-  it imports besides `@bh/config`.
+  the error card and Prose are drawn with `@bh/ui` and `@bh/code`.
+  Prose takes the types of `@bh/richtext`'s documents, and nothing of
+  its editor.
 - A block's schema is any Standard Schema, valibot's as it is. It must
   be synchronous: an async one is reported as a problem.

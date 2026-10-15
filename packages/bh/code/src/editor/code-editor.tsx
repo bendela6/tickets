@@ -6,10 +6,11 @@ import {
   simplifySelection,
   temporarilySetTabFocusMode,
 } from '@codemirror/commands';
-import { syntaxHighlighting } from '@codemirror/language';
+import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { Annotation, Compartment, EditorState, type Extension } from '@codemirror/state';
 import {
   EditorView,
+  gutters,
   highlightActiveLine,
   highlightActiveLineGutter,
   keymap,
@@ -17,17 +18,22 @@ import {
   placeholder as placeholderText,
   type KeyBinding,
 } from '@codemirror/view';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '@bh/ui';
 import { SYNTAX_HIGHLIGHTER } from '../highlight';
-import { editorLanguage } from './languages';
+import type { LineProblems } from '../problems';
+import { editorLanguage, type FenceLanguage } from './languages';
+import { problemLines, setProblems } from './problem-lines';
 
 export interface CodeEditorProps {
   /** The text, verbatim. */
   value: string;
   /** The whole text after each edit. */
   onChange?: (value: string) => void;
-  /** Picks the grammar: `shell` (or `sh`, `bash`), `dockerfile`, `yaml`. Any other edits plain. */
+  /**
+   * Picks the grammar: `shell` (or `sh`, `bash`), `dockerfile`, `yaml`, `tsx`
+   * (or `ts`, `jsx`, `js`) and `markdown` (or `md`). Any other edits plain.
+   */
   lang?: string;
   /** Names the text in the strip above it: its file, or what the script is for. */
   title?: ReactNode;
@@ -45,19 +51,38 @@ export interface CodeEditorProps {
   placeholder?: string;
   /** The text has a problem: a red border, and `aria-invalid`. */
   invalid?: boolean;
+  /** The lines with a problem: each number in the problem's tone, the line tinted, as a code block marks them. */
+  problems?: LineProblems;
+  /**
+   * The lines alone, with no strip or border: for a pane that names and frames
+   * the code itself, as an example's does.
+   */
+  bare?: boolean;
+  /**
+   * In markdown, the language a fence's code is in, from its info string; by
+   * default the info's first word. Read with `lang`.
+   */
+  fenceLanguage?: FenceLanguage;
+  /**
+   * CodeMirror extensions the app adds, such as completions or line wrapping.
+   * Read when the editor is made.
+   */
+  extensions?: Extension;
 }
 
 /** One line's height, in px: the code block's, so a fragment and its editor line up. */
 const LINE = 20;
-/** The space above the first line and below the last, in px. */
-const PAD = 10;
+/** The space above the first line and below the last, in px: the code block's too. */
+const PAD = 12;
+
+const NO_PROBLEMS: LineProblems = new Map();
 
 /** Marks a change the page made (a new `value`), which is no edit to report. */
 const fromValue = Annotation.define<boolean>();
 
 /** The editor's chrome, in the page's tokens, so it themes with the page. */
 const THEME = EditorView.theme({
-  '&': { fontSize: '13px', backgroundColor: 'transparent' },
+  '&': { fontSize: '13px', backgroundColor: 'transparent', color: 'var(--color-gray-12)' },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: `${LINE}px` },
   '.cm-content': { padding: `${PAD}px 0`, caretColor: 'var(--color-gray-12)' },
@@ -66,14 +91,33 @@ const THEME = EditorView.theme({
     color: 'var(--color-gray-8)',
     border: 'none',
   },
-  '.cm-lineNumbers .cm-gutterElement': { padding: '0 16px 0 12px' },
+  // A code block's gutter: a bar's room on the left, for a problem's.
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 16px 0 12px',
+    borderLeft: '2px solid transparent',
+    fontVariantNumeric: 'tabular-nums',
+  },
   '.cm-activeLine': { backgroundColor: 'var(--color-indigo-2)' },
   '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--color-gray-12)' },
+  // Without the caret, its line says nothing.
+  '&:not(.cm-focused) .cm-activeLine': { backgroundColor: 'transparent' },
+  '&:not(.cm-focused) .cm-activeLineGutter': { color: 'var(--color-gray-8)' },
   '.cm-line': { padding: '0 16px 0 0' },
   '.cm-placeholder': { color: 'var(--color-gray-9)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
     backgroundColor: 'var(--color-indigo-4)',
   },
+  '.cm-matchingBracket': { backgroundColor: 'var(--color-gray-4)', outline: 'none' },
+  '.cm-gutterElement.cm-problem-error': {
+    borderLeftColor: 'var(--color-red-9)',
+    color: 'var(--color-red-11)',
+  },
+  '.cm-gutterElement.cm-problem-warning': {
+    borderLeftColor: 'var(--color-orange-9)',
+    color: 'var(--color-orange-11)',
+  },
+  '.cm-line.cm-problem-error': { backgroundColor: 'var(--color-red-3)' },
+  '.cm-line.cm-problem-warning': { backgroundColor: 'var(--color-orange-3)' },
 });
 
 /**
@@ -157,6 +201,10 @@ export function CodeEditor({
   readOnly = false,
   placeholder,
   invalid = false,
+  problems,
+  bare = false,
+  fenceLanguage,
+  extensions = [],
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -167,6 +215,7 @@ export function CodeEditor({
   const made = useRef({
     value,
     lang,
+    fenceLanguage,
     readOnly,
     placeholder,
     minLines,
@@ -174,6 +223,8 @@ export function CodeEditor({
     name,
     labelledBy,
     invalid,
+    problems: problems ?? NO_PROBLEMS,
+    extensions,
   });
   const language = useRef(new Compartment());
   const edits = useRef(new Compartment());
@@ -182,25 +233,33 @@ export function CodeEditor({
     return { line: 1, column: 1, lines: value.split('\n').length };
   });
 
-  useEffect(() => {
+  // Made before the browser paints, so an editor that takes the place of the
+  // code it loaded behind never shows the pane empty between the two.
+  useLayoutEffect(() => {
     const first = made.current;
     const editor = new EditorView({
       parent: host.current ?? undefined,
       state: EditorState.create({
         doc: first.value,
         extensions: [
+          // The numbers scroll sideways with their lines, as in a code block.
+          gutters({ fixed: false }),
           lineNumbers(),
           history(),
+          indentOnInput(),
+          bracketMatching(),
           keymap.of([ESCAPE_THEN_TAB, ...defaultKeymap, ...historyKeymap, indentWithTab]),
-          language.current.of(editorLanguage(first.lang) ?? []),
+          language.current.of(editorLanguage(first.lang, first.fenceLanguage) ?? []),
           edits.current.of(editing(first.readOnly)),
           attributes.current.of(attributesOf(first)),
+          problemLines(first.problems),
           syntaxHighlighting(SYNTAX_HIGHLIGHTER),
           first.placeholder ? placeholderText(first.placeholder) : [],
           THEME,
           EditorView.theme({
             '.cm-scroller': { minHeight: `${first.minLines * LINE + 2 * PAD}px` },
           }),
+          first.extensions,
           EditorView.updateListener.of((update) => {
             const outside = update.transactions.some((tr) => tr.annotation(fromValue));
             if (update.docChanged && !outside) {
@@ -230,9 +289,9 @@ export function CodeEditor({
 
   useEffect(() => {
     view.current?.dispatch({
-      effects: language.current.reconfigure(editorLanguage(lang) ?? []),
+      effects: language.current.reconfigure(editorLanguage(lang, fenceLanguage) ?? []),
     });
-  }, [lang]);
+  }, [lang, fenceLanguage]);
 
   useEffect(() => {
     view.current?.dispatch({ effects: edits.current.reconfigure(editing(readOnly)) });
@@ -248,36 +307,45 @@ export function CodeEditor({
     }
   }, [value]);
 
+  // After the value, so the problems land on the lines of the text they are about.
+  useEffect(() => {
+    view.current?.dispatch({ effects: setProblems.of(problems ?? NO_PROBLEMS) });
+  }, [problems]);
+
+  // Bare or framed, the lines stay in the same place, so the editor made in
+  // them survives a change from one to the other.
   return (
     <div
       data-lang={lang}
       className={cn(
-        'rounded-6 overflow-hidden border-1',
-        readOnly ? 'bg-surface-raised' : 'bg-surface-field focus-within:border-indigo-9',
-        invalid ? 'border-red-9' : 'border-gray-6',
+        !bare && 'rounded-6 overflow-hidden border-1',
+        !bare && (readOnly ? 'bg-surface-raised' : 'bg-surface-field focus-within:border-indigo-9'),
+        !bare && (invalid ? 'border-red-9' : 'border-gray-6'),
       )}
     >
-      <div className="bg-surface-inset border-gray-6 text-11 text-gray-10 flex h-36 items-center gap-8 border-b-1 px-12 font-mono">
-        {title ? <span className="text-12 text-gray-12 min-w-0 truncate">{title}</span> : null}
-        <span className="flex-1" />
-        <span className="tabular-nums">
-          {caret.lines} {caret.lines === 1 ? 'line' : 'lines'}
-        </span>
-        {readOnly ? null : (
-          <>
-            <span aria-hidden="true">·</span>
-            <span className="tabular-nums">
-              Ln {caret.line}, Col {caret.column}
-            </span>
-          </>
-        )}
-        {lang ? (
-          <>
-            <span aria-hidden="true">·</span>
-            <span>{lang}</span>
-          </>
-        ) : null}
-      </div>
+      {bare ? null : (
+        <div className="bg-surface-inset border-gray-6 text-11 text-gray-10 flex h-36 items-center gap-8 border-b-1 px-12 font-mono">
+          {title ? <span className="text-12 text-gray-12 min-w-0 truncate">{title}</span> : null}
+          <span className="flex-1" />
+          <span className="tabular-nums">
+            {caret.lines} {caret.lines === 1 ? 'line' : 'lines'}
+          </span>
+          {readOnly ? null : (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="tabular-nums">
+                Ln {caret.line}, Col {caret.column}
+              </span>
+            </>
+          )}
+          {lang ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{lang}</span>
+            </>
+          ) : null}
+        </div>
+      )}
       <div ref={host} />
     </div>
   );

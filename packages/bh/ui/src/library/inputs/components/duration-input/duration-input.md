@@ -1,7 +1,7 @@
 ---
 title: DurationInput
 summary: A length of time, typed as text and held in minutes.
-related: [TimePicker, NumberInput]
+related: [TimePicker, NumberInput, formatDuration]
 ---
 
 [//]: # 'written from duration-input.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -130,7 +130,10 @@ will become, and the one that says how far over budget, are plain text.
 | `readOnly`            | `boolean`                                                                                                                                                                                                   |            | Not editable, but still focusable and still submitted.                                                                                                                                                                 |
 | `className`           | `string`                                                                                                                                                                                                    |            | Added to the control's own classes.                                                                                                                                                                                    |
 
-The reader and the writer it uses are exported too:
+The reader it uses is exported too. The writer is
+[`formatDuration`](../../../primitives/components/format-duration/format-duration.md), which
+writes a length in minutes as the field does, and one in seconds or
+milliseconds too.
 
 ```ts
 parseDuration(raw: string): number | null
@@ -151,16 +154,3 @@ what a typo produces.
 | `raw` (required) | `string` |         | The text as typed. |
 
 Returns `number \| null`.
-
-```ts
-formatDuration(minutes: number): string
-```
-
-`150` → `2h 30m`. Zero is `0m`, not an empty string: a stored zero is a real
-answer and has to look different from nothing having been entered.
-
-| Parameter            | Type     | Default | Description             |
-| -------------------- | -------- | ------- | ----------------------- |
-| `minutes` (required) | `number` |         | The length, in minutes. |
-
-Returns `string`.

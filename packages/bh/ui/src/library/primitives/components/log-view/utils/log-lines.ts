@@ -63,3 +63,37 @@ export function clockTime(time: LogLine['time']): { clock: string; iso: string }
     iso: date.toISOString(),
   };
 }
+
+/** A line's time in milliseconds since the epoch; none if it has none, or it does not parse. */
+export function timeOf(time: LogLine['time']): number | undefined {
+  if (time === undefined) {
+    return undefined;
+  }
+  const ms = time instanceof Date ? time.getTime() : new Date(time).getTime();
+  return Number.isNaN(ms) ? undefined : ms;
+}
+
+/**
+ * How long something took, as a section shows it: tenths of a second under
+ * ten seconds when the times have them (`4.9 s`), whole seconds to a minute
+ * (`31 s`), then minutes and seconds (`2 min 5 s`), then hours and minutes.
+ * `whole` drops the tenths, for a time still ticking.
+ */
+export function formatTook(ms: number, { whole = false }: { whole?: boolean } = {}): string {
+  const tenths = Math.floor(Math.max(0, ms) / 100);
+  const seconds = Math.floor(tenths / 10);
+  if (seconds < 10 && !whole && tenths % 10 !== 0) {
+    return `${(tenths / 10).toFixed(1)} s`;
+  }
+  if (seconds < 60) {
+    return `${seconds} s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    const rest = seconds % 60;
+    return rest === 0 ? `${minutes} min` : `${minutes} min ${rest} s`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}

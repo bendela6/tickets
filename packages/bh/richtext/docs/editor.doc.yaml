@@ -1,0 +1,104 @@
+title: RichTextEditor
+summary: Writes rich text on a field's floor, holding a document and reporting each edit as its JSON.
+order: 3
+related: [The toolbar, The composer, Prose, Textarea]
+body:
+  - |
+    Writes rich text on a field's floor, holding a document and reporting
+    each edit as its JSON.
+
+    It is Tiptap's editor as a bh control, as `Textarea` is one: `value` and
+    `onChange` speak text, `tone` colours it, `disabled` fades it, and
+    `readOnly` prints it. Its features say what it can do, and its
+    [toolbar](/richtext/toolbar) shows them while it can be edited.
+  - h2: Import
+  - code: import { RichTextEditor } from '@bh/richtext/editor';
+    lang: tsx
+  - h2: Examples
+  - |
+    A document, with every feature (`features="full"`, the default). Its
+    `value` may be markdown, which it reads as a document; each edit comes
+    back through `onChange` as the document's JSON.
+  - demo: examples/a-document.tsx
+  - |
+    A note, with a comment's features (`features="compact"`), at `xs`: the
+    sizes are a field's, and set the text's floor, about two, three and four
+    lines.
+  - demo: examples/a-short-note.tsx
+  - |
+    What it reports: the document's JSON, and `''` once it holds nothing.
+    A new `value` from the page replaces the document, and isn't reported
+    back as an edit; one the editor reported itself, even a late one, is its
+    own edit coming back.
+  - demo: examples/what-it-stores.tsx
+  - |
+    `readOnly` shows the text as a printed row that keeps its tab stop;
+    `disabled` fades it and takes it out of the tab order. Neither shows a
+    toolbar.
+  - demo: examples/read-only-and-disabled.tsx
+  - h2: What its features leave out
+  - |
+    A document holding what the editor's features leave out (a heading in a
+    `compact` comment, written through an API in markdown) would load empty
+    in Tiptap, and the next edit would write over every word of it. The
+    editor loads it as its plain text instead, a paragraph a line, and says
+    so on the console. A stored document that no longer parses shows as its
+    text, and is reported once.
+  - h2: An app's own nodes
+  - |
+    An app with inline nodes of its own (a chip naming one of its records)
+    hands the editor its rich text, made once with `createRichText` (see
+    [the core](/richtext/core)). Make it outside the component: another one,
+    or another feature list, makes the editor again, from the text it holds.
+  - code: |
+      import { useState } from 'react';
+      import type { RichText } from '@bh/richtext';
+      import { RichTextEditor } from '@bh/richtext/editor';
+
+      // The app's rich text, made once with its nodes (see the core).
+      declare const richText: RichText;
+
+      export function Body() {
+        const [body, setBody] = useState('');
+        return (
+          <RichTextEditor
+            label="Body"
+            richText={richText}
+            features="compact"
+            value={body}
+            onChange={setBody}
+          />
+        );
+      }
+    lang: tsx
+    file: body.tsx
+  - h2: Keyboard and accessibility
+  - |
+    The editable area is a multi-line `textbox`, named by `label` or by the
+    element `labelledBy` points at; `id` and `aria-describedby` land on it.
+    A `<label htmlFor>` can't name it, since it's no form control: point
+    `labelledBy` at the label's id. `tone="danger"` sets `aria-invalid`,
+    `readOnly` sets `aria-readonly` and keeps a tab stop, and `disabled`
+    sets `aria-disabled` and takes the tab stop away. Its placeholder is
+    `aria-placeholder` too.
+
+    The editor's own keys are Tiptap's: ⌘B, ⌘I, ⌘U and the rest of the
+    marks, Enter for a new block, Shift+Enter (and ⌘↩, outside a
+    [composer](/richtext/composer)) for a line break, Tab and Shift+Tab in a
+    list to nest and lift. ⌘K opens the link popup.
+  - h2: When not to use it
+  - |
+    For text without formatting, use `Textarea`. For text that is only
+    read, use `Prose`, which draws a document without loading the editor.
+  - h2: Props
+  - props: RichTextEditor
+  - h2: Types
+  - ref: Feature
+  - ref: PRESETS
+  - ref: RichText
+  - ref: SuggestionSource
+  - ref: SlashCommand
+  - ref: UploadImage
+  - ref: Composer
+  - ref: ControlSize
+  - ref: Tone

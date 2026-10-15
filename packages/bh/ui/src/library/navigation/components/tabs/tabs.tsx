@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../../../style';
 import { Icon, type IconName, type IconSize } from '../../../primitives/components/icon';
+import { disabledTreatment, readOnlyMarkClass } from '../../../inputs/contract';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -157,6 +158,10 @@ export function Tabs({
   previousValue,
   onChange,
   label,
+  id,
+  'aria-describedby': ariaDescribedBy,
+  disabled = false,
+  readOnly = false,
   className,
 }: {
   /** The strip's shape: a ruled row, pills in a well, a vertical list, or a hairline group. */
@@ -182,6 +187,18 @@ export function Tabs({
   onChange: (value: string) => void;
   /** The strip's accessible name, as `aria-label`. */
   label?: string;
+  /** The strip's id, which a form field's label and help point at. */
+  id?: string;
+  /** The ids of what describes the strip: a form field's help, or its problem. */
+  'aria-describedby'?: string;
+  /** Dims every item and takes it out of the tab order: none can be picked. */
+  disabled?: boolean;
+  /**
+   * Keeps every item's tab stop, but a click changes nothing. Each item says so
+   * with `aria-disabled`, since ARIA allows no `aria-readonly` on a tab or a
+   * button.
+   */
+  readOnly?: boolean;
   /** Added to the strip's classes. */
   className?: string;
 }) {
@@ -190,9 +207,16 @@ export function Tabs({
 
   return (
     <div
+      id={id}
+      aria-describedby={ariaDescribedBy}
       role={isTablist ? 'tablist' : 'group'}
       aria-label={label}
-      className={listClass({ variant, size, className })}
+      aria-disabled={disabled || undefined}
+      className={listClass({
+        variant,
+        size,
+        className: cn(disabled && disabledTreatment, readOnly && readOnlyMarkClass, className),
+      })}
     >
       {items.map((item) => {
         const active = item.value === value;
@@ -208,7 +232,13 @@ export function Tabs({
             aria-selected={isTablist ? active : undefined}
             aria-pressed={isTablist ? undefined : active}
             type="button"
-            onClick={() => onChange(item.value)}
+            disabled={disabled}
+            aria-disabled={readOnly || undefined}
+            onClick={() => {
+              if (!readOnly) {
+                onChange(item.value);
+              }
+            }}
             className={tabClass({
               variant,
               scale,

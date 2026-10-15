@@ -8,3 +8,4 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 ## Resources
 
 - [The resource contract](../docs/contract.md): What every resource route of an app answers to: its metadata, its query, its writes, its actions and its errors, one shape for every resource.
+- [The client](../docs/client.md): A typed fetcher for a resource's routes, the error it throws, and what a list the client holds does with a row it just wrote, without asking the server again.

@@ -59,17 +59,18 @@ describe('bh’s operators', () => {
     }).toThrow(TypeError);
   });
 
-  it('have words of their own for dates and for lists', () => {
+  it('have words of their own for dates and times, and for lists', () => {
     const words = baseOperators
       .filter((spec) => spec.labels)
       .map((spec) => [spec.name, spec.labels]);
+    const onDates = (said: string) => ({ kinds: { date: said, time: said, datetime: said } });
     expect(words).toEqual([
       ['in', { many: 'has any of' }],
       ['notIn', { many: 'has none of' }],
-      ['lt', { kinds: { date: 'is before', datetime: 'is before' } }],
-      ['lte', { kinds: { date: 'is on or before', datetime: 'is on or before' } }],
-      ['gt', { kinds: { date: 'is after', datetime: 'is after' } }],
-      ['gte', { kinds: { date: 'is on or after', datetime: 'is on or after' } }],
+      ['lt', onDates('is before')],
+      ['lte', onDates('is on or before')],
+      ['gt', onDates('is after')],
+      ['gte', onDates('is on or after')],
     ]);
   });
 });
@@ -241,6 +242,23 @@ describe('matches', () => {
     expect(passes('lt', '2026-10-12T09:30:00.000001Z', '2026-10-12T09:30:00.00001Z')).toBe(true);
   });
 
+  it('compares a time by minute', () => {
+    expect(passes('lt', '09:30', '14:00')).toBe(true);
+    expect(passes('gte', '23:59', '00:00')).toBe(true);
+    expect(passes('lte', '09:30', '09:30')).toBe(true);
+    expect(passes('gt', '09:29', '09:30')).toBe(false);
+  });
+
+  it('on a many field, holds a range when one of its values does', () => {
+    expect(passes('lt', [8, 2], 3)).toBe(true);
+    expect(passes('lt', [8, 4], 3)).toBe(false);
+    expect(passes('gte', ['2026-09-30', '2026-10-12'], '2026-10-01')).toBe(true);
+    expect(passes('gt', ['09:00', '10:00'], '12:00')).toBe(false);
+    for (const name of ['lt', 'lte', 'gt', 'gte']) {
+      expect(passes(name, [], 3), name).toBe(false);
+    }
+  });
+
   it('takes a month as gte its first moment and lt the next month’s', () => {
     const october = (at: string) => {
       return (
@@ -327,5 +345,14 @@ describe('inLast and notInLast', () => {
   it('pass a row without a value through notInLast only', () => {
     expect(passes('inLast', null, 7)).toBe(false);
     expect(passes('notInLast', null, 7)).toBe(true);
+  });
+
+  it('on a many field, hold inLast when one of its values is in, notInLast when none is', () => {
+    expect(passes('inLast', ['2026-09-01', '2026-10-13'], 7)).toBe(true);
+    expect(passes('inLast', ['2026-09-01', '2026-09-02'], 7)).toBe(false);
+    expect(passes('notInLast', ['2026-09-01', '2026-10-13'], 7)).toBe(false);
+    expect(passes('notInLast', ['2026-09-01', '2026-09-02'], 7)).toBe(true);
+    expect(passes('inLast', [], 7)).toBe(false);
+    expect(passes('notInLast', [], 7)).toBe(true);
   });
 });

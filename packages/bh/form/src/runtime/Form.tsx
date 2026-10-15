@@ -17,6 +17,9 @@ import type { Commit } from '../types/commit';
 import type { Commits, OnCommit } from './commits';
 import { CommitContext } from './commit-context';
 import { useChanged } from './use-changed';
+import { SlotsContext } from './slots-context';
+import { FieldWrapperContext } from './field-wrapper-context';
+import type { ResetOptions } from '../types/action-node';
 
 interface CommonProps<I extends InputRegistry, L extends LayoutComponentRegistry> {
   /**
@@ -29,6 +32,11 @@ interface CommonProps<I extends InputRegistry, L extends LayoutComponentRegistry
    * names no one field. Drawn above the fields, only while there is one.
    */
   renderFormError?: (msg: string) => ReactNode;
+  /**
+   * What the form's slot nodes hold, by name, each drawn where its node sits:
+   * a count, a button of the app's. A slot given nothing draws nothing.
+   */
+  slots?: Readonly<Record<string, ReactNode>>;
   /**
    * Drawn inside the `<form>`, after the fields: anything that reads a value
    * with `useFieldValue`, or a button the form's own `b.submit()` cannot be.
@@ -48,6 +56,15 @@ interface InlineFormProps<
   form: FormConfig<I, L>;
   /** Values to start at, by field name, over the form's and each field's own. */
   defaultValues?: Record<string, unknown>;
+  /**
+   * Values from outside that the form follows, by field name, apart from
+   * where it started: an address's, after Back. Each time they change,
+   * compared by what they hold, so the same value handed back after a commit
+   * is no change, the fields take them, without a remount and without running
+   * `onCommit`; a field being typed in keeps its draft. `defaultValues` stays
+   * where the form started, so a reset still goes there.
+   */
+  values?: Record<string, unknown>;
   /** Called on submit, once every check passes, with the visible fields' values. */
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
   /**
@@ -119,6 +136,7 @@ function FormInline<I extends InputRegistry, L extends LayoutComponentRegistry>(
     form: props.form,
     registry,
     defaultValues: props.defaultValues,
+    values: props.values,
     onSubmit: props.onSubmit,
     onCommit: props.onCommit,
     commit: props.commit,
@@ -135,6 +153,7 @@ function FormInline<I extends InputRegistry, L extends LayoutComponentRegistry>(
       config={props.form}
       registry={registry}
       renderFormError={props.renderFormError}
+      slots={props.slots}
     >
       {props.children}
     </FormShell>
@@ -161,6 +180,7 @@ function FormWithApi<I extends InputRegistry, L extends LayoutComponentRegistry>
       config={config as unknown as FormConfig<I, L>}
       registry={registry}
       renderFormError={props.renderFormError}
+      slots={props.slots}
     >
       {props.children}
     </FormShell>
@@ -180,8 +200,11 @@ interface FormShellProps<
   /** Commits the drafts, waits, checks, and calls `onSubmit`. */
   submit: () => Promise<void>;
   /** Puts the values back and forgets the drafts. */
-  reset: () => void;
+  reset: (options?: ResetOptions) => void;
 }
+
+/** No slot filled: one object, so the context's value holds still. */
+const NO_SLOTS: Readonly<Record<string, ReactNode>> = {};
 
 // Shared rendering layer: providers, the actual `<form>` element with the
 // submission gate, the optional form-level error slot, and the tree walker.
@@ -193,6 +216,7 @@ function FormShell<I extends InputRegistry, L extends LayoutComponentRegistry>(
   const { form, cache, commits, commit, reset } = props;
   const scope = useMemo(() => ({ commits, commit, reset }), [commits, commit, reset]);
   const Root = props.registry.root?.Component;
+  const slots = props.slots ?? NO_SLOTS;
   const tree = (
     <>
       {props.renderFormError && <FormErrorSlot render={props.renderFormError} />}
@@ -202,28 +226,34 @@ function FormShell<I extends InputRegistry, L extends LayoutComponentRegistry>(
   return (
     <FormContext.Provider value={form as never}>
       <RegistryContext.Provider value={props.registry}>
-        <CommitContext.Provider value={scope}>
-          <ResolverCacheContext.Provider value={cache}>
-            <form
-              // The fields' schemas check the values, in their own words: the
-              // browser's checks (a `type="email"` input's, say) would stop a
-              // submit with a bubble of their own before they ran.
-              noValidate
-              onSubmit={async (e) => {
-                e.preventDefault();
-                // The same submit `useStandaloneForm`'s does: drafts commit first,
-                // then it waits for the visible fields' async config (the set
-                // taken now, so a field hidden mid-flight doesn't hold it) and
-                // the commits still saving.
-                await props.submit();
-              }}
-            >
-              <LeaveWarning form={form} commits={commits} />
-              {Root ? <Root>{tree}</Root> : tree}
-              {props.children}
-            </form>
-          </ResolverCacheContext.Provider>
-        </CommitContext.Provider>
+        <SlotsContext.Provider value={slots}>
+          <CommitContext.Provider value={scope}>
+            <ResolverCacheContext.Provider value={cache}>
+              <form
+                // The fields' schemas check the values, in their own words: the
+                // browser's checks (a `type="email"` input's, say) would stop a
+                // submit with a bubble of their own before they ran.
+                noValidate
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  // The same submit `useStandaloneForm`'s does: drafts commit first,
+                  // then it waits for the visible fields' async config (the set
+                  // taken now, so a field hidden mid-flight doesn't hold it) and
+                  // the commits still saving.
+                  await props.submit();
+                }}
+              >
+                <LeaveWarning form={form} commits={commits} />
+                {/* A form starts at the registry's field wrapper, drawn inside
+                    another form's layout too: a filter bar's sheet. */}
+                <FieldWrapperContext.Provider value={null}>
+                  {Root ? <Root>{tree}</Root> : tree}
+                  {props.children}
+                </FieldWrapperContext.Provider>
+              </form>
+            </ResolverCacheContext.Provider>
+          </CommitContext.Provider>
+        </SlotsContext.Provider>
       </RegistryContext.Provider>
     </FormContext.Provider>
   );

@@ -6,10 +6,12 @@ import type {
   InferLayoutComponentProps,
 } from '../types/registry';
 import type { LayoutNode } from '../types/layout-node';
-import type { ActionNode, FormAction } from '../types/action-node';
+import type { ActionNode, FormAction, ResetTo } from '../types/action-node';
 import type { FieldNode } from '../types/field-node';
 import type { WhenClause } from '../types/when';
 import type { AuthorConfig } from '../types/async-config';
+import type { FieldFilter } from '../types/field-filter';
+import type { SlotNode } from '../types/slot-node';
 
 /** What a builder's input method takes: the field, less its `kind` and `type`. */
 export interface FieldOptions<R extends InputRegistry, K extends keyof R> {
@@ -21,10 +23,22 @@ export interface FieldOptions<R extends InputRegistry, K extends keyof R> {
   description?: string;
   /** Marks the label. It checks nothing: a `validate` schema does. */
   required?: boolean;
+  /** Shown and submitted, but changed neither by the reader nor by a reset. */
+  readOnly?: boolean;
   /** What it starts at, unless the form's `defaultValues` names it. */
   defaultValue?: InferValue<R[K]>;
   /** Its input's config, typed by the kind; any key may be an `AsyncResolver`. */
   config: AuthorConfig<InferConfig<R[K]>>;
+  /** Shown only while this holds. */
+  when?: WhenClause;
+  /** Which part of the query's filter it holds, in a filter form. */
+  filter?: FieldFilter;
+}
+
+/** What a builder's `slot` takes. */
+export interface SlotOptions {
+  /** Its key in `<Form slots>`. */
+  name: string;
   /** Shown only while this holds. */
   when?: WhenClause;
 }
@@ -35,13 +49,15 @@ export interface ActionOptions {
   label: string;
   /** Shown only while this holds. */
   when?: WhenClause;
+  /** A reset's: `'submitted'` (the default) or `'start'`, where it puts the values. */
+  to?: ResetTo;
 }
 
 /**
  * `defineForm`'s builder: per input kind, a method taking `FieldOptions` that
  * returns a field; per layout kind, one taking its props (and `when`) and its
- * children that returns a layout node; and `submit` and `reset`, which return
- * the form's buttons, drawn where they sit.
+ * children that returns a layout node; `submit` and `reset`, which return the
+ * form's buttons, drawn where they sit; and `slot`, a place the app fills.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Builder<R extends InputRegistry, L extends LayoutComponentRegistry = {}> = {
@@ -56,6 +72,8 @@ export type Builder<R extends InputRegistry, L extends LayoutComponentRegistry =
   submit: (opts: ActionOptions) => ActionNode;
   /** A button that puts the values back where they started. */
   reset: (opts: ActionOptions) => ActionNode;
+  /** A place the app fills with `<Form slots>`, holding no value. */
+  slot: (opts: SlotOptions) => SlotNode;
 };
 
 const ACTIONS: readonly string[] = ['submit', 'reset'] satisfies FormAction[];
@@ -70,9 +88,21 @@ export function createBuilder<R extends InputRegistry, L extends LayoutComponent
       if (typeof prop !== 'string') {
         return undefined;
       }
+      if (prop === 'slot') {
+        return (opts: SlotOptions): SlotNode => {
+          return { kind: 'slot', name: opts.name, ...(opts.when ? { when: opts.when } : {}) };
+        };
+      }
       if (ACTIONS.includes(prop)) {
         return (opts: ActionOptions): ActionNode => {
-          return { kind: 'action', action: prop as FormAction, label: opts.label, when: opts.when };
+          const to = prop === 'reset' && opts.to ? { to: opts.to } : {};
+          return {
+            kind: 'action',
+            action: prop as FormAction,
+            label: opts.label,
+            when: opts.when,
+            ...to,
+          };
         };
       }
       if (prop in registry) {
@@ -87,6 +117,9 @@ export function createBuilder<R extends InputRegistry, L extends LayoutComponent
             defaultValue: opts.defaultValue,
             config: opts.config,
             when: opts.when,
+            // Only when given, so a field without them stays as it was.
+            ...(opts.readOnly ? { readOnly: true } : {}),
+            ...(opts.filter ? { filter: opts.filter } : {}),
           };
         };
       }

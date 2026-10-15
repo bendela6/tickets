@@ -1,4 +1,6 @@
+import type { Filter } from '@bh/resource';
 import type { UploadFile } from '../inputs/components/file-input';
+import { AvatarsField } from './bindings/avatars/avatars-field';
 import { CheckboxField } from './bindings/checkbox/checkbox-field';
 import { CheckboxGroupField } from './bindings/checkbox-group/checkbox-group-field';
 import { ColorField } from './bindings/color/color-field';
@@ -12,9 +14,13 @@ import { PasswordField } from './bindings/password/password-field';
 import { PinField } from './bindings/pin/pin-field';
 import { RangeField } from './bindings/range-slider/range-slider-field';
 import { RatingField } from './bindings/rating/rating-field';
+import { RulesField } from './bindings/rules/rules-field';
+import { SearchField } from './bindings/search/search-field';
 import { SegmentedField } from './bindings/segmented/segmented-field';
+import { TabsField } from './bindings/tabs/tabs-field';
 import { TagsField } from './bindings/tags/tags-field';
 import { TimeField } from './bindings/time/time-field';
+import { ToggleChipsField } from './bindings/toggle-chips/toggle-chips-field';
 import { UserField } from './bindings/user/user-field';
 import { JsonField } from './bindings/json/json-field';
 import { ListField } from './bindings/list/list-field';
@@ -27,7 +33,18 @@ import { SliderField } from './bindings/slider/slider-field';
 import { TextField } from './bindings/text/text-field';
 import { TextAreaField } from './bindings/textarea/textarea-field';
 import { ToggleField } from './bindings/toggle/toggle-field';
-import { ActionsLayout, CardLayout, ColumnLayout, GroupLayout, RowLayout } from './layouts';
+import { FilterChanges } from './components/filter-changes';
+import { FilterCount } from './components/filter-count';
+import { FilterSheet } from './components/filter-sheet';
+import { InlineFieldWrapper } from './components/inline-field-wrapper';
+import {
+  ActionsLayout,
+  CardLayout,
+  ColumnLayout,
+  GroupLayout,
+  InlineLayout,
+  RowLayout,
+} from './layouts';
 
 /** The standard input set. Apps spread this and add their own kinds
  *  (`{ ...baseInputs, directory: … }`). Each defaultValue
@@ -53,9 +70,7 @@ export const baseInputs = {
   slider: { Component: SliderField, defaultValue: 0 },
   json: { Component: JsonField, defaultValue: '' },
 
-  // The sixteen from the Soft Fill design. `search` is the one control that got
-  // no kind: it filters a view rather than holding a value, so a form has
-  // nothing to store for it.
+  // The sixteen from the Soft Fill design.
   password: { Component: PasswordField, defaultValue: '' },
   pin: { Component: PinField, defaultValue: '' },
   segmented: { Component: SegmentedField, defaultValue: '' },
@@ -73,6 +88,13 @@ export const baseInputs = {
   icon: { Component: IconField, defaultValue: null },
   user: { Component: UserField, defaultValue: [] as string[] },
   file: { Component: FileField, defaultValue: [] as UploadFile[] },
+
+  // A filter form's: the text a query searches for, kept beside its filter.
+  search: { Component: SearchField, defaultValue: '' },
+  'toggle-chips': { Component: ToggleChipsField, defaultValue: [] as string[] },
+  tabs: { Component: TabsField, defaultValue: '' },
+  avatars: { Component: AvatarsField, defaultValue: [] as string[] },
+  rules: { Component: RulesField, defaultValue: [] as Filter[] },
 
   // Forms inside a form, for data shaped as a schema says: `schemaToFormConfig`
   // gives a list of objects `list` and a nested object `object`.
@@ -147,6 +169,16 @@ export interface ValueOfKind {
   /** Person ids, in both single and multi mode. */
   user: string[];
   file: UploadFile[];
+  /** The text searched for. */
+  search: string;
+  /** The pressed chips' values, in the order they were pressed. */
+  'toggle-chips': string[];
+  /** `''` is no tab chosen, as a radio group's. */
+  tabs: string;
+  /** Person ids, as `user`'s, in the order they were pressed. */
+  avatars: string[];
+  /** A filter's rules, each joined to the rest by `all`: conditions, and any group kept as it is. */
+  rules: Filter[];
   /** Each item an object of its own fields' values. */
   list: Record<string, unknown>[];
   /** Null until a field in it is given a value. */
@@ -169,4 +201,13 @@ export const baseLayouts = {
   row: { Component: RowLayout },
   column: { Component: ColumnLayout },
   actions: { Component: ActionsLayout },
+  // A filter bar's row: its fields name themselves inside it, not above.
+  inline: { Component: InlineLayout, field: { Component: InlineFieldWrapper } },
 };
+
+/**
+ * What a filter form draws besides its fields, as the registry's `filter`:
+ * `FilterCount` in its count slot, `FilterChanges` in its changes slot, and
+ * `FilterSheet` for a narrow window.
+ */
+export const baseFilter = { count: FilterCount, changes: FilterChanges, sheet: FilterSheet };

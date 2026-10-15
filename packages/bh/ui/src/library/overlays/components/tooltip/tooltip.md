@@ -1,7 +1,7 @@
 ---
 title: Tooltip
 summary: A short hint that shows when its trigger is hovered or focused.
-related: [Button, Popover]
+related: [Button, Popover, useIsClipped]
 ---
 
 [//]: # 'written from tooltip.doc.yaml by pnpm docs:sync; edit that file, not this one'
@@ -62,6 +62,8 @@ export function Shortcuts() {
 ```
 
 `side` picks the side of the trigger it shows on: `top` by default.
+`align` lines it up with the trigger's start, middle or end along that
+side: `center` by default.
 
 **Sides**
 
@@ -84,6 +86,43 @@ export function Sides() {
   );
 }
 ```
+
+Pass `open` and `onOpenChange` to hold it yourself: it then shows only
+while `open` is true, and asks `onOpenChange` when a hover, a focus, a
+click or Escape would show or hide it. Here the switch holds it open,
+and hovering the button still shows and hides it through the same
+state.
+
+**Held by the page**
+
+```tsx
+import { useState } from 'react';
+import { Button, Switch, Tooltip } from '@bh/ui';
+
+export function HeldByThePage() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex items-center gap-24">
+      <Tooltip
+        content="Saved two minutes ago"
+        side="bottom"
+        align="start"
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <Button>Save</Button>
+      </Tooltip>
+      <Switch label="Show the hint" value={open} onChange={setOpen} />
+    </div>
+  );
+}
+```
+
+A tooltip with nothing to say is better left out than held shut: asked
+to show, one held shut still counts as shown, and the next tooltip
+skips its delay. A table's text cell draws one only while its text is
+clipped, as [useIsClipped](../../../../../../hooks/docs/use-is-clipped.md) says, and holds it
+so that the cell's keyboard focus shows it too.
 
 ## Keyboard and accessibility
 
@@ -110,12 +149,16 @@ trigger loses focus.
 
 ### Tooltip
 
-| Prop                  | Type                                                                               | Default | Description                                                         |
-| --------------------- | ---------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------- |
-| `content` (required)  | `ReactNode`                                                                        |         | What the tooltip says.                                              |
-| `children` (required) | `ReactNode`                                                                        |         | The trigger: one element that takes a ref and focus, like a Button. |
-| `side`                | `'top' \| 'right' \| 'bottom' \| 'left'`: `'top'`, `'right'`, `'bottom'`, `'left'` | `'top'` | The side of the trigger it shows on.                                |
-| `className`           | `string`                                                                           |         | Classes merged onto the tooltip.                                    |
+| Prop                  | Type                                                                               | Default    | Description                                                                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `content` (required)  | `ReactNode`                                                                        |            | What the tooltip says.                                                                                                              |
+| `children` (required) | `ReactNode`                                                                        |            | The trigger: one element that takes a ref and focus, like a Button.                                                                 |
+| `side`                | `'top' \| 'right' \| 'bottom' \| 'left'`: `'top'`, `'right'`, `'bottom'`, `'left'` | `'top'`    | The side of the trigger it shows on.                                                                                                |
+| `align`               | `'start' \| 'center' \| 'end'`: `'start'`, `'center'`, `'end'`                     | `'center'` | Where along that side it lines up with the trigger: their starts, their middles or their ends.                                      |
+| `open`                | `boolean`                                                                          |            | Whether it shows. Leave it out and the tooltip holds its own, shown while its trigger is hovered or has keyboard focus.             |
+| `defaultOpen`         | `boolean`                                                                          |            | Whether it starts shown, when `open` is left out.                                                                                   |
+| `onOpenChange`        | `(open: boolean) => void`                                                          |            | Called with the new state when a hover, a focus, a click, Escape or a scroll would show or hide it, whether `open` is given or not. |
+| `className`           | `string`                                                                           |            | Classes merged onto the tooltip.                                                                                                    |
 
 ### TooltipProvider
 

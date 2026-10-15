@@ -38,6 +38,12 @@ export interface InputProps<TConfigResolved, TValue> {
   error?: string;
   /** Whether the form is submitting, when every input takes no changes. */
   disabled?: boolean;
+  /**
+   * Whether the field is read-only: shown, and still submitted, but the
+   * reader can't change it. Pass it to the control's `readOnly`; the form
+   * ignores the field's `onChange` meanwhile.
+   */
+  readOnly?: boolean;
   /** Whether the field's async config is still loading. */
   loading: boolean;
   /** Why the field's async config failed to load, if it did. */
@@ -81,10 +87,17 @@ export interface LayoutComponentProps<TProps> {
   children: ReactNode;
 }
 
-/** A layout kind in a registry: the component that draws it. */
+/** A layout kind in a registry: the component that draws it, and the wrapper its fields get. */
 export interface LayoutComponentDefinition<TProps> {
   /** The layout, given the node's props and its drawn children. */
   Component: ComponentType<LayoutComponentProps<TProps>>;
+  /**
+   * The wrapper drawn around each field inside it, at any depth until another
+   * layout names its own, in place of the registry's `field`: a filter bar's
+   * fields read "Type: any" inside the control, while the same fields in a
+   * sheet keep the app's wrapper, label above.
+   */
+  field?: FieldWrapperDefinition;
 }
 
 /** A registry's layouts, by the kind a layout node names. */
@@ -95,6 +108,11 @@ export type LayoutComponentRegistry = Record<string, LayoutComponentDefinition<a
 export interface FieldWrapperProps {
   /** The field's name in the form's values. */
   name: string;
+  /**
+   * The field's kind, as its input is registered: 'select', 'search'. A
+   * wrapper may place the label its own way per kind, as a filter bar's does.
+   */
+  type?: string;
   /** The field's label, from its definition. */
   label?: string;
   /** Help text for the field, from its definition. */
@@ -163,6 +181,48 @@ export interface ActionDefinition {
   Component: ComponentType<ActionProps>;
 }
 
+/** What a filter form gives the count of the rows its filter lets through. */
+export interface FilterCountProps {
+  /** How many rows the filter lets through; unknown while it is counted. */
+  shown?: number;
+  /** How many rows there are in all; unknown when the app doesn't say. */
+  total?: number;
+  /** The resource's name for one row and for several: `ResourceMeta.label`. */
+  label: { one: string; other: string };
+  /** The count is being asked for. */
+  loading: boolean;
+}
+
+/** What a filter form gives the sheet that holds its fields on a phone. */
+export interface FilterSheetProps {
+  /** The sheet's title: "Filters". */
+  title: string;
+  /** How many conditions the sheet's fields hold, on its button's badge. */
+  count: number;
+  /** Whether the sheet is open. */
+  open: boolean;
+  /** Called with the new open state: from its button, Escape, or its own buttons. */
+  onOpenChange: (open: boolean) => void;
+  /** The sheet's own form: its fields, then its buttons. */
+  children: ReactNode;
+}
+
+/** What a filter form gives the words saying it holds changes not applied yet. */
+export interface FilterChangesProps {
+  /** How many of its fields hold a change its Apply hasn't applied yet; 0 for none. */
+  count: number;
+}
+
+/** A registry's filter parts: what a filter form draws besides its fields. */
+export interface FilterDefinition {
+  /** "12 of 40 items", in the count slot. */
+  count: ComponentType<FilterCountProps>;
+  /** "1 change waiting", in the changes slot of a form that applies with a button. */
+  changes: ComponentType<FilterChangesProps>;
+  /** The Filters button and the sheet it opens, for a narrow window. */
+  sheet: ComponentType<FilterSheetProps>;
+}
+
 /** What a form is drawn with: an input per kind, a layout per kind, and the wrappers. */
 export interface FormRegistry<I extends InputRegistry, L extends LayoutComponentRegistry> {
   /** The inputs a field may name, by kind. */
@@ -175,6 +235,8 @@ export interface FormRegistry<I extends InputRegistry, L extends LayoutComponent
   root?: RootWrapperDefinition;
   /** The button drawn for a submit or reset node; without one, a plain `<button>`. */
   action?: ActionDefinition;
+  /** What a filter form draws besides its fields: its count, and its sheet on a phone. */
+  filter?: FilterDefinition;
 }
 
 /** The props a layout kind takes, read off its definition. */

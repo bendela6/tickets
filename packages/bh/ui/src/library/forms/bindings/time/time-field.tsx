@@ -17,6 +17,7 @@ export function TimeField(p: InputProps<TimeFieldConfig, string | null>) {
         value={p.value ?? null}
         stepMinutes={p.config.stepMinutes}
         placeholder={p.config.placeholder}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

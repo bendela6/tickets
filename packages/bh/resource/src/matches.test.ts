@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryOf } from './checks';
-import { matchesFilter } from './matches';
+import { matchesFilter, matchesSearch } from './matches';
 import type { ResourceMeta } from './meta';
 import type { Filter } from './query';
 import { createRegistry } from './registry';
@@ -71,6 +71,15 @@ const items: ResourceMeta = {
     field('services', { kind: 'json' }, ['empty', 'notEmpty']),
   ],
   sort: [],
+  serves: {
+    read: true,
+    create: true,
+    update: true,
+    delete: true,
+    filter: { any: true, not: true },
+    sort: { max: 10 },
+    page: { numbered: 'any', cursor: true, total: true, max: 500 },
+  },
   actions: [],
 };
 
@@ -187,5 +196,51 @@ describe('matchesFilter', () => {
     };
     expect(v.is(queryOf(items, registry), { filter })).toBe(true);
     expect(passes(filter, fix, 3)).toBe(true);
+  });
+});
+
+describe('matchesSearch', () => {
+  // title and notes are searched, a rich text by its words; status is not.
+  const searched: ResourceMeta = {
+    ...items,
+    fields: [
+      ...items.fields.map((each) => {
+        return each.key === 'title' ? { ...each, query: { ...each.query, search: true } } : each;
+      }),
+      {
+        ...field('aliases', { kind: 'text', many: true }, []),
+        query: { filter: [], sort: false, group: false, search: true },
+      },
+      {
+        ...field('notes', { kind: 'richtext' }, []),
+        query: { filter: [], sort: false, group: false, search: true },
+      },
+    ],
+  };
+  const notes = JSON.stringify({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Session cookie expires' }] }],
+  });
+  const row: Row = { ...fix, aliases: ['SSO', 'sign-in'], notes };
+  const finds = (term: string) => matchesSearch(term, row, searched, registry);
+
+  it('keeps a row where a searched field holds the term, case ignored', () => {
+    expect(finds('LOGIN')).toBe(true);
+    expect(finds('fix the')).toBe(true);
+  });
+
+  it('matches the term whole, as one piece of text', () => {
+    expect(finds('login fix')).toBe(false);
+  });
+
+  it('looks in each value of a list, and in a rich text’s words, never its JSON', () => {
+    expect(finds('sign-in')).toBe(true);
+    expect(finds('cookie exp')).toBe(true);
+    expect(finds('paragraph')).toBe(false);
+  });
+
+  it('looks in no field a search doesn’t', () => {
+    expect(finds('doing')).toBe(false);
+    expect(matchesSearch('login', fix, items, registry)).toBe(false);
   });
 });

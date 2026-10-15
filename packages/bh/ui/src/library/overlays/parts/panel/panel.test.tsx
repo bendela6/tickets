@@ -32,7 +32,7 @@ function Harness({
   storageKey?: string;
   defaultWidth?: number;
 }) {
-  const { width, panelRef, separatorProps } = usePanelWidth({
+  const { width, panelRef, getSeparatorProps } = usePanelWidth({
     side,
     defaultWidth,
     minWidth: 180,
@@ -42,7 +42,7 @@ function Harness({
   });
   return (
     <aside ref={panelRef} data-testid="panel" style={{ ['--panel-w' as string]: `${width}px` }}>
-      <div {...separatorProps} />
+      <div {...getSeparatorProps()} />
     </aside>
   );
 }
@@ -51,9 +51,9 @@ const widthOf = () => {
   return screen.getByTestId('panel').style.getPropertyValue('--panel-w');
 };
 
-// jsdom gives every element a zero-size rect, which would make a right-side
-// drag always clamp to the minimum and prove nothing. The drag math reads the
-// panel's rect fresh on every pointermove, so stubbing it after render is
+// jsdom gives every element a zero-size rect. A drag starts from the width
+// the panel is laid out at, read off its rect as the press lands, and moves
+// it by as far as the pointer goes, so stubbing the rect after render is
 // enough — no need to route it through the ref or a layout effect.
 function stubPanelRect(rect: { left: number; right: number }) {
   const panel = screen.getByTestId('panel');
@@ -174,9 +174,9 @@ describe('usePanelWidth', () => {
 });
 
 describe('usePanelWidth dragging', () => {
-  // The hook attaches its pointermove/pointerup listeners to the handle
-  // itself (for pointer capture), not to window, so the gesture must be
-  // fired at the handle, not dispatched globally.
+  // The drag's pointermove/pointerup handlers are on the handle itself (it
+  // captures the pointer), not on window, so the gesture must be fired at
+  // the handle, not dispatched globally.
   it('drags a left panel by clientX - rect.left, and a right panel by rect.right - clientX — opposite directions for the same motion', () => {
     const { unmount } = render(<Harness side="left" />);
     stubPanelRect({ left: 0, right: 224 });

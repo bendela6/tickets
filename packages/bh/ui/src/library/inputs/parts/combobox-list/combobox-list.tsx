@@ -4,6 +4,7 @@ import { cn } from '../../../../style/cn';
 import { Icon } from '../../../primitives/components/icon';
 import { Pill } from '../../../primitives/components/pill';
 import { OptionRow } from '../option-row';
+import { OptionCount } from '../option-count';
 import { GroupHeading, groupRuns, inGroupOrder } from './groups';
 
 /**
@@ -368,7 +369,13 @@ export function ComboboxList({
           renderLeading?.(option) ??
           (option.icon ? <Icon name={option.icon} size="md" /> : undefined)
         }
-        trailing={renderTrailing?.(option)}
+        // The caller's trailing first; the option's count where it has none.
+        trailing={
+          renderTrailing?.(option) ??
+          (option.count === undefined ? undefined : (
+            <OptionCount count={option.count} className="text-gray-11 opacity-100" />
+          ))
+        }
         onPick={() => pick(index)}
       >
         {renderOption ? (

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Prose } from './prose';
 
 describe('Prose', () => {
-  it('draws markdown with token classes, a fence as a code block', () => {
+  it('draws markdown in the editor’s look, a fence as a code block', () => {
     const { container } = render(
       <Prose>
         {[
@@ -21,15 +21,17 @@ describe('Prose', () => {
         ].join('\n')}
       </Prose>,
     );
+    // One look for markdown and documents, the editor's: `.rt` draws every element.
+    expect(container.firstElementChild).toHaveClass('rt');
+    expect(container.firstElementChild).not.toHaveAttribute('data-rt-doc');
     const heading = screen.getByRole('heading', { level: 2, name: 'Context' });
-    expect(heading.className).toContain('text-gray-12');
     // Many notes on one screen: no heading claims an id.
     expect(heading.id).toBe('');
     expect(screen.getByRole('link', { name: 'the notes' }).getAttribute('href')).toBe(
       'https://example.com',
     );
     expect(container.querySelector('pre code')?.textContent).toBe('const a = 1;');
-    expect(container.querySelector('td code')?.className).toContain('font-mono');
+    expect(container.querySelector('td code')).toHaveTextContent('yes');
   });
 
   it('never runs what it is handed: no blocks, no HTML, no script links', () => {

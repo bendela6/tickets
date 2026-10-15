@@ -123,6 +123,9 @@ jump to, as a card's `CardTitle` is. The button has `aria-expanded`, and
 the title and described by the summary. The body is drawn only while
 open, so state inside it belongs in the caller.
 
+Its open state, and the props on the header's button and the body, are
+[useDisclosure](../../../../../../hooks/docs/use-disclosure.md)'s, as Disclosure's are.
+
 ## Props
 
 | Prop                  | Type                                         | Default | Description                                                                                                                                        |

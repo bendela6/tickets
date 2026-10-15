@@ -25,6 +25,11 @@ body:
     the option as a pill in the list.
   - demo: examples/coloured-options.tsx
   - |
+    An option's `count`, how many rows hold it, sits at the right of its row
+    in the list, in IBM Plex Mono at 11 pixels, and never on the field.
+    Without one, nothing is drawn.
+  - demo: examples/with-counts.tsx
+  - |
     An option's `icon` leads its row in the list, and the field once it is
     chosen, before the dot of its `color`. Here, a parcel's stage, without
     search.

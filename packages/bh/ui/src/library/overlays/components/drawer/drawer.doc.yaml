@@ -17,6 +17,13 @@ body:
     controls, then a body that scrolls.
   - demo: examples/from-either-side.tsx
   - |
+    From the `bottom` it is a sheet, as a phone's: as wide as the window,
+    as tall as its content up to 48 pixels short of the top, rounded at the
+    top, and not resized, so `size`, the widths and `maximizable` don't
+    apply.
+  - demo: examples/from-the-bottom.tsx
+    width: phone
+  - |
     `size` is the width it opens at: 288, 400 or 620 pixels. The reader can
     drag it between `minWidth` and `maxWidth`, 280 and 960 by default.
   - demo: examples/sizes.tsx

@@ -92,6 +92,15 @@ const items: ResourceMeta = {
     field('data', 'json'),
   ],
   sort: [{ field: 'updatedAt', dir: 'desc' }],
+  serves: {
+    read: true,
+    create: true,
+    update: true,
+    delete: true,
+    filter: { any: true, not: true },
+    sort: { max: 10 },
+    page: { numbered: 'any', cursor: true, total: true, max: 500 },
+  },
   actions: [
     {
       name: 'deploy',
@@ -122,6 +131,21 @@ describe('metaOf', () => {
     expect(refusals(meta, items)).toEqual([]);
   });
 
+  it('says it serves the writes its fields take, and a sort no longer than a query’s', () => {
+    const readOnly: ResourceMeta = {
+      ...items,
+      sort: [
+        { field: 'updatedAt', dir: 'desc' },
+        { field: 'id', dir: 'asc' },
+      ],
+      serves: { ...items.serves, create: false, sort: { max: 1 } },
+    };
+    const said = refusals(meta, readOnly);
+    expect(said).toContain('fields.1.write.create: a create sets it, but the resource serves none');
+    expect(said).toContain('sort: a sort names one field here');
+    expect(said.some((each) => each.includes('write.update'))).toBe(false);
+  });
+
   it('refuses the shape’s problems before its own', () => {
     expect(refusals(meta, { ...items, title: 'name' })).toEqual([
       'title: Invalid key: Expected never but received "title"',
@@ -148,10 +172,20 @@ describe('metaOf', () => {
     expect(refusals(meta, withField(none))).toEqual([
       'fields.10.type.settings: the kind "option" needs its settings',
     ]);
-    const extra = field('title', 'text', { type: { kind: 'text', settings: { max: 80 } } });
-    expect(refusals(meta, withField(extra))).toContain(
-      'fields.1.type.settings: the kind "text" takes no settings',
-    );
+    const extra = field('data', 'json', { type: { kind: 'json', settings: { max: 80 } } });
+    expect(refusals(meta, withField(extra))).toEqual([
+      'fields.9.type.settings: the kind "json" takes no settings',
+    ]);
+    const misspelt = field('title', 'text', { type: { kind: 'text', settings: { max: 80 } } });
+    expect(refusals(meta, withField(misspelt))).toEqual([
+      'fields.1.type.settings.max: Invalid key: Expected never but received "max"',
+    ]);
+    const range = field('score', 'number', {
+      type: { kind: 'number', settings: { min: 5, max: 1, integer: true } },
+    });
+    expect(refusals(meta, withField(range))).toEqual([
+      'fields.10.type.settings.max: a number’s max is at least its min',
+    ]);
     const twice = field('stage', 'option', {
       type: {
         kind: 'option',
@@ -170,10 +204,41 @@ describe('metaOf', () => {
     expect(refusals(meta, withField(ref))[0]).toMatch(/^fields\.10\.type\.settings\.of: /);
   });
 
-  it('lets a field hold a list only where its kind does', () => {
+  it('lets a field of any of bh’s kinds hold a list, an app’s own only where it says so', () => {
     const scores = field('scores', 'number', { type: { kind: 'number', many: true } });
-    expect(refusals(meta, withField(scores))).toEqual([
-      'fields.10.type.many: the kind "number" holds one value, never a list',
+    expect(refusals(meta, withField(scores))).toEqual([]);
+    const flags = field('flags', 'boolean', { type: { kind: 'boolean', many: true } });
+    expect(refusals(meta, withField(flags))).toEqual([]);
+    const color: KindSpec = {
+      name: 'color',
+      value: () => v.pipe(v.string(), v.hexColor()),
+      many: false,
+      operators: ['equals'],
+      sort: false,
+      group: true,
+      search: false,
+    };
+    const colors = field('colors', 'color', { type: { kind: 'color', many: true } });
+    expect(refusals(metaOf(createRegistry({ kinds: [color] })), withField(colors))).toEqual([
+      'fields.10.type.many: the kind "color" holds one value, never a list',
+    ]);
+  });
+
+  it('checks a default by the field’s settings: a number’s range, a text’s length and pattern', () => {
+    const rating = field('rating', 'number', {
+      type: { kind: 'number', settings: { min: 1, max: 5, integer: true } },
+      write: { ...written, default: 7 },
+    });
+    expect(refusals(meta, withField(rating))).toEqual(['fields.10.write.default: at most 5']);
+    const half = { ...rating, write: { ...written, default: 2.5 } };
+    expect(refusals(meta, withField(half))).toEqual(['fields.10.write.default: a whole number']);
+    const code = field('code', 'text', {
+      type: { kind: 'text', settings: { maxLength: 5, pattern: '[A-Z]+' } },
+      write: { ...written, default: 'TIX-12' },
+    });
+    expect(refusals(meta, withField(code))).toEqual([
+      'fields.10.write.default: at most 5 characters',
+      'fields.10.write.default: text matching [A-Z]+',
     ]);
   });
 
@@ -339,6 +404,52 @@ describe('metaOf', () => {
 
 describe('queryOf', () => {
   const query = queryOf(items, registry);
+
+  it('asks no more than the resource serves: how it joins, sorts and pages', () => {
+    // As an external API serves it: conditions joined by all, one sort, whole pages.
+    const narrow: ResourceMeta = {
+      ...items,
+      serves: {
+        ...items.serves,
+        filter: { any: false, not: false },
+        sort: { max: 1 },
+        page: { numbered: 'pages', cursor: false, total: false, max: 100 },
+      },
+    };
+    const asked = queryOf(narrow, registry);
+    expect(
+      refusals(asked, {
+        filter: { any: [{ not: { field: 'status', op: 'equals', value: 'todo' } }] },
+        sort: [
+          { field: 'updatedAt', dir: 'desc' },
+          { field: 'title', dir: 'asc' },
+        ],
+        page: { skip: 30, take: 20 },
+      }),
+    ).toEqual([
+      'filter.any: the resource joins conditions by "all" alone, never "any"',
+      'filter.any.0.not: the resource joins conditions by "all" alone, never "not"',
+      'sort: a sort names one field here',
+      'page.skip: the resource skips whole pages: a multiple of 20',
+    ]);
+    expect(refusals(asked, { page: { cursor: 'eyJpZCI6NDJ9' } })).toEqual([
+      'page.cursor: the resource pages by number, never by cursor',
+    ]);
+    expect(refusals(asked, { page: { take: 200 } })).toEqual([
+      'page.take: a page takes at most 100 rows here',
+    ]);
+    expect(refusals(asked, { page: { skip: 40, take: 20 } })).toEqual([]);
+    const cursorOnly = {
+      ...narrow,
+      serves: {
+        ...narrow.serves,
+        page: { ...narrow.serves.page, numbered: 'none' as const, cursor: true },
+      },
+    };
+    expect(refusals(queryOf(cursorOnly, registry), { page: { skip: 20 } })).toEqual([
+      'page.skip: the resource pages by cursor, never by number',
+    ]);
+  });
 
   it('takes one project’s open items, mine, by a field and an attribute’s path', () => {
     const open = {

@@ -2,35 +2,16 @@ import { useMemo, useState } from 'react';
 import { cn } from '../../../../style';
 import { Avatar, type AvatarSize } from '../../../primitives/components/avatar';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
-import {
-  readOnlyFieldClass,
-  type ControlProps,
-  type ControlSize,
-  type Option,
-} from '../../contract';
-import { ComboboxList } from '../../parts/combobox-list';
-import { fieldClass, fieldState } from '../../parts/field';
+import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
+import { fieldClass, fieldState, triggerPrefixClass } from '../../parts/field';
 import { Popup } from '../../parts/popup';
+import { PeopleList } from './people-list';
+import type { Person } from './person';
+
+export type { Person } from './person';
 
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 const AVATAR: Record<ControlSize, AvatarSize> = { xs: 'xs', md: 'sm', lg: 'md' };
-
-/** Someone a UserPicker offers. */
-export interface Person {
-  /** What `value` holds for this person. */
-  id: string;
-  /** Shown in the list, and on the field when only this person is chosen; the avatar takes its initials. */
-  name: string;
-  /** Secondary line in the list — a handle, a team, a role. */
-  detail?: string;
-  /** Shown, but neither the cursor nor a click can pick them. */
-  disabled?: boolean;
-  /**
-   * Why a `disabled` person can't be picked, e.g. "Away until Monday." The
-   * list prints it under the greyed row and makes it the row's description.
-   */
-  disabledReason?: string;
-}
 
 export type UserPickerProps = Omit<ControlProps<string[]>, 'value' | 'onChange'> & {
   /** Everyone who can be picked, in the order the list shows them. */
@@ -46,6 +27,12 @@ export type UserPickerProps = Omit<ControlProps<string[]>, 'value' | 'onChange'>
   maxAvatars?: number;
   /** Shown on the field while nobody is chosen. */
   placeholder?: string;
+  /**
+   * Words before the value on the field, in the muted tone, as a filter bar
+   * names a field inside its control: "Type:" in "Type: any". With one, the
+   * placeholder reads as a value would.
+   */
+  prefix?: string;
   /** The accessible name of the list of people. */
   label?: string;
 };
@@ -74,6 +61,7 @@ export function UserPicker({
   multiple = false,
   maxAvatars = 3,
   placeholder = 'Unassigned',
+  prefix,
   label = 'People',
   size = 'md',
   tone,
@@ -89,19 +77,6 @@ export function UserPicker({
       .map((personId) => people.find((p) => p.id === personId))
       .filter(Boolean) as Person[];
   }, [people, value]);
-
-  // The list speaks options; a person is one, with their name as its label.
-  const options = useMemo<Option[]>(() => {
-    return people.map((person) => {
-      return {
-        value: person.id,
-        label: person.name,
-        disabled: person.disabled,
-        disabledReason: person.disabledReason,
-      };
-    });
-  }, [people]);
-  const byId = useMemo(() => new Map(people.map((person) => [person.id, person])), [people]);
 
   function toggle(personId: string) {
     if (readOnly) {
@@ -137,13 +112,14 @@ export function UserPicker({
         focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8 font-sans',
-          chosen.length > 0 ? 'text-gray-12' : 'text-gray-9',
+          chosen.length > 0 || prefix ? 'text-gray-12' : 'text-gray-9',
           readOnly && readOnlyFieldClass,
           className,
         ),
       })}
     >
       <span className="flex min-w-0 items-center gap-8">
+        {prefix ? <span className={triggerPrefixClass}>{prefix}</span> : null}
         {chosen.length === 0 ? (
           // The dashed ring. NOT an empty avatar — that reads as a picture that
           // failed to load rather than a slot nobody is in.
@@ -197,37 +173,12 @@ export function UserPicker({
     >
       {/* Mounted as the popup opens, so each opening starts with an empty
           search and the cursor on the first person chosen. */}
-      <ComboboxList
-        options={options}
+      <PeopleList
+        people={people}
         isSelected={(personId) => value.includes(personId)}
         onPick={toggle}
-        keepOpen={multiple}
-        searchPlaceholder="Search people"
-        // A handle finds its person as well as a name does.
-        matches={(option, query) => {
-          return (
-            option.label.toLowerCase().includes(query) ||
-            (byId.get(option.value)?.detail?.toLowerCase().includes(query) ?? false)
-          );
-        }}
-        renderLeading={(option) => <Avatar name={option.label} size="xs" />}
-        renderTrailing={(option) => {
-          const detail = byId.get(option.value)?.detail;
-          return detail ? (
-            <span className="text-11 text-gray-9 shrink-0 font-mono">{detail}</span>
-          ) : null;
-        }}
-        emptyLabel="Nobody to pick"
-        noMatchLabel={(query) => {
-          return (
-            <>
-              Nobody matches <span className="font-500">“{query}”</span>
-            </>
-          );
-        }}
+        multiple={multiple}
         label={label}
-        multiselectable={multiple}
-        className="w-full"
       />
     </Popup>
   );

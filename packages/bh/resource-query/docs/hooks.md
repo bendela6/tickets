@@ -1,0 +1,411 @@
+---
+title: React Query hooks
+summary: "React Query's hooks for a resource's routes: its metadata, a query's
+  page or groups, the pages a cursor brings, one row, and the writes, which put
+  the row they answer in each list the cache holds."
+order: 3
+related: [The client, The resource contract]
+---
+
+[//]: # 'written from hooks.doc.yaml by pnpm docs:sync; edit that file, not this one'
+
+# React Query hooks
+
+React Query's hooks for a resource's routes: its metadata, a query's page
+or groups, the pages a cursor brings, one row, and the writes, which put
+the row they answer in each list the cache holds.
+
+`@bh/resource-query` builds on [the client](../../../shared/resource/docs/client.md): each hook
+is one route of [the contract](../../../shared/resource/docs/contract.md), called through
+`@bh/resource/client`'s fetcher and kept in React Query's cache. Every
+type this page names is defined under [Types](#types).
+
+## Taking it
+
+It needs `@bh/resource`, and an app takes both on the gateway's bh page.
+Its tests run the hooks against `@bh/source`'s router, a dev dependency,
+so the gateway asks for `source` beside it. Its peers are `react` and
+`@tanstack/react-query`, which the app installs itself:
+
+```json
+"dependencies": {
+  "@bh/resource": "workspace:*",
+  "@bh/resource-query": "workspace:*",
+  "@tanstack/react-query": "^5.103.1"
+}
+```
+
+A `ResourceProvider`, inside React Query's own provider, gives the hooks
+below it the client, the registry the server runs with (bh's kinds and
+operators, and the app's own beside them; bh's alone when absent), and
+who is viewing, for `isMe`:
+
+```tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
+import { resourceClient } from '@bh/resource/client';
+import { ResourceProvider } from '@bh/resource-query';
+
+const queryClient = new QueryClient();
+const api = resourceClient({ base: '/api' });
+
+export function Providers({ viewer, children }: { viewer?: number; children: ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ResourceProvider client={api} {...(viewer === undefined ? {} : { viewer })}>
+        {children}
+      </ResourceProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+## Reading
+
+Each read hook takes the resource's name, what it asks, and React Query's
+options but its key and its function, and answers React Query's result.
+
+| Hook                                            | Route                                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| `useResourceMeta(resource)`                     | `GET /meta`                                                      |
+| `useResourceQuery<T>(resource, query?)`         | `POST /query`: a page, numbered or after a cursor, or its groups |
+| `useResourceInfiniteQuery<T>(resource, query?)` | `POST /query`, page after page by the cursor each gives          |
+| `useResourceRow<T>(resource, id)`               | `GET /:id`                                                       |
+
+A table that numbers its pages asks one page at a time, by `skip` and
+`take`. A list that grows as it scrolls asks `useResourceInfiniteQuery`,
+which pages by the cursor each answer gives (`page.next`), `take` rows at
+a time: `fetchNextPage` brings the next while `hasNextPage` is true.
+
+```ts
+import { useResourceInfiniteQuery, useResourceQuery } from '@bh/resource-query';
+
+interface Item {
+  id: number;
+  title: string;
+}
+
+export function useItemsPage(page: number) {
+  return useResourceQuery<Item>('items', {
+    sort: [{ field: 'updatedAt', dir: 'desc' }],
+    page: { skip: page * 50, take: 50 },
+  });
+}
+
+export function useOpenItems() {
+  const list = useResourceInfiniteQuery<Item>('items', {
+    filter: { field: 'status.kind', op: 'in', value: ['todo', 'active'] },
+    take: 50,
+  });
+  const rows = list.data?.pages.flatMap((page) => page.rows) ?? [];
+  return { rows, more: list.hasNextPage, next: () => list.fetchNextPage() };
+}
+```
+
+An error answer is the client's `ResourceRequestError`, by its `code`.
+Each read is also React Query's options (`resourceQueryOptions` and the
+rest), so a route's loader fills the cache a hook then reads, through
+React Query's `queryClient.query` (`ensureQueryData` on an older 5.x);
+and `resourceKeys` names every key, so an app refreshes a resource's
+answers by its prefix:
+
+```ts
+import type { QueryClient } from '@tanstack/react-query';
+import { resourceClient } from '@bh/resource/client';
+import { resourceKeys, resourceQueryOptions } from '@bh/resource-query';
+
+declare const queryClient: QueryClient;
+const api = resourceClient();
+
+export function loader() {
+  return queryClient.query(resourceQueryOptions(api, 'items', { page: { take: 50 } }));
+}
+
+export function refreshItems() {
+  return queryClient.invalidateQueries({ queryKey: resourceKeys.of('items') });
+}
+```
+
+## Writing
+
+| Hook                        | Route         | `mutate` takes             |
+| --------------------------- | ------------- | -------------------------- |
+| `useCreateRow<T>(resource)` | `POST`        | `{ values }`               |
+| `useUpdateRow<T>(resource)` | `PATCH /:id`  | `{ id, values, version? }` |
+| `useDeleteRow(resource)`    | `DELETE /:id` | `{ id, version? }`         |
+
+Each takes React Query's mutation options but its function. Every call of
+`mutate` sends its own `Idempotency-Key`, and one React Query retries
+sends the same one again.
+
+A write answers the row after it, and before `mutate` settles the cache
+holds it: its own entry is that row, and every list of the resource the
+cache holds keeps it or drops it by its query's filter and search, in its
+place by its query's order, its total moved by what entered or left, as
+[the client's After a write](../../../shared/resource/docs/client.md#after-a-write) lays out.
+A deleted row leaves every list, and its own entry is gone. None of it
+asks the server again, except where the client can't tell:
+
+- a grouped query, whose counts it doesn't keep;
+- a list sorted by a key it can't order here: a kind without `compare`, a
+  ref whose titles the cache doesn't hold (the ref's resource's metadata
+  and the row it points at), a key the list's `fields` left out;
+- every list of the resource, when its metadata can't be had.
+
+Those are asked again, as React Query's invalidation does.
+
+```ts
+import { useCreateRow, useUpdateRow } from '@bh/resource-query';
+
+interface Item {
+  id: number;
+  title: string;
+  status: string;
+  updatedAt: string;
+}
+
+export function useFinish() {
+  const update = useUpdateRow<Item>('items');
+  return (item: Item) => {
+    update.mutate({ id: item.id, values: { status: 'done' }, version: item.updatedAt });
+  };
+}
+
+export function useAdd() {
+  const create = useCreateRow<Item>('items');
+  return (title: string) => create.mutateAsync({ values: { title } });
+}
+```
+
+## Types
+
+Every type above, as the package exports it. The contract's shapes it
+names are under [From the contract](#from-the-contract); the client's
+(`ResourceClient`, `QueryAnswer`) are on [the client's
+page](../../../shared/resource/docs/client.md#types).
+
+### The provider
+
+```tsx
+import type { ReactNode } from 'react';
+import type { Id, Registry } from '@bh/resource';
+import type { ResourceClient } from '@bh/resource/client';
+
+/** Gives the resource hooks below it their client, registry and viewer. */
+export declare function ResourceProvider(props: ResourceProviderProps): ReactNode;
+
+export interface ResourceProviderProps {
+  /** The fetcher for the routes: resourceClient({ base: '/api' }). */
+  client: ResourceClient;
+  /** The kinds and operators the server runs with; bh's alone when absent. */
+  registry?: Registry;
+  /** The signed-in user's id, for isMe. */
+  viewer?: Id;
+  children?: ReactNode;
+}
+
+/** What the hooks read from the nearest ResourceProvider. */
+export interface ResourceContextValue {
+  client: ResourceClient;
+  registry: Registry;
+  viewer?: Id;
+}
+
+/** The nearest ResourceProvider's value; throws outside one. */
+export declare function useResourceContext(): ResourceContextValue;
+```
+
+### The hooks
+
+```ts
+import type {
+  InfiniteData,
+  QueryKey,
+  UseInfiniteQueryOptions,
+  UseInfiniteQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
+} from '@tanstack/react-query';
+import type { Create, Id, Patch, Query, ResourceMeta, Row } from '@bh/resource';
+import type { QueryAnswer } from '@bh/resource/client';
+
+export declare function useResourceMeta(
+  resource: string,
+  options?: ReadOptions<ResourceMeta>,
+): UseQueryResult<ResourceMeta>;
+
+export declare function useResourceQuery<T = Row>(
+  resource: string,
+  query?: Query,
+  options?: ReadOptions<QueryAnswer<T>>,
+): UseQueryResult<QueryAnswer<T>>;
+
+export declare function useResourceInfiniteQuery<T = Row>(
+  resource: string,
+  query?: InfiniteQuery,
+  options?: InfiniteOptions<T>,
+): UseInfiniteQueryResult<InfiniteData<QueryAnswer<T>, string | null>>;
+
+export declare function useResourceRow<T = Row>(
+  resource: string,
+  id: Id,
+  options?: ReadOptions<T>,
+): UseQueryResult<T>;
+
+export declare function useCreateRow<T = Row>(
+  resource: string,
+  options?: WriteOptions<T, Create>,
+): UseMutationResult<T, Error, Create>;
+
+export declare function useUpdateRow<T = Row>(
+  resource: string,
+  options?: WriteOptions<T, UpdateRow>,
+): UseMutationResult<T, Error, UpdateRow>;
+
+export declare function useDeleteRow(
+  resource: string,
+  options?: WriteOptions<void, DeleteRow>,
+): UseMutationResult<void, Error, DeleteRow>;
+
+/** A query whose pages a cursor brings: no page, which the hook asks for, nor a group. */
+export interface InfiniteQuery extends Omit<Query, 'page' | 'group'> {
+  /** Rows per page: 1 to 500; 100, or the resource's most, when absent. */
+  take?: number;
+}
+
+/** What useUpdateRow's mutate takes. */
+export interface UpdateRow extends Patch {
+  id: Id;
+}
+
+/** What useDeleteRow's mutate takes. */
+export interface DeleteRow {
+  id: Id;
+  /** The version read; a stale one answers 409 conflict. */
+  version?: string;
+}
+
+/** React Query's options for a read, but its key and its function. */
+export type ReadOptions<T> = Omit<UseQueryOptions<T, Error, T, QueryKey>, 'queryKey' | 'queryFn'>;
+
+/** React Query's options for pages, but what the hook gives them. */
+export type InfiniteOptions<T> = Omit<
+  UseInfiniteQueryOptions<
+    QueryAnswer<T>,
+    Error,
+    InfiniteData<QueryAnswer<T>, string | null>,
+    QueryKey,
+    string | null
+  >,
+  'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'
+>;
+
+/** React Query's options for a write, but its function. */
+export type WriteOptions<T, Variables> = Omit<
+  UseMutationOptions<T, Error, Variables>,
+  'mutationFn'
+>;
+```
+
+### Keys and options
+
+```ts
+import type { Id, Query } from '@bh/resource';
+import type { InfiniteQuery } from '@bh/resource-query';
+
+/** Every key the hooks keep a resource's answers under, below '@bh/resource'. */
+export declare const resourceKeys: {
+  all: () => readonly ['@bh/resource'];
+  of: (resource: string) => readonly ['@bh/resource', string];
+  meta: (resource: string) => readonly ['@bh/resource', string, 'meta'];
+  answers: (resource: string) => readonly ['@bh/resource', string, 'query'];
+  answer: (resource: string, query: Query) => readonly ['@bh/resource', string, 'query', Query];
+  lists: (resource: string) => readonly ['@bh/resource', string, 'infinite'];
+  list: (
+    resource: string,
+    query: InfiniteQuery,
+  ) => readonly ['@bh/resource', string, 'infinite', InfiniteQuery];
+  rows: (resource: string) => readonly ['@bh/resource', string, 'row'];
+  row: (resource: string, id: Id) => readonly ['@bh/resource', string, 'row', Id];
+};
+```
+
+`resourceMetaOptions(client, resource)`, `resourceQueryOptions(client,
+resource, query)`, `resourceInfiniteQueryOptions(client, resource, query)`
+and `resourceRowOptions(client, resource, id)` answer React Query's
+`queryOptions` and `infiniteQueryOptions` for each read: its key, and its
+function through the client.
+
+### From the contract
+
+```ts
+import type {
+  ActionMeta,
+  FieldMeta,
+  Filter,
+  FormatSpec,
+  GroupBy,
+  KindSpec,
+  OperatorSpec,
+  Page,
+  ResourceRoles,
+  Serves,
+  Sort,
+} from '@bh/resource';
+
+/** One value: text, a finite number, or a boolean. */
+export type Scalar = string | number | boolean;
+
+/** Any JSON value. */
+export type Json = null | Scalar | Json[] | { [key: string]: Json };
+
+/** A row's id: a string that isn't empty, or a whole number. */
+export type Id = string | number;
+
+/** A field's value: its kind's, null when unset; a list of them on a list field. */
+export type FieldValue = null | Scalar | Scalar[] | Json;
+
+/** A row: its fields' values by key. */
+export type Row = Record<string, FieldValue>;
+
+/** GET /meta. */
+export interface ResourceMeta {
+  resource: string;
+  label: { one: string; other: string };
+  roles: ResourceRoles;
+  fields: FieldMeta[];
+  sort: Sort[];
+  actions: ActionMeta[];
+  serves: Serves;
+}
+
+/** POST /query: the body. */
+export interface Query {
+  filter?: Filter;
+  search?: string;
+  sort?: Sort[];
+  page?: Page;
+  group?: GroupBy;
+  fields?: string[];
+}
+
+/** POST's body. */
+export interface Create {
+  values: Record<string, FieldValue>;
+}
+
+/** PATCH's body: the values that change, and the version read. */
+export interface Patch {
+  values: Record<string, FieldValue>;
+  version?: string;
+}
+
+/** bh's kinds and operators, the app's own, and the formats. */
+export interface Registry {
+  readonly kinds: readonly KindSpec[];
+  readonly formats: readonly FormatSpec[];
+  readonly operators: readonly OperatorSpec[];
+}
+```

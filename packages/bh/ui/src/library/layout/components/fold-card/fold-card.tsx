@@ -1,7 +1,8 @@
 import { useId, type ReactNode } from 'react';
+import { useDisclosure } from '@bh/hooks';
 import { cn } from '../../../../style';
 import { Card, CardBody, type Padding } from '../card';
-import { FoldRow, useFoldOpen } from '../disclosure/fold';
+import { FoldRow } from '../disclosure/fold';
 
 interface FoldCardProps {
   /** The card's title, in its header beside the chevron. */
@@ -48,13 +49,13 @@ export function FoldCard({
   children,
 }: FoldCardProps) {
   const contentId = `${useId()}content`;
-  const [isOpen, toggle] = useFoldOpen(open, defaultOpen, onOpenChange);
+  const fold = useDisclosure({ open, defaultOpen, onOpenChange, id: contentId });
+  const isOpen = fold.isOpen;
   return (
     <Card className={className}>
       <h3>
         <FoldRow
-          open={isOpen}
-          onToggle={toggle}
+          fold={fold}
           title={title}
           summary={summary}
           contentId={contentId}
@@ -71,7 +72,7 @@ export function FoldCard({
         />
       </h3>
       {isOpen ? (
-        <CardBody id={contentId} padding={padding}>
+        <CardBody {...fold.getRegionProps()} padding={padding}>
           {children}
         </CardBody>
       ) : null}

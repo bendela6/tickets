@@ -20,11 +20,6 @@
    can never find them. See scripts/extract-safelist.mjs. */
 @import './generated/safelist.css';
 
-/* Rich-text prose (`.rt`), lifted out of the token sheet on 2026-08-04. It
-   carries its own `@layer components` wrapper, so it keeps its cascade position
-   wherever this import sits. */
-@import './prose.css';
-
 /* Every consumer's Tailwind build must scan this package's own sources —
    component and demo files. Relative to THIS file, which now lives in
    `styles/`, so the sources are one level up and over in `src/`. Pointing this
@@ -165,6 +160,12 @@
   }
 }
 
+@keyframes panel-slide-from-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+
 .panel-slide-right {
   animation: panel-slide-from-right 200ms var(--ease-out);
 }
@@ -173,9 +174,14 @@
   animation: panel-slide-from-left 200ms var(--ease-out);
 }
 
+.panel-slide-bottom {
+  animation: panel-slide-from-bottom 200ms var(--ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .panel-slide-right,
-  .panel-slide-left {
+  .panel-slide-left,
+  .panel-slide-bottom {
     animation: none;
   }
 }
@@ -308,4 +314,31 @@
     width: 100%;
     opacity: 0.5;
   }
+}
+
+/* A filter bar's end: an inline row's count, its changes and its buttons
+   sit past the row's free space, as the design's bars put them. The first
+   of them with something to show takes the space; the rest follow it. A
+   reset with nothing to reset, Clear before any condition, isn't drawn. */
+.inline-row
+  > [data-row-end]:not(:empty, [data-action='reset']:disabled):not(
+    [data-row-end]:not(:empty, [data-action='reset']:disabled) ~ *
+  ) {
+  margin-inline-start: auto;
+}
+.inline-row > [data-action='reset']:disabled {
+  display: none;
+}
+
+/* A filter sheet's form keeps its buttons at the sheet's foot while its
+   fields scroll under them: the form's actions row, which ActionsLayout
+   marks data-actions, sticks to the bottom of the sheet's scrolling body,
+   on the sheet's own surface, with a rule above it. */
+.filter-sheet [data-actions] {
+  position: sticky;
+  bottom: 0;
+  margin-inline: -16px;
+  padding: 12px 16px 16px;
+  background: var(--color-surface-raised);
+  border-top: 1.5px solid var(--color-gray-5);
 }

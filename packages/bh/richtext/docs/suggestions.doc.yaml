@@ -1,0 +1,85 @@
+title: Suggestions
+summary: What @, an app's own trigger and / offer at the caret, filled by the app, picked with the keys.
+order: 5
+related: [RichTextEditor, The core, Combobox]
+body:
+  - |
+    What `@`, an app's own trigger and `/` offer at the caret, filled by the
+    app, picked with the keys.
+
+    Typing an inline node's trigger opens a list at the caret. The app fills
+    it: `suggestions`, by the node's name, `mention` for `@` and its own
+    nodes by theirs. A pick inserts the node's chip. `/` opens the list of
+    commands when `slashCommands` is on.
+  - h2: Examples
+  - |
+    People to mention. A source's `items` takes what was typed after the
+    trigger and gives the rows; each has a `label`, and may have a
+    `description` after it and a `leading` node before it, an avatar here.
+  - demo: examples/people-to-mention.tsx
+  - |
+    From the server: `items` may give a promise, and the list says it is
+    looking until it resolves. A `label` names the list, over it and to a
+    screen reader.
+  - demo: examples/from-the-server.tsx
+  - |
+    `slashCommands` set to `true` offers bh's own (`SLASH_COMMANDS`): text,
+    headings, lists, quote, code block, callout, collapsible section, image
+    and divider. Only those whose `feature` the editor has are offered, and
+    Image only with an upload.
+  - demo: examples/slash-commands.tsx
+  - |
+    An app's own list, which may spread bh's in. A command runs on Tiptap's
+    `Editor` (from `@tiptap/react`, which `@bh/richtext/editor` exports as
+    a type), where the `/` and what was typed after it were.
+  - demo: examples/commands-of-your-own.tsx
+  - h2: An app's own nodes
+  - |
+    A node an app adds through `createRichText` (see
+    [the core](/richtext/core)) suggests by its own name, with its own
+    trigger, `#` for a reference say. A node with no source opens no list,
+    and the toolbar's `@` is there only while the app suggests people.
+  - code: |
+      import { useState } from 'react';
+      import type { RichText } from '@bh/richtext';
+      import { RichTextEditor, type SuggestionItem } from '@bh/richtext/editor';
+
+      // The app's: its rich text with a `recipeRef` node, and where both lists come from.
+      declare const richText: RichText;
+      declare function people(query: string): SuggestionItem[];
+      declare const api: { searchRecipes: (query: string) => Promise<SuggestionItem[]> };
+
+      export function Method() {
+        const [method, setMethod] = useState('');
+        return (
+          <RichTextEditor
+            label="Method"
+            richText={richText}
+            suggestions={{
+              mention: { label: 'People', items: (query) => people(query) },
+              recipeRef: { label: 'Recipes', items: (query) => api.searchRecipes(query) },
+            }}
+            value={method}
+            onChange={setMethod}
+          />
+        );
+      }
+    lang: tsx
+    file: method.tsx
+  - |
+    The picked row's `id` and `label` are the chip's, and its `attrs` go on
+    it beside them. Sources are read as they are typed, so a new object each
+    render needs no new editor.
+  - h2: Keyboard and accessibility
+  - |
+    The focus stays in the text while a list is open: ↑ and ↓ move along
+    it, wrapping, Enter or Tab picks, and Escape closes it until the caret
+    moves on. The text points at the list and at the row under the cursor,
+    as a combobox's input does (`aria-controls`, `aria-activedescendant`),
+    and the list is a `listbox` named by its source's `label`.
+  - h2: Types
+  - ref: SuggestionSource
+  - ref: SuggestionItem
+  - ref: SlashCommand
+  - ref: SLASH_COMMANDS
+  - ref: Feature

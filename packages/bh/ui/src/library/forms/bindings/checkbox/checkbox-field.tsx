@@ -1,5 +1,6 @@
 import type { InputProps } from '@bh/form';
 import { Checkbox } from '../../../inputs/components/checkbox';
+import { useInlineField } from '../../components/inline-field-wrapper';
 
 export interface CheckboxFieldConfig {
   /**
@@ -26,15 +27,18 @@ export interface CheckboxFieldConfig {
  * the form. A generated form picking between them is picking that meaning.
  */
 export function CheckboxField(p: InputProps<CheckboxFieldConfig, boolean>) {
+  const inline = useInlineField();
   return (
     <div onBlur={p.onBlur}>
       <Checkbox
         id={p.name}
         aria-describedby={p.describedBy}
         name={p.name}
-        label={p.config.label}
+        // In a filter bar's row, the field's label is the text beside it.
+        label={p.config.label ?? inline?.label}
         description={p.config.description}
         value={Boolean(p.value)}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

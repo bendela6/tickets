@@ -26,6 +26,12 @@ body:
     with its label.
   - demo: examples/colored-icons.tsx
   - |
+    An option's `count`, how many rows hold it, follows its label in IBM
+    Plex Mono at 11 pixels, in the label's color, muted, and is part of the
+    segment's name: "All 412". Without one, nothing is drawn and no gap is
+    left.
+  - demo: examples/with-counts.tsx
+  - |
     `size` sets the height, 30, 38 or 46 pixels, with the type, the padding
     and the glyph.
   - demo: examples/sizes.tsx

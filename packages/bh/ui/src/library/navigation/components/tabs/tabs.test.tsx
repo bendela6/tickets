@@ -160,4 +160,34 @@ describe('Tabs', () => {
     rerender(<Tabs items={items} value="board" onChange={() => {}} />);
     expect(screen.getByRole('tablist').hasAttribute('aria-label')).toBe(false);
   });
+
+  it('puts id and aria-describedby on the strip', () => {
+    render(
+      <>
+        <p id="help">Only open ones are counted.</p>
+        <Tabs id="status" aria-describedby="help" items={items} value="board" onChange={() => {}} />
+      </>,
+    );
+    const strip = screen.getByRole('tablist');
+    expect(strip.id).toBe('status');
+    expect(strip).toHaveAccessibleDescription('Only open ones are counted.');
+  });
+
+  it('disabled: every item out of reach, and the strip says so', () => {
+    render(<Tabs role="group" items={items} value="board" onChange={() => {}} disabled />);
+    expect(screen.getByRole('group')).toHaveAttribute('aria-disabled', 'true');
+    for (const item of screen.getAllByRole('button')) {
+      expect(item).toBeDisabled();
+    }
+  });
+
+  it('readOnly: every item keeps its tab stop, says so, and a click changes nothing', () => {
+    const onChange = vi.fn();
+    render(<Tabs role="group" items={items} value="board" onChange={onChange} readOnly />);
+    const table = screen.getByRole('button', { name: /Table/ });
+    expect(table).not.toBeDisabled();
+    expect(table).toHaveAttribute('aria-disabled', 'true');
+    table.click();
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

@@ -18,7 +18,7 @@ export {
 // `DocView`, and Prose.
 export * from './blocks';
 export { BlockErrorCard } from './error-card';
-export { Prose } from './prose';
+export { Prose, type ProseNodeProps, type ProseNodes, type ProseProps } from './prose';
 
 // The highlighter code is coloured by lives in @bh/code, with CodeBlock (from
 // './blocks'). It is exported here too, as it was before @bh/code, so an app

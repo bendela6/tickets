@@ -61,7 +61,10 @@ list.
 
 When the reader asks for less motion, a drawer appears without sliding,
 and the table's refresh bar and the status dot's pulse stop. A spinner
-keeps turning.
+keeps turning, but for the one in
+[ScreenState](../../src/library/feedback/components/screen-state/screen-state.md)'s loading state, which
+fades in place instead: a fade moves nothing, and still says the screen
+is working.
 
 In the app's own code, write `motion-safe:` on motion that only decorates,
 so it plays only for readers who haven't asked for less:

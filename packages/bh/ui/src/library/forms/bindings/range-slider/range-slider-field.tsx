@@ -23,6 +23,7 @@ export function RangeField(p: InputProps<RangeFieldConfig, [number, number]>) {
         min={min}
         max={max}
         step={p.config.step}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

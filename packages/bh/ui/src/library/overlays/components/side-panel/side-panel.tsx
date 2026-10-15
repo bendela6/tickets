@@ -126,7 +126,7 @@ export function SidePanel({
   children,
 }: SidePanelProps) {
   const controlled = controlledOpen !== undefined;
-  const { width, panelRef, separatorProps } = usePanelWidth({
+  const { width, panelRef, getSeparatorProps } = usePanelWidth({
     side,
     defaultWidth,
     minWidth,
@@ -268,7 +268,7 @@ export function SidePanel({
       )}
     >
       <div
-        {...separatorProps}
+        {...getSeparatorProps()}
         className={cn(
           'hover:bg-indigo-9 absolute inset-y-0 z-10 w-6 cursor-col-resize',
           side === 'left' ? 'right-0' : 'left-0',

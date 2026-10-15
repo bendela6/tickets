@@ -27,6 +27,39 @@ export type LogTone = Tone | 'quiet';
 /** What a line counts as when a rule marks it: an error or a warning line is washed in its tone. */
 export type LogLevel = 'error' | 'warning';
 
+/** How a section starts: how deep it sits, and whether it starts open. */
+export interface LogSection {
+  /**
+   * How deep it sits: 0, the top, unless given. A section runs until the
+   * next one at its level or above it; one at a deeper level starts inside it.
+   */
+  level?: number;
+  /**
+   * Whether it starts open or folded. Unset, it is open while it holds the
+   * log's last line or a failure, and folded otherwise: a streaming log's
+   * running step is open, and folds once it is through. Once the reader
+   * opens or folds it, it stays as they left it.
+   */
+  start?: 'open' | 'folded';
+}
+
+/** Starts a section at each line it matches. */
+export interface LogSectionRule extends LogSection {
+  /**
+   * The lines that start one, read as plain text. A string matches a line
+   * that holds it, case and all; a regular expression, a line it matches
+   * (`^` ties it to the line's start).
+   */
+  match: string | RegExp;
+}
+
+/**
+ * Says whether a line starts a section, and how: its level and how it
+ * starts, or nothing for a line that belongs to the section it is in. Given
+ * the line's plain text, its escape codes taken out, and its index.
+ */
+export type LogSectionOf = (text: string, index: number) => LogSection | undefined;
+
 /** A highlight: the text it matches, and how that text is drawn. */
 export interface LogRule {
   /**

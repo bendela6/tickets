@@ -23,6 +23,12 @@ body:
     `primary` unless given, and so does the `+N` chip.
   - demo: examples/coloured-options.tsx
   - |
+    An option's `count`, how many rows hold it, follows its label in IBM
+    Plex Mono at 11 pixels, in the label's color, muted, and is part of
+    the chip's name: "Running 9". Without one, nothing is drawn and no gap
+    is left.
+  - demo: examples/with-counts.tsx
+  - |
     Past `maxVisible`, 6 unless set, the rest of the options sit behind a
     `+N` chip that opens a searchable list. While some of them are pressed,
     the `+N` chip is pressed too and counts them.

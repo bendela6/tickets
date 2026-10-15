@@ -7,7 +7,7 @@
 // against one resource's metadata and the registry (metaOf, queryOf…), and
 // made into JSON Schema and OpenAPI for the routes and the docs.
 export { FieldValue, Id, Json, Row, Scalar } from './values';
-export { AttributeMeta, OptionMeta } from './schemas';
+export { AttributeMeta, FileValue, OptionMeta } from './schemas';
 export {
   FieldFormat,
   FieldKey,
@@ -26,7 +26,7 @@ export {
   type Operator,
   type OperatorSpec,
 } from './types';
-export { ResourceMeta } from './meta';
+export { ResourceMeta, Serves } from './meta';
 export {
   Condition,
   FieldPath,
@@ -54,7 +54,8 @@ export {
   type RegistryEntries,
 } from './registry';
 export { actionInputOf, createOf, metaOf, patchOf, queryOf, rowOf } from './checks';
-export { matchesFilter } from './matches';
+export { matchesFilter, matchesSearch, valueAt } from './matches';
+export { rowOrder, type OrderOptions, type TitleOf } from './order';
 export { jsonSchemaOf, openApiOf } from './openapi';
 export type { JsonSchema } from '@valibot/to-json-schema';
 export type { OpenAPIV3_1 } from 'openapi-types';

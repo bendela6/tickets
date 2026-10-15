@@ -160,3 +160,10 @@ export function fieldState(tone: string | undefined): {
 /** Re-exported so a control that needs one rung of the ladder does not reach
  *  past this module for it. */
 export { CONTROL_LADDER, type ControlSize };
+
+/**
+ * Words before a trigger's value, in the muted tone, as a filter bar names a
+ * field inside its control: "Type:" in "Type: any". Shared by the pickers
+ * that take a `prefix`, so it reads alike on each.
+ */
+export const triggerPrefixClass = 'text-gray-11 shrink-0 font-sans';

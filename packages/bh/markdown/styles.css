@@ -1,6 +1,8 @@
-/* The code blocks are @bh/code's, so its classes come with these. An import
-   comes before every other rule. */
+/* The code blocks are @bh/code's, so its classes come with these; and Prose
+   wears the rich text editor's look, `.rt`, which @bh/richtext keeps. An
+   import comes before every other rule. */
 @import '@bh/code/styles.css';
+@import '@bh/richtext/prose.css';
 
 /* @bh/markdown's sources for the consuming app's Tailwind scan: the blocks,
    the error card and Prose are styled here. A class used only inside this

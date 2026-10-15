@@ -6,7 +6,12 @@ import type { ErdTable, Point } from './schema';
 
 export type CardHandle = Pick<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  'onPointerDown' | 'onPointerMove' | 'onPointerUp' | 'onPointerCancel' | 'onKeyDown'
+  | 'onPointerDown'
+  | 'onPointerMove'
+  | 'onPointerUp'
+  | 'onPointerCancel'
+  | 'onLostPointerCapture'
+  | 'onKeyDown'
 >;
 
 export interface TableCardProps {

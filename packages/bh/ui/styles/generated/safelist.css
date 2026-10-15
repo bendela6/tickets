@@ -314,6 +314,7 @@
 @source inline("flex");
 @source inline("flex-1");
 @source inline("flex-col");
+@source inline("flex-wrap");
 @source inline("focus-visible:bg-surface-field");
 @source inline("focus-visible:border-blue-11");
 @source inline("focus-visible:border-blue-9");
@@ -465,7 +466,9 @@
 @source inline("group-hover:text-teal-11");
 @source inline("group-hover:text-yellow-11");
 @source inline("h-16");
+@source inline("h-17");
 @source inline("h-18");
+@source inline("h-19");
 @source inline("h-2");
 @source inline("h-20");
 @source inline("h-22");
@@ -521,6 +524,7 @@
 @source inline("hover:border-blue-9");
 @source inline("hover:border-cyan-8");
 @source inline("hover:border-cyan-9");
+@source inline("hover:border-gray-7");
 @source inline("hover:border-gray-8");
 @source inline("hover:border-gray-9");
 @source inline("hover:border-green-8");
@@ -588,6 +592,7 @@
 @source inline("inset-y-0");
 @source inline("items-baseline");
 @source inline("items-center");
+@source inline("items-start");
 @source inline("justify-center");
 @source inline("leading-none");
 @source inline("left-0");
@@ -604,6 +609,7 @@
 @source inline("overflow-hidden");
 @source inline("p-0");
 @source inline("p-12");
+@source inline("p-16");
 @source inline("p-2");
 @source inline("p-3");
 @source inline("p-4");
@@ -618,8 +624,11 @@
 @source inline("pl-9");
 @source inline("placeholder:text-gray-11");
 @source inline("pointer-events-none");
+@source inline("pt-4");
 @source inline("pt-5");
+@source inline("pt-6");
 @source inline("pt-7");
+@source inline("pt-8");
 @source inline("pt-9");
 @source inline("px-0");
 @source inline("px-10");
@@ -634,6 +643,7 @@
 @source inline("px-8");
 @source inline("px-9");
 @source inline("px-[18px]");
+@source inline("py-12");
 @source inline("py-2");
 @source inline("py-4");
 @source inline("py-6");
@@ -680,6 +690,7 @@
 @source inline("size-20");
 @source inline("size-22");
 @source inline("size-28");
+@source inline("size-30");
 @source inline("size-36");
 @source inline("size-6");
 @source inline("size-8");
@@ -692,6 +703,7 @@
 @source inline("text-13/19");
 @source inline("text-14");
 @source inline("text-15");
+@source inline("text-15/24");
 @source inline("text-9");
 @source inline("text-9/11");
 @source inline("text-blue-10");

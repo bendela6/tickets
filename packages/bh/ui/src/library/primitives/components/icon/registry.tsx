@@ -70,6 +70,10 @@ export const registry = {
   'columns':        { viewBox: '0 0 16 16', node: <><rect x="1.5" y="2" width="4" height="12" rx="1" {...s} /><rect x="6.5" y="2" width="4" height="8" rx="1" {...s} /><rect x="11.5" y="2" width="4" height="10" rx="1" {...s} /></> },
   'rows':           { viewBox: '0 0 16 16', node: <path d="M1.5 4h13M1.5 8h13M1.5 12h13" {...s} /> },
   'rows-compact':   { viewBox: '0 0 16 16', node: <path d="M1.5 3h13M1.5 6h13M1.5 9h13M1.5 12h13" {...s} /> },
+  // A pane split in two, side by side or one over the other: where a second
+  // pane goes, as an example's code beside its result or under it.
+  'columns-2':      { viewBox: '0 0 16 16', node: <><rect x="2" y="2.5" width="12" height="11" rx="1.5" {...s} /><path d="M8 2.5v11" {...s} /></> },
+  'rows-2':         { viewBox: '0 0 16 16', node: <><rect x="2" y="2.5" width="12" height="11" rx="1.5" {...s} /><path d="M2 8h12" {...s} /></> },
   'folder':         { viewBox: '0 0 16 16', node: <path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 2H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1Z" {...s} /> },
   'file':           { viewBox: '0 0 16 16', node: <><path d="M4 2h5l3.5 3.5V14H4Z" {...s} /><path d="M9 2v3.5h3.5" {...s} /></> },
   'terminal':       { viewBox: '0 0 16 16', node: <><rect x="1.5" y="3" width="13" height="10" rx="1.5" {...s} /><path d="m4.5 6.5 2 2-2 2M9 10.5h2.5" {...s} /></> },
@@ -78,6 +82,8 @@ export const registry = {
   'clock':          { viewBox: '0 0 16 16', node: <><circle cx="8" cy="8" r="5.5" {...s} /><path d="M8 5v3.2l2.2 1.3" {...s} /></> },
   'tag':            { viewBox: '0 0 16 16', node: <><path d="M2.5 2.5h5.2L14 8.8 8.8 14 2.5 7.7Z" {...s} strokeLinejoin="round" /><circle cx="5.3" cy="5.3" r="1" fill="currentColor" /></> },
   'user':           { viewBox: '0 0 16 16', node: <><circle cx="8" cy="5.5" r="2.5" {...s} /><path d="M3.2 13.5a4.9 4.9 0 0 1 9.6 0" {...s} /></> },
+  'lock':           { viewBox: '0 0 16 16', node: <><rect x="3" y="7" width="10" height="7" rx="1.5" {...s} /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" {...s} /></> },
+  'text-cursor':    { viewBox: '0 0 16 16', node: <path d="M5 2.5h6M5 13.5h6M8 2.5v11" {...s} strokeLinecap="round" /> },
   // ── theme ──
   'sun':            { viewBox: '0 0 16 16', node: <><circle cx="8" cy="8" r="2.8" {...s} /><path d="M8 1.4v1.4M8 13.2v1.4M1.4 8h1.4M13.2 8h1.4M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1" {...s} strokeLinecap="round" /></> },
   'moon':           { viewBox: '0 0 16 16', node: <path d="M8 2a4 4 0 0 0 6 6 6 6 0 1 1-6-6Z" {...s} strokeLinejoin="round" /> },

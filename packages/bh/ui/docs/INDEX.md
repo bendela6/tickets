@@ -22,12 +22,14 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [Avatar](../src/library/primitives/components/avatar/avatar.md): Shows a name as its initials in a coloured disc or square.
 - [Button](../src/library/primitives/components/button/button.md): Starts an action: save, open a dialog, run a job.
 - [Dot](../src/library/primitives/components/dot/dot.md): An 8-pixel disc in any CSS colour, for a colour known only at runtime.
+- [formatBytes](../src/library/primitives/components/format-bytes/format-bytes.md): Writes a size in bytes as a person reads it, 1.5 KiB or 1.5 kB: in binary units or in decimal ones.
+- [formatDuration](../src/library/primitives/components/format-duration/format-duration.md): Writes a length of time as a person reads it, 2h 30m or 1m 26s, from minutes, seconds or milliseconds.
 - [Icon](../src/library/primitives/components/icon/icon.md): Draws one glyph from the icon registry, in the colour of the text around it.
 - [JsonViewer](../src/library/primitives/components/json-viewer/json-viewer.md): Reads a JSON document, folded and numbered, and edits it when given an `onChange`.
 - [Kbd](../src/library/primitives/components/kbd/kbd.md): A key hint: one key, or a chord, drawn as a key cap.
-- [LogView](../src/library/primitives/components/log-view/log-view.md): Reads any app's log, line by line, its ANSI colours drawn, what failed, warned or passed highlighted, and its stack traces folding.
+- [LogView](../src/library/primitives/components/log-view/log-view.md): Reads any app's log, line by line, its ANSI colours drawn, what failed, warned or passed highlighted, its stack traces folding, in sections the app names, following the end while lines arrive.
 - [Pill](../src/library/primitives/components/pill/pill.md): A compact label for one fact: a status, a type, a count.
-- [RelativeDate](../src/library/primitives/components/relative-date/relative-date.md): Shows a date as days from now (today, in 3 days, 2 days ago); formatDateTime writes one out with its time.
+- [RelativeDate](../src/library/primitives/components/relative-date/relative-date.md): Shows a date as days from now (today, in 3 days), or a moment as minutes and hours (5 minutes ago); formatDateTime writes one out with its time.
 - [StatusDot](../src/library/primitives/components/status-dot/status-dot.md): Shows whether something is running right now.
 - [TextLink](../src/library/primitives/components/text-link/text-link.md): A link in a line of text: its strongest gray, underlined under the pointer.
 - [useCopy](../src/library/primitives/components/use-copy/use-copy.md): Copies text to the clipboard and says whether it worked, for a button of your own.
@@ -82,6 +84,10 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [FieldError](../src/library/forms/components/field-error/field-error.md): A field's error message, in red, announced as an alert.
 - [FieldLabel](../src/library/forms/components/field-label/field-label.md): A field's caption: a label in uppercase, with a mark when the field is required.
 - [FieldWrapper](../src/library/forms/components/field-wrapper/field-wrapper.md): Draws one form field: its label, its control, then its description or its error.
+- [FilterChanges](../src/library/forms/components/filter-changes/filter-changes.md): Says a filter form holds changes not applied yet: "1 change waiting".
+- [FilterCount](../src/library/forms/components/filter-count/filter-count.md): How many rows a filter lets through: "12 of 40 items", "Counting" while it counts.
+- [FilterSheet](../src/library/forms/components/filter-sheet/filter-sheet.md): A filter form's fields on a phone: a Filters button that opens a sheet from the bottom.
+- [InlineFieldWrapper](../src/library/forms/components/inline-field-wrapper/inline-field-wrapper.md): Draws one field in a row, as a filter bar lays its fields out: the label inside the control, before it, or for a screen reader only.
 
 ## Overlays
 
@@ -98,7 +104,8 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 
 - [CardState](../src/library/feedback/components/card-state/card-state.md): A loading card in its four states: waiting, failed, empty, and its content.
 - [Meter](../src/library/feedback/components/meter/meter.md): A share of a whole as a bar: its name, its percent, a caption, and a tone for how full it is.
+- [Notice](../src/library/feedback/components/notice/notice.md): A box with a tone for a message on a page: a note, information, a success, a warning or an error.
 - [Progress](../src/library/feedback/components/progress/progress.md): A bar showing how far along something is, as a percentage.
-- [ScreenState](../src/library/feedback/components/screen-state/screen-state.md): What a screen shows in place of its content: empty, not found, or an error.
+- [ScreenState](../src/library/feedback/components/screen-state/screen-state.md): What a screen shows in place of its content: loading, empty, not found, or an error.
 - [Spinner](../src/library/feedback/components/spinner/spinner.md): A mark that moves while something loads.
 - [Toast](../src/library/feedback/components/toast/toast.md): A short message in the corner of the screen that goes away on its own.

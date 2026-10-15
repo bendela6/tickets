@@ -197,8 +197,9 @@ function actionOperation(
 
 /**
  * A resource's routes as an OpenAPI 3.1 document, under `basePath` ('/api'):
- * its metadata, its query, reading one row, its create, patch and delete, and
- * its actions, with GET /jobs/:id when one runs long. Each names its body
+ * its metadata, its query, reading one row, its create, patch and delete
+ * where it serves them (`serves`), and its actions, with GET /jobs/:id when
+ * one runs long. Each names its body
  * and its answer, ErrorBody at the statuses it may fail with, and every
  * shape is a component, the same for every resource: what a field holds is
  * the metadata's to say, at GET /meta.
@@ -252,7 +253,10 @@ export function openApiOf(meta: ResourceMeta, basePath: string): OpenAPIV3_1.Doc
         },
       }),
     },
-    [base]: {
+  };
+  const { serves } = meta;
+  if (serves.create) {
+    paths[base] = {
       post: operation('create', 'create', {
         parameters: [idempotencyKey],
         requestBody: { required: true, content: content('Create') },
@@ -261,29 +265,37 @@ export function openApiOf(meta: ResourceMeta, basePath: string): OpenAPIV3_1.Doc
           ...failures(400, 409),
         },
       }),
-    },
-    [`${base}/{id}`]: {
-      get: operation('get', 'read one', {
-        parameters: [rowId],
-        responses: {
-          200: { description: 'The row.', content: content('Row') },
-          ...failures(400, 404),
-        },
-      }),
-      patch: operation('update', 'update', {
-        parameters: [rowId, idempotencyKey],
-        requestBody: { required: true, content: content('Patch') },
-        responses: {
-          200: { description: 'The row as it is after it.', content: content('Row') },
-          ...failures(400, 404, 409),
-        },
-      }),
-      delete: operation('delete', 'delete', {
-        parameters: [rowId, ...version, idempotencyKey],
-        responses: { 204: { description: 'Deleted.' }, ...failures(400, 404, 409) },
-      }),
-    },
-  };
+    };
+  }
+  const one: Paths[string] = {};
+  if (serves.read) {
+    one.get = operation('get', 'read one', {
+      parameters: [rowId],
+      responses: {
+        200: { description: 'The row.', content: content('Row') },
+        ...failures(400, 404),
+      },
+    });
+  }
+  if (serves.update) {
+    one.patch = operation('update', 'update', {
+      parameters: [rowId, idempotencyKey],
+      requestBody: { required: true, content: content('Patch') },
+      responses: {
+        200: { description: 'The row as it is after it.', content: content('Row') },
+        ...failures(400, 404, 409),
+      },
+    });
+  }
+  if (serves.delete) {
+    one.delete = operation('delete', 'delete', {
+      parameters: [rowId, ...version, idempotencyKey],
+      responses: { 204: { description: 'Deleted.' }, ...failures(400, 404, 409) },
+    });
+  }
+  if (Object.keys(one).length > 0) {
+    paths[`${base}/{id}`] = one;
+  }
 
   for (const action of meta.actions) {
     const path =

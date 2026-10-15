@@ -23,6 +23,7 @@ export function CheckboxGroupField(p: InputProps<CheckboxGroupFieldConfig, strin
         options={p.config.options ?? []}
         selectAllLabel={p.config.selectAllLabel}
         value={p.value ?? []}
+        readOnly={p.readOnly}
         disabled={(p.disabled ?? false) || p.loading}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

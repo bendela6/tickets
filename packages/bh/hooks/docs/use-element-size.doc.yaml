@@ -1,0 +1,46 @@
+title: useElementSize
+summary: An element's width and height, measured before it paints and again whenever it changes size, for a chart or a layout drawn to the room it has.
+order: 3
+related: [Writing a hook]
+body:
+  - |
+    An element's width and height, measured before it paints and again
+    whenever it changes size: `width`, `height`, and the `ref` for the
+    element. What is drawn at that size is the caller's.
+  - h2: Import
+  - code: import { useElementSize } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/a-box-that-knows-its-width.tsx
+  - |
+    Drag the box's corner: it says its size as it changes, and draws as
+    many bars as fit across it. The size is the content box's, inside the
+    padding, as a chart wants it; `box: 'border-box'` measures out to the
+    border's outer edge instead.
+  - |
+    `width` and `height` are `undefined` until there is an element to
+    measure, so a default where they are destructured gives a number to
+    draw with: `const { width = 0, ref } = useElementSize()`.
+  - h2: Rules
+  - |
+    - **Its server value is no size**: `undefined`, since a server lays
+      nothing out. In a browser the element is measured as it mounts,
+      before it first paints, so nothing shows at the wrong size first.
+    - **It follows the element** with a `ResizeObserver`, one for each
+      element measured; a browser without one measures on mount and not
+      again.
+    - **`ref` is a callback ref**, the same function for the hook's life
+      while `box` is: an element that mounts later, or is swapped for
+      another, is measured as it arrives, and while there is none the size
+      is `undefined` again.
+    - **A measurement that comes out the same** changes nothing, so a
+      resize that leaves the box as it was renders nothing new.
+    - **Sizes are as laid out**, in fractions of a pixel where the layout
+      has them: round where a whole number is drawn.
+    - **Cleaning up**: the observer is disconnected when the element goes,
+      or the component.
+  - h2: Reference
+  - ref: useElementSize
+  - ref: UseElementSizeOptions
+  - ref: UseElementSizeResult
+  - ref: MeasuredBox

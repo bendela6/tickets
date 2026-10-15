@@ -19,6 +19,7 @@ export function RatingField(p: InputProps<RatingFieldConfig, number>) {
         value={p.value ?? 0}
         max={p.config.max}
         showValue={p.config.showValue}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
         onChange={(next) => p.onChange(next)}

@@ -1,0 +1,84 @@
+title: Notice
+summary: 'A box with a tone for a message on a page: a note, information, a success, a warning or an error.'
+related: [Toast, ScreenState, FieldError, Pill]
+body:
+  - |
+    A box with a tone for a message on a page: a note, information, a
+    success, a warning or an error.
+
+    It stays where it is put until the page takes it away. `tone` says what
+    the message is, in a tinted fill and a glyph of its own, and a notice
+    rests on `neutral`. A title, the message and actions are each optional.
+  - h2: Import
+  - code: import { Notice } from '@bh/ui';
+    lang: tsx
+  - h2: Examples
+  - |
+    `tone` takes bh's role names. `neutral` is a note in passing, `primary`
+    information in the accent, `success` that something worked, `warning`
+    that something needs care, and `danger` an error. Each draws its own
+    glyph as well as its colour, so a reader who can't tell red from green
+    can still tell an error from a success.
+
+    `size` sets the type, padding and glyph together: 12, 13 and 15 pixel
+    type. `sm` fits a dense panel and `lg` a screen read at arm's length,
+    such as a phone at a counter.
+  - variants:
+      of: Notice
+      rows: tone
+      columns: size
+      fixed:
+        children: The next sync runs at 14:00.
+  - |
+    `title` is a line in bold above the message. Either can stand alone.
+  - demo: examples/a-title-and-a-message.tsx
+  - |
+    `action` goes under the message: a button, a link, or a few of them.
+  - demo: examples/with-an-action.tsx
+  - |
+    A notice that answers something the reader just did, such as a save
+    that failed, takes `announce`, so a screen reader says it as it
+    appears. Save below fails once and then works.
+  - demo: examples/after-an-action.tsx
+  - |
+    A string keeps its line breaks, so an error in a server's own words
+    keeps its lines, and a long word without spaces, such as a URL, breaks
+    rather than running out of the box. The message can be any element,
+    such as a list.
+  - demo: examples/long-messages.tsx
+  - |
+    `icon` takes another glyph from the [Icon](/components/primitives/icon)
+    registry, for a notice that says something more particular than its
+    tone. `iconLabel` names it to a screen reader.
+  - demo: examples/another-glyph.tsx
+  - h2: Keyboard and accessibility
+  - |
+    A notice has no key of its own; its actions are reached by Tab like
+    any others.
+
+    The glyph is an image named by the tone's word, read before the
+    message: "Error: The save failed." The words are English: `iconLabel`
+    takes the app's own.
+
+    A notice is not a live region unless it has `announce`. Most notices
+    are on the page from its first render, and a live region there would
+    read them out over whatever the reader was doing. With `announce`, a
+    `danger` notice is an alert (`role="alert"`) and interrupts, since the
+    reader is waiting on what they did; any other tone is a status
+    (`role="status"`) and waits for a pause. A `role` passed to the notice
+    wins over the one `announce` sets.
+
+    The title is a plain `div`, not a heading, so a notice never breaks the
+    page's outline. For a notice that names a section of its own, pass
+    `role="region"` and an `aria-labelledby`.
+  - h2: When not to use it
+  - |
+    - For a short message that goes away on its own, use
+      [Toast](/components/feedback/toast).
+    - For what a screen or a card shows in place of its content, such as
+      an empty list or a failed load, use
+      [ScreenState](/components/feedback/screen-state).
+    - For what is wrong with one field's value, use the field's `error`,
+      drawn by [FieldError](/components/forms/field-error) under it.
+  - h2: Props
+  - props: Notice

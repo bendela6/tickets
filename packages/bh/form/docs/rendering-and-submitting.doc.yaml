@@ -33,6 +33,17 @@ body:
     While a submit is checking the values and running `onSubmit`, every input
     is disabled. A submit first waits for the
     [async options](/forms/async-options) of the fields on screen.
+  - h2: Values from outside
+  - |
+    A form whose value lives elsewhere, as a filter's lives in the address,
+    takes it as `<Form values>`: Back, or another part of the page, changes
+    it, and the form follows. Each time `values` changes, compared by what it
+    holds rather than by identity, so the same value handed back after a
+    commit is no change, the fields take it, without a remount and without
+    running `onCommit`. A field being typed in keeps its draft, and commits
+    it when it would have. `defaultValues` stays where the form started, so a
+    reset still goes there. `useStandaloneForm` takes `values` too.
+  - demo: examples/values-from-outside.tsx
   - h2: A button outside the form
   - |
     A Save button in a dialog's footer, or a page's header, sits outside the
@@ -58,7 +69,8 @@ body:
       second one, so both see the same values, checks and loading options.
     - `useFieldValue` throws outside a `<Form>`.
     - `reset` puts every value back where it started, or to what was last
-      submitted.
+      submitted; never to `values`, which the form follows but didn't start
+      at.
     - Both buttons wait while a submit runs, and a reset waits for a change
       to put back.
   - h2: Reference

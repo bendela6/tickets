@@ -1,6 +1,6 @@
 {
   "name": "@bh/code",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -15,8 +15,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bh/hooks": "workspace:*",
     "@bh/ui": "workspace:*",
     "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-markdown": "^6.5.2",
     "@codemirror/lang-yaml": "^6.1.3",
     "@codemirror/language": "^6.12.4",
     "@codemirror/legacy-modes": "6.5.4",
@@ -32,6 +35,7 @@
     "@bh/config": "workspace:*",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/react": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^29.1.1",

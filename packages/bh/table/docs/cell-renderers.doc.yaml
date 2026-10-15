@@ -27,9 +27,12 @@ body:
   - demo: examples/every-renderer.tsx
   - |
     - **`TextColumn`** keeps the text on one line and fades it out where it
-      runs past the column, showing the whole of it on hover. `mono` sets it
-      in the mono face; `truncate: false` lets it wrap, beside a `rowHeight`
-      that leaves room.
+      runs past the column. Only then does its cell have a
+      [Tooltip](/components/overlays/tooltip) with the whole of it, under
+      the row, shown on hover or when the cell has keyboard focus
+      ([useIsClipped](/hooks/use-is-clipped) says when). `mono` sets it in
+      the mono face, the tooltip too; `truncate: false` lets it wrap,
+      beside a `rowHeight` that leaves room.
     - **`NumberColumn`** right-aligns digits that line up: `integer`,
       `decimal` (up to six places, or `fractionDigits`), or `currency` with a
       `currency` code. Give its column `align: 'right'`, which puts the cell

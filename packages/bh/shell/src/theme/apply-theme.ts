@@ -2,6 +2,7 @@
 // the first render (with what readStoredTheme found) and the theme control calls
 // it on every change.
 
+import { writeStored } from '@bh/hooks';
 import { resolveTheme } from './resolve-theme';
 import type { ThemePreference } from './theme-types';
 
@@ -21,9 +22,6 @@ export function applyTheme(preference: ThemePreference, storageKey: string): voi
   const root = document.documentElement;
   root.dataset.theme = resolveTheme(preference);
   root.dataset.themePreference = preference;
-  try {
-    localStorage.setItem(storageKey, preference);
-  } catch {
-    // Storage can be unavailable (private mode); the theme still applies for this page.
-  }
+  // Storage can be unavailable (private mode): the theme still applies for this page.
+  writeStored(storageKey, preference);
 }

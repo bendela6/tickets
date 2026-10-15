@@ -46,6 +46,8 @@ describe('Icon', () => {
       'columns',
       'rows',
       'rows-compact',
+      'columns-2',
+      'rows-2',
       'folder',
       'file',
       'terminal',
@@ -54,6 +56,8 @@ describe('Icon', () => {
       'clock',
       'tag',
       'user',
+      'lock',
+      'text-cursor',
     ]) {
       expect(ICON_NAMES, `missing glyph ${name}`).toContain(name);
     }

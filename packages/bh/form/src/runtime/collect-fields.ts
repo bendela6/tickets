@@ -3,8 +3,9 @@ import type { LayoutNode } from '../types/layout-node';
 import type { FieldNode } from '../types/field-node';
 
 /**
- * Every field in a tree, by name, layouts opened. Throws on a name used twice,
- * which the form would hold as one value.
+ * Every field in a tree, by name, layouts opened; buttons and slots hold no
+ * value and are skipped. Throws on a name used twice, which the form would
+ * hold as one value.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export function collectFields<R extends InputRegistry, L extends LayoutComponentRegistry = {}>(

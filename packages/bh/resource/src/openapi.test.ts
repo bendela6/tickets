@@ -37,6 +37,15 @@ const stacks: ResourceMeta = {
     { key: 'updatedAt', label: 'Updated', type: { kind: 'datetime' }, query: reads, write },
   ],
   sort: [{ field: 'name', dir: 'asc' }],
+  serves: {
+    read: true,
+    create: true,
+    update: true,
+    delete: true,
+    filter: { any: true, not: true },
+    sort: { max: 10 },
+    page: { numbered: 'any', cursor: true, total: true, max: 500 },
+  },
   actions: [
     { name: 'deploy', label: 'Deploy', on: 'row', input: [], long: true },
     { name: 'pause', label: 'Pause', on: 'row', input: [], long: false },
@@ -90,6 +99,15 @@ describe('openApiOf', () => {
     expect(doc.info.title).toBe('Stacks');
     const quiet = openApiOf({ ...stacks, actions: [] }, '/api');
     expect(Object.keys(quiet.paths ?? {})).not.toContain('/api/jobs/{id}');
+  });
+
+  it('lists only the writes the resource serves', () => {
+    const readOnly = openApiOf(
+      { ...stacks, serves: { ...stacks.serves, create: false, update: false, delete: false } },
+      '/api',
+    );
+    expect(Object.keys(readOnly.paths ?? {})).not.toContain('/api/stacks');
+    expect(Object.keys(readOnly.paths?.['/api/stacks/{id}'] ?? {})).toEqual(['get']);
   });
 
   it('names each body and answer, and ErrorBody at every status a route may fail with', () => {

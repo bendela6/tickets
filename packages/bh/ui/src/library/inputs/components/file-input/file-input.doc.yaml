@@ -1,6 +1,6 @@
 title: FileInput
 summary: Takes files by drop or by browse, and lists them with their size, progress or error.
-related: [Progress, Input]
+related: [Progress, Input, formatBytes]
 body:
   - |
     Takes files by drop or by browse, and lists them.
@@ -21,9 +21,11 @@ body:
   - demo: examples/choosing-files.tsx
   - |
     A file shows its `error` if it has one, else a progress bar while
-    `progress` is set, else its `size`. An error belongs to its file and
-    leaves the others alone. The progress bars, the focus ring and the target
-    under a dragged file take `tone`, `primary` by default.
+    `progress` is set, else its `size`, which
+    [`formatBytes`](/components/primitives/format-bytes) writes. An error
+    belongs to its file and leaves the others alone. The progress bars, the
+    focus ring and the target under a dragged file take `tone`, `primary` by
+    default.
   - demo: examples/errors-per-file.tsx
   - |
     `multiple={false}` lets the dialog choose one file and takes only the

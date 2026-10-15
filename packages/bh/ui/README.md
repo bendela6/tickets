@@ -36,7 +36,8 @@ fails if anything moved. The Tooling guide's `tokens:build` page has the rest.
 
 ## Layer
 
-Built on `@bh/form`, `@bh/table` and `@bh/template`, which is built on
-`@bh/resource`; an app that takes `ui` takes those too. It depends on `radix-ui`, `clsx`, `tailwind-merge` and `valibot`, with
+Built on `@bh/form`, `@bh/table`, `@bh/template` and `@bh/resource`, whose
+filter tree and field metadata a filter form's rules draw; an app that takes
+`ui` takes those too. It depends on `radix-ui`, `clsx`, `tailwind-merge` and `valibot`, with
 `react` and `tailwindcss` as peers. `@bh/shell` and `@bh/markdown` are built
 on it.

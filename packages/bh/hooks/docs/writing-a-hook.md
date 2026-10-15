@@ -18,17 +18,19 @@ holds the mechanics and a component draws what it returns, as
 tile already split them in `@bh/ui`.
 
 > [!NOTE]
-> **Two hooks worked through, before they are built**
+> **Two hooks worked through, and since built**
 >
 > `useDisclosure` and `usePersistedState` are the worked examples
-> below, written out as the shape they will have. They are not in the
-> package yet: their code here is a sketch, which the docs' type check
-> reads and nothing exports. Some points of the shape still wait on a
-> choice, and are written here as proposed: a hook about one value
-> taking it first, `usePersistedState` returning a pair, prop getters
-> rather than prop objects, the caller's handler running first, a
-> stored value kept in step across tabs, and a disclosure's trigger
-> being a `<button>`.
+> below, written out before they were built. Both are in the package
+> now, each with its own page:
+> [useDisclosure](use-disclosure.md) and
+> [usePersistedState](use-persisted-state.md). The code here is
+> the shape as it was worked out, which the docs' type check reads;
+> their pages show them as they are. The points it proposed were all
+> chosen: a hook about one value taking it first, `usePersistedState`
+> returning a pair, prop getters rather than prop objects, the
+> caller's handler running first, a stored value kept in step across
+> tabs, and a disclosure's trigger being a `<button>`.
 
 ## The shape
 

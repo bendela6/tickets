@@ -98,6 +98,15 @@ const items: ResourceMeta = {
     },
   ],
   sort: [{ field: 'updatedAt', dir: 'desc' }],
+  serves: {
+    read: true,
+    create: true,
+    update: true,
+    delete: true,
+    filter: { any: true, not: true },
+    sort: { max: 10 },
+    page: { numbered: 'any', cursor: true, total: true, max: 500 },
+  },
   actions: [],
 };
 

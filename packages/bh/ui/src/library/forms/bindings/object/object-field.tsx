@@ -23,6 +23,7 @@ export function ObjectField(p: InputProps<ObjectFieldConfig, Value | null>) {
         name={p.name}
         nodes={p.config.fields.nodes}
         value={value}
+        readOnly={p.readOnly}
         disabled={p.disabled}
         onChange={p.onChange}
       />

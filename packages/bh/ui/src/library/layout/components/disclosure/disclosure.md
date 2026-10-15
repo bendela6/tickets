@@ -166,6 +166,10 @@ keep it in the caller, as a controlled input's already is.
   [Tree](../../../navigation/components/tree/tree.md).
 - For a caption over a section that stays open, use
   [SectionHeader](../section-header/section-header.md).
+- For a fold drawn your own way, whose button holds more than a title
+  or whose content isn't indented under it, use
+  [useDisclosure](../../../../../../hooks/docs/use-disclosure.md), the hook this row is built
+  on.
 
 ## Props
 

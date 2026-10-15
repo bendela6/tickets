@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { axis, cn, cursorRing, focusRing, HUES, over, variants } from '../../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
-import { fieldClass, fieldState } from '../../parts/field';
+import { fieldClass, fieldState, triggerPrefixClass } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { Button } from '../../../primitives/components/button';
 import { Popup } from '../../parts/popup';
@@ -106,6 +106,12 @@ export type DatePickerProps = ControlProps<string | null> & {
   /** Shown in the field while it is empty. */
   placeholder?: string;
   /**
+   * Words before the value on the field, in the muted tone, as a filter bar
+   * names a field inside its control: "Type:" in "Type: any". With one, the
+   * placeholder reads as a value would.
+   */
+  prefix?: string;
+  /**
    * The earliest day that can be picked, as ISO `yyyy-mm-dd`.
    *
    * Earliest / latest selectable day (`min` and `max`) — the same
@@ -147,6 +153,7 @@ export function DatePicker({
   value,
   onChange,
   placeholder = 'Set date…',
+  prefix,
   'aria-label': ariaLabel,
   size = 'md',
   tone,
@@ -309,7 +316,7 @@ export function DatePicker({
             focus: 'focus-visible',
             className: cn(
               'flex w-full items-center justify-between gap-8 font-sans',
-              selected ? 'text-gray-12' : 'text-gray-9',
+              selected || prefix ? 'text-gray-12' : 'text-gray-9',
               // Ground and affordances change; the text keeps full contrast,
               // because the whole point is that the value stays readable.
               readOnly && readOnlyFieldClass,
@@ -321,11 +328,14 @@ export function DatePicker({
               align on its digits, and a proportional face makes every row a
               different width. The PLACEHOLDER stays proportional: it is prose,
               not a date, and setting it in mono would read as a value. */}
-          {value ? (
-            <span className="font-mono tabular-nums">{formatExact(value)}</span>
-          ) : (
-            placeholder
-          )}
+          <span className="flex min-w-0 items-center gap-5">
+            {prefix ? <span className={triggerPrefixClass}>{prefix}</span> : null}
+            {value ? (
+              <span className="font-mono tabular-nums">{formatExact(value)}</span>
+            ) : (
+              placeholder
+            )}
+          </span>
           {/* Dropped when read-only: a chevron promises a calendar that is not
               going to open. */}
           {readOnly ? null : (

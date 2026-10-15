@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { baseInputs, baseLayouts } from './registry';
+import { InlineFieldWrapper } from './components/inline-field-wrapper';
+import { FilterChanges } from './components/filter-changes';
+import { FilterCount } from './components/filter-count';
+import { FilterSheet } from './components/filter-sheet';
+import { baseFilter, baseInputs, baseLayouts } from './registry';
 
 describe('form registry maps', () => {
   it('registers every input the package ships', () => {
     expect(Object.keys(baseInputs).sort()).toEqual([
+      'avatars',
       'checkbox',
       'checkbox-group',
       'color',
@@ -23,20 +28,40 @@ describe('form registry maps', () => {
       'radio',
       'range',
       'rating',
+      'rules',
+      'search',
       'segmented',
       'select',
       'slider',
+      'tabs',
       'tags',
       'text',
       'textarea',
       'time',
       'toggle',
+      'toggle-chips',
       'user',
     ]);
   });
 
   it('registers every layout the package ships', () => {
-    expect(Object.keys(baseLayouts).sort()).toEqual(['actions', 'card', 'column', 'group', 'row']);
+    expect(Object.keys(baseLayouts).sort()).toEqual([
+      'actions',
+      'card',
+      'column',
+      'group',
+      'inline',
+      'row',
+    ]);
+  });
+
+  it('gives a filter form its count, its changes waiting and its sheet', () => {
+    expect(baseFilter).toEqual({ count: FilterCount, changes: FilterChanges, sheet: FilterSheet });
+  });
+
+  it('gives the inline layout’s fields their own wrapper, and the others none', () => {
+    expect(baseLayouts.inline.field.Component).toBe(InlineFieldWrapper);
+    expect('field' in baseLayouts.row).toBe(false);
   });
 
   // The engine seeds a field from the FieldNode's own `defaultValue`, not from
@@ -124,10 +149,19 @@ describe('the Soft Fill controls a generated form can name', () => {
     expect(baseInputs.user.defaultValue).toEqual([]);
     expect(baseInputs.file.defaultValue).toEqual([]);
   });
+});
 
-  it('gives SearchInput no kind, because it holds nothing', () => {
-    // It filters a view rather than carrying a value, so a form has nothing to
-    // store for it. The one control of the sixteen deliberately left out.
-    expect(Object.keys(baseInputs)).not.toContain('search');
+describe('the kinds a filter form draws', () => {
+  // SearchInput had no kind while a form had nothing to keep of a search; a
+  // filter form's value keeps it, as its query's `search`.
+  it.each([
+    ['search', ''],
+    ['toggle-chips', []],
+    ['tabs', ''],
+    ['avatars', []],
+    ['rules', []],
+  ] as const)('registers %s with a component and its empty value', (kind, empty) => {
+    expect(baseInputs[kind].Component).toBeTypeOf('function');
+    expect(baseInputs[kind].defaultValue).toEqual(empty);
   });
 });

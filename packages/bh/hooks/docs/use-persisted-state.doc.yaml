@@ -1,0 +1,92 @@
+title: usePersistedState
+summary: useState that remembers, in localStorage under the app's key, and keeps every place using the key in step, on the page and across the app's tabs.
+order: 3
+related: [Writing a hook, The app names its own, Drawer, Widths and resizing]
+body:
+  - |
+    `useState` that remembers: a value kept in `localStorage` under the
+    app's key, read back on the next visit, and the same in every place
+    that uses the key, on the page and in the app's other tabs. What the
+    value looks like, and what reads it, is the caller's.
+  - |
+    `readStored` and `writeStored` are the guarded reads and writes under
+    it, for code outside a component: a theme applied before the first
+    render, a draft saved as it changes.
+  - h2: Import
+  - code: import { readStored, usePersistedState, writeStored } from '@bh/hooks';
+    lang: tsx
+  - h2: Examples
+  - demo: examples/two-counts-one-key.tsx
+  - |
+    Each button counts its clicks under the one key, `docs:hooks:count`,
+    so the two move together. Reload the page and they come back where
+    they were; open this page in a second tab and click there, and this
+    one follows. **Forget it** takes the key out with `writeStored(KEY,
+    null)`, and both go back to `defaultValue`.
+  - |
+    It returns a pair, as `useState` does, and its setter takes a value or
+    a function of the one before it:
+  - code: |
+      import { usePersistedState } from '@bh/hooks';
+
+      export function useSidebarOpen() {
+        const [open, setOpen] = usePersistedState({ key: 'shop:sidebar', defaultValue: true });
+        return { open, toggle: () => setOpen((before) => !before) };
+      }
+    lang: ts
+  - h2: Reading what is stored
+  - |
+    A value is stored as JSON unless `serialize` says otherwise, and read
+    back with `parse`, which is where an app checks what an older version
+    of it stored: return `undefined` for a string it can't read, and the
+    value is `defaultValue` again. A string that isn't JSON reads the same
+    way.
+  - code: |
+      import { usePersistedState } from '@bh/hooks';
+
+      const SIZES = ['sm', 'md', 'lg'] as const;
+      type Size = (typeof SIZES)[number];
+
+      // Outside the component, so it is the same function on every render.
+      function parseSize(raw: string): Size | undefined {
+        return SIZES.find((size) => size === raw);
+      }
+
+      export function useDensity() {
+        return usePersistedState<Size>({
+          key: 'shop:density',
+          defaultValue: 'md',
+          serialize: (size) => size,
+          parse: parseSize,
+        });
+      }
+    lang: ts
+  - h2: Rules
+  - |
+    - **Its server value is `defaultValue`**: a server has no storage, so
+      nothing is read there. An app that renders only in the browser reads
+      the stored value on its first render, a hydrated page right after it.
+    - **No key, nothing stored**: `key: undefined` is plain state, which
+      lives as long as the component and writes nothing under a name the
+      hook made up. A hook can't be called on a condition, so this is how
+      a component stores only when the app names it.
+    - **One key, one value**: every `usePersistedState` on the page under
+      the key holds the same value, and so does each one in the app's
+      other tabs, through the browser's `storage` event. `writeStored`
+      moves them too; a write straight to `localStorage` does not.
+    - **A storage that refuses** (blocked, or full) reads as empty, and the
+      value still changes for the page while anything on it uses the key:
+      it is only not remembered.
+    - **`storage: 'session'`** keeps it in the tab's own `sessionStorage`,
+      for as long as the tab is open; another tab has its own.
+    - **What keeps its identity**: the setter, for the hook's life; the
+      value, until it changes, as long as `parse` and an object
+      `defaultValue` come from outside the component.
+    - **Cleaning up**: its `storage` listener goes with the component.
+  - h2: Reference
+  - ref: usePersistedState
+  - ref: UsePersistedStateOptions
+  - ref: SetPersisted
+  - ref: readStored
+  - ref: writeStored
+  - ref: StoredIn
