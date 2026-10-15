@@ -13,6 +13,7 @@ export {
 } from './enums';
 export { attachments } from './attachments';
 export { users } from './users';
+export { agentReports, AGENT_ROLES, AGENT_STATES } from './agent-reports';
 export { projects } from './projects';
 export { views } from './views';
 export { schemes } from './schemes';
