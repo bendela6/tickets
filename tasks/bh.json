@@ -150,6 +150,32 @@
               "part": "docs (`apps/docs/src/blocks/tokens-block.tsx:189`)"
             }
           ]
+        },
+        {
+          "status": "Planned",
+          "plan": [
+            {
+              "id": "BH-19.1",
+              "title": "Fix the pages' text running past the right edge on a phone",
+              "description": "Find what holds the page wider than the screen (a fixed width, a long code line, a table, the nav), so text wraps and only code and tables scroll sideways inside their own frames; checked at 375px on every kind of page.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "docs"
+                }
+              ],
+              "done": false
+            }
+          ],
+          "id": "BH-19",
+          "title": "Fix the docs site cutting text off at a phone's width",
+          "description": "At a phone's width, bh's docs site cuts text off at the right edge, on every page TK-11's builder looked at, the older ones too. Found while checking TK-11.6's docs page.",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs"
+            }
+          ]
         }
       ]
     },
@@ -194,8 +220,8 @@
           "id": "BH-14",
           "title": "Load fonts from Google Fonts and let each app choose its own",
           "description": "Load them from Google Fonts instead of the `@fontsource/ibm-plex-*` imports, and let each app choose its fonts.",
-          "status": "In progress",
-          "statusNote": "195df76 drops the `@fontsource` imports for Google Fonts; the token stacks still name IBM Plex, so an app can't choose yet",
+          "status": "Done",
+          "statusNote": "Mostly on bh's main already: 195df76 loads the fonts from Google Fonts in the docs, with no `@fontsource`; the tokens name IBM Plex as the default, and an app picks its own by setting `--font-sans` and `--font-mono` in an `@theme` after the imports (the docs' Styles and fonts page, \"Fonts of your own\"); the lifecycle block measures the app's mono font. Left, as the plan below: `@bh/erd` still measures its cards in IBM Plex Mono, and nothing tests that an app's fonts replace Plex. tickets and gateway keep their `@fontsource` imports, which works, since the tokens still name Plex. BH-14.1 (953fa09) and BH-14.2 (a410f1b) on bh branch `bh-14`, in `../bh-wt-bh-14`, cut from bh's main (b909d45), not merged: `@bh/erd` measures its cards in the root's `--font-mono`, read at each measure, falling back to Tailwind's `--default-mono-font-family` and then a glyph's width; a test compiles `tokens.css` with an app's own `@theme` fonts and checks `font-sans`, `font-mono`, `html`, `body` and `code` take them. Found: `--font-mono` reaches the page's root only when a scanned source mentions it, so an app that doesn't scan `@bh/erd` may lack it (hence the fallback); always emitting it would be a token change in `@bh/ui`. Merged: `bh-14` into bh's main (dd47451), released in bh 0.4.0.",
           "where": [
             {
               "repo": "bh",
@@ -207,6 +233,34 @@
             "the token font stacks name IBM Plex directly in `packages/web/ui/src/style/generated/typography.ts` (generated), so an app can't swap them;",
             "`lifecycle/layout.ts:65` (a markdown block) assumes IBM Plex Mono's character width;",
             "the setup page documented the `@fontsource` imports (`apps/docs/content/getting-started/styles-and-fonts.doc.yaml`; no longer)."
+          ],
+          "plan": [
+            {
+              "id": "BH-14.1",
+              "title": "Measure `@bh/erd`'s cards in the app's mono font",
+              "description": "`packages/web/erd/src/engine/geometry/measure-entity.ts` sizes a card by measuring its names in IBM Plex Mono, named in the file, so an app with other fonts gets cards sized for Plex. It reads `--font-mono` from the page's root, as the lifecycle block does (`useMonoMeasure` in `packages/web/markdown/src/blocks/lifecycle/lifecycle.tsx`), and keeps a mono glyph's width when there's no document or canvas.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/erd"
+                }
+              ],
+              "done": true,
+              "approved": true
+            },
+            {
+              "id": "BH-14.2",
+              "title": "Add a test that an app's own fonts replace IBM Plex",
+              "description": "Builds a stylesheet like the docs' \"Fonts of your own\" example (`@bh/ui/tokens.css`, then an `@theme` naming other fonts) and checks that `font-sans`, `font-mono` and the page's own text take the app's fonts, so the docs' promise holds when the tokens change.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": true,
+              "approved": true
+            }
           ]
         }
       ]
@@ -268,6 +322,82 @@
               "Tests (sections, ANSI parsing, following, thousands of lines staying fast) and a docs page."
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "title": "Fix bh's safelist holding classes nothing draws",
+      "features": [
+        {
+          "status": "Planned",
+          "plan": [
+            {
+              "id": "BH-17.1",
+              "title": "Add a hue list to a `variants()` axis, and safelist only those",
+              "description": "An axis may name the hues it takes; the safelist extractor (`scripts/extract-safelist.mjs`) writes only those, and `LogView`'s unused `text-*-12` classes go. Without a list, an axis takes every hue, as today.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui"
+                }
+              ],
+              "done": false
+            }
+          ],
+          "id": "BH-17",
+          "title": "Let a `variants()` axis take only some hues",
+          "description": "A component's tone and hue classes reach Tailwind through `variants()`, which lists every hue for an axis, so the safelist holds classes the component never draws. Found while building `LogView` (GW-13.2), which safelists 10 `text-*-12` classes it doesn't use.",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/ui"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E7",
+      "title": "Fix bh's docs tests that fail under load",
+      "features": [
+        {
+          "status": "Planned",
+          "plan": [
+            {
+              "id": "BH-18.1",
+              "title": "Load the code editor up front in `panel-block.test.tsx`",
+              "description": "As b909d45 does for `LiveExample`, so the test waits on nothing it started itself; checked by running the full suite several times.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "docs"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-18.2",
+              "title": "Fix `live-example.test.tsx` and `read-api.test.ts` failing under load",
+              "description": "Find what each waits on under load, and load it up front or wait on it properly, the same way.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "docs"
+                }
+              ],
+              "done": false
+            }
+          ],
+          "id": "BH-18",
+          "title": "Fix the docs tests that time out while the code editor or runtime is still loading",
+          "description": "In `@bh/docs`, `src/blocks/panel-block.test.tsx` sometimes times out looking for the code editor while it is still loading: it passes alone, and failed once in each of two full runs while the builder checked GW-2.2.4. It's the race b909d45 fixed for `LiveExample`, by loading the runtime up front. `live-example.test.tsx` and `read-api.test.ts` have failed under load before too.",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "docs"
+            }
+          ]
         }
       ]
     }

@@ -135,6 +135,14 @@
           "title": "Replace the gateway's own components with bh's",
           "description": "Wherever possible, use components from bh (`@bh/*`) instead of the gateway's own. A component bh lacks is added in `../bh` first and then synced, never edited under `packages/bh/`.",
           "status": "In progress",
+          "statusNote": "GW-2.2.1–2.2.3 checked against their text on bh's main (0bbf758), on bh branch `gw-2-2` in `../bh-wt-gw-2-2`: `TextLink` meets it as built (a plain `<a>`, a router link or a button through `asChild`, the gateway's `LINK` look, 8 tests, a docs page); `Field` did not describe its control by its hint or error unless the caller wired `aria-describedby` by hand, as none of the gateway's ~20 uses do, fixed in 0116c4e; `RadioGroup`'s cards meet it, with keyboard tests added in 8278663. GW-2.2.4 checked on the same branch: `Disclosure` and `FoldCard` meet it (a chevron that turns, the summary only while folded, a `<button>` with `aria-expanded` named by the title and described by the summary, `aria-controls` while open, open state held by either side, 19 tests, two docs pages; `FoldCard` shares `Disclosure`'s row and open state rather than drawing a `Disclosure`), except that a narrow fold cut its title before its summary (\"Exp…\" at 288px), fixed in 5011bb0. Not merged: `gw-2-2` is three commits on bh's main (b909d45). GW-2.2.5 waits on TK-76, and its release GW-2.2.7 on it. Merged: `gw-2-2` into bh's main (c43a96c), in bh 0.4.0.",
+          "notes": [
+            {
+              "at": "2026-10-14T01:02:16.235Z",
+              "by": "claude",
+              "text": "From the builder: GW-2.2.1 to GW-2.2.4 (`TextLink`, `Field`, the `RadioGroup` cards with a line of description, `Disclosure` and `FoldCard`) are on bh's main since 0bbf758 (2026-10-11), built outside this plan, and went out in bh 2.0.0, which tickets has already. Nobody has checked them against their tickets' text, so they aren't marked done: approve them and the builder checks each and marks it done.\n\n- GW-2.2.4 no longer waits on TK-31.2: `Disclosure` was built without the hook, and moving it onto the hook is TK-31.2's now.\n- GW-2.2.7, the release, now carries only GW-2.2.5, the card parts.\n- TK-5.15 (tickets' links) now waits on GW-2.2.1 only, not all of GW-2.2, whose card parts wait on TK-76; GW-3.3 (the form's field widths) on GW-2.2.2."
+            }
+          ],
           "where": [
             {
               "repo": "gateway",
@@ -187,41 +195,81 @@
                 {
                   "id": "GW-2.2.1",
                   "title": "Add `TextLink`",
-                  "description": "The link style, for `<a>`, router links and link-like buttons; replaces the `LINK` class copied into 9 files.",
-                  "done": false
+                  "description": "The link style, for `<a>`, router links and link-like buttons; replaces the `LINK` class copied into 9 files. Built outside this plan on bh's main (0bbf758, 2026-10-11) and released in bh 0.3.0, which tickets has already; what's left is to check it against this text.",
+                  "done": true,
+                  "approved": true,
+                  "notes": [
+                    {
+                      "at": "2026-10-14T01:02:16.234Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: it's on bh's main and in bh 2.0.0 already (0bbf758), built outside this plan."
+                    }
+                  ]
                 },
                 {
                   "id": "GW-2.2.2",
                   "title": "Add `Field`",
-                  "description": "Label, control, hint or error, stacked; a width of its own from the form.",
-                  "done": false
+                  "description": "Label, control, hint or error, stacked; a width of its own from the form. Built outside this plan on bh's main (0bbf758, 2026-10-11) and released in bh 0.3.0, which tickets has already; what's left is to check it against this text.",
+                  "done": true,
+                  "approved": true,
+                  "notes": [
+                    {
+                      "at": "2026-10-14T01:02:16.235Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: it's on bh's main and in bh 2.0.0 already (0bbf758), built outside this plan."
+                    }
+                  ]
                 },
                 {
                   "id": "GW-2.2.3",
                   "title": "Add `RadioGroup` cards with a line of description and an icon",
-                  "done": false
+                  "description": "Built outside this plan on bh's main (0bbf758, 2026-10-11) and released in bh 0.3.0, which tickets has already; what's left is to check it against this text.",
+                  "done": true,
+                  "approved": true,
+                  "notes": [
+                    {
+                      "at": "2026-10-14T01:02:16.235Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: it's on bh's main and in bh 2.0.0 already (0bbf758), built outside this plan."
+                    }
+                  ]
                 },
                 {
                   "id": "GW-2.2.4",
                   "title": "Add `Disclosure`, and `FoldCard` on it",
-                  "description": "A row that folds what follows it: chevron, title, summary while folded. `LogView` (GW-13) reuses `FoldCard` for its steps.",
-                  "done": false,
-                  "blockedBy": [
+                  "description": "A row that folds what follows it: chevron, title, summary while folded. Built outside this plan on bh's main (0bbf758, 2026-10-11), without a `useDisclosure` hook, and released in bh 0.3.0; what's left is to check it against this text. Moving it onto the hook is TK-31.2's. `LogView` (GW-13) doesn't use it: it draws its title inside the button and indents what it folds, so a log line couldn't be selected or keep its time column; its sections fold through `useDisclosure` instead (GW-13.1).",
+                  "done": true,
+                  "approved": true,
+                  "notes": [
                     {
-                      "id": "TK-31.2",
-                      "why": "builds `Disclosure` over the `useDisclosure` hook"
+                      "at": "2026-10-14T01:02:16.235Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: it's on bh's main and in bh 2.0.0 already (0bbf758), built outside this plan."
                     }
                   ]
                 },
                 {
                   "id": "GW-2.2.5",
                   "title": "Add the card parts, merged with medialib's copies",
-                  "description": "`CardState`, `MetricCard` (or an `aside` on `CardHeader`), `Meter`, `Figure`, `Figures` (titled by `SectionHeader`), `Num`.",
+                  "description": "`CardState`, `MetricCard`, which becomes a `Card` given a `value` (TK-76), `Meter`, `Num`, built with the configurable `Card` (TK-76). `Figure` and `Figures` aren't parts of their own: they are `Card`'s row and titled-group shapes (your answer on TK-76); `Meter` comes with TK-76.3.",
                   "done": false,
                   "blockedBy": [
                     {
                       "id": "TK-76",
                       "why": "the card parts are designed and built with the configurable `Card`"
+                    }
+                  ],
+                  "approved": true,
+                  "notes": [
+                    {
+                      "at": "2026-10-14T01:16:03.550Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: `Figure` and `Figures` are `Card`'s row and titled-group shapes (TK-76)."
+                    },
+                    {
+                      "at": "2026-10-14T01:22:56.363Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: `MetricCard` becomes a `Card` given a `value` (TK-76)."
                     }
                   ]
                 },
@@ -234,6 +282,7 @@
                 {
                   "id": "GW-2.2.7",
                   "title": "Release bh's next version, with these parts",
+                  "description": "GW-2.2.1 to GW-2.2.4 went out in bh 0.3.0 already; this release carries GW-2.2.5, the card parts.",
                   "where": [
                     {
                       "repo": "bh",
@@ -243,24 +292,16 @@
                   "done": false,
                   "blockedBy": [
                     {
-                      "id": "GW-2.2.1",
-                      "why": "the release carries it"
-                    },
-                    {
-                      "id": "GW-2.2.2",
-                      "why": "the release carries it"
-                    },
-                    {
-                      "id": "GW-2.2.3",
-                      "why": "the release carries it"
-                    },
-                    {
-                      "id": "GW-2.2.4",
-                      "why": "the release carries it"
-                    },
-                    {
                       "id": "GW-2.2.5",
                       "why": "the release carries it"
+                    }
+                  ],
+                  "approved": true,
+                  "notes": [
+                    {
+                      "at": "2026-10-14T01:02:16.235Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: it's on bh's main and in bh 2.0.0 already (0bbf758), built outside this plan."
                     }
                   ]
                 }
@@ -290,7 +331,8 @@
                   "id": "TK-2.7",
                   "why": "takes the bh release with `TabNav`'s fix and `PageBody`"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "GW-2.4",
@@ -312,7 +354,8 @@
                   "id": "TK-70.1",
                   "why": "medialib's update to a bh version with the card parts"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "GW-2.5",
@@ -330,7 +373,8 @@
                   "id": "GW-2.3",
                   "why": "checks the pages switched to bh's parts"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -408,7 +452,7 @@
               "done": false,
               "blockedBy": [
                 {
-                  "id": "GW-2.2",
+                  "id": "GW-2.2.2",
                   "why": "uses `Field`'s width, set by the form"
                 },
                 {
@@ -1333,30 +1377,60 @@
           "id": "GW-13",
           "title": "Build LogView in bh",
           "description": "A `LogView` component in `@bh/ui`, for any app's logs. It knows nothing of the gateway: the app says which lines start a section, and at which level. Also BH-16.",
-          "status": "Planned",
+          "status": "Done",
+          "statusNote": "Released in bh 0.6.0, which the gateway took on the bh page (pull request 1, merged as a3a1565, live 2026-10-15).",
+          "notes": [
+            {
+              "at": "2026-10-14T01:02:17.026Z",
+              "by": "claude",
+              "text": "From the builder, after GW-13.2 and GW-13.3 (done, on bh branch `gw-13`):\n\n- **GW-13.1**, the sections, now waits on TK-31.2, the headless `useDisclosure`, not GW-2.2.4: bh's `Disclosure` draws its title inside the button and indents what it folds, which a log can't use. TK-31.2 isn't approved yet.\n- Where the worker went its own way from the design, for you to see (say so in a note to change one): the fold is a chevron in the gutter, not the whole row as a button, so the text stays selectable; an entry's lines stay flat with their own whitespace, not indented 20px per level; an object's \"… 17 more fields\" summary isn't built (it belongs with the design's Readable / Raw JSON view, which isn't planned).\n- One question below: what a screen reader hears while a log streams.\n- A gap in bh's tooling: a `variants()` axis can't be limited to some hues, so `LogView` safelists 10 `text-*-12` classes it never draws. Now BH-17."
+            },
+            {
+              "at": "2026-10-14T01:07:29.374Z",
+              "by": "claude",
+              "text": "Folded your answer: while a log streams, a screen reader hears only a step starting, finishing or failing. It's in `chosen`, in GW-13.1 (the sections, which announce it) and in GW-13.4 (its tests)."
+            }
+          ],
           "where": [
             {
               "repo": "bh",
               "part": "@bh/ui, docs"
             }
           ],
+          "chosen": [
+            "While a log streams, a screen reader hears only a step starting, finishing or failing, through a polite live region, never each line (your answer)."
+          ],
+          "chosenOn": "2026-10-14",
           "design": "https://claude.ai/artifact/373FqCFMX7MWWu3U33K7Nf (six artboards: done, running, failed, service logs, dark, anatomy). Beyond the plan below, it adds: the toolbar and the step being read stick to the top of the page; error and warning counts per step and in the toolbar; neighboring CACHED steps fold into one row; a Readable / Raw JSON switch for JSON lines; Find opens the folds holding a match; keys ↑ ↓ → ← Enter.",
           "plan": [
             {
               "id": "GW-13.1",
               "title": "Build sections that fold and follow",
-              "description": "Lines in sections, nested to any depth. Each section folds, shows its time and how long it took, and can start open or folded. It follows the end while lines arrive, unless the reader scrolled up, with a \"jump to the end\" when they did. No scroll box of its own: it grows with the page (GW-7).",
+              "description": "Lines in sections, nested to any depth. Each section folds, shows its time and how long it took, and can start open or folded. It follows the end while lines arrive, unless the reader scrolled up, with a \"jump to the end\" when they did. No scroll box of its own: it grows with the page (GW-7). Sections fold through bh's headless `useDisclosure` (TK-31.2), not `Disclosure`: that draws its title inside the button, so a log line couldn't be selected or copied, and indents what it folds, shifting the 56px time column. GW-13.3's fold of an entry (`EntryToggle`, drawn in one place) moves onto the hook too. While lines arrive, a screen reader hears a section starting, finishing or failing, through a polite live region; the lines themselves aren't read out as they come (`LogView` drops `role=\"log\"`'s reading of each line).",
               "where": [
                 {
                   "repo": "bh",
                   "part": "@bh/ui"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
-                  "id": "GW-2.2.4",
-                  "why": "sections reuse `Disclosure` and `FoldCard`"
+                  "id": "TK-31.2",
+                  "why": "sections fold through the headless `useDisclosure`"
+                }
+              ],
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-14T01:02:17.026Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: sections fold through the headless `useDisclosure` (TK-31.2), not `Disclosure`, which a log can't use, so it now waits on TK-31.2 instead of GW-2.2.4. TK-31.2 isn't approved yet (TK-31 is Not planned): approve it, and TK-31.11, the package it lives in, for this to go ahead."
+                },
+                {
+                  "at": "2026-10-14T01:07:29.373Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: while lines arrive, a screen reader hears only a section starting, finishing or failing, not each line (your answer on GW-13)."
                 }
               ]
             },
@@ -1370,7 +1444,8 @@
                   "part": "@bh/ui"
                 }
               ],
-              "done": false
+              "done": true,
+              "approved": true
             },
             {
               "id": "GW-13.3",
@@ -1382,19 +1457,20 @@
                   "part": "@bh/ui"
                 }
               ],
-              "done": false
+              "done": true,
+              "approved": true
             },
             {
               "id": "GW-13.4",
               "title": "Test it and write its docs page",
-              "description": "Tests: sections and nesting, ANSI parsing, following the end, a log of thousands of lines staying fast. A docs page with examples, as every bh component has.",
+              "description": "Tests: sections and nesting, ANSI parsing, following the end, what a screen reader is told while lines arrive (a section's start, end or failure, never each line), a log of thousands of lines staying fast. A docs page with examples, as every bh component has.",
               "where": [
                 {
                   "repo": "bh",
                   "part": "@bh/ui, docs"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "GW-13.1",
@@ -1408,6 +1484,14 @@
                   "id": "GW-13.3",
                   "why": "tests and documents folding multi-line entries"
                 }
+              ],
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-14T01:07:29.374Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: it also tests what a screen reader is told while lines arrive."
+                }
               ]
             },
             {
@@ -1419,13 +1503,14 @@
                   "part": "main"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "GW-13.4",
                   "why": "releases the tested `LogView`"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "GW-13.6",
@@ -1440,13 +1525,14 @@
                   "part": "packages/bh"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "GW-13.5",
                   "why": "copies the version with `LogView`"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         }
