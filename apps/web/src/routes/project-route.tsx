@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, createRoute, useParams } from '@tanstack/react-router';
+import { writeStored } from '@bh/hooks';
 import { Page, PageBody, PageHeader } from '@bh/shell/layout';
 import { Button, Icon, ScreenState } from '@bh/ui';
 import { useBoard } from '../api/use-board';
@@ -9,7 +10,6 @@ import { ViewTabs } from '../components/view-tabs';
 import { boardProgress } from '../utils/board-progress';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 import { indexBoard } from '../utils/index-board';
-import { writeLocal } from '../utils/write-local';
 import { rootRoute } from './root-route';
 
 const PROJECTS_CRUMB = [{ label: 'Projects', path: '/' }];
@@ -26,7 +26,7 @@ function ProjectLayout() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    writeLocal(STORAGE_KEYS.lastProject, projectKey);
+    writeStored(STORAGE_KEYS.lastProject, projectKey);
   }, [projectKey]);
 
   if (boardQuery.isLoading) {

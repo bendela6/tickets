@@ -1,8 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { usePersistedState } from '@bh/hooks';
 import { STORAGE_KEYS } from '../utils/storage-keys';
-import { readLocal } from '../utils/read-local';
-import { writeLocal } from '../utils/write-local';
 
 type CurrentUserValue = {
   userId: number | null;
@@ -11,15 +10,22 @@ type CurrentUserValue = {
 
 const CurrentUserContext = createContext<CurrentUserValue | null>(null);
 
+// The chosen user's id is stored as its digits. A stored value that is not a
+// positive integer reads as no one chosen.
+const serializeUserId = (userId: number | null) => String(userId);
+const parseUserId = (raw: string) => {
+  const stored = Number(raw);
+  return Number.isInteger(stored) && stored > 0 ? stored : undefined;
+};
+
 export function CurrentUserProvider({ children }: { children: ReactNode }) {
-  const [userId, setUserIdState] = useState<number | null>(() => {
-    const stored = Number(readLocal(STORAGE_KEYS.userId));
-    return Number.isInteger(stored) && stored > 0 ? stored : null;
+  // Kept in localStorage, so the chosen user also stays in step across the app's open tabs.
+  const [userId, setUserId] = usePersistedState<number | null>({
+    key: STORAGE_KEYS.userId,
+    defaultValue: null,
+    serialize: serializeUserId,
+    parse: parseUserId,
   });
-  const setUserId = useCallback((next: number) => {
-    setUserIdState(next);
-    writeLocal(STORAGE_KEYS.userId, String(next));
-  }, []);
   const value = useMemo(() => {
     return { userId, setUserId };
   }, [userId, setUserId]);
