@@ -1,4 +1,5 @@
 // packages/db/src/schema/registry.ts
+import { agentReports } from './agent-reports';
 import { attachments } from './attachments';
 import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
@@ -31,7 +32,7 @@ import { views } from './views';
 // Every pgTable in the schema. The conformance test forces this to equal the
 // entity set in packages/db/src/schema/items-platform.json.
 export const allTables = [
-  users, projects, views,
+  users, projects, views, agentReports,
   schemes, itemTypes, itemTypeChildTypes, itemTypeFields, fields,
   optionSets, options, optionTransitions, linkTypes, linkTypeTargetTypes,
   items, itemValues, comments, commentReactions, itemLinks, attachments,
