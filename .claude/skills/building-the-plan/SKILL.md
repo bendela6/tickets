@@ -5,7 +5,7 @@ description: Use when running as the builder session — the one that watches ta
 
 # Building the plan
 
-You are the **builder**: you watch `tasks/*.json` and build what the user approves. You are a **dispatcher**: you decide what's ready and hand every build to a **worker**, a subagent you start with the Agent tool in the background. You never build yourself.
+You are the **builder**: you watch `tasks/*.json` and build what the user approves. You are a **dispatcher**: you decide what's ready and hand every build to a **worker**, a subagent you start with the Agent tool in the background, **one worker per feature**. You never build yourself.
 
 Read first:
 - `CLAUDE.md`, its "Tasks" section;
@@ -28,11 +28,13 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 
 ## What to build
 
-- **Ready**, as `tasks-builder.mjs ready` works it out: an item without children that is approved, neither done nor cancelled, not `byYou`, and whose `blockedBy` (its own and its parents') are all done. A ticket whose subtickets are all ready is one unit.
+- **Ready**, as `tasks-builder.mjs ready` works it out: an item without children that is approved, neither done nor cancelled, not `byYou`, and whose `blockedBy` (its own and its parents') are all done.
+- **A feature is the unit:** all of a feature's ready items go to one worker, never one worker per ticket.
 - **Order:** `tickets.json` first, then the other files. Inside a file, follow the plan's order.
 - **Skip an item, and say why, when:**
   - it depends on a question still open in its feature's `openChoices` (`ready` counts them as `openQuestions`; read them);
-  - it needs a step that's the user's: a push, a merge, a deploy, a bh release, the bh page, or a change to the live gateway.
+  - it needs something only the user has: a passkey, a login, a secret, or the gateway's bh page while there's no `GATEWAY_TOKEN` (see "Merging and releasing").
+- **Merges, pushes, bh releases and bh-page updates are yours** (the user's yes, 2026-10-15): a "Release bh's next version" or "Update … on the bh page" ticket is built like any other, as "Merging and releasing" says.
 - **An approved feature without a plan:** don't build it. Write its plan:
   - tickets numbered under it, in the file's format, every title starting with a verb, each with its `blockedBy`;
   - then set its status to Planned, and say in chat that the new tickets wait for the user's approval.
@@ -40,20 +42,24 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 
 ## Dispatching a worker
 
-- **One worker per feature branch:**
+- **One worker per feature, and one feature per worker:**
+  - the worker builds all the feature's ready tickets and subtickets, one after another in the plan's order, on the feature's branch;
+  - never split a feature's tickets across workers, and never start a second worker on a feature whose worker is still running;
+  - a ticket of that feature that becomes ready while its worker runs waits for it: when its notification comes, continue that worker with SendMessage (it keeps its context), or dispatch a new one for the feature that picks up from the branch;
   - branch `tk-7`, in a git worktree: `../bh-wt-tk-7` for bh work, `../tickets-wt-tk-7` for tickets work;
   - never on main, and never in a repo's own checkout, because other sessions may have uncommitted work there;
   - never edit the bh copies under `packages/bh` in an app; bh work happens in `../bh`.
-- Workers that don't share files run in parallel.
+- Workers for different features run in parallel, unless they share files.
 - Before dispatching, set the feature's status to "In progress".
-- Check `node scripts/tasks-agents.mjs list`: never dispatch an item a worker is already on.
+- Check `node scripts/tasks-agents.mjs list`: never dispatch a feature a worker is already on.
 
 Give each worker the whole brief, since it knows nothing else:
-- **Its name and items:** a name like `worker-tk-7`, and the items: their text, their `blockedBy`, their notes (the user's and the planner's replies), and the feature's `chosen`.
+- **Its name and items:** a name like `worker-tk-7`, named after the feature, and every ready item of the feature, in order: their text, their `blockedBy`, their notes (the user's and the planner's replies), and the feature's `chosen`.
 - **Where:** the worktree and branch, and the repo's CLAUDE.md and skills. In tickets those are `implementing-a-component`, `verifying-a-component` and `running-the-stack`.
 - **Checks:** typecheck, tests and build. A "Check in the browser" ticket is done in the browser, with screenshots.
 - **Commits:** one per ticket, on its branch, a conventional commit scoped to the app, with the ticket id in the body.
-- **Never:** push, merge, deploy or release, and never edit `tasks/*.json`.
+- **Last, merge and push:** once its items are built and checked, it merges its branch into main and pushes, as "Merging and releasing" says.
+- **Never:** force-push, push a branch whose checks fail, deploy any other way than that push, or edit `tasks/*.json`.
 - **Saying what it does**, with the absolute path, since it runs in a worktree:
   - `node C:/Users/bbend/Desktop/Projects/tickets/scripts/tasks-agents.mjs say worker-tk-7 working --item TK-7.2 "Writing the Sort type"`;
   - at the start, at every step, and before any long command. Switch `--item` to the ticket or subticket in hand. Thirty minutes of silence shows as "abandoned?".
@@ -71,7 +77,30 @@ Then update the task files from its report:
 - while the feature is under way, its `statusNote` says what's built and where, e.g. "TK-7.1 on branch tk-7 (abc1234)";
 - when all its tickets are done, set its status to Done.
 
-Report in chat in two lines: what's built, where it is, and what's waiting on the user (a merge, a push, a release).
+Report in chat in two lines: what's built, where it went live (deployed, or the bh version), and what's waiting on the user (an approval, an answer, a `byYou` step).
+
+## Merging and releasing
+
+Finished work goes on main, never parked on a branch or a pull request, in every repo, though a push to tickets' or the gateway's main deploys and a push to bh's main releases.
+
+- **The worker merges, in its own worktree**, never the repo's checkout:
+  1. `git fetch origin`, then `git merge origin/main`, resolving any conflict;
+  2. the checks again, on the merged result: typecheck, tests and build;
+  3. `git push origin HEAD:main`. If main moved meanwhile and the push is refused, go back to 1.
+  - A branch whose checks fail isn't pushed: the worker says `failed` with why.
+- **After its report:**
+  - in the repo's own checkout, if it has main checked out, run `git merge --ff-only origin/main`. Git refuses rather than overwrite uncommitted files; if it refuses, say so and leave it.
+  - a push to tickets' main deploys tickets.bendelhome.cc within a minute (skill `running-the-stack`), and the gateway's deploys the gateway: check the deploy came up, and say so in the report.
+- **Branches built earlier and never merged:**
+  - dispatch a worker to merge each one whose built items are done and checked;
+  - a branch named parked or wip, or holding work the user hasn't approved, stays: ask the user.
+- **A bh release is a push to bh's main.**
+  - The release workflow (`scripts/release.mjs --publish`) tags the next version from the commits since the last tag. A `fix:`, `feat:` or `!` commit touching `packages/` or `copy.json` makes one. Other commits wait for the next version.
+  - A "Release bh's next version" ticket is done once a tag holds its feature's commits: check `git ls-remote --tags origin` in `../bh`, and put the version in the feature's `statusNote`.
+- **An "Update <app> … on the bh page" ticket** goes through the gateway's API. Never copy bh into `packages/bh` by hand.
+  - Call `POST https://gateway.bendelhome.cc/api/library/apps/<app>/updates` with `{"version": "0.4.1"}` and `Authorization: Bearer $GATEWAY_TOKEN`. `GET /api/library/apps` lists the apps' ids.
+  - It commits `chore: bh <version>` to the app's main, which deploys it. Follow it with `GET …/updates/<number>` until it ends.
+  - Without `GATEWAY_TOKEN` in the environment, the update is the user's: ask them to press Update on the page.
 
 ## Writing the task files
 
