@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@bh/form": "workspace:*",
+    "@bh/richtext": "workspace:*",
     "@bh/shell": "workspace:*",
     "@bh/table": "workspace:*",
     "@bh/ui": "workspace:*",

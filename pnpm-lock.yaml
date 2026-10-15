@@ -94,6 +94,9 @@ importers:
       '@bh/form':
         specifier: workspace:*
         version: link:../../packages/bh/form
+      '@bh/richtext':
+        specifier: workspace:*
+        version: link:../../packages/bh/richtext
       '@bh/shell':
         specifier: workspace:*
         version: link:../../packages/bh/shell
