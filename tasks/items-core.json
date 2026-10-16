@@ -1414,27 +1414,27 @@
             {
               "id": "IC-21.1",
               "title": "Replace the console's Firebase sign-in with Rauthy's, by authorization code with PKCE",
-              "description": "The console's sign-in sends the person to Rauthy and comes back with a code it turns into tokens, kept for the tab and renewed before they expire; it sends the access token as the Bearer, as it sent Firebase's. The setup wizard's claim of the first admin signs in the same way. Sign-out ends Rauthy's session too. Rauthy's address and the console's client id are the build's settings, as the Firebase web config was (`.env.production`), and the local sign-in bypass stays as it is. Its tests cover signing in, a token renewed, a sign-in refused, and sign-out.",
+              "description": "The console's sign-in sends the person to Rauthy and comes back with a code it turns into tokens, kept for the tab and renewed before they expire; it sends the access token as the Bearer, as it sent Firebase's. The setup wizard's claim of the first admin signs in the same way. Sign-out ends Rauthy's session too. Rauthy's address and the console's client id are the build's settings, as the Firebase web config was (`.env.production`), and the local sign-in bypass stays as it is. Its tests cover signing in, a token renewed, a sign-in refused, and sign-out.\n\nDone 2026-10-16, merged to items-core's main at `cd423ba9` (`98ab73e2`). The console signs in with `oidc-client-ts` by authorization code with PKCE. Its tokens are kept in sessionStorage for the tab and renewed with the refresh token a minute before they expire. It sends the access token as the Bearer. Sign-out ends Rauthy's session too. After the API refuses an account, the next sign-in asks Rauthy to show its sign-in page again. Its settings are `VITE_CONSOLE_AUTH_ISSUER` and `VITE_CONSOLE_AUTH_CLIENT_ID`, committed in `.env.production` and `.env.stack`; without them the console says sign-in isn't set up. The Firebase web SDK is gone from the console. 501 console tests pass.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "apps/console-web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-21.2",
               "title": "Replace the API's Firebase token check with a check of Rauthy's tokens against its published keys",
-              "description": "The console group and `/api/setup/claim-admin` check a Rauthy token: its signature against the keys Rauthy publishes (fetched once and kept, fetched again for a key it doesn't know), its issuer, its audience (the console's client), its expiry, and a verified email, then `console.admins` as now. The API's environment names Rauthy's issuer and the console's client id; the consumer group keeps its Firebase check until its own move, so `FIREBASE_PROJECT_ID` stays for it. Its tests cover a good token, each way one is refused, and a key rotated.",
+              "description": "The console group and `/api/setup/claim-admin` check a Rauthy token: its signature against the keys Rauthy publishes (fetched once and kept, fetched again for a key it doesn't know), its issuer, its audience (the console's client), its expiry, and a verified email, then `console.admins` as now. The API's environment names Rauthy's issuer and the console's client id; the consumer group keeps its Firebase check until its own move, so `FIREBASE_PROJECT_ID` stays for it. Its tests cover a good token, each way one is refused, and a key rotated.\n\nDone 2026-10-16, merged to items-core's main at `cd423ba9` (`7db59280`, `cd423ba9`). `packages/backend/auth/src/verify-oidc-token.ts` checks, with `jose`, the signature against the keys Rauthy publishes, the issuer, the audience (`items-console`), the access token's type (`at+jwt`, so an ID token is refused), the expiry, and a verified email. Rauthy's discovery document and keys are read once and kept; they are fetched again only for an unknown key id, at most once every 30 seconds. While Rauthy can't be read the API answers 503, not 401, so the console keeps its session. The API reads `CONSOLE_AUTH_ISSUER` and `CONSOLE_AUTH_CLIENT_ID`, both or neither; with neither it boots and refuses every console token. `FIREBASE_PROJECT_ID` stays for the consumer group. A token Rauthy revokes at sign-out stays good until it expires, since the check doesn't ask Rauthy. The whole check passed in Docker: 122 of 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "packages/backend/auth, apps/gateway"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
