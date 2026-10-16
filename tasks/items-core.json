@@ -1469,6 +1469,70 @@
               "approved": true
             }
           ]
+        },
+        {
+          "id": "IC-22",
+          "title": "Fix the worker staying down when Docker or the gateway machine restarts",
+          "description": "After Docker or the gateway machine restarts, items-core's worker comes back by itself, as the API, the console and the browser do. A Stop from the console's fleet page still keeps it down.",
+          "status": "Planning",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "apps/worker: how it stops and its exit code"
+            },
+            {
+              "repo": "items-core",
+              "part": "deploy/compose.yaml, DEPLOY.md, docs/workflow/deploy.md, WORKER.md"
+            }
+          ],
+          "today": [
+            "The worker's service has `restart: on-failure`: a Stop from the fleet page ends it with exit 0 and leaves it down, and a crash exits 1 and Docker starts it again (`deploy/compose.yaml`).",
+            "A SIGTERM ends it with exit 0 too: it logs `stopping: claiming nothing more, finishing what is held`, then `worker stopped` with outcome `interrupted`.",
+            "On 2026-10-16 at 21:35 UTC the gateway machine's WSL restarted during the acceptance's fixture crawl (IC-20.6). Every items-core container came back but the worker, which had exited 0. It stayed down until it was started by hand (`docker start items-core-worker-1`), and the crawl, waiting for its rules, sat until then.",
+            "When Docker starts, it restarts an `on-failure` container only if its last exit was non-zero. A container stopped with `docker stop`, or by a compose deploy, counts as stopped by hand, and no policy restarts it."
+          ],
+          "openChoices": [
+            {
+              "question": "How should items-core's worker come back after Docker or the gateway machine restarts, while a Stop from the fleet page still keeps it down?",
+              "options": [
+                "The worker exits non-zero (143) when a signal stops it, and 0 only after a Stop from the fleet page. `restart: on-failure` then brings it back after Docker restarts, while a deploy's stop or a `docker stop` still isn't restarted, since Docker counts those as stopped by hand.",
+                "The service gets `restart: unless-stopped`, and a worker whose fleet row says stopped starts but claims no work until its row is deleted."
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "IC-22.1",
+              "title": "Make the worker come back after Docker restarts, and stay down after a Stop from the fleet page",
+              "description": "Built as the chosen answer says. Its tests cover the exit code after a fleet-page Stop, after a signal, and after a crash. DEPLOY.md, `deploy.md` and WORKER.md say what each does.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "apps/worker, deploy/compose.yaml, the docs"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "IC-22.2",
+              "title": "Check on the gateway that the worker comes back after Docker restarts",
+              "description": "With the fix deployed, restart Docker on the gateway machine, or simulate it by restarting the worker's container through the Docker daemon. The worker comes back under a new boot, and a Stop from the fleet page still leaves it down. Done from your gateway session with your permission.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "the items-core stack"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-22.1",
+                  "why": "deploys the fix it checks"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
