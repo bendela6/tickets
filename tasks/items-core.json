@@ -1026,7 +1026,8 @@
             "The worker fetches the fixture site through a setting that names the host and port pairs it may fetch beyond public addresses on ports 80 and 443, empty by default; it is set only for the local baseline and, during the acceptance, on the gateway, then removed. The address guard stays as it is everywhere else (your answer, 2026-10-16).",
             "With no model provider, the site crawl's analysis records an empty proposal and waits for you; you write the site's page rules in the console's proposal editor and approve them, and the crawl goes on. The acceptance's fixture crawls get the same rules in both runs (your answer, 2026-10-16).",
             "The worker gets a browser fetch host over the stack's browser, under the same address guard and allow setting, so sites that need rendering crawl on the gateway, and the acceptance's rendered checks stay (your answer, 2026-10-16).",
-            "Each site's settings choose plain or rendered fetching, plain by default, and the site crawl fetches that site's pages the chosen way, through the browser profile the site picks; the acceptance's rendered checks stay (your answer, 2026-10-16)."
+            "Each site's settings choose plain or rendered fetching, plain by default, and the site crawl fetches that site's pages the chosen way, through the browser profile the site picks; the acceptance's rendered checks stay (your answer, 2026-10-16).",
+            "The fixture crawl's page rules, approved when its analysis waits with no model, in the local baseline and again on the gateway: `/page/*` is a product page that contains products and is fetched; `/` is not a product page and is not fetched (the fixture answers 404 there) (your answer, 2026-10-16)."
           ],
           "chosenOn": "2026-10-16",
           "plan": [
@@ -1140,7 +1141,7 @@
             {
               "id": "IC-20.6",
               "title": "Run the fixture crawl on the gateway and compare it with the baseline",
-              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run (`limits.maxPages` 200), and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes.",
+              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run (`limits.maxPages` 200), and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes. When its analysis waits with no model, approve the same rules as the baseline did (IC-20's chosen): `/page/*` a product page, `/` not fetched.",
               "done": false,
               "blockedBy": [
                 {
