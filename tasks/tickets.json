@@ -4335,13 +4335,14 @@
           "id": "TK-13",
           "title": "Serve items as a resource",
           "description": "Every item, across projects, queryable by any of its fields.",
-          "status": "Planned",
+          "status": "In progress",
           "blockedBy": [
             {
               "id": "TK-77",
               "why": "serves items with `@bh/resource`, in tickets' copy of bh"
             }
           ],
+          "statusNote": "TK-13.1 on main (5e7e7307, merged as ae68bc5f, 2026-10-16): `buildItemsMeta(scheme)` in `apps/api/src/resource/items-meta.ts`, pure, 15 tests, checked by bh's `metaOf`; no route yet. Its choices: the title template is `{key} {title}` (items.key holds TIX-12 and plan keys); one field per key across schemes (options joined by value, the first scheme's label and color win; mixed kinds widen); a field is required only when every type requires it; markdown and rich fields are bh's richtext kind; refs hold numeric ids; it pages by number only so far.",
           "where": [
             {
               "repo": "tickets",
@@ -4349,7 +4350,11 @@
             }
           ],
           "today": "no endpoint takes a filter, a sort or a page. The web downloads a whole project (`GET /api/projects/:key/board`) every 10 seconds, filters it (`apps/web/src/utils/evaluate-filters.ts`) and sorts it (`compare-tickets.ts`) in the browser; project stats download every project; MCP search filters a project in memory. A value lives as one row per value in `records.item_values` (text, number, date, boolean, json, option or user). Writes are commands (idempotent, with events and an outbox).",
-          "chosen": "writes keep their commands; the contract's routes call them.",
+          "chosen": [
+            "writes keep their commands; the contract's routes call them.",
+            "An item's one-line name is the templated `{key} {title}` (\"TIX-12 Fix the login\", \"TK-13.1 Build item metadata…\"), from the key tickets stores, not `{project}-{number} {title}` (your answer, 2026-10-16).",
+            "Long text (tickets' markdown and rich fields, bh's `richtext` kind) is always served as the editor's document: the server turns a markdown value, as the API and MCP write them, into a document with `@bh/richtext's` `markdownToDoc` on the way out (your answer, 2026-10-16)."
+          ],
           "plan": [
             {
               "id": "TK-13.1",
@@ -4361,7 +4366,7 @@
                   "part": "apps/api"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-5.21.1",
@@ -4438,7 +4443,7 @@
             {
               "id": "TK-13.3",
               "title": "Add `/api/items/query` and `/api/items/meta`",
-              "description": "Across projects: the project is a field.",
+              "description": "Across projects: the project is a field. It serves long text as documents, turning stored markdown into the editor's document with `markdownToDoc` (your answer on TK-13), and it waits on TK-14.1, since the metadata's refs name the users and projects resources.",
               "where": [
                 {
                   "repo": "tickets",
@@ -4454,6 +4459,10 @@
                 {
                   "id": "TK-13.2",
                   "why": "answers /query through the one-row-per-value adapter"
+                },
+                {
+                  "id": "TK-14.1",
+                  "why": "its refs name the users and projects resources, which bh requires the server to serve"
                 }
               ],
               "approved": true
@@ -4643,7 +4652,7 @@
           "title": "Define one JSON template for table cells, list items, tiles and card bodies",
           "description": "One way to say what a record shows: parts laid out in rows and grids, each part a registered renderer with a registered formatter. A table column's cell, a list item, a tile and a card's body are all templates, drawn by the same code; each host keeps a few fixed parts of its own (a card's icon and title) as plain values. It is the display half of what bh's forms are for input: a form is JSON over a registry of inputs and layouts (`baseInputs`, `@bh/ui`'s `forms/registry.ts`), a template is JSON over a registry of renderers, formatters and layouts, each of which an app extends.",
           "status": "In progress",
-          "statusNote": "TK-79.1 (61ac894) and TK-79.2 (1afb01e) on bh branch `tk-79`, in `../bh-wt-tk-79`, cut from bh branch `tk-11` (9ff8ff8), since a `when` is TK-11.2.1's filter; so `tk-11` merges first. Not merged. `@bh/template` is a new package in `packages/shared/template`, with no React and no DOM: a template is a tree of `TemplateNode`s, each a layout node (`{ layout, options, nodes, when }`; base layouts `flex`, `grid` and `repeat`) or a part (a field, a constant or a text, with an optional renderer, format and shared options); `resolvePart` fills in a part's renderer and format from its field and kind, and `fillText` and `textPaths` handle text templates. The worker's choices where the text was open are with the planner. TK-79.3 (6b7e4f5), TK-79.6 (2779843) and TK-79.10 (285966d) on the same branch: the renderer registry, its specs in `@bh/template` (what each shows, its options' schema, its minimum width) and bh's thirteen renderers in `@bh/ui` over `Pill`, `Avatar`, `TextLink`, `Icon`, `Progress` and `Meter` (the eleven named plus `check` and `code`, which the kind defaults need), with a default per kind; `defineHost`, a host's fixed parts as plain values and where its template goes (the four real hosts are TK-16.2, TK-19.1, TK-19.2 and TK-76's); and the layout registry, `flex`, `grid` and `repeat`, drawn by `@bh/ui`'s `Row` and `Stack` (`baseTemplateLayouts`, since `baseLayouts` is forms'). TK-79.3's commit is marked breaking (`feat(ui)!:`): `@bh/ui` now depends on `@bh/template` and `@bh/resource`, so each app adds them on the bh page. Not checked in the browser: nothing draws these until `Template` (TK-79.7). TK-79.5 (2ce3f61) on the same branch: `link` takes `to`, a route template (`/p/{project}/t/{number}`) filled with each field's raw value, URL-encoded, and shows any kind, so a title or key links to its row; a route that's malformed, or a value that's empty, a list or an object, gives plain text, not a link; one rule, `isAddress`, for every link: absolute with its scheme or a path from the root, never `//`, a relative path, `javascript:`, `vbscript:` or `data:` (tightening TK-79.3's url links); an app's router link plugs in through `createLinkRenderer(Anchor)`. Left: TK-79.4 (formats), TK-79.7, TK-79.8, TK-79.9. Merged: `tk-79` into bh's main (923636b), released in bh 0.4.0, which tickets takes (4d0b46b5).",
+          "statusNote": "TK-79.1 (61ac894) and TK-79.2 (1afb01e) on bh branch `tk-79`, in `../bh-wt-tk-79`, cut from bh branch `tk-11` (9ff8ff8), since a `when` is TK-11.2.1's filter; so `tk-11` merges first. Not merged. `@bh/template` is a new package in `packages/shared/template`, with no React and no DOM: a template is a tree of `TemplateNode`s, each a layout node (`{ layout, options, nodes, when }`; base layouts `flex`, `grid` and `repeat`) or a part (a field, a constant or a text, with an optional renderer, format and shared options); `resolvePart` fills in a part's renderer and format from its field and kind, and `fillText` and `textPaths` handle text templates. The worker's choices where the text was open are with the planner. TK-79.3 (6b7e4f5), TK-79.6 (2779843) and TK-79.10 (285966d) on the same branch: the renderer registry, its specs in `@bh/template` (what each shows, its options' schema, its minimum width) and bh's thirteen renderers in `@bh/ui` over `Pill`, `Avatar`, `TextLink`, `Icon`, `Progress` and `Meter` (the eleven named plus `check` and `code`, which the kind defaults need), with a default per kind; `defineHost`, a host's fixed parts as plain values and where its template goes (the four real hosts are TK-16.2, TK-19.1, TK-19.2 and TK-76's); and the layout registry, `flex`, `grid` and `repeat`, drawn by `@bh/ui`'s `Row` and `Stack` (`baseTemplateLayouts`, since `baseLayouts` is forms'). TK-79.3's commit is marked breaking (`feat(ui)!:`): `@bh/ui` now depends on `@bh/template` and `@bh/resource`, so each app adds them on the bh page. Not checked in the browser: nothing draws these until `Template` (TK-79.7). TK-79.5 (2ce3f61) on the same branch: `link` takes `to`, a route template (`/p/{project}/t/{number}`) filled with each field's raw value, URL-encoded, and shows any kind, so a title or key links to its row; a route that's malformed, or a value that's empty, a list or an object, gives plain text, not a link; one rule, `isAddress`, for every link: absolute with its scheme or a path from the root, never `//`, a relative path, `javascript:`, `vbscript:` or `data:` (tightening TK-79.3's url links); an app's router link plugs in through `createLinkRenderer(Anchor)`. Left: TK-79.4 (formats), TK-79.7, TK-79.8, TK-79.9. Merged: `tk-79` into bh's main (923636b), released in bh 0.4.0, which tickets takes (4d0b46b5). TK-79.4, the formatter registry, merged into bh's main (5801d81) and released in bh 0.6.1 on 2026-10-16: `baseFormats` (the eleven), `formatValue`, `formatText`, `checkFormats` in `@bh/template`; `formatBytes`, `formatDuration` and the date helpers moved there, `@bh/ui` still exports them; markdown and richtext kinds default to the `markdown` and `rich` formats.",
           "notes": [
             {
               "at": "2026-10-14T01:16:52.554Z",
@@ -4758,7 +4767,7 @@
               "id": "TK-79.4",
               "title": "Add the formatter registry: number, percent, bytes, duration, money, date, datetime, relative, plain, markdown, rich",
               "description": "A formatter turns a value into the text a renderer shows, as pieces (`[{ text: \"12.4\" }, { text: \"MiB\", unit: true }]`, as `Intl`'s `formatToParts`), so a card draws the unit smaller and a cell joins them; `formatText()` joins them for plain text (filter chips, tooltips, exports, MCP). Each entry is the function, called with the value, its options and a context (locale, time zone, now), and a `FormatSpec` (TK-11.1): its name, the field kinds it takes, its options' schema. A field's `format` names an entry, so a part that names no formatter shows its field in its format; an app registers its own beside bh's. bh registers eleven: `number` (`digits`, `notation: \"compact\"`), `percent` (`digits`; it takes a fraction, 0.427 → 43%), `bytes` (1024s, KiB/MiB/GiB; `per: \"s\"` for a rate), `duration` (the value's `unit`: ms, s, min or h), `money` (`currency`), `date`, `datetime` (`timeZone`), `relative` (minute and hour steps, TK-32), and the text formats `plain`, `markdown` and `rich` (the text renderer draws them, TK-79.3). Each of bh's kinds names a default format (TK-11.1), and the registry checks every kind's default is registered. The registry runs in the browser and on a server alike: `formatBytes` and `formatDuration` move from `@bh/ui` into `@bh/template`, and `@bh/ui` keeps exporting them. The locale and time zone come from the app, set once; a format may override the time zone. \"x of y\" and a ratio are not formats: a card writes them as two parts on one line, the second with `prefix: \"of \"`, each in its own format (\"of 8 GB\" is bytes), by your answer on TK-76.",
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-32",
@@ -4973,7 +4982,8 @@
                   "id": "TK-79.4",
                   "why": "the formats hand back their unit as a piece of its own, which it draws smaller"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-79.13",
@@ -4999,7 +5009,8 @@
                   "id": "TK-79.3",
                   "why": "the renderer registry `sparkline` joins"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -6435,7 +6446,8 @@
                   "id": "TK-24.2.1",
                   "why": "the icon-only `Button` it adds a look and a size to"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -7825,7 +7837,8 @@
                   "id": "TK-38.2",
                   "why": "marked `shortcutLabel` deprecated and moved bh's own uses to `Kbd`"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -9237,7 +9250,7 @@
           "title": "Remove items-core's leftovers from before bh",
           "description": "What items-core keeps from before bh was its own repository.",
           "status": "In progress",
-          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 not built: items-core's main has neither `@bh/config` (`packages/bh/` came in with f31df28e) nor the `node-file-suffix` rule; both are only on `bbendeliani/detection`, 30 commits ahead of main and the branch your checkout is on. TK-66.1 done (2026-10-16: you deleted `packages/web`). TK-66.2 builds on items-core's main after the detection merge (TK-66.4), which waits on the cloud-dev cutover (IC-8), since a push to main deploys there. Merged: tickets' `tk-66` into main (61fa1a9f).",
+          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 not built: items-core's main has neither `@bh/config` (`packages/bh/` came in with f31df28e) nor the `node-file-suffix` rule; both are only on `bbendeliani/detection`, 30 commits ahead of main and the branch your checkout is on. TK-66.1 done (2026-10-16: you deleted `packages/web`). TK-66.2 builds on items-core's main after the detection merge (TK-66.4), which no longer waits on a cloud cutover: Google Cloud was dropped on 2026-10-16. Merged: tickets' `tk-66` into main (61fa1a9f).",
           "notes": [
             {
               "at": "2026-10-14T01:29:42.921Z",
@@ -9263,7 +9276,7 @@
           "today": "187 MB of git-ignored files in `packages/web/`. `@bw/config` is a fork of `@bh/config`, and two domain rules differ. `docs/design/design-system.html`, the spec bh's `button.tsx:36` cites (\"matching design-system.html §06 Buttons\"), isn't in bh; the audit found it only in items-core, but tickets has a byte-identical copy (`docs/design/design-system.html`).",
           "chosen": [
             "items-core's two workflow lint rules stay in items-core, as local rules in its own eslint config on top of `@bh/config` (your answer).",
-            "items-core's `bbendeliani/detection` is merged into its main first (TK-66.4): a worker merges it, pushing only if its checks pass and stopping to tell you if they fail. TK-66.2 is then built on main. A push to items-core's main deploys to cloud dev, and IC-8's cutover deploys the migration's own tip, `396d36ad`, first as its own push, so the detection merge reaches main only after the cutover (your answers on TK-66 and IC-8)."
+            "items-core's `bbendeliani/detection` is merged into its main first (TK-66.4): a worker merges it, pushing only if its checks pass and stopping to tell you if they fail. TK-66.2 is then built on main (your answer on TK-66). The merge no longer waits on a Google Cloud cutover: Google Cloud is dropped, and items-core deploys to the gateway instead, where its stack deploys `main` on each push once it exists (your words, 2026-10-16; IC/E4)."
           ],
           "chosenOn": "2026-10-16",
           "plan": [
@@ -9282,7 +9295,7 @@
             {
               "id": "TK-66.2",
               "title": "Replace `@bw/config` with `@bh/config`, keeping items-core's two workflow rules local",
-              "description": "items-core's lint and TypeScript config come from `@bh/config`, and `@bw/config`, its fork, goes. Its two workflow rules, `node-file-suffix` and `port-schema-convertible` (in `packages/shared/config/eslint/rules`, with their tests), stay in items-core as local rules in its own eslint config, on top of `@bh/config` (your answer); `@bh/config` doesn't change.\n\nIt is built on items-core's main after `bbendeliani/detection` is merged into it (TK-66.4), which is after the cloud-dev cutover has deployed the migration's own tip (IC-8; your answers on TK-66 and IC-8).\n\nWhat it touches (the builder read detection, read-only):\n\n- About 30 workspaces use `@bw/config`: a devDependency, `tsconfig` extends (`base`, `node`, `package`, `react`), the `bw-lint` and `bw-madge` scripts, and about 20 `vitest.config.ts` coverage imports.\n- At the root: `package.json`'s prettier and `bw-format` entries, `eslint.config.js` (`@bw/config/eslint/base` and the `'!@bw/config'` allow-list), and `packages/shared/{contracts,env}/eslint.config.js`.\n- The two configs barely differ: the rule prefix `bw/` becomes `bh/`, `@bh/config` drops a duplicate `process.env` ban, React is `'19.0'` rather than `'detect'`, and madge's exclude matches whole path segments. Few or no code fixes expected.\n- The two local rules: the root `eslint.config.js` turns them on as `bw/...`, and five `eslint-disable` comments in `packages/domain/workflow/src/__tests__/define-node.test.ts` name `bw/port-schema-convertible`, so the local plugin can keep the name `bw`, in a small workspace package with its own `test` script, keeping `port-schema-convertible`'s test under `turbo test`.",
+              "description": "items-core's lint and TypeScript config come from `@bh/config`, and `@bw/config`, its fork, goes. Its two workflow rules, `node-file-suffix` and `port-schema-convertible` (in `packages/shared/config/eslint/rules`, with their tests), stay in items-core as local rules in its own eslint config, on top of `@bh/config` (your answer); `@bh/config` doesn't change.\n\nIt is built on items-core's main after `bbendeliani/detection` is merged into it (TK-66.4; your answer on TK-66). No cloud cutover comes first: Google Cloud is dropped (2026-10-16), and its push deploys to the gateway once items-core's stack exists there (IC-18).\n\nWhat it touches (the builder read detection, read-only):\n\n- About 30 workspaces use `@bw/config`: a devDependency, `tsconfig` extends (`base`, `node`, `package`, `react`), the `bw-lint` and `bw-madge` scripts, and about 20 `vitest.config.ts` coverage imports.\n- At the root: `package.json`'s prettier and `bw-format` entries, `eslint.config.js` (`@bw/config/eslint/base` and the `'!@bw/config'` allow-list), and `packages/shared/{contracts,env}/eslint.config.js`.\n- The two configs barely differ: the rule prefix `bw/` becomes `bh/`, `@bh/config` drops a duplicate `process.env` ban, React is `'19.0'` rather than `'detect'`, and madge's exclude matches whole path segments. Few or no code fixes expected.\n- The two local rules: the root `eslint.config.js` turns them on as `bw/...`, and five `eslint-disable` comments in `packages/domain/workflow/src/__tests__/define-node.test.ts` name `bw/port-schema-convertible`, so the local plugin can keep the name `bw`, in a small workspace package with its own `test` script, keeping `port-schema-convertible`'s test under `turbo test`.",
               "where": [
                 {
                   "repo": "items-core",
@@ -9294,10 +9307,6 @@
                 {
                   "id": "TK-66.4",
                   "why": "`@bh/config` and the `node-file-suffix` rule reach items-core's main with the detection merge"
-                },
-                {
-                  "id": "IC-8.9",
-                  "why": "items-core's main holds the cutover's tip, deployed and seeded, before `bbendeliani/detection` reaches it"
                 }
               ],
               "approved": true,
@@ -9340,8 +9349,8 @@
             },
             {
               "id": "TK-66.4",
-              "title": "Merge `bbendeliani/detection` into items-core's main, after the cloud-dev cutover",
-              "description": "A worker merges items-core's `bbendeliani/detection` into its main and pushes it only if the merge's checks pass; if any fail it pushes nothing and tells you (your answer on TK-66). `@bh/config` and the `node-file-suffix` rule, which TK-66.2 needs, exist only on that branch.\n\nA push to items-core's main deploys everything on it to cloud dev (Cloud Build migrates, then deploys), and IC-8's cutover deploys the migration's own tip, `396d36ad`, first as its own push (your answer on IC-8). So this goes out after the cutover, and once IC-6.6 and IC-6.7 are done: since `de0d48aa` both processes refuse a bucket without `STORAGE_PROVIDER` (IC-6.6, applied to the gateway and the VM), and since `0dc3fbcc` the Dockerfiles need BuildKit in Cloud Build (IC-6.7). The branch's later migrations drop columns and tables, so after this push a rollback is a dev reset, not an image redeploy (IC-8).",
+              "title": "Merge `bbendeliani/detection` into items-core's main",
+              "description": "A worker merges items-core's `bbendeliani/detection` into its main and pushes it only if the merge's checks pass; if any fail it pushes nothing and tells you (your answer on TK-66). `@bh/config` and the `node-file-suffix` rule, which TK-66.2 needs, exist only on that branch.\n\nIt waits on no cloud cutover any more: Google Cloud is dropped (your words, 2026-10-16), and while `bnw-items-dev`'s billing is off a push to items-core's main deploys nothing there. items-core deploys to the gateway instead (IC/E4): its stack deploys `main` on each push once it exists (IC-18.2). Whichever comes first: if the stack exists with deploy on push before this push, the push is its first deploy (IC-18.4); otherwise IC-18.4 deploys `main` by hand after it. The stack's compose file, the gateway's docs and the fixture crawl's new baseline are built on main after this merge (IC-17, IC-19, IC-20.5). The branch's later migrations drop columns and tables; on the gateway, whose database starts empty, rolling back past them is a restore from the shared Postgres's nightly dump or a reset (IC-19.1).",
               "where": [
                 {
                   "repo": "items-core",
@@ -9349,20 +9358,7 @@
                 }
               ],
               "done": false,
-              "blockedBy": [
-                {
-                  "id": "IC-8.9",
-                  "why": "the cutover deploys the migration's own tip first, and its seeds need that release's migrations"
-                },
-                {
-                  "id": "IC-6.6",
-                  "why": "since `de0d48aa` both processes refuse a bucket without `STORAGE_PROVIDER`"
-                },
-                {
-                  "id": "IC-6.7",
-                  "why": "a push that carries `0dc3fbcc` needs BuildKit in Cloud Build"
-                }
-              ]
+              "approved": true
             }
           ]
         },
