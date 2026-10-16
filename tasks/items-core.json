@@ -856,14 +856,14 @@
             {
               "id": "IC-18.4",
               "title": "Deploy items-core's `main` on the gateway for the first time",
-              "description": "The stack's first deploy: it builds the four images, runs `migrate` then `worker-role`, starts the services healthy and watches them 10 s. The detection merge is on `main` already (TK-66.4, 2026-10-16), so deploy `main` by hand from the stack's page; later pushes deploy on their own. A deploy that fails before anything starts leaves nothing running: read its log. It also proves the gateway builds the Dockerfiles' BuildKit cache mounts.",
+              "description": "The stack's first deploy: it builds the four images, runs `migrate` then `worker-role`, starts the services healthy and watches them 10 s. The detection merge is on `main` already (TK-66.4, 2026-10-16), so deploy `main` by hand from the stack's page; later pushes deploy on their own. A deploy that fails before anything starts leaves nothing running: read its log. It also proves the gateway builds the Dockerfiles' BuildKit cache mounts.\n\nDone 2026-10-16, from your gateway session with your permission. Deploy 1 (`5d796c79`) built the images in about five minutes (the BuildKit cache mounts build), made the database `items-core`, ran `migrate` (one `run_events` partition made) and `worker-role`, and went live with the four services healthy. Only `items-api.bendelhome.cc` answered: the live Caddy stack's setup was still the inline script of 2026-10-08, one site file per stack, so the API's name overwrote the console's (gateway 9374a72 moved setup and teardown to `config/site.sh` but never changed the live stack's). With your permission Caddy's setup and teardown became `sh /etc/caddy/site.sh set` and `remove`, as the gateway's README has them, and deploy 2 wrote `items-core.items.bendelhome.cc.caddy` and `items-core.items-api.bendelhome.cc.caddy`. The other stacks keep their one `<stack>.caddy` until their next deploy replaces it. Both addresses answer: the console's page, `/api/health`, and `/api/setup/status` with `needsAdmin: true`. Signing in waits for IC-21.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.2",
