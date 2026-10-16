@@ -113,18 +113,10 @@
               "Two image pipelines exist. The Cloud Build trigger pushes to Artifact Registry for the VM. `.github/workflows/worker-images.yml` still pushes both images to `ghcr.io/bob-and-weave` on every push to `main`."
             ]
           },
-          "openChoices": [
-            {
-              "question": "What happens to `.github/workflows/worker-images.yml`?",
-              "options": [
-                "Keep it. It costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; revisit once a host outside GCP is decided.",
-                "Delete it. Cloud Build and Artifact Registry are the only pipeline the cloud uses, and the plan leaves remote machines browsers and proxies only."
-              ],
-              "recommended": 0,
-              "answer": "Keep it. It costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; revisit once a host outside GCP is decided.",
-              "answeredOn": "2026-10-15"
-            }
+          "chosen": [
+            "`.github/workflows/worker-images.yml` stays: it costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; it is revisited once a host outside GCP is decided (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "IC-6.1",
@@ -159,13 +151,13 @@
             {
               "id": "IC-6.6",
               "title": "Set `STORAGE_PROVIDER=gcs` on the gateway and the worker VM",
-              "description": "Add `STORAGE_PROVIDER=gcs` and `WORKFLOW_BLOB_STORAGE_PROVIDER=postgres` beside `GCS_BUCKET` in `modules/services/main.tf` and `modules/services/worker/cloud-init.yaml.tftpl`, as `deploy.md`'s configuration tables list them. Since `de0d48aa` both processes refuse a bucket that no store uses. Code from before it ignores the two extra variables.",
+              "description": "Add `STORAGE_PROVIDER=gcs` and `WORKFLOW_BLOB_STORAGE_PROVIDER=postgres` beside `GCS_BUCKET` in `modules/services/main.tf` and `modules/services/worker/cloud-init.yaml.tftpl`, as `deploy.md`'s configuration tables list them. Since `de0d48aa` both processes refuse a bucket that no store uses. Code from before it ignores the two extra variables. The cutover (IC-8) deploys `396d36ad`, which predates `de0d48aa` and ignores these variables, so it doesn't wait for this; the later push of `bbendeliani/detection` does (TK-66.4). The Terraform change has to be applied before that push, since the gateway's and the VM's settings come from the apply.",
               "done": false
             },
             {
               "id": "IC-6.7",
               "title": "Check the Cloud Build steps build the BuildKit Dockerfiles",
-              "description": "Since `0dc3fbcc`, `docker/gateway/Dockerfile` and `docker/worker/Dockerfile` use `RUN --mount=type=cache`, which needs BuildKit. The gateway trigger (`modules/services/items-api/main.tf`, already live) and the worker trigger run `gcr.io/cloud-builders/docker` with plain `build` and no `DOCKER_BUILDKIT=1`. Confirm the builder uses BuildKit, or set it on the steps, before any push to `main` that carries `0dc3fbcc`.",
+              "description": "Since `0dc3fbcc`, `docker/gateway/Dockerfile` and `docker/worker/Dockerfile` use `RUN --mount=type=cache`, which needs BuildKit. The gateway trigger (`modules/services/items-api/main.tf`, already live) and the worker trigger run `gcr.io/cloud-builders/docker` with plain `build` and no `DOCKER_BUILDKIT=1`. Confirm the builder uses BuildKit, or set it on the steps, before any push to `main` that carries `0dc3fbcc`. The cutover's `396d36ad` predates `0dc3fbcc`, so it doesn't need this; the later push of `bbendeliani/detection` does (TK-66.4).",
               "done": false
             }
           ]
@@ -241,9 +233,8 @@
         {
           "id": "IC-8",
           "title": "Cut cloud dev over to the direct worker",
-          "description": "The plan's fourth step, as `deploy.md`'s cutover runbook: your approval, then stop the old workers, apply the Terraform, create the worker role, push `main` and refresh the workflow definitions.",
+          "description": "The plan's fourth step, as `deploy.md`'s cutover runbook: your approval, then stop the old workers, apply the Terraform, create the worker role, push `main` (at `396d36ad`) and refresh the workflow definitions.",
           "status": "Planned",
-          "waitingOn": ["your choice of release (below)"],
           "where": [
             {
               "repo": "items-core",
@@ -264,41 +255,23 @@
             "It no longer holds at the branch tip. Later migrations drop columns (`services/crawls/migrations/0011_crawl_stage.sql`, `services/sites/migrations/sites/0005` and `0007`), drop a table (`sites/0009`), rename a table and columns (`sites/0012`), and delete the old crawl workflows with their runs (`services/runs/migrations/0017`, `services/workflows/migrations/0004`). Old images can't run on that schema, so a rollback becomes a dev reset.",
             "The tip also deleted the crawl graphs the recorded baseline ran (`252b077c`). It serves `ai.generate` only through a local `GENERATION_PROVIDER`, so the site crawl's model step is refused in the cloud."
           ],
-          "openChoices": [
-            {
-              "question": "Which items-core commit does the cutover deploy?",
-              "options": [
-                "The migration's own tip, `396d36ad`, first. Every migration is additive, the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The later work goes out as its own push once IC-6.6 and IC-6.7 are done.",
-                "The `bbendeliani/detection` tip. One push carries everything. It needs IC-6.6 and IC-6.7 first, a rollback becomes a dev reset, the runbook's rollback must be rewritten, and the acceptance crawl needs a new baseline."
-              ],
-              "recommended": 0,
-              "answer": "The migration's own tip, `396d36ad`, first. Every migration is additive, the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The later work goes out as its own push once IC-6.6 and IC-6.7 are done.",
-              "answeredOn": "2026-10-15"
-            }
+          "chosen": [
+            "The cutover deploys the migration's own tip, `396d36ad` (2026-09-23), first: every migration up to it only adds, so the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The rest of `bbendeliani/detection` goes out later as its own push (TK-66.4), once IC-6.6 and IC-6.7 are done (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "IC-8.1",
               "title": "Merge the worker migration into items-core's `main`",
-              "description": "Milestone 2's gate: review, then merge, before any deploy. Merge the release chosen above into `main` locally. Don't push yet: the push deploys (IC-8.8).",
+              "description": "Milestone 2's gate: review, then merge, before any deploy. Merge `396d36ad`, the migration's last commit, into `main` locally, and nothing after it (your answer): the rest of `bbendeliani/detection` follows as its own push (TK-66.4). Don't push yet: the push deploys (IC-8.8).",
               "done": false,
               "byYou": true
             },
             {
               "id": "IC-8.2",
               "title": "Merge `bbendeliani/direct-worker` into items-infrastructure's `main` after reading `terraform plan`",
-              "description": "Review the six commits, then run `make init-dev` and `doppler run -- terraform -chdir=environments/dev plan`. The branch was never pushed.",
+              "description": "Review the six commits, then run `make init-dev` and `doppler run -- terraform -chdir=environments/dev plan`. The branch was never pushed. IC-6.6 and IC-6.7 don't come first any more: the cutover deploys `396d36ad`, which predates `de0d48aa` and `0dc3fbcc` and ignores the storage variables (your answer). They come before the later push (TK-66.4).",
               "done": false,
-              "blockedBy": [
-                {
-                  "id": "IC-6.6",
-                  "why": "today's gateway and worker refuse `GCS_BUCKET` without `STORAGE_PROVIDER`"
-                },
-                {
-                  "id": "IC-6.7",
-                  "why": "a push that carries `0dc3fbcc` needs BuildKit in Cloud Build"
-                }
-              ],
               "byYou": true
             },
             {
@@ -377,7 +350,7 @@
             {
               "id": "IC-8.8",
               "title": "Deploy the gateway and the worker by pushing items-core's `main`",
-              "description": "The gateway build migrates, then deploys. The worker build pushes both images, waits for the gateway to serve the commit, and pins them on the VM, which starts the worker (runbook step 4).",
+              "description": "The gateway build migrates, then deploys. `main` holds `396d36ad` and nothing after it. The worker build pushes both images, waits for the gateway to serve the commit, and pins them on the VM, which starts the worker (runbook step 4).",
               "done": false,
               "blockedBy": [
                 {
@@ -428,28 +401,11 @@
             "The recorded baseline is a 200-page crawl of the local fixture site (`tools/dev/fixture-site.mjs` on `127.0.0.1:8089`), captured on the HTTP worker (2026-09-22) and on two direct workers across a kill (2026-09-23), in `transport-parity.md`. The VM can't reach that address.",
             "The recovery proofs run locally against isolated databases. Rendered fetching from GCP egress and real-site bot defenses are proven only here."
           ],
-          "openChoices": [
-            {
-              "question": "What does the acceptance crawl run against?",
-              "options": [
-                "The fixture site, served where the VM can reach it (a container on its `items` network), compared with the baseline, then one seeded real site, rendered.",
-                "Real sites only, judged on business outcomes without a comparison with the baseline."
-              ],
-              "recommended": 0,
-              "answer": "The fixture site, served where the VM can reach it (a container on its `items` network), compared with the baseline, then one seeded real site, rendered.",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How is takeover proven?",
-              "options": [
-                "Kill the worker mid-crawl, and also start a temporary second container, `gcp-dev-2`, outside a gateway rollout. The plan asks for takeover, and the budget holds two workers only outside a rollout.",
-                "Kill the worker only, and let the restarted container reclaim the run under a new boot."
-              ],
-              "recommended": 0,
-              "answer": "Kill the worker mid-crawl, and also start a temporary second container, `gcp-dev-2`, outside a gateway rollout. The plan asks for takeover, and the budget holds two workers only outside a rollout.",
-              "answeredOn": "2026-10-15"
-            }
+          "chosen": [
+            "The acceptance crawl runs against the fixture site, served where the VM can reach it (a container on its `items` network, IC-9.11) and compared with the baseline, then against one seeded real site, rendered (IC-9.12) (your answer).",
+            "Takeover is proven by killing the worker mid-crawl and also by starting a temporary second container, `gcp-dev-2`, outside a gateway rollout: the plan asks for takeover, and the budget holds two workers only outside a rollout (IC-9.7) (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "IC-9.1",
@@ -474,9 +430,15 @@
             },
             {
               "id": "IC-9.4",
-              "title": "Run an acceptance crawl and compare it with the recorded baseline",
-              "description": "Judge it on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures, frontier states and completion. Raise `WORKER_CONCURRENCY` only after a rendered crawl passes.",
+              "title": "Run an acceptance crawl of the fixture site and compare it with the recorded baseline",
+              "description": "Run the crawl of the fixture site (served by IC-9.11) on the VM's worker and compare it with the recorded baseline in `transport-parity.md`. Judge it on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures, frontier states and completion. The rendered crawl of a real site is IC-9.12; raise `WORKER_CONCURRENCY` only after that rendered crawl passes.",
               "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-9.11",
+                  "why": "the fixture site, served where the VM can reach it"
+                }
+              ],
               "byYou": true
             },
             {
@@ -495,8 +457,8 @@
             },
             {
               "id": "IC-9.7",
-              "title": "Check a killed worker's run is reclaimed and completes",
-              "description": "`docker kill` the worker mid-crawl. Its leases lapse after 30 seconds, and the run is reclaimed from its durable log and completes. How far this goes is the takeover choice above.",
+              "title": "Check a killed worker's run is reclaimed and completes, also by a second worker",
+              "description": "`docker kill` the worker mid-crawl. Its leases lapse after 30 seconds, and the run is reclaimed from its durable log and completes. Takeover is proven twice (your answer): by the restarted worker under a new boot, and by a temporary second container, `gcp-dev-2` (`WORKER_NAME=gcp-dev-2`), started on the VM for this check, which takes over a run its first worker lost. Run it outside a gateway rollout: the connection budget holds two workers only then (a second adds 10 to the 47 of 50). Remove `gcp-dev-2` afterwards, and take it out of the fleet.",
               "done": false,
               "byYou": true
             },
@@ -563,6 +525,46 @@
                 {
                   "id": "IC-7.7",
                   "why": "the docs must match the deployed system"
+                },
+                {
+                  "id": "IC-9.12",
+                  "why": "the rendered real-site check"
+                }
+              ],
+              "byYou": true
+            },
+            {
+              "id": "IC-9.11",
+              "title": "Serve the fixture site from a container on the VM's `items` network",
+              "description": "The recorded baseline is a 200-page crawl of `tools/dev/fixture-site.mjs`, which binds `127.0.0.1:8089` by default, an address the VM can't reach. A temporary container on the VM's `items` Docker network runs it with `--host` set to the container's name on that network, so the worker reaches it by that name (your answer). The script uses only Node's built-ins, so any Node image with it copied in will serve it. It serves the baseline's 200 pages and is removed after the acceptance crawl (IC-9.4).",
+              "where": [
+                {
+                  "repo": "gcp",
+                  "part": "items-worker-dev"
+                },
+                {
+                  "repo": "items-core",
+                  "part": "tools/dev/fixture-site.mjs"
+                }
+              ],
+              "done": false,
+              "byYou": true
+            },
+            {
+              "id": "IC-9.12",
+              "title": "Check one seeded real site crawls, rendered, from the VM",
+              "description": "After the fixture comparison (IC-9.4), crawl one seeded real site with rendered fetching through the browser container (your answer). It is the one check of rendered fetching from GCP's single datacenter address and of a real site's bot defenses, which are proven only in the cloud. Judge it on business outcomes (the crawl row, captures, frontier states and completion); there is no baseline to compare with. The site is your pick.",
+              "where": [
+                {
+                  "repo": "gcp",
+                  "part": "items-worker-dev"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-9.4",
+                  "why": "the fixture crawl passes first"
                 }
               ],
               "byYou": true

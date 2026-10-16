@@ -251,7 +251,7 @@
                 {
                   "id": "GW-2.2.5",
                   "title": "Add the card parts, merged with medialib's copies",
-                  "description": "`CardState`, `MetricCard`, which becomes a `Card` given a `value` (TK-76), `Meter`, `Num`, built with the configurable `Card` (TK-76). `Figure` and `Figures` aren't parts of their own: they are `Card`'s row and titled-group shapes (your answer on TK-76); `Meter` comes with TK-76.3.",
+                  "description": "`CardState`, `MetricCard`, which becomes a `Card` whose template draws its number with the `figure` renderer (TK-76, TK-79.12; a card has no `value` prop), `Meter`, `Num` (its formatting is the card's `fields`, TK-76), built with the configurable `Card` (TK-76). `Figure` and `Figures` aren't parts of their own: they are `Card`'s row and titled-group shapes (your answer on TK-76); `Meter` comes with TK-76.3.",
                   "done": false,
                   "blockedBy": [
                     {
@@ -270,6 +270,11 @@
                       "at": "2026-10-14T01:22:56.363Z",
                       "by": "claude",
                       "text": "Changed since you approved it: `MetricCard` becomes a `Card` given a `value` (TK-76)."
+                    },
+                    {
+                      "at": "2026-10-16T01:41:19.764Z",
+                      "by": "claude",
+                      "text": "Changed since you approved it: a `Card`'s number is drawn by its template's `figure` part, not a `value` prop, and `Num` takes its format from the card's `fields` (your answers on TK-76)."
                     }
                   ]
                 },
