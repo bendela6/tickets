@@ -714,7 +714,8 @@
                   "part": "deploy/compose.yaml"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "IC-17.2",
@@ -732,7 +733,8 @@
                   "id": "IC-17.1",
                   "why": "the jobs use the API service's image and connection"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "IC-17.3",
@@ -750,7 +752,8 @@
                   "id": "IC-17.2",
                   "why": "lists the compose file's services and jobs"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "IC-17.4",
@@ -766,7 +769,8 @@
                   "part": "docker/worker/README.md"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         },
@@ -808,7 +812,8 @@
                 }
               ],
               "done": false,
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-18.2",
@@ -831,7 +836,8 @@
                   "why": "its source reads the repository through that connection"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-18.3",
@@ -844,7 +850,8 @@
                 }
               ],
               "done": false,
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-18.4",
@@ -863,7 +870,8 @@
                   "why": "deploys the stack"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-18.5",
@@ -886,7 +894,8 @@
                   "why": "the console and the jobs are deployed"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             }
           ],
           "chosen": [
@@ -935,7 +944,8 @@
                   "id": "IC-17",
                   "why": "documents the stack as written"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "IC-19.2",
@@ -947,7 +957,8 @@
                   "part": "WORKER.md, docs/workflow/deploy.md"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "IC-19.3",
@@ -965,7 +976,8 @@
                   "id": "IC-19.1",
                   "why": "draws `deploy.md`'s topology"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -1018,7 +1030,8 @@
                   "why": "checks the deployed stack"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.2",
@@ -1031,7 +1044,8 @@
                   "why": "checks the deployed, seeded stack, signed in"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.3",
@@ -1044,7 +1058,8 @@
                   "why": "checks the deployed stack"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.4",
@@ -1067,7 +1082,8 @@
                   "why": "checks the deployed stack"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.5",
@@ -1085,7 +1101,8 @@
                   "id": "TK-66.4",
                   "why": "runs on items-core's `main` after the detection merge"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "IC-20.6",
@@ -1106,7 +1123,8 @@
                   "why": "the baseline it is compared with"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.7",
@@ -1119,7 +1137,8 @@
                   "why": "checks the deployed, seeded stack, signed in"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.8",
@@ -1132,7 +1151,8 @@
                   "why": "checks the deployed, seeded stack, signed in"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.9",
@@ -1149,7 +1169,8 @@
                   "why": "the second worker needs 10 connections the census found free"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.10",
@@ -1162,7 +1183,8 @@
                   "why": "checks the deployed, seeded stack, signed in"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.11",
@@ -1175,7 +1197,8 @@
                   "why": "the budget it is measured against"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.12",
@@ -1188,7 +1211,8 @@
                   "why": "the fixture crawl passes first"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             },
             {
               "id": "IC-20.13",
@@ -1241,7 +1265,8 @@
                   "why": "the docs must match the deployed system"
                 }
               ],
-              "byYou": true
+              "byYou": true,
+              "approved": true
             }
           ]
         }
