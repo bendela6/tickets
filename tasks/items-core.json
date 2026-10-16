@@ -800,7 +800,7 @@
             {
               "id": "IC-18.1",
               "title": "Add a GitHub connection on the gateway that reads `bob-and-weave/items-core`",
-              "description": "On the gateway's Settings › Connections › GitHub: a connection whose app belongs to the `bob-and-weave` organization (made by GitHub's manifest flow, which an owner of the organization confirms), with read access to the contents of `bob-and-weave/items-core`; or the repository added to an app the organization has installed already. The stack's source names this connection.",
+              "description": "On the gateway's Settings › Connections › GitHub: a connection whose app belongs to the `bob-and-weave` organization (made by GitHub's manifest flow, which an owner of the organization confirms), with read access to the contents of `bob-and-weave/items-core`; or the repository added to an app the organization has installed already. The stack's source names this connection.\n\nDone 2026-10-16, differently (your choice): one app instead of an organization's. Your gateway app, renamed `bendev-gateway` (was `bendela6-gateway`), was made public and installed on `bob-and-weave` with only `items-core` selected; the gateway's existing GitHub connection lists `bob-and-weave/items-core` beside your own repositories. The app has read and write on code and pull requests (the bh page's pull-request delivery needs it); deploying needs read only.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -811,7 +811,7 @@
                   "part": "GitHub: bob-and-weave/items-core"
                 }
               ],
-              "done": false,
+              "done": true,
               "byYou": true,
               "approved": true
             },
