@@ -1381,7 +1381,7 @@
           "id": "IC-21",
           "title": "Replace the console's Firebase sign-in with Rauthy's",
           "description": "The items-core console signs in through Rauthy, the gateway's shared sign-in service at `auth.bendelhome.cc`, instead of the Firebase of `bnw-items-dev`, which was deleted on 2026-10-16. Who may use the console doesn't change: the API still checks the token's verified email against `console.admins`, and the first admin is still claimed in the setup wizard.",
-          "status": "Planning",
+          "status": "Done",
           "where": [
             {
               "repo": "items-core",
@@ -1440,7 +1440,7 @@
             {
               "id": "IC-21.3",
               "title": "Add Rauthy's address and the console's client to the stack's settings and DEPLOY.md, and deploy it",
-              "description": "`deploy/compose.yaml` and DEPLOY.md name the new settings, and the stack's compose on the gateway is sent again with them, since the gateway keeps its own copy: a change to the file in the repo reaches the stack only when it is sent too. DEPLOY.md says so where it now says such a change deploys on push. Then a push deploys it, and a sign-in at `items.bendelhome.cc` is checked. Done from your gateway session with your permission.",
+              "description": "`deploy/compose.yaml` and DEPLOY.md name the new settings, and the stack's compose on the gateway is sent again with them, since the gateway keeps its own copy: a change to the file in the repo reaches the stack only when it is sent too. DEPLOY.md says so where it now says such a change deploys on push. Then a push deploys it, and a sign-in at `items.bendelhome.cc` is checked. Done from your gateway session with your permission.\n\nDone 2026-10-16, from your gateway session with your permission. items-core `059d8e96` gives the `api` service `CONSOLE_AUTH_ISSUER: 'https://auth.bendelhome.cc/auth/v1/'` and `CONSOLE_AUTH_CLIENT_ID: items-console`, written in the compose since they are public; the jobs don't need them. `251415b4` updates DEPLOY.md and `docs/workflow/deploy.md`: the console's sign-in settings, `FIREBASE_PROJECT_ID` as the consumer API's, and a new \"Changing the compose\" section. It replaces the wrong \"deploys on push\" with what happens: a push deploys the compose text the gateway holds, and a change to the file reaches the stack only when that text is replaced. The stack's compose was replaced (`PATCH /api/stacks/items-core`, the text of `251415b4` byte for byte) before the push, and deploy 4 went live with it. Checked at `items.bendelhome.cc`: the setup wizard's sign-in went to Rauthy and came back signed in as your email. Rauthy's access token is EdDSA, `typ` `at+jwt`, `aud` `items-console`, `email_verified` true, with a refresh token. The API passed it through every check up to `console.admins`, answering `account not allowed` since no admin is claimed yet.",
               "where": [
                 {
                   "repo": "items-core",
@@ -1451,7 +1451,7 @@
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-21.1",
