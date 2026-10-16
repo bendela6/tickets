@@ -778,7 +778,7 @@
           "id": "IC-18",
           "title": "Run items-core as a stack on the gateway, deployed from its `main`",
           "description": "The live gateway runs items-core as the stack `items-core`, from `bob-and-weave/items-core`'s `main`, on the shared Postgres, at its addresses through Caddy, and deploys each push to `main`. Every step here changes the live gateway or needs your accounts, so each is yours, done from your gateway session with your permission where an agent can do it (as AU-1.8 was).",
-          "status": "Planning",
+          "status": "Done",
           "waitingOn": ["your choices (below)"],
           "where": [
             {
@@ -876,14 +876,14 @@
             {
               "id": "IC-18.5",
               "title": "Make the first console admin and seed the new database",
-              "description": "Sign in to the console at its address and claim the first admin in its setup wizard, which shows while `admins.admins` is empty. Then run the `seed` job once from the stack's page: the sites, merchants and brands, and the workflow definitions. It empties what it seeds, so it runs on the new database only; `seed-workflows` is the job for later graph changes.",
+              "description": "Sign in to the console at its address and claim the first admin in its setup wizard, which shows while `admins.admins` is empty. Then run the `seed` job once from the stack's page: the sites, merchants and brands, and the workflow definitions. It empties what it seeds, so it runs on the new database only; `seed-workflows` is the job for later graph changes.\n\nDone 2026-10-16 on your word (\"do both\"), from your signed-in Chrome. The setup wizard at `items.bendelhome.cc` signed in through Rauthy and claimed the first admin for b.bendeliani@gmail.com (\"Setup complete\"); `/api/setup/status` now answers `needsAdmin: false`. The `seed` job ran once on deploy 4 (`POST /api/stacks/items-core/runs`, run 1, done in 249 ms): 515 sites, 553 merchants, 539 brands, 313 site platforms, 2 workflows with their versions, and their lookup tables.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.3",
