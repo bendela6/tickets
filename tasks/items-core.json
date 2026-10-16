@@ -1114,14 +1114,14 @@
             {
               "id": "IC-20.5",
               "title": "Take a baseline of the fixture crawl on the commit the gateway runs",
-              "description": "The recorded baseline ran the corpus-crawl graph, which is gone; the gateway runs the site-crawl graph. Locally, on items-core's `main` after the detection merge, run the crawl as `transport-parity.md` describes, with the fixture site at `fixture-site:8089` on the stack's network, the allow setting set to it (IC-20.14), and `limits.maxPages` 200 (`pnpm dev` with one worker, `node tools/dev/fixture-site.mjs --urls 5000`, `POST /api/crawls/from-url` with `maxPages` 200), with no `GENERATION_PROVIDER`, as on the gateway; if the analysis stage stops on a rule proposal, answer it as the gateway's run will be answered. Capture it with `docs/workflow/perf/parity-capture.sh` and add it to `transport-parity.md` as the site-crawl baseline. By your answer on IC-18's first commit.",
+              "description": "The recorded baseline ran the corpus-crawl graph, which is gone; the gateway runs the site-crawl graph. Locally, on items-core's `main` after the detection merge, run the crawl as `transport-parity.md` describes, with the fixture site at `fixture-site:8089` on the stack's network, the allow setting set to it (IC-20.14), and `limits.maxPages` 200 (`pnpm dev` with one worker, `node tools/dev/fixture-site.mjs --urls 5000`, `POST /api/crawls/from-url` with `maxPages` 200), with no `GENERATION_PROVIDER`, as on the gateway; if the analysis stage stops on a rule proposal, answer it as the gateway's run will be answered. Capture it with `docs/workflow/perf/parity-capture.sh` and add it to `transport-parity.md` as the site-crawl baseline. By your answer on IC-18's first commit.\n\nDone 2026-10-16 (`56fed442` on items-core's main): `docs/workflow/perf/parity/2026-10-16-1efb96a9-site-crawl.txt` and the site-crawl section of `transport-parity.md`. Run on the stack itself (`deploy/compose.yaml`, project `ic205`, a throwaway `postgres:18.4`), `fixture-site:8089` with 5,000 pages, the allow setting, no model, plain fetching, `limits.maxPages` 200. The analysis waited with a `noModel` proposal; your rules were approved; the crawl ended `max_pages` with 200 pages seen and fetched, 5,600 URLs discovered and in scope, cost 0.10; the run succeeded, `lease_epoch` 2 (it gave up its lease while waiting), 15,437 events, 6m29s of which 4m47s waiting. Each run fetches a random 200 of the 5,000 pages, so `urls_discovered` can differ slightly between runs; the doc says what IC-20.6 compares.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "docs/workflow/transport-parity.md, docs/workflow/perf/parity"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-66.4",
