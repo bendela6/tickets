@@ -1422,12 +1422,7 @@
                 }
               ],
               "done": false,
-              "blockedBy": [
-                {
-                  "id": "AU-2.5",
-                  "why": "the console's client at Rauthy, which its sign-in names"
-                }
-              ]
+              "approved": true
             },
             {
               "id": "IC-21.2",
@@ -1440,12 +1435,7 @@
                 }
               ],
               "done": false,
-              "blockedBy": [
-                {
-                  "id": "AU-2.5",
-                  "why": "the console's client id, which a token's audience must name"
-                }
-              ]
+              "approved": true
             },
             {
               "id": "IC-21.3",
@@ -1470,8 +1460,13 @@
                 {
                   "id": "IC-21.2",
                   "why": "deploys its token check"
+                },
+                {
+                  "id": "AU-2.5",
+                  "why": "the console's client at Rauthy, which the deployed settings name"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         }
