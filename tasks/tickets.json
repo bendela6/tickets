@@ -1832,7 +1832,7 @@
             {
               "id": "TK-5.8",
               "title": "Replace the KPI strip with number `Card`s (TK-76)",
-              "description": "The board's KPI strip (`components/board/kpi-strip.tsx`) becomes number `Card`s that fit a phone's width: today the strip is wider than a 500px screen and the page scrolls sideways (seen in TK-4.8).",
+              "description": "The board's KPI strip (`components/board/kpi-strip.tsx`) becomes number `Card`s that fit a phone's width: today the strip is wider than a 500px screen and the page scrolls sideways (seen in TK-4.8). Each status is a `Card` in the row shape: its status kind's icon, its label, and the count at the right edge (your answer on TK-76).",
               "where": [
                 {
                   "repo": "tickets",
@@ -1852,6 +1852,11 @@
                   "at": "2026-10-13T08:04:51.315Z",
                   "by": "claude",
                   "text": "Changed since you approved it: its cards must fit a phone's width; the strip they replace makes a 500px screen scroll sideways today."
+                },
+                {
+                  "at": "2026-10-16T01:41:19.313Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: each status is a row-shaped `Card`: its icon, label and the count at the right edge (your answer)."
                 }
               ]
             },
@@ -2783,51 +2788,19 @@
           "id": "TK-108",
           "title": "Fix the bugs in tickets that TK-5's build found",
           "description": "Bugs the builder found in tickets while moving it onto bh's parts (TK-5), there before it and covered by no ticket; one can break a fresh install. Kept apart from TK-5, whose tickets you approved.",
-          "status": "Planning",
-          "waitingOn": ["your choices (below)"],
+          "status": "Planned",
           "where": [
             {
               "repo": "tickets",
               "part": "apps/web, the workspace"
             }
           ],
-          "openChoices": [
-            {
-              "question": "How should forking a scheme (tickets' \"Fork for this project\", confirmed by bh's `useConfirm` since TK-5.19) keep the reader's focus once it's confirmed?",
-              "context": "Today the dialog closes on confirm, then the fork runs with \"Fork for this project\" disabled meanwhile, so focus falls to the page (`<body>`) and a keyboard reader loses their place; a failed fork shows a toast.\n\n- **Run the fork in the dialog's `onConfirm`**: the dialog stays open and busy while it runs, shows the error itself if it fails, and gives focus back to the button when it closes. For: what bh's async `onConfirm` (TK-29.1, in bh 0.4.0) is for; the dialog keeps focus throughout. Against: a failure shows in the dialog, not as a toast.\n- **Keep the toast; give focus back to the button once the fork ends**. For: a failure reads as it does today. Against: focus has nowhere to stay while the button is disabled, so it still drops until the fork ends.",
-              "options": [
-                "Run the fork in the dialog's `onConfirm`",
-                "Keep the toast; give focus back to the button once the fork ends"
-              ],
-              "recommended": 0,
-              "answer": "Run the fork in the dialog's `onConfirm`",
-              "answeredOn": "2026-10-16"
-            },
-            {
-              "question": "What does tickets' status picker show on its field, now that it draws the status's kind icon (TK-103.6) beside its color dot: \"○ ● Backlog\"?",
-              "context": "Since TK-103.6 (built, not merged), each status option carries its kind's icon, and bh's `Combobox` draws it on the field too, so the field reads icon, dot, label.\n\n- **Drop the dot**: icon and label, as the status pills and the KPI strip read. For: one mark, the same everywhere. Against: until bh colors the icon by kind (TK-105.10), the field loses its color.\n- **Keep both**: For: the color stays now. Against: two marks for one status.\n- **Drop the icon on the field**, keeping it in the list: For: the field reads as it did. Against: the list and the field differ.",
-              "options": [
-                "Drop the dot",
-                "Keep both",
-                "Drop the icon on the field, keeping it in the list"
-              ],
-              "recommended": 0,
-              "answer": "Drop the dot",
-              "answeredOn": "2026-10-16"
-            },
-            {
-              "question": "A subtask row in tickets shows its status's kind icon twice, at the row's start and in its status picker (TK-103.6). Which goes?",
-              "context": "- **The row's own icon**: the picker's icon stays, beside the status it names. For: one mark, and it's the one you can change. Against: the rows' starts no longer line up on an icon.\n- **The picker's icon, on subtask rows only**: For: the row reads as it did. Against: the picker looks different there than everywhere else.\n- **Keep both**: For: nothing to do. Against: the same mark twice in one row.",
-              "options": [
-                "The row's own icon",
-                "The picker's icon, on subtask rows only",
-                "Keep both"
-              ],
-              "recommended": 0,
-              "answer": "The row's own icon",
-              "answeredOn": "2026-10-16"
-            }
+          "chosen": [
+            "Forking a scheme runs in the confirm dialog's `onConfirm`: the dialog stays open and busy while the fork runs, shows the error itself if it fails (no toast), and gives focus back to the button when it closes (your answer).",
+            "Tickets' status picker shows the status kind's icon and its label on its field, with no color dot, as the status pills and the KPI strip read; the field has no color until bh colors an option's icon by its color (TK-105.10) (your answer).",
+            "A subtask row's own status icon at the row's start goes; the status picker's icon stays, beside the status it names, so the rows' starts no longer line up on an icon (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-108.1",
@@ -2868,7 +2841,7 @@
             {
               "id": "TK-108.4",
               "title": "Fix focus falling to the page after a scheme fork is confirmed",
-              "description": "After \"Fork for this project\" is confirmed, focus lands on `<body>`, since the button is disabled while the fork runs. Fixed the way the question on this feature picks.",
+              "description": "After \"Fork for this project\" is confirmed, focus lands on `<body>`, since the button is disabled while the fork runs. The fork runs in the confirm dialog's `onConfirm` (`confirm({ …, onConfirm })` of bh's `useConfirm`, TK-5.19): the dialog stays open and busy while it runs, shows the error itself if it fails, and gives focus back to the button when it closes (your answer). A failed fork no longer shows as a toast.",
               "where": [
                 {
                   "repo": "tickets",
@@ -2880,7 +2853,7 @@
             {
               "id": "TK-108.5",
               "title": "Fix the status picker's field showing two marks for one status",
-              "description": "The field reads \"○ ● Backlog\" since TK-103.6. Fixed the way the question on this feature picks.",
+              "description": "The field reads \"○ ● Backlog\" since TK-103.6. The field reads the kind's icon and the label, with no color dot, as the status pills and the KPI strip read (your answer). Until bh colors an option's icon by its color (TK-105.10) the field has no color; dropping the dot must not drop the option's `color`, which TK-105.10 will use for the icon.",
               "where": [
                 {
                   "repo": "tickets",
@@ -2898,7 +2871,7 @@
             {
               "id": "TK-108.6",
               "title": "Fix a subtask row showing its status's kind icon twice",
-              "description": "Once at the row's start and again in its status picker, since TK-103.6. Fixed the way the question on this feature picks.",
+              "description": "Once at the row's start and again in its status picker, since TK-103.6. The row's own icon at its start goes; the status picker's icon stays, beside the status it names (your answer). The rows' starts no longer line up on an icon.",
               "where": [
                 {
                   "repo": "tickets",
@@ -4532,7 +4505,8 @@
                   "part": "apps/api"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-14.2",
@@ -4543,7 +4517,8 @@
                   "part": "apps/api"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-14.3",
@@ -4560,7 +4535,8 @@
                   "id": "TK-14.5",
                   "why": "serves views with no project too"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-14.4",
@@ -4571,7 +4547,8 @@
                   "part": "apps/api"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-14.5",
@@ -4583,7 +4560,8 @@
                   "part": "packages/db"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         },
@@ -4623,7 +4601,8 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-15.2",
@@ -4634,7 +4613,8 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-15.3",
@@ -4645,7 +4625,8 @@
                   "part": "apps/mcp"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         }
@@ -4662,7 +4643,6 @@
           "title": "Define one JSON template for table cells, list items, tiles and card bodies",
           "description": "One way to say what a record shows: parts laid out in rows and grids, each part a registered renderer with a registered formatter. A table column's cell, a list item, a tile and a card's body are all templates, drawn by the same code; each host keeps a few fixed parts of its own (a card's icon and title) as plain values. It is the display half of what bh's forms are for input: a form is JSON over a registry of inputs and layouts (`baseInputs`, `@bh/ui`'s `forms/registry.ts`), a template is JSON over a registry of renderers, formatters and layouts, each of which an app extends.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
           "statusNote": "TK-79.1 (61ac894) and TK-79.2 (1afb01e) on bh branch `tk-79`, in `../bh-wt-tk-79`, cut from bh branch `tk-11` (9ff8ff8), since a `when` is TK-11.2.1's filter; so `tk-11` merges first. Not merged. `@bh/template` is a new package in `packages/shared/template`, with no React and no DOM: a template is a tree of `TemplateNode`s, each a layout node (`{ layout, options, nodes, when }`; base layouts `flex`, `grid` and `repeat`) or a part (a field, a constant or a text, with an optional renderer, format and shared options); `resolvePart` fills in a part's renderer and format from its field and kind, and `fillText` and `textPaths` handle text templates. The worker's choices where the text was open are with the planner. TK-79.3 (6b7e4f5), TK-79.6 (2779843) and TK-79.10 (285966d) on the same branch: the renderer registry, its specs in `@bh/template` (what each shows, its options' schema, its minimum width) and bh's thirteen renderers in `@bh/ui` over `Pill`, `Avatar`, `TextLink`, `Icon`, `Progress` and `Meter` (the eleven named plus `check` and `code`, which the kind defaults need), with a default per kind; `defineHost`, a host's fixed parts as plain values and where its template goes (the four real hosts are TK-16.2, TK-19.1, TK-19.2 and TK-76's); and the layout registry, `flex`, `grid` and `repeat`, drawn by `@bh/ui`'s `Row` and `Stack` (`baseTemplateLayouts`, since `baseLayouts` is forms'). TK-79.3's commit is marked breaking (`feat(ui)!:`): `@bh/ui` now depends on `@bh/template` and `@bh/resource`, so each app adds them on the bh page. Not checked in the browser: nothing draws these until `Template` (TK-79.7). TK-79.5 (2ce3f61) on the same branch: `link` takes `to`, a route template (`/p/{project}/t/{number}`) filled with each field's raw value, URL-encoded, and shows any kind, so a title or key links to its row; a route that's malformed, or a value that's empty, a list or an object, gives plain text, not a link; one rule, `isAddress`, for every link: absolute with its scheme or a path from the root, never `//`, a relative path, `javascript:`, `vbscript:` or `data:` (tightening TK-79.3's url links); an app's router link plugs in through `createLinkRenderer(Anchor)`. Left: TK-79.4 (formats), TK-79.7, TK-79.8, TK-79.9. Merged: `tk-79` into bh's main (923636b), released in bh 0.4.0, which tickets takes (4d0b46b5).",
           "notes": [
             {
@@ -4715,7 +4695,7 @@
             "every host draws records by hand: a table's cells are column code in each app (bh's `tableRender` skins the table, not its cells); tickets' list rows and kanban cards; six apps' number tiles (TK-76).",
             "TK-16.3 drafted a cell for tables, lists and tiles: lines of parts, a part being a field or a text template (`{title}`) with a renderer and its options; renderers text, link, pill, date, number, avatar, user, icon, progress; options tone, mono, weight, clamp to N lines, prefix, empty text; a link's target as a route template; layouts lines, inline and two sides.",
             "the August plan (`docs/superpowers/plans/2026-08-02-table-schema-package.md`, never built) had the same model for tables only: `CellPart` (a renderer, a field or a constant, props, an empty text), a closed set of layouts (`lines`, `inline`, `wrap`, `grid`), bindings (`{$field}`, `{$fn}`, a literal with `{path}` in it), seven registries (cells, fields, datasets, routes, fns, operators, actions) and `validateDef`. Pure TypeScript, generic over the node type, so React arrives only with the renderers.",
-            "the Card design (TK-76) lists the formats a number needs: count, compact, percent, bytes, rate, duration, \"x of y\", ratio, time ago, date, text. bh has some: its dates and `relativeLabel` (TK-32 adds more), `formatBytes` and `formatDuration` (TK-35)."
+            "the Card design (TK-76) lists the formats a number needs: count, compact, percent, bytes, rate, duration, ratio, time ago, date, text (it also listed \"x of y\", which is two parts on one line instead, your answer on TK-76). bh has some: its dates and `relativeLabel` (TK-32 adds more), `formatBytes` and `formatDuration` (TK-35)."
           ],
           "chosen": [
             "One render system for every host: a table column's cell, a list item, a tile and a card's body are templates, drawn by the same code from the same JSON, fully configurable (your answer).",
@@ -4726,19 +4706,16 @@
             "Rows and grids nest in each other as deep as a template needs (your answer).",
             "A package of its own, `@bh/template`, with no React; the renderers come from `@bh/ui`, so `@bh/ui`'s `Card` and `@bh/view`'s tables both use it (your answer).",
             "No computed values: formatters only; anything else, the app adds to the record first (your answer).",
-            "Layouts are a registry, as renderers and formatters are and as forms' layouts are: bh registers `flex`, `grid` and `repeat`, `when` shows or hides any node, and an app adds its own layouts, an overlay among them (your answer)."
+            "Layouts are a registry, as renderers and formatters are and as forms' layouts are: bh registers `flex`, `grid` and `repeat`, `when` shows or hides any node, and an app adds its own layouts, an overlay among them (your answer).",
+            "The formatter registry starts with eleven formats: `number` (`digits`, `notation: compact`), `percent`, `bytes` (`per: s` for a rate), `duration`, `money` (`currency`), `date`, `datetime` (`timeZone`), `relative`, `plain`, `markdown` and `rich`; an app adds its own. Count, compact, rate and time ago are those with options, and \"x of y\" and a ratio are two parts (your answer, 2026-10-16).",
+            "Formatters run in the browser and on a server alike (MCP answers, exports): `formatBytes` and `formatDuration` move from `@bh/ui` into `@bh/template`, which has no React, and `@bh/ui` keeps exporting them (your answer, 2026-10-16).",
+            "The app sets its locale and time zone once; a field's format may override the time zone, as tickets' table dates show UTC (your answer, 2026-10-16).",
+            "`percent` takes a fraction: 0.427 → 43% (your answer, 2026-10-16).",
+            "A part with no value and no `empty` text shows nothing, taking no space, as built (your answer).",
+            "A card's big number is drawn by a renderer of its own, `figure`, sized by its host and with its unit smaller, and its small line chart by `sparkline`; `trend` stays the name of the change since the last period (your answers on TK-76).",
+            "\"x of y\" is no format: it is two parts on one line, the second with `prefix: \"of \"`, each in its own format (your answer on TK-76)."
           ],
-          "chosenOn": "2026-10-14",
-          "openChoices": [
-            {
-              "question": "What does a template part show when its value is empty and it sets no `empty` text (TK-79)?",
-              "context": "A part may set `empty`, the text it shows for no value. TK-79.2's worker built a part without it to show nothing; the August plan showed \"—\".\n\n- **Nothing, taking no space**, as built. For: a card or list item without a due date just doesn't have that line. Against: in a table, an empty cell and one still loading or broken look alike.\n- **\"—\"**, as the August plan had. For: a reader sees there's no value. Against: dashes everywhere in sparse rows, and a part that should vanish needs `empty: ''`.",
-              "options": ["Nothing, taking no space (as built)", "\"—\""],
-              "recommended": 0,
-              "answer": "Nothing, taking no space (as built)",
-              "answeredOn": "2026-10-15"
-            }
-          ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-79.1",
@@ -4756,7 +4733,7 @@
             {
               "id": "TK-79.2",
               "title": "Define a part: a renderer, what it shows, a formatter and options",
-              "description": "What it shows is a field, a constant, or a text template (`{title}`). Options: tone, mono, weight, clamp to N lines, prefix, empty text. For example the id as a blue link, the title as plain text, the description clamped to two lines. A part that names no renderer or formatter takes its field's: its kind's default renderer (TK-79.3) and its `format` (TK-11.1), so a field shows the same everywhere unless a template says otherwise.",
+              "description": "What it shows is a field, a constant, or a text template (`{title}`). Options: tone, mono, weight, clamp to N lines, prefix, empty text; a part that sets no `empty` text and has no value shows nothing, taking no space (your answer). For example the id as a blue link, the title as plain text, the description clamped to two lines. A part that names no renderer or formatter takes its field's: its kind's default renderer (TK-79.3) and its `format` (TK-11.1), so a field shows the same everywhere unless a template says otherwise.",
               "done": true,
               "approved": true
             },
@@ -4779,8 +4756,8 @@
             },
             {
               "id": "TK-79.4",
-              "title": "Add the formatter registry: count, compact, percent, bytes, rate, duration, money, \"x of y\", ratio, time ago, date, text",
-              "description": "A formatter turns a value into the text a renderer shows. The formats are the Card design's (TK-76), over bh's date, byte and duration helpers; an app adds its own. Each entry is the function, and a `FormatSpec` (TK-11.1): its name, the field kinds it takes, its options' schema. A field's `format` names an entry, so a part that names no formatter shows its field in its format, and a field's format is any registered one, an app's own too. bh registers the text formats `plain`, `markdown` and `rich` (the text renderer draws them, TK-79.3) and, for numbers and dates, `number`, `percent`, `bytes`, `duration`, `money` (with a `currency` option), `date`, `datetime` and `relative`. Each of bh's kinds names a default format (`plain`, `number`, `date`, `datetime`, TK-11.1); once these are registered, the registry checks that every kind's default is one of them. For the Card design (TK-76): `number` takes `notation: \"compact\"` and `digits`, `percent` takes `digits`, and `bytes` takes `per: \"s\"` (a rate); and a format can hand back its unit apart from its digits (as `Intl`'s `formatToParts`), so a card draws the unit smaller. `formatBytes` and `formatDuration` live in `@bh/ui`, which `@bh/template` can't import, so the `bytes` and `duration` formats are registered from `@bh/ui`, as the renderers are. TK-35 didn't build the bytes rate or the unit apart; they're built here.",
+              "title": "Add the formatter registry: number, percent, bytes, duration, money, date, datetime, relative, plain, markdown, rich",
+              "description": "A formatter turns a value into the text a renderer shows, as pieces (`[{ text: \"12.4\" }, { text: \"MiB\", unit: true }]`, as `Intl`'s `formatToParts`), so a card draws the unit smaller and a cell joins them; `formatText()` joins them for plain text (filter chips, tooltips, exports, MCP). Each entry is the function, called with the value, its options and a context (locale, time zone, now), and a `FormatSpec` (TK-11.1): its name, the field kinds it takes, its options' schema. A field's `format` names an entry, so a part that names no formatter shows its field in its format; an app registers its own beside bh's. bh registers eleven: `number` (`digits`, `notation: \"compact\"`), `percent` (`digits`; it takes a fraction, 0.427 → 43%), `bytes` (1024s, KiB/MiB/GiB; `per: \"s\"` for a rate), `duration` (the value's `unit`: ms, s, min or h), `money` (`currency`), `date`, `datetime` (`timeZone`), `relative` (minute and hour steps, TK-32), and the text formats `plain`, `markdown` and `rich` (the text renderer draws them, TK-79.3). Each of bh's kinds names a default format (TK-11.1), and the registry checks every kind's default is registered. The registry runs in the browser and on a server alike: `formatBytes` and `formatDuration` move from `@bh/ui` into `@bh/template`, and `@bh/ui` keeps exporting them. The locale and time zone come from the app, set once; a format may override the time zone. \"x of y\" and a ratio are not formats: a card writes them as two parts on one line, the second with `prefix: \"of \"`, each in its own format (\"of 8 GB\" is bytes), by your answer on TK-76.",
               "done": false,
               "blockedBy": [
                 {
@@ -4812,6 +4789,11 @@
                   "at": "2026-10-14T10:04:53.996Z",
                   "by": "claude",
                   "text": "Changed since you approved it: the `bytes` and `duration` formats are registered from `@bh/ui`, where their functions live; the bytes rate and the unit apart are built here, not in TK-35."
+                },
+                {
+                  "at": "2026-10-16T01:35:22.407Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it, from your four answers in chat (2026-10-16): the eleven formats (count, compact, rate, ratio, \"x of y\", time ago and text are covered by them or are two parts), formatters run on a server too (`formatBytes` and `formatDuration` move into `@bh/template`), the app sets the locale and time zone once, and `percent` takes a fraction."
                 }
               ]
             },
@@ -4847,7 +4829,7 @@
             {
               "id": "TK-79.7",
               "title": "Build `Template`, which draws one from a record and the registries",
-              "description": "The one component every host draws its body with. A missing value shows the part's empty text, and the layout keeps its size while values load or fail (as TK-76's states). While values load, it draws a placeholder in each part's line, so a card (TK-76) or a row keeps its size.",
+              "description": "The one component every host draws its body with. A missing value shows the part's empty text, or nothing, taking no space, when it sets none, and the layout keeps its size while values load or fail (as TK-76's states). While values load, it draws a placeholder in each part's line, so a card (TK-76) or a row keeps its size.",
               "done": false,
               "blockedBy": [
                 {
@@ -4869,6 +4851,11 @@
                   "at": "2026-10-14T03:32:24.321Z",
                   "by": "claude",
                   "text": "Changed since you approved it: while values load, it draws a placeholder in each part's line, so a card keeps its size (the Card design, TK-76)."
+                },
+                {
+                  "at": "2026-10-16T01:41:19.608Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: an empty part shows nothing and takes no room, as built and as you answered."
                 }
               ]
             },
@@ -4961,6 +4948,58 @@
                 }
               ],
               "approved": true
+            },
+            {
+              "id": "TK-79.12",
+              "title": "Add the `figure` renderer, a card's big number with its unit smaller",
+              "description": "Draws a number large, in digits of one width, at the size its host gives it (a card's `size`, TK-76), with its unit smaller beside it: the piece its format marks `unit: true` (TK-79.4 hands a format's result back as pieces). `number` stays the plain renderer: it draws only text, at the size of the text around it. `figure` joins the registry beside bh's others, with a spec (the kinds it shows, its options' schema, the room it needs) and the shared options. It is the part a card's number uses, so a `Card` has no `value` prop (your answers on TK-76). With its tests.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/template (its spec)"
+                },
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui (the renderer)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-79.3",
+                  "why": "the renderer registry `figure` joins"
+                },
+                {
+                  "id": "TK-79.4",
+                  "why": "the formats hand back their unit as a piece of its own, which it draws smaller"
+                }
+              ]
+            },
+            {
+              "id": "TK-79.13",
+              "title": "Add the `sparkline` renderer, a small line chart from a list of numbers",
+              "description": "Draws bh's `Sparkline` (TK-36.1) from a list of numbers in the record, with no axes or labels, in the part's tone. `trend` keeps its name for the change since the last period (TK-79.3, built), by your answer on TK-76. Registered with a spec like the others (the kinds it shows, its options' schema, the room it needs: a line needs width). With its tests.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/template (its spec)"
+                },
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui (the renderer)"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-36.1",
+                  "why": "the `Sparkline` it draws"
+                },
+                {
+                  "id": "TK-79.3",
+                  "why": "the renderer registry `sparkline` joins"
+                }
+              ]
             }
           ]
         },
@@ -5222,20 +5261,10 @@
             "the table design's last phases were never built (`2026-07-30-table-component-design.md`, phases 6–9): the server's sorted, filtered pages by cursor, windowing, a data table with a cache, selection across pages.",
             "three apps wrap `useTable` + `sortRows` + `tableRender` into a sorted table of their own: cv `DataTable.tsx`, items-core `data-table.tsx`, medialib `data-table.tsx` (its storage key `tickets:table:` shows it was copied from tickets). The audit calls the shared one `useSortedTable`."
           ],
-          "openChoices": [
-            {
-              "question": "Does `DataTable` (TK-18) load more rows as you scroll by skip and take, or by cursor?",
-              "context": "The resource contract pages by skip and take by default, with a cursor as the option (your answer on TK-11), and TK-18.2 loads pages as you scroll.\n\n- **By cursor**\n  - For: a row added or removed above while you scroll doesn't make another show twice or go missing, and a late page costs what the first does.\n  - Against: the table can't jump to a page by its number.\n- **By skip and take**: the contract's default.\n  - For: the simplest, the same requests a page-numbered table sends.\n  - Against: tickets' items change while you read them (the board refreshes every 10 seconds today), so as you scroll a row can show twice or be skipped, and a deep page is slower.\n- **As the view says**: each view (TK-16.1) picks scrolling by cursor or numbered pages by skip and take.\n  - Against: `DataTable` builds both.",
-              "options": [
-                "By cursor, the contract's option for a list that grows as it scrolls",
-                "By skip and take, the contract's default",
-                "As the view says: scrolling by cursor, or numbered pages by skip and take (a paging setting in TK-16.1)"
-              ],
-              "recommended": 0,
-              "answer": "By cursor, the contract's option for a list that grows as it scrolls",
-              "answeredOn": "2026-10-15"
-            }
+          "chosen": [
+            "`DataTable` loads more rows as you scroll by cursor, the resource contract's option for a list that grows as it scrolls, not by skip and take: a row added or removed above while you scroll doesn't make another show twice or go missing, and a late page costs what the first does; the table can't jump to a page by its number (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-18.1",
@@ -5258,7 +5287,7 @@
             {
               "id": "TK-18.2",
               "title": "Add sort, filters (`FilterForm`) and paging on the server",
-              "description": "Pages load as you scroll.",
+              "description": "Pages load as you scroll, by cursor: every answer carries `page.next` and the next request passes it back (`page: { cursor, take }`, TK-11.2.4), so a row added or removed above doesn't make another show twice or go missing while you read. The table doesn't jump to a page by its number (your answer on TK-18).",
               "where": [
                 {
                   "repo": "bh",
@@ -5276,7 +5305,14 @@
                   "why": "shows its filters in bh's FilterForm"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-16T01:41:19.164Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: paging is by cursor, as you chose: a table loads more rows as you scroll and can't jump to a numbered page."
+                }
+              ]
             },
             {
               "id": "TK-18.3",
@@ -5444,10 +5480,9 @@
         {
           "id": "TK-76",
           "title": "Make bh's `Card` configurable: a number and what helps read it",
-          "description": "Cards with numbers, at the top of a page and on dashboards, set up as data: what each card measures, how it's shown, and which cards a reader sees. Split out of TK-2.4 (`Stat` tiles) on 2026-10-12, and named `Card` at your word: bh's `Card` (`layout/components/card/card.tsx`) is today a raised surface with `CardHeader`, `CardTitle` and `CardBody`; its content is always a template (2026-10-16). A card's size comes from the parts it has and its layout, never from its state, so a page doesn't jump while cards load or fail. Its body is a template (TK-79), so a card is configured like a column or a tile: the value, the change, the trend, the meter and the note are parts from the shared registries, and its icon and title stay fixed (2026-10-12). One `Card` covers a number tile, a row and a titled group, by its `shape`, so gateway's `Figure` rows and `Figures` group are shapes, not parts of their own; its values are numbers the app passes in until measures come with TK-11; its labels have one style (2026-10-14).",
+          "description": "Cards with numbers, at the top of a page and on dashboards, set up as data: what each card measures, how it's shown, and which cards a reader sees. Split out of TK-2.4 (`Stat` tiles) on 2026-10-12, and named `Card` at your word: bh's `Card` (`layout/components/card/card.tsx`) is today a raised surface with `CardHeader`, `CardTitle` and `CardBody`; its content is always a template (2026-10-16). A card's size comes from the parts it has and its layout, never from its state, so a page doesn't jump while cards load or fail. Its body is a template (TK-79), so a card is configured like a column or a tile: the number (a `figure` part, with its format and its unit smaller), the change (`trend`), the line (`sparkline`), the meter and the note are parts from the shared registries, and its icon and title stay fixed (2026-10-12). One `Card` covers a number tile, a row and a titled group, by its `shape`, so gateway's `Figure` rows and `Figures` group are shapes, not parts of their own; \"x of y\" is two parts on one line, the second with `prefix: \"of \"`; a number inside a sentence takes its format from `fields` that the card or its `CardGroup` carries; its values are numbers the app passes in until measures come with TK-11; its labels have one style (2026-10-14), and a raised group's title is `CardTitle` in a band.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
-          "statusNote": "TK-76.1 done (2026-10-14): the design redrawn from your five answers, same link (https://claude.ai/artifact/PDcJkQcg28U5khXFsVtgHB, version 11, \"Card design\"), in 7 artboards: a card is a TK-79 host (fixed icon, tone and title, then its template), its config the real `{ fixed, template }`, its numbers from a `record` the app passes in; the shapes tile, row (was `Figure`) and group (was `Figures` and `MetricCard`), sizes and surfaces, one label style; five apps' tiles and gateway's card parts each beside its config; the formats, then the change, line and meter (next, TK-76.3); `CardGroup` as strip, grid, wrap and list; the states at one size, then click-to-filter and choosing cards (later, TK-76.4). Not rendered or screenshotted. Its eight choices are answered (2026-10-15), not yet folded by the planner. TK-76.2, the plan, isn't written: its worker was stopped at your word on 2026-10-15 while it was still reading, and wrote nothing. Moved into E6 on 2026-10-12: the design's `shape` becomes the template's rows and grids (TK-79).",
+          "statusNote": "TK-76.1 done (2026-10-14): the design redrawn from your five answers, same link (https://claude.ai/artifact/PDcJkQcg28U5khXFsVtgHB, version 11, \"Card design\"), in 7 artboards: a card is a TK-79 host (fixed icon, tone and title, then its template), its config the real `{ fixed, template }`, its numbers from a `record` the app passes in; the shapes tile, row (was `Figure`) and group (was `Figures` and `MetricCard`), sizes and surfaces, one label style; five apps' tiles and gateway's card parts each beside its config; the formats, then the change, line and meter (next, TK-76.3); `CardGroup` as strip, grid, wrap and list; the states at one size, then click-to-filter and choosing cards (later, TK-76.4). Not rendered or screenshotted. Its eight choices are answered (2026-10-15) and folded (2026-10-16), with your rule that a card's content is always a template; TK-76.2, the plan, is next. TK-76.2, the plan, isn't written: its worker was stopped at your word on 2026-10-15 while it was still reading, and wrote nothing. Moved into E6 on 2026-10-12: the design's `shape` becomes the template's rows and grids (TK-79).",
           "notes": [
             {
               "at": "2026-10-14T01:16:03.101Z",
@@ -5495,111 +5530,27 @@
             "A card shows numbers the app passes in first; measures over a resource come when TK-11 lands (your answer).",
             "A card's label has one style, with no uppercase option (your answer).",
             "The first version is the card, its formats, `CardGroup` and the states; the change, trend and meter come next, then click-to-filter and the reader's choice of cards (your answer).",
-            "No new name: bh's existing `Card` grows these parts. Its content is always a template: its own props are only its label, icon and card settings (shape, tone, state), and a number is a template part the `figure` renderer draws, with its format; no `value` shortcut (your answers, 2026-10-12 and 2026-10-16)."
+            "No new name: bh's existing `Card` grows these parts. Its content is always a template: its own props are only its label, icon and card settings (shape, tone, state), and a number is a template part the `figure` renderer draws, with its format; no `value` shortcut (your answers, 2026-10-12 and 2026-10-16).",
+            "Tickets' status strip is made of row-shaped `Card`s: the status kind's icon, its label, and the count at the right edge (your answer).",
+            "A `CardGroup` grid takes a least width or a fixed count (`{ \"min\": 160 }` or `3`), measured on the grid's own width, as TK-79's `grid` layout does; not columns per screen breakpoint (your answer).",
+            "A group `Card` gets its rows from a list in JSX for now: the app turns its list into row cards. Lists as data, one row card per entry of a list field, come with measures (TK-76.4) (your answer).",
+            "A card's two over-time parts: `trend` stays the name of the change since the last period (TK-79.3, built), and the small line chart is a new renderer, `sparkline` (TK-79.13) (your answer).",
+            "A card's big number is drawn by a new renderer, `figure` (TK-79.12), sized by the card's `size` with its unit smaller; `number` stays the plain text renderer (your answer).",
+            "\"x of y\" is no format: it is two parts on one line, the second with `prefix: \"of \"`, each in its own format (\"of 8 GB\" is bytes); TK-79.4 drops it from its title (your answer).",
+            "A number inside a sentence on a card (`\"{reclaimable} reclaimable\"`) gets its format from `fields` that the card or its `CardGroup` carries: each record field's kind and format, like a resource's metadata; measures (TK-76.4) bring the same later (your answer).",
+            "A raised group card's title is bh's `CardTitle` in a band with a rule; a bare group's title takes the label style (your answer)."
           ],
-          "chosenOn": "2026-10-14",
-          "openChoices": [
-            {
-              "question": "How should tickets' status strip read once each of its tiles is a `Card` (TK-76)?",
-              "context": "Today each tile reads icon, count, label (\"◔ 9 Active\"). A `Card` draws its fixed icon and title first, then its template, which holds the count.\n\n- **Row shape: icon, label, then the count at the right edge** (\"◔ Active … 9\"). For: no new arrangement; reads like gateway's rows. Against: the count moves from the front to the end.\n- **A small tile, the label over the count**. For: a plain tile, as the other apps' are. Against: a taller strip than today.\n- **Keep icon, count, label**, by letting a card put its template before its title. For: looks as it does today. Against: a new order on the card host, for one app.",
-              "options": [
-                "Row shape: icon, label, the count at the right edge",
-                "A small tile, the label over the count",
-                "Keep icon, count, label, the template before the title"
-              ],
-              "recommended": 0,
-              "answer": "Row shape: icon, label, the count at the right edge",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How does a `CardGroup` grid (TK-76) decide how many columns it has?",
-              "context": "wallet-passes and items-core switch their card grids at screen breakpoints today (2, 3 or 5 columns).\n\n- **A least width or a fixed count** (`{ \"min\": 160 }` or `3`), as TK-79's `grid` layout takes it, measured on the grid's own width. For: a grid in a side panel gets fewer columns; one rule with templates. Against: the apps' breakpoints don't carry over exactly.\n- **Columns per screen breakpoint** (`[2, 3, 5]`). For: what the apps write today. Against: a grid in a narrow panel on a wide screen still gets 5; a second rule beside TK-79's grid.",
-              "options": [
-                "A least width or a fixed count, measured on the grid",
-                "Columns per screen breakpoint"
-              ],
-              "recommended": 0,
-              "answer": "A least width or a fixed count, measured on the grid",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How does a group `Card` (TK-76) get one row per entry of a list in its data?",
-              "context": "For example gateway's \"Most CPU\" (the busiest processes) and \"What fills it\" (a disk's largest folders).\n\n- **In JSX for now**: the app turns its list into row cards; lists as data wait for measures (TK-76.4). For: the first version stays small. Against: such a group isn't config until TK-76.4.\n- **A new key now** that draws one row card per entry of a list field. For: config from the start. Against: more to build now, before measures settle what a list is.",
-              "options": [
-                "In JSX for now; lists as data with measures (TK-76.4)",
-                "A new key now: one row card per entry of a list field"
-              ],
-              "recommended": 0,
-              "answer": "In JSX for now; lists as data with measures (TK-76.4)",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "What are a `Card`'s two over-time parts (TK-76) called: the change since the last period, and the small line chart?",
-              "context": "TK-79's `trend` renderer, already built (TK-79.3), draws a change: an arrow and the delta. The card also needs a small line chart (TK-76.3).\n\n- **Keep `trend` for the change; add `sparkline` for the line**. For: nothing built changes; `sparkline` is the usual name. Against: some read \"trend\" as a line.\n- **Rename `trend` to `change`** before bh branch `tk-79` merges, and call the line `trend`. For: each name says what it draws. Against: renames a built renderer (cheap now, since it isn't merged).",
-              "options": [
-                "Keep `trend` for the change; add `sparkline`",
-                "Rename `trend` to `change`; the line is `trend`"
-              ],
-              "recommended": 0,
-              "answer": "Keep `trend` for the change; add `sparkline`",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How is a `Card`'s big number drawn (TK-76)?",
-              "context": "TK-79's `number` renderer draws only text, in digits of one width, at the size of the text around it.\n\n- **A new renderer, `figure`**, sized by the card's `size`, with its unit smaller. For: `number` stays simple; a card names one part. Against: one more renderer for TK-79.\n- **A `size` option and a smaller unit on `number`**, set on every card's value. For: no new renderer. Against: every card repeats the option, and `number` grows options only cards use.",
-              "options": [
-                "A new renderer, `figure`",
-                "A `size` option and a smaller unit on `number`"
-              ],
-              "recommended": 0,
-              "answer": "A new renderer, `figure`",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "Is \"x of y\" (as in medialib's \"22 of 100\" or gateway's \"6.9 of 8 GB\") a format of its own (TK-76, TK-79.4)?",
-              "context": "TK-79.4's title lists \"x of y\" among the formats a part can name.\n\n- **No: two parts on one line**, the second with `prefix: \"of \"`, each in its own format (\"of 8 GB\" is bytes); TK-79.4's title drops \"x of y\". For: each number keeps its own format and unit. Against: a card writes two parts for it.\n- **A format `of`** that takes the whole as an option. For: one part. Against: the whole's format (bytes, a count) has to be repeated in its options.",
-              "options": [
-                "No: two parts on one line, the second with `prefix: \"of \"`",
-                "A format `of`, taking the whole as an option"
-              ],
-              "recommended": 0,
-              "answer": "No: two parts on one line, the second with `prefix: \"of \"`",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How does a number inside a sentence on a `Card` (TK-76) get its format, as in `\"{reclaimable} reclaimable\"`?",
-              "context": "Numbers the app passes in (a card's `record`) carry no field metadata, so a placeholder shows the raw value (\"1200000000\"). This also covers gateway's `Num`.\n\n- **The card or `CardGroup` carries `fields`**: each record field's kind and format, like a resource's metadata; measures (TK-76.4) bring the same later. For: one place says how each number reads, for sentences and parts alike. Against: an app writes the fields once per group.\n- **A format in the placeholder** (`{reclaimable:bytes}`), an addition to `@bh/resource`'s text templates. For: written where it's used. Against: a second way to name a format.\n- **The app formats such sentences itself**. For: nothing to build. Against: the sentence isn't config.",
-              "options": [
-                "The card or `CardGroup` carries `fields`",
-                "A format in the placeholder: `{reclaimable:bytes}`",
-                "The app formats such sentences itself"
-              ],
-              "recommended": 0,
-              "answer": "The card or `CardGroup` carries `fields`",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "What style does a raised group `Card`'s title use (TK-76), as gateway's \"Machine\" or wallet-passes' \"Today\" in a header band?",
-              "context": "You gave a card's labels one style (12px, medium, gray-11); this is about a group's title.\n\n- **bh's `CardTitle`** (13px, semibold, dark) in a band with a rule; a bare group's title takes the label style. For: a raised group reads as a card with a heading. Against: two title styles.\n- **The label style everywhere**. For: one style. Against: a raised group's title is as quiet as a tile's label.",
-              "options": [
-                "bh's `CardTitle` in a band; bare groups take the label style",
-                "The label style everywhere"
-              ],
-              "recommended": 0,
-              "answer": "bh's `CardTitle` in a band; bare groups take the label style",
-              "answeredOn": "2026-10-15"
-            }
-          ],
+          "chosenOn": "2026-10-16",
           "design": {
             "text": "Redrawn on 2026-10-14 from your five answers (version 11), as a Design canvas of 7 artboards, each variant beside the config that makes it: https://claude.ai/artifact/PDcJkQcg28U5khXFsVtgHB",
             "items": [
               "A card is a TK-79 host: a fixed icon, tone and title, then its template (`order: ['icon', 'title', 'template']`); its config is the real `{ fixed, template }`. `shape` (tile, row, group), `size` and `surface` are fixed settings.",
-              "Its numbers come from a `record` the app passes in. A group card is a `Card` whose header holds a `CardGroup` of its own `cards`.",
-              "One label style: 12px, medium, gray-11, as written.",
+              "Its numbers come from a `record` the app passes in. A group card is a `Card` whose header holds a `CardGroup` of its own `cards`; a list of rows in a group (gateway's \"Most CPU\") is the app's JSX for now, and lists as data come with measures (TK-76.4).",
+              "One label style: 12px, medium, gray-11, as written. A raised group's title is the one exception (your answer, 2026-10-15): bh's `CardTitle` (13px, semibold) in a band with a rule; a bare group's title takes the label style.",
               "Five apps' tiles and gateway's card parts, each beside its config.",
-              "The formats; then the change, the line and the meter (next, TK-76.3), the meter keeping fixed thresholds (80% warning, 90% danger).",
-              "`CardGroup` as a strip, a grid, a wrap and a list: `layout`, `columns` (a count or `{ min }`), `narrow` (scroll or wrap), `title` and `cards`. It passes its record and states to every card, and its children follow its cards.",
-              "`Card`'s new keys: `shape`, `size`, `surface` and `tone`; for a group, `layout` and `columns`, with an optional `title`; `record`, `loading`, `error` with `onRetry`, and `stale`; in JSX, `value`, `format` and `note`, which write the template.",
+              "The formats; then the change (`trend`), the line (`sparkline`) and the meter (next, TK-76.3), the meter keeping fixed thresholds (80% warning, 90% danger). \"x of y\" is no format: two parts on one line, the second with `prefix: \"of \"` (your answer, 2026-10-15).",
+              "`CardGroup` as a strip, a grid, a wrap and a list: `layout`, `columns` (a count or `{ min }`, measured on the grid's own width), `narrow` (scroll or wrap), `title` and `cards`. It passes its record and states to every card, and its children follow its cards.",
+              "`Card`'s new keys: `shape`, `size`, `surface` and `tone`; for a group, `layout` and `columns`, with an optional `title`; `record`, `fields` (each record field's kind and format, on the card or its `CardGroup`, for a number inside a sentence), `loading`, `error` with `onRetry`, and `stale`. The artboards also showed `value`, `format` and `note` in JSX as a shortcut that writes the template; it is dropped (2026-10-16): a card's content is always a template, and its number is a `figure` part.",
               "States at one size: loading, error with a retry, stale; zero is an answer, drawn in a quieter ink.",
               "Later (TK-76.4): a click that filters, and choosing cards."
             ]
@@ -5621,7 +5572,7 @@
             {
               "id": "TK-76.2",
               "title": "Plan it from the chosen design",
-              "description": "Replace this with the tickets the design settles: the config shape, each card and layout, the states at one size, the tests and the docs page. Its first version is the card, its formats, `CardGroup` and the states: one `Card` whose `shape` is a tile, a row or a titled group; values are numbers the app passes in; labels in one style. The change, the trend and the meter come next (TK-76.3), and a click that filters and the reader's choice of cards after that (TK-76.4).",
+              "description": "Replace this with the tickets the design settles: the config shape, each card and layout, the states at one size, the tests and the docs page. Its first version is the card, its formats, `CardGroup` and the states: one `Card` whose `shape` is a tile, a row or a titled group; values are numbers the app passes in; labels in one style. The change, the sparkline and the meter come next (TK-76.3), and a click that filters and the reader's choice of cards after that (TK-76.4).\n\nA card's content is always a template (TK-79): its own props are its label, icon and card settings (shape, tone, state), and a number is a `figure` part (TK-79.12); there is no `value` shortcut (2026-10-16). The tickets it writes wait on `figure`.\n\nYour answers of 2026-10-15 settle the design this plan starts from:\n\n- Tickets' status strip: each status is a row-shaped `Card`, its icon, its label, and the count at the right edge (TK-5.8).\n- A `CardGroup` grid takes a least width or a fixed count (`{ \"min\": 160 }` or `3`), measured on the grid's own width; not columns per screen breakpoint.\n- A group card's list of rows (gateway's \"Most CPU\", \"What fills it\"): the app turns its list into row cards in JSX for now; lists as data come with measures (TK-76.4).\n- Over time: `trend` stays the change since the last period (built, TK-79.3); the small line chart is a new renderer, `sparkline` (TK-79.13).\n- The big number is the `figure` renderer (TK-79.12), sized by the card's `size`, its unit smaller.\n- \"x of y\" is no format: two parts on one line, the second with `prefix: \"of \"`, each in its own format.\n- A number inside a sentence (`\"{reclaimable} reclaimable\"`) is formatted by `fields` on the card or its `CardGroup`: each record field's kind and format.\n- A raised group's title is bh's `CardTitle` in a band with a rule; a bare group's title takes the label style.",
               "where": [
                 {
                   "repo": "bh",
@@ -5645,13 +5596,18 @@
                   "at": "2026-10-14T01:16:03.100Z",
                   "by": "claude",
                   "text": "Changed since you approved it: its first version is the card, its formats, `CardGroup` and the states, with one `Card` for a tile, a row and a titled group, numbers from the app and one label style (your answers); the rest moved to TK-76.3 and TK-76.4."
+                },
+                {
+                  "at": "2026-10-16T01:41:18.698Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: it now holds the settled design from your eight answers and your rule that a card's content is always a template (no `value` shortcut)."
                 }
               ]
             },
             {
               "id": "TK-76.3",
-              "title": "Add the change, the trend and the meter to `Card`",
-              "description": "The change since the last period (colored by which way is better), a trend line, and a meter with warning and danger, each a part of the card's template body (TK-79). Gateway's `Meter` (GW-2.2.5) comes with it.",
+              "title": "Add the change, the sparkline and the meter to `Card`",
+              "description": "The change since the last period (`trend`, colored by which way is better), a line (`sparkline`, TK-79.13), and a meter with warning and danger, each a part of the card's template body (TK-79). Gateway's `Meter` (GW-2.2.5) comes with it.",
               "where": [
                 {
                   "repo": "bh",
@@ -5663,14 +5619,25 @@
                 {
                   "id": "TK-76.2",
                   "why": "the first version's card, which these parts join"
+                },
+                {
+                  "id": "TK-79.13",
+                  "why": "the `sparkline` renderer its line part uses"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "notes": [
+                {
+                  "at": "2026-10-16T01:41:18.852Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: retitled to the change, the sparkline and the meter (`trend` is the change, `sparkline` the line, by your answer), and it waits on the `sparkline` renderer (TK-79.13)."
+                }
+              ]
             },
             {
               "id": "TK-76.4",
               "title": "Add a card's click that filters, and the reader's choice of cards",
-              "description": "A click on a card sets its filter in the list's `FilterForm` (TK-75); a menu lets the reader pick which cards show, kept in the view (TK-16). And measures: a card's value as a count or a sum over a resource's query, once TK-11 lands, instead of a number the app passes in. The design shows how: an `id` on each card, a `filter` among its fixed parts, and a `measure` that fills one of its fields.",
+              "description": "A click on a card sets its filter in the list's `FilterForm` (TK-75); a menu lets the reader pick which cards show, kept in the view (TK-16). And measures: a card's value as a count or a sum over a resource's query, once TK-11 lands, instead of a number the app passes in. The design shows how: an `id` on each card, a `filter` among its fixed parts, and a `measure` that fills one of its fields. A measure brings its field's kind and format, as a card's `fields` do for the numbers the app passes in (your answer). And lists: a group card draws one row card per entry of a list field (gateway's \"Most CPU\", \"What fills it\"), which the first version leaves to the app's JSX (your answer).",
               "where": [
                 {
                   "repo": "bh",
@@ -5702,6 +5669,11 @@
                   "at": "2026-10-14T03:32:24.048Z",
                   "by": "claude",
                   "text": "Changed since you approved it: it names the keys the design shows for it: a card's `id`, a `filter` among its fixed parts, and a `measure` that fills a field."
+                },
+                {
+                  "at": "2026-10-16T01:41:19.013Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: it also covers a group card's rows as data from a list, and measures bringing their field kind and format (your answer: in JSX until then)."
                 }
               ]
             }
@@ -5896,7 +5868,8 @@
                   "id": "TK-16.4",
                   "why": "migrates stored columns, sort and filters into view state"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-21.2",
@@ -5914,7 +5887,8 @@
                   "id": "TK-21.1",
                   "why": "reads the board's views as migrated view JSON"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-21.3",
@@ -5936,7 +5910,8 @@
                   "id": "TK-14.3",
                   "why": "saves All items' views through the views resource"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-21.4",
@@ -5957,7 +5932,8 @@
                   "id": "TK-21.3",
                   "why": "checks the new All items table"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -5992,7 +5968,8 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-22.2",
@@ -6003,7 +5980,8 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-22.3",
@@ -6024,7 +6002,8 @@
                   "id": "TK-22.2",
                   "why": "checks the cards built from the tile template"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         }
@@ -6086,7 +6065,6 @@
           "title": "Replace `CopyButton` with `useCopy` and an icon-only `Button`",
           "description": "Copying becomes a hook, and the button a plain `Button`.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
           "statusNote": "On bh branch `tk-24`, in `../bh-wt-tk-24`, cut from bh's main (b909d45), not merged. TK-24.2.1 (b394bdb, b1da698, 30f8678): `Button` takes `icon` (a registry name or an element) and `label`, which is its `aria-label` and its tooltip; it's square at every size, `xs` 24, `sm` 28, `md` 36, `lg` 44, `xs` for icon-only buttons alone; an icon without a label, or words beside an icon, is a type error; a disabled or loading one still shows its tooltip; the tooltip opens on keyboard focus, not on focus a click led to; and `Tooltip` brings its own provider when it has none above it. TK-24.2.2 (1ee83c6, 5983a9f, 65d54fa, 001ea12, 11a0145, 1e3dbed): 36 hand-made icon buttons in ui, markdown, richtext, shell, table's docs and the docs site are icon-only `Button`s, their `title`s now bh's tooltips. Left alone: `SidePanel`'s and `ColorPicker`'s, the sidebar's controls (the nav's inward ring and quieter color, and a 32px rail search no size matches), the copy buttons (TK-24.3), and controls that aren't button-shaped (steppers, clear and chip ×, tree carets, the rich-text toolbar). All checks pass; checked in the browser. On the same branch: TK-24.1 (a71e08d) `useCopy` in its own module, built on `copyText(text): Promise<boolean>`, which never throws (no clipboard now reports `failed` instead of throwing); TK-24.3 (3461196) bh's own copy controls, CodeBlock's (every code block, markdown code block, ref block and props table), the docs site's and JsonViewer's `ToolButton`, are `Button`s showing Copied in green or Could not copy in red, and the docs point to `useCopy` (`undo` and `redo` added to the icon registry for JsonViewer's tools); TK-24.4 (41a3283) `TableRender.onCopyCell`, filled by ui's `tableRender` with `copyText`, so a copied cell shows a green or red ring and a Copied or Could not copy pill for 1.5 seconds; TK-24.5 (1f5181a, `feat(ui)!:`) `CopyButton` deleted, no wrapper kept. All checks pass; checked in the browser, light and dark. Left: TK-24.6 (the apps' 18 call sites, after the release) and TK-24.7 (the major release), yours. Merged: `tk-24` into bh's main (06e8683), released in bh 0.4.0 (TK-24.7; below 1.0.0 a breaking change makes a minor version, f14e959), which tickets takes (4d0b46b5, TK-24.8).",
           "notes": [
             {
@@ -6139,23 +6117,10 @@
             "CodeBlock's copy needs an icon-only `Button`, which bh lacks. Hand-made instead: about 30 hand-squared spellings in bh (`h-24 w-24 p-0`, `w-28 p-0`…) and about 15 raw icon buttons; signals 5; tickets about 20 glyph buttons (× ⋯ ＋ ☰); wallet-passes `IconButton` and `BigButton`; medialib."
           ],
           "chosen": [
-            "`CopyButton` is deleted in one breaking release, with no deprecated wrapper (your answer)."
+            "`CopyButton` is deleted in one breaking release, with no deprecated wrapper (your answer).",
+            "The sidebar's own icon buttons (in `@bh/shell`) become `Button`s: `Button` gets a `nav` look, the nav's inward focus ring and quieter color as a variant, and a 32px size (your answer)."
           ],
-          "chosenOn": "2026-10-14",
-          "openChoices": [
-            {
-              "question": "How do the sidebar's own icon buttons (in `@bh/shell`) move onto `Button`'s icon-only size (TK-24)?",
-              "context": "TK-24.2.2 left the sidebar's own controls hand-built: `nav-branch`'s chevron, `nav-group`'s action, `rail-menu`, `brand-row`'s two, the rail's search button and `theme-footer`. They use the nav's inward focus ring and its quieter color, and the rail's search is 32px, which no `Button` size is (24, 28, 36, 44).\n\n- **A `nav` look for `Button`, with a 32px size**: the inward ring and quieter color as a variant. For: the sidebar's buttons become `Button`s and keep their look. Against: a variant and a size only the shell uses.\n- **A 32px size only**: the sidebar keeps its ring and color by class. For: smaller. Against: each control repeats the class.\n- **Leave them hand-built**: For: nothing to do. Against: eight hand-built buttons in bh itself.",
-              "options": [
-                "A `nav` look for `Button`, with a 32px size",
-                "A 32px size only; the look by class",
-                "Leave them hand-built"
-              ],
-              "recommended": 0,
-              "answer": "A `nav` look for `Button`, with a 32px size",
-              "answeredOn": "2026-10-15"
-            }
-          ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-24.1",
@@ -6453,6 +6418,24 @@
                 }
               ],
               "approved": true
+            },
+            {
+              "id": "TK-24.12",
+              "title": "Add a `nav` look and a 32px size to `Button`, and move the sidebar's icon buttons onto it",
+              "description": "`Button` gains a `nav` look, the sidebar's: the inward focus ring and the quieter color, as a variant, and a 32px size, which none of its sizes is now (`xs` 24, `sm` 28, `md` 36, `lg` 44; the rail's search button is 32px). The controls TK-24.2.2 left hand-built in `@bh/shell`'s sidebar then become icon-only `Button`s with that look and size, looking as they do: `nav-branch`'s chevron, `nav-group`'s action, `rail-menu`, `brand-row`'s two buttons, the rail's search button and `theme-footer`. Only the shell uses the look and the size (your answer on TK-24).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/ui (Button), @bh/shell"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-24.2.1",
+                  "why": "the icon-only `Button` it adds a look and a size to"
+                }
+              ]
             }
           ]
         },
@@ -6835,7 +6818,6 @@
           "title": "Add the hooks the apps keep writing to bh",
           "description": "Hooks bh doesn't export, written again in app after app. They go in `@bh/hooks`, a new small package below `@bh/ui`, `@bh/table` and `@bh/shell`, which import it.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
           "statusNote": "Merged into bh's main (dd81872) and released in bh 0.6.0 on 2026-10-15. Left: TK-31.13, TK-31.14.",
           "notes": [
             {
@@ -6913,34 +6895,11 @@
             "`@bh/hooks` exports `useControllableState`, the shared logic for a value either controlled by the caller (`value`, `onChange`) or held by the component (`defaultValue`) (your answer).",
             "Two places using `usePersistedState` with the same key stay in step, on the page and across the app's open tabs, through the browser's `storage` event (your answer).",
             "bh's lint checks React hooks (`eslint-plugin-react-hooks` 7: the rules of hooks, exhaustive deps, the React Compiler's ref and purity checks) for `@bh/hooks` only, for now (your answer).",
-            "`useDisclosure`'s trigger is a `<button>` only; its getter sets `type=\"button\"` (your answer)."
+            "`useDisclosure`'s trigger is a `<button>` only; its getter sets `type=\"button\"` (your answer).",
+            "When a hook's prop getter (`getTriggerProps({ onClick })`) merges the caller's handler with its own, both run, the caller's first and then the hook's; the caller can't stop the hook's own handling. Built so in `@bh/hooks`' `mergeProps` (bh 0.6.0) (your answer).",
+            "A shared hook hands over an element's props through prop getters (`getTriggerProps(own?)`, `getRegionProps(own?)`, `getHandleProps(own?)`, `getSeparatorProps(own?)`), which merge the caller's own props, handlers and ref into the hook's, not through plain prop objects the caller merges by hand. Built so in bh 0.6.0: `useDisclosure`, `useDrag` and `useResizeHandle` return getters, and `usePanelWidth` returns `getSeparatorProps()` (your answer)."
           ],
-          "chosenOn": "2026-10-14",
-          "openChoices": [
-            {
-              "question": "When a hook's prop getter (`getTriggerProps({ onClick })`) merges the caller's handler with its own, which runs (TK-31's pattern)?",
-              "context": "- **Both, the caller's first**: For: nothing is lost, and the order is plain. Against: the caller can't stop the hook's own handling.\n- **The caller's first; the hook's is skipped if the caller called `event.preventDefault()`**: For: a way to opt out. Against: preventing the default for another reason (stopping Space from scrolling) silently stops the hook too.\n- **The hook's first**: For: the hook's state is set when the caller's runs. Against: the caller can't act before it.",
-              "options": [
-                "Both, the caller's first",
-                "The caller's first; the hook's skipped after `preventDefault()`",
-                "The hook's first"
-              ],
-              "recommended": 0,
-              "answer": "Both, the caller's first",
-              "answeredOn": "2026-10-15"
-            },
-            {
-              "question": "How does a shared hook hand over an element's props (a trigger's `aria-expanded` and click, a resize handle's role and pointer events)?",
-              "context": "- **Prop getters, `getTriggerProps(own?)`**, which merge the caller's own props, handlers and ref into the hook's. For: one call, nothing to merge by hand. `usePanelWidth`'s `separatorProps` becomes `getSeparatorProps()` when it moves onto `useDrag` (TK-31.8). Against: a function where a plain object would do for simple cases.\n- **Plain prop objects**, which the caller spreads and merges by hand, as `usePanelWidth` does today. For: nothing to learn. Against: every caller merges its own handlers and refs, and some will get it wrong.",
-              "options": [
-                "Prop getters that merge the caller's props",
-                "Plain prop objects, merged by hand"
-              ],
-              "recommended": 0,
-              "answer": "Prop getters that merge the caller's props",
-              "answeredOn": "2026-10-15"
-            }
-          ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-31.1",
@@ -7239,7 +7198,7 @@
             {
               "id": "TK-31.12",
               "title": "Design the shape every shared hook follows, and its tests and docs page",
-              "description": "One pattern for all nine hooks, settled before the first: options in; state, actions and prop getters out (`getTriggerProps()`, `getRegionProps()`), no markup, as `useTreeView` and `useSegmentTile` already are. Written up with `useDisclosure` (TK-31.2) and `usePersistedState` (TK-31.1) as the worked examples, beside one layout for a hook's tests and one for its docs page (its signature, a live demo driving a plain view, what it returns). The choices it raises go in `openChoices`.",
+              "description": "One pattern for all nine hooks, settled before the first: options in; state, actions and prop getters out (`getTriggerProps()`, `getRegionProps()`), no markup, as `useTreeView` and `useSegmentTile` already are. Written up with `useDisclosure` (TK-31.2) and `usePersistedState` (TK-31.1) as the worked examples, beside one layout for a hook's tests and one for its docs page (its signature, a live demo driving a plain view, what it returns). The choices it raises go in `openChoices`. A prop getter merges the caller's own props into the hook's: both handlers run, the caller's first and then the hook's, and both refs get the node (your answers on TK-31).",
               "where": [
                 {
                   "repo": "bh",
@@ -7553,7 +7512,6 @@
           "title": "Export `formatBytes` and add a `formatDuration` for milliseconds",
           "description": "One way to print a size and a duration.",
           "status": "Done",
-          "waitingOn": ["your choices (below)"],
           "statusNote": "Merged into bh's main (dd81872) and released in bh 0.6.0 on 2026-10-15. Left: TK-35.3.",
           "notes": [
             {
@@ -7569,20 +7527,10 @@
             }
           ],
           "today": "`formatBytes` sits inside `file-input.tsx:52`, not exported. signals, medialib, cv and items-core (twice) have 5 copies that each print differently (KB or KiB, stopping at GB or TB). items-core and session-board format durations in ms; bh's `formatDuration` takes minutes.",
-          "openChoices": [
-            {
-              "question": "When bh's `formatBytes` (TK-35) writes a size counted in 1024s, should it say KiB, MiB, GiB or KB, MB, GB?",
-              "context": "Every app's copy counts sizes in 1024s, and four of them write it as KB, MB, GB. bh's `formatBytes` (TK-35.1, built on bh branch `tk-35`) counts in 1024s by default too, but writes KiB, MiB, GiB; `{ units: 'decimal' }` gives kB, MB in 1000s.\n\n- **KiB, MiB, GiB, as built**: the standard spelling for 1024s. For: a unit that says exactly what it counts. Against: what readers see changes: signals' \"2.1 GB\" reads \"2.1 GiB\", cv's \"12 KB\" reads \"12 KiB\", and bh's own `FileInput` reads \"1.5 KiB\" where it read \"1.5 KB\".\n- **KB, MB, GB for 1024s**, as four of the apps write today: a third `units` value, made the default. For: nothing changes for readers. Against: KB means 1000 elsewhere, and bh keeps a third spelling.\n- **Count in 1000s by default (kB, MB, GB)**: `decimal` becomes the default. For: matches what macOS and disk makers show. Against: the numbers change too (\"2.1 GB\" becomes \"2.3 GB\").",
-              "options": [
-                "KiB, MiB, GiB, as built",
-                "KB, MB, GB for 1024s, as the apps write today",
-                "Count in 1000s by default: kB, MB, GB"
-              ],
-              "recommended": 0,
-              "answer": "KiB, MiB, GiB, as built",
-              "answeredOn": "2026-10-15"
-            }
+          "chosen": [
+            "bh's `formatBytes` writes a size counted in 1024s as KiB, MiB, GiB, as built; `{ units: 'decimal' }` gives kB, MB in 1000s (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-35.1",
@@ -7611,7 +7559,7 @@
             {
               "id": "TK-35.3",
               "title": "Release bh's next version, with `formatBytes` and `formatDuration` in milliseconds",
-              "description": "Merging TK-35.1 and TK-35.2 (bh branch `tk-35`) into bh's main makes the version: `scripts/release.mjs` tags the next one from the commits since the last tag. Nothing is marked breaking, so it's a patch under bh's numbering below 1.0.0, though `FileInput`'s sizes read KiB unless the question on TK-35 says otherwise. A push to bh's main is your yes.",
+              "description": "Merging TK-35.1 and TK-35.2 (bh branch `tk-35`) into bh's main makes the version: `scripts/release.mjs` tags the next one from the commits since the last tag. Nothing is marked breaking, so it's a patch under bh's numbering below 1.0.0, and `FileInput`'s sizes read KiB (your answer on TK-35). A push to bh's main is your yes.",
               "where": [
                 {
                   "repo": "bh",
@@ -7635,8 +7583,8 @@
         {
           "id": "TK-36",
           "title": "Add `Sparkline` and `TimeChart` to bh",
-          "description": "A `Sparkline` first, then gateway's `TimeChart`.",
-          "status": "Not planned",
+          "description": "A `Sparkline` first, then gateway's `TimeChart`, both in `@bh/ui` (your answer).",
+          "status": "Planned",
           "where": [
             {
               "repo": "bh",
@@ -7648,19 +7596,15 @@
             }
           ],
           "today": "bh has no charts. gateway's `TimeChart` and `Sparkline` are 395 lines; its comment says \"to move there once ../bh can take a commit\". signals has a `Sparkline`, wallet-passes a `DailyChart`, items-core a price chart.",
-          "openChoices": [
-            {
-              "question": "Where do `Sparkline` and `TimeChart` live?",
-              "options": ["In `@bh/ui`", "In a package of their own"],
-              "recommended": 0,
-              "answer": "In `@bh/ui`",
-              "answeredOn": "2026-10-16"
-            }
+          "chosen": [
+            "`Sparkline` and `TimeChart` live in `@bh/ui`, with bh's other drawn parts, not in a package of their own (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-36.1",
               "title": "Add `Sparkline`",
+              "description": "Gateway's `Sparkline` moves into `@bh/ui`, not a package of its own (your answer). A card draws it through the `sparkline` renderer (TK-79.13).",
               "where": [
                 {
                   "repo": "bh",
@@ -7672,6 +7616,7 @@
             {
               "id": "TK-36.2",
               "title": "Move gateway's `TimeChart` into bh",
+              "description": "Gateway's `TimeChart` follows `Sparkline` into `@bh/ui` (your answer).",
               "where": [
                 {
                   "repo": "bh",
@@ -7723,7 +7668,6 @@
           "title": "Add `Kbd` to `@bh/ui`",
           "description": "A key, drawn one way.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
           "statusNote": "TK-38.1 (17277ad) on bh branch `tk-38`, in `../bh-wt-tk-38`, cut from bh's main (b909d45), not merged: `<Kbd keys={['mod','K']} />` or `keys=\"mod+K\"`, each key named the reader's platform's way (⌘⇧K on a Mac, Ctrl+Shift+K elsewhere; `platform` pins one), a `<kbd>` per key with its word for screen readers; variants `raised` (the design's key cap), `tint` (on a Tooltip) and `text` (a menu row's shortcut), sizes `sm`/`md`/`lg`; 13 tests and a docs page. TK-38.2 (604737c) on the same branch: `@bh/shell`'s NavSearch hint (`mod+K`: ⌘K on a Mac, Ctrl+K elsewhere, where it read \"Ctrl K\"), SearchDialog's esc, ↑ ↓ and ↵, `SearchInput`'s `shortcut` and Input's add example are `Kbd`; `shortcutLabel` is marked deprecated rather than removed, since removing a public `@bh/shell` export would be a major release (nothing outside bh imports it). Markdown's `keyboard` block is TK-53.2's. The release is TK-38.3. Merged: `tk-38` into bh's main (489d9ea), released in bh 0.4.0 (TK-38.3) with `tk-41` and `tk-29`, which tickets takes (4d0b46b5, TK-38.4).",
           "notes": [
             {
@@ -7752,27 +7696,10 @@
             }
           ],
           "today": "medialib and tickets draw their own; bh draws it 4 times (shell's nav search, the docs' search, markdown's `keyboard` block, ui's `SearchInput`).",
-          "openChoices": [
-            {
-              "question": "When does `@bh/shell`'s `shortcutLabel`, which `Kbd` replaces (TK-38), go?",
-              "context": "`shortcutLabel` is a public export of `@bh/shell` that `Kbd` replaces. TK-38.2's worker kept it, marked deprecated; nothing outside bh's own copies imports it (gateway, tickets, cv, medialib, items-core, wallet-passes and signals searched). bh 0.4.0 went out with it still there. Removing an export is a breaking change, and under bh's numbering since 0.4.0 (below 1.0.0, a breaking change makes a minor version) dropping it makes the next version 0.5.0, not a major one.\n\n- **Dropped now**: a one-line removal in a `feat(shell)!:` commit, out with bh's next version. For: gone at once; a breaking change costs only a minor version now, and no app imports it. Against: that version is marked breaking for an export nobody uses.\n- **Dropped with bh's next breaking change**, whichever comes. For: one breaking version carries both. Against: it lingers until then.\n- **Kept, deprecated**: For: nothing to do. Against: a dead export stays.",
-              "options": [
-                "Dropped now",
-                "Dropped with bh's next breaking change",
-                "Kept, deprecated"
-              ],
-              "recommended": 0,
-              "notes": [
-                {
-                  "at": "2026-10-14T09:38:41.030Z",
-                  "by": "claude",
-                  "text": "Rewritten: the recommended option was to drop it in the breaking release that deleted `CopyButton`, and that release, bh 0.4.0, has gone out without dropping it. Under bh's new numbering a breaking change below 1.0.0 is only a minor version, so dropping it now is the recommendation."
-                }
-              ],
-              "answer": "Dropped now",
-              "answeredOn": "2026-10-16"
-            }
+          "chosen": [
+            "`@bh/shell`'s `shortcutLabel`, which `Kbd` replaces, is dropped now: a removal in a `feat(shell)!:` commit, which makes bh's next version 0.7.0 (a breaking change below 1.0.0 makes a minor version) (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-38.1",
@@ -7879,6 +7806,24 @@
                 {
                   "id": "TK-24.2.2",
                   "why": "tk-24 edits `nav-search.tsx`'s import line too"
+                }
+              ]
+            },
+            {
+              "id": "TK-38.6",
+              "title": "Remove `shortcutLabel` from `@bh/shell`",
+              "description": "A `feat(shell)!:` commit removes `shortcutLabel`, which TK-38.2 marked deprecated, from `@bh/shell`'s exports, with its test and any docs mention. Nothing outside bh imports it (gateway, tickets, cv, medialib, items-core, wallet-passes and signals searched). The breaking commit makes bh's next version 0.7.0: below 1.0.0 a breaking change makes a minor version (your answer).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-38.2",
+                  "why": "marked `shortcutLabel` deprecated and moved bh's own uses to `Kbd`"
                 }
               ]
             }
@@ -8617,8 +8562,8 @@
         {
           "id": "TK-55",
           "title": "Move bh and wallet-passes to one icon system",
-          "description": "Icons come one way.",
-          "status": "Not planned",
+          "description": "Icons come one way: through bh's `Icon` registry (your answer).",
+          "status": "Planned",
           "where": [
             {
               "repo": "bh",
@@ -8630,19 +8575,15 @@
             }
           ],
           "today": "lucide is imported directly in 11 shell files and 11 docs files, beside ui's `Icon` registry; wallet-passes imports it in 28 files. Size M/L.",
-          "openChoices": [
-            {
-              "question": "Which icon system do bh and wallet-passes both use?",
-              "options": ["bh's `Icon` registry", "lucide"],
-              "recommended": 0,
-              "answer": "bh's `Icon` registry",
-              "answeredOn": "2026-10-16"
-            }
+          "chosen": [
+            "bh and wallet-passes both use bh's `Icon` registry, not lucide imported directly (your answer)."
           ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-55.1",
-              "title": "Move the shell and the docs to the chosen icon system",
+              "title": "Move the shell and the docs to bh's `Icon` registry",
+              "description": "The 11 shell files and 11 docs files that import lucide directly draw their icons with `Icon` and a registry name; a glyph the registry lacks is added to it first.",
               "where": [
                 {
                   "repo": "bh",
@@ -8653,7 +8594,8 @@
             },
             {
               "id": "TK-55.2",
-              "title": "Move wallet-passes to it (TK-72)",
+              "title": "Move wallet-passes to bh's `Icon` registry (TK-72)",
+              "description": "The 28 files that import lucide draw their icons with `Icon` and a registry name; a glyph the registry lacks is added to it in bh first.",
               "where": [
                 {
                   "repo": "wallet-passes",
@@ -9295,8 +9237,7 @@
           "title": "Remove items-core's leftovers from before bh",
           "description": "What items-core keeps from before bh was its own repository.",
           "status": "In progress",
-          "waitingOn": ["your choices (below)"],
-          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 not built: items-core's main has neither `@bh/config` (`packages/bh/` came in with f31df28e) nor the `node-file-suffix` rule; both are only on `bbendeliani/detection`, 30 commits ahead of main and the branch your checkout is on. It waits on your choice of its base: `tk-66` (from main, 9f75dbbb) moved onto `bbendeliani/detection`, or TK-66.2 started there; either way merging it brings detection's 30 commits into main. Merged: tickets' `tk-66` into main (61fa1a9f).",
+          "statusNote": "TK-66.3 and TK-66.3.1 on branch `tk-66` in three repos: bh 492969a (`../bh-wt-tk-66`: `docs/design/design-system.html` with the `support.js` it loads, the README says where it is, `button.tsx` cites it by path), tickets 79deb2fb (`../tickets-wt-tk-66`: its copy deleted; CLAUDE.md, AGENTS.md and the design skills point at bh's) and items-core 9f75dbbb (`../items-core-wt-tk-66`, from its main: its copy deleted, references pointed at bh's). TK-66.1 is yours (items-core's own checkout); TK-66.2 not built: items-core's main has neither `@bh/config` (`packages/bh/` came in with f31df28e) nor the `node-file-suffix` rule; both are only on `bbendeliani/detection`, 30 commits ahead of main and the branch your checkout is on. TK-66.1 done (2026-10-16: you deleted `packages/web`). TK-66.2 builds on items-core's main after the detection merge (TK-66.4), which waits on the cloud-dev cutover (IC-8), since a push to main deploys there. Merged: tickets' `tk-66` into main (61fa1a9f).",
           "notes": [
             {
               "at": "2026-10-14T01:29:42.921Z",
@@ -9321,23 +9262,10 @@
           ],
           "today": "187 MB of git-ignored files in `packages/web/`. `@bw/config` is a fork of `@bh/config`, and two domain rules differ. `docs/design/design-system.html`, the spec bh's `button.tsx:36` cites (\"matching design-system.html §06 Buttons\"), isn't in bh; the audit found it only in items-core, but tickets has a byte-identical copy (`docs/design/design-system.html`).",
           "chosen": [
-            "items-core's two workflow lint rules stay in items-core, as local rules in its own eslint config on top of `@bh/config` (your answer)."
+            "items-core's two workflow lint rules stay in items-core, as local rules in its own eslint config on top of `@bh/config` (your answer).",
+            "items-core's `bbendeliani/detection` is merged into its main first (TK-66.4): a worker merges it, pushing only if its checks pass and stopping to tell you if they fail. TK-66.2 is then built on main. A push to items-core's main deploys to cloud dev, and IC-8's cutover deploys the migration's own tip, `396d36ad`, first as its own push, so the detection merge reaches main only after the cutover (your answers on TK-66 and IC-8)."
           ],
-          "chosenOn": "2026-10-14",
-          "openChoices": [
-            {
-              "question": "Where should TK-66.2 (moving items-core from `@bw/config` to `@bh/config`) be built, since `@bh/config` and the `node-file-suffix` rule exist only on items-core's branch `bbendeliani/detection`, not on its main?",
-              "context": "items-core's main (b1ccebf8) has no `@bh/config`: `packages/bh/` came in with f31df28e, which is on `bbendeliani/detection`, along with the `node-file-suffix` rule TK-66.2 keeps local. That branch is pushed, 30 commits ahead of main, not merged, and it is the branch your own items-core checkout is on. TK-66.3's items-core commit (9f75dbbb, on `tk-66`) was made from main. Moving `tk-66` onto detection is a rebase, which the builder's permissions refused, so the base is your call. (TK-66.1's leftovers in `packages/web/` also exist only on detection, where f31df28e removed that package's source.)\n\n- **On `bbendeliani/detection`**: move `tk-66` onto it (TK-66.3's commit gets a new hash), or start TK-66.2 from it. For: everything TK-66.2 needs is already there. Against: merging `tk-66` into main brings detection's 30 commits with it, so detection should be merged first or together.\n- **Wait until you merge `bbendeliani/detection` into main**, then build TK-66.2 from main. For: `tk-66` stays as it is and main gets detection on your terms. Against: TK-66.2 waits on that merge.\n- **On main as it is**, copying bh's config into main first. For: no dependence on detection. Against: it repeats what detection already brings, and the two would clash when detection merges.",
-              "options": [
-                "On `bbendeliani/detection`",
-                "Wait until you merge `bbendeliani/detection` into main",
-                "On main as it is, copying bh's config in first"
-              ],
-              "recommended": 0,
-              "answer": "Merge `bbendeliani/detection` into items-core's main first: a worker merges it, pushing only if its checks pass and stopping to tell me if they fail. Then build TK-66.2 on main.",
-              "answeredOn": "2026-10-15"
-            }
-          ],
+          "chosenOn": "2026-10-16",
           "plan": [
             {
               "id": "TK-66.1",
@@ -9354,7 +9282,7 @@
             {
               "id": "TK-66.2",
               "title": "Replace `@bw/config` with `@bh/config`, keeping items-core's two workflow rules local",
-              "description": "items-core's lint and TypeScript config come from `@bh/config`, and `@bw/config`, its fork, goes. Its two workflow rules, `node-file-suffix` and `port-schema-convertible` (in `packages/shared/config/eslint/rules`, with their tests), stay in items-core as local rules in its own eslint config, on top of `@bh/config` (your answer); `@bh/config` doesn't change.\n\nWhat it touches (the builder read detection, read-only):\n\n- About 30 workspaces use `@bw/config`: a devDependency, `tsconfig` extends (`base`, `node`, `package`, `react`), the `bw-lint` and `bw-madge` scripts, and about 20 `vitest.config.ts` coverage imports.\n- At the root: `package.json`'s prettier and `bw-format` entries, `eslint.config.js` (`@bw/config/eslint/base` and the `'!@bw/config'` allow-list), and `packages/shared/{contracts,env}/eslint.config.js`.\n- The two configs barely differ: the rule prefix `bw/` becomes `bh/`, `@bh/config` drops a duplicate `process.env` ban, React is `'19.0'` rather than `'detect'`, and madge's exclude matches whole path segments. Few or no code fixes expected.\n- The two local rules: the root `eslint.config.js` turns them on as `bw/...`, and five `eslint-disable` comments in `packages/domain/workflow/src/__tests__/define-node.test.ts` name `bw/port-schema-convertible`, so the local plugin can keep the name `bw`, in a small workspace package with its own `test` script, keeping `port-schema-convertible`'s test under `turbo test`.",
+              "description": "items-core's lint and TypeScript config come from `@bh/config`, and `@bw/config`, its fork, goes. Its two workflow rules, `node-file-suffix` and `port-schema-convertible` (in `packages/shared/config/eslint/rules`, with their tests), stay in items-core as local rules in its own eslint config, on top of `@bh/config` (your answer); `@bh/config` doesn't change.\n\nIt is built on items-core's main after `bbendeliani/detection` is merged into it (TK-66.4), which is after the cloud-dev cutover has deployed the migration's own tip (IC-8; your answers on TK-66 and IC-8).\n\nWhat it touches (the builder read detection, read-only):\n\n- About 30 workspaces use `@bw/config`: a devDependency, `tsconfig` extends (`base`, `node`, `package`, `react`), the `bw-lint` and `bw-madge` scripts, and about 20 `vitest.config.ts` coverage imports.\n- At the root: `package.json`'s prettier and `bw-format` entries, `eslint.config.js` (`@bw/config/eslint/base` and the `'!@bw/config'` allow-list), and `packages/shared/{contracts,env}/eslint.config.js`.\n- The two configs barely differ: the rule prefix `bw/` becomes `bh/`, `@bh/config` drops a duplicate `process.env` ban, React is `'19.0'` rather than `'detect'`, and madge's exclude matches whole path segments. Few or no code fixes expected.\n- The two local rules: the root `eslint.config.js` turns them on as `bw/...`, and five `eslint-disable` comments in `packages/domain/workflow/src/__tests__/define-node.test.ts` name `bw/port-schema-convertible`, so the local plugin can keep the name `bw`, in a small workspace package with its own `test` script, keeping `port-schema-convertible`'s test under `turbo test`.",
               "where": [
                 {
                   "repo": "items-core",
@@ -9362,6 +9290,16 @@
                 }
               ],
               "done": false,
+              "blockedBy": [
+                {
+                  "id": "TK-66.4",
+                  "why": "`@bh/config` and the `node-file-suffix` rule reach items-core's main with the detection merge"
+                },
+                {
+                  "id": "IC-8.9",
+                  "why": "items-core's main holds the cutover's tip, deployed and seeded, before `bbendeliani/detection` reaches it"
+                }
+              ],
               "approved": true,
               "notes": [
                 {
@@ -9373,6 +9311,11 @@
                   "at": "2026-10-14T03:11:42.523Z",
                   "by": "claude",
                   "text": "Changed since you approved it: it lists what the move touches, from the builder; nothing new, only more precise. It waits on your choice of branch to build it on (the question on TK-66)."
+                },
+                {
+                  "at": "2026-10-16T01:41:19.458Z",
+                  "by": "claude",
+                  "text": "Changed since you approved it: it builds on items-core's main after the detection merge (TK-66.4), which waits on the cloud-dev cutover (IC-8), by your answer there."
                 }
               ]
             },
@@ -9392,6 +9335,32 @@
                   "title": "Point items-core's and tickets' copies at bh's",
                   "done": true,
                   "approved": true
+                }
+              ]
+            },
+            {
+              "id": "TK-66.4",
+              "title": "Merge `bbendeliani/detection` into items-core's main, after the cloud-dev cutover",
+              "description": "A worker merges items-core's `bbendeliani/detection` into its main and pushes it only if the merge's checks pass; if any fail it pushes nothing and tells you (your answer on TK-66). `@bh/config` and the `node-file-suffix` rule, which TK-66.2 needs, exist only on that branch.\n\nA push to items-core's main deploys everything on it to cloud dev (Cloud Build migrates, then deploys), and IC-8's cutover deploys the migration's own tip, `396d36ad`, first as its own push (your answer on IC-8). So this goes out after the cutover, and once IC-6.6 and IC-6.7 are done: since `de0d48aa` both processes refuse a bucket without `STORAGE_PROVIDER` (IC-6.6, applied to the gateway and the VM), and since `0dc3fbcc` the Dockerfiles need BuildKit in Cloud Build (IC-6.7). The branch's later migrations drop columns and tables, so after this push a rollback is a dev reset, not an image redeploy (IC-8).",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "main"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-8.9",
+                  "why": "the cutover deploys the migration's own tip first, and its seeds need that release's migrations"
+                },
+                {
+                  "id": "IC-6.6",
+                  "why": "since `de0d48aa` both processes refuse a bucket without `STORAGE_PROVIDER`"
+                },
+                {
+                  "id": "IC-6.7",
+                  "why": "a push that carries `0dc3fbcc` needs BuildKit in Cloud Build"
                 }
               ]
             }
@@ -9589,7 +9558,7 @@
                 {
                   "id": "TK-68.2.5",
                   "title": "Replace `formatTimestamp` (TK-32) and `formatBytes` (TK-35)",
-                  "description": "cv's `formatTimestamp` (20 uses) becomes `formatDateTime(iso, { locale: 'en-GB' })`, which writes the same. cv's own byte format becomes `formatBytes(n)` (`12 KB` reads `12 KiB`, unless the question on TK-35 keeps KB).",
+                  "description": "cv's `formatTimestamp` (20 uses) becomes `formatDateTime(iso, { locale: 'en-GB' })`, which writes the same. cv's own byte format becomes `formatBytes(n)` (`12 KB` reads `12 KiB`, your answer on TK-35).",
                   "done": false,
                   "blockedBy": [
                     {
@@ -10373,7 +10342,7 @@
                 {
                   "id": "TK-71.2.4",
                   "title": "Replace the relative times (TK-32) and `formatBytes` (TK-35)",
-                  "description": "`formatDate` with `formatClockTime` becomes `formatDateTime(iso, { timeZone: 'UTC', seconds: true })`. Sizes become `formatBytes(n)` (`2.1 GB` reads `2.1 GiB`, unless the question on TK-35 keeps GB); `formatDurationMs` becomes `formatDuration(ms, { unit: 'ms' })`.",
+                  "description": "`formatDate` with `formatClockTime` becomes `formatDateTime(iso, { timeZone: 'UTC', seconds: true })`. Sizes become `formatBytes(n)` (`2.1 GB` reads `2.1 GiB`, your answer on TK-35); `formatDurationMs` becomes `formatDuration(ms, { unit: 'ms' })`.",
                   "done": false,
                   "blockedBy": [
                     {
