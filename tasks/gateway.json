@@ -1375,7 +1375,7 @@
           "id": "GW-18",
           "title": "Show a GitHub connection's app name, link and permissions as GitHub has them now",
           "description": "A GitHub connection keeps what its app was when the gateway made it: its name, its slug (which the install link uses) and the permissions it asked for. An app renamed or changed on GitHub then shows stale on the gateway, with an install link that no longer works. The gateway reads them from GitHub instead.",
-          "status": "Planned",
+          "status": "Done",
           "where": [
             {
               "repo": "gateway",
@@ -1397,7 +1397,7 @@
             {
               "id": "GW-18.1",
               "title": "Load a GitHub connection's app from GitHub when its page is shown",
-              "description": "When a GitHub connection's page or the connections list is read, the API asks GitHub for the app (`GET /app` with the app's JWT, which it already makes for installations), cached as the installations are (30 s), and answers its current name, slug, owner, public or private, and permissions; the install link is built from the current slug. If GitHub can't be reached, it answers what it stored, marked as possibly stale. The stored slug is updated when it changed. The page shows the current name, owner, whether the app is public, and its real permissions. Tests: a renamed app shows its new name and link; GitHub unreachable falls back to the stored one.",
+              "description": "When a GitHub connection's page or the connections list is read, the API asks GitHub for the app (`GET /app` with the app's JWT, which it already makes for installations), cached as the installations are (30 s), and answers its current name, slug, owner, public or private, and permissions; the install link is built from the current slug. If GitHub can't be reached, it answers what it stored, marked as possibly stale. The stored slug is updated when it changed. The page shows the current name, owner, whether the app is public, and its real permissions. Tests: a renamed app shows its new name and link; GitHub unreachable falls back to the stored one.\n\nDone 2026-10-16 (`54594cc` on the gateway's main, deploy 26 live). `GET /app` with the app's JWT, cached 30 s apart from installations (a failed ask isn't cached, `?fresh=1` clears it); the stored slug, name, owner, link, visibility and permissions are updated when they changed, so the fallback stays coherent, and an unreachable GitHub shows them marked stale. `GET /app` doesn't say whether an app is public, so that is whether `GET /apps/{slug}` answers without a login (a failed probe keeps the stored value; unauthenticated calls are limited to 60 an hour, which the cache keeps clear of). Checks: API 221 tests, web 100, typecheck, lint, build. Live: the page shows bendev-gateway, owned by bendela6, public, Contents and Pull requests read and write, Metadata read.",
               "where": [
                 {
                   "repo": "gateway",
@@ -1408,10 +1408,11 @@
                   "part": "apps/web/src/settings/connection-page.tsx"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
-          ]
+          ],
+          "statusNote": "54594cc, live 2026-10-16"
         }
       ]
     },
