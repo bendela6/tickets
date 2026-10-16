@@ -818,14 +818,14 @@
             {
               "id": "IC-18.2",
               "title": "Create the `items-core` stack with its Postgres and Caddy connections and its variables",
-              "description": "On the gateway, as `DEPLOY.md` lists it (IC-17.3): the stack `items-core`; its source, IC-18.1's connection, `bob-and-weave/items-core`, branch `main`, deploy on push on from the start (your answer on the first commit); its compose, `deploy/compose.yaml`; its shared-Postgres connection (database and role `items-core`, `may_create: roles`; `api`, `worker` and the jobs joining, all but `worker` taking its variables); its Caddy connection, `items.bendelhome.cc` to `console` port 80 and `items-api.bendelhome.cc` to `api` port 3000 (your answer); its variables, the worker's password made by the gateway (Make). No value is typed in chat. Done from your gateway session with your permission, as AU-1.8 was.",
+              "description": "On the gateway, as `DEPLOY.md` lists it (IC-17.3): the stack `items-core`; its source, IC-18.1's connection, `bob-and-weave/items-core`, branch `main`, deploy on push on from the start (your answer on the first commit); its compose, `deploy/compose.yaml`; its shared-Postgres connection (database and role `items-core`, `may_create: roles`; `api`, `worker` and the jobs joining, all but `worker` taking its variables); its Caddy connection, `items.bendelhome.cc` to `console` port 80 and `items-api.bendelhome.cc` to `api` port 3000 (your answer); its variables, the worker's password made by the gateway (Make). No value is typed in chat. Done from your gateway session with your permission, as AU-1.8 was.\n\nDone 2026-10-16, from your gateway session (`POST /api/stacks`), since the form takes no compose text and the API takes it as it is: the stack `items-core`, its source the `github` connection, `bob-and-weave/items-core`, `main`, deploy on push on; its compose `deploy/compose.yaml` of `main` (`5d796c79`), read through that connection; Postgres to `api`, `worker` and the four jobs, `api` taking its variables, database and role `items-core`, `may_create: roles`, its password made; Caddy `items.bendelhome.cc` to `console` port 80 and `items-api.bendelhome.cc` to `api` port 3000; `api`'s `FIREBASE_PROJECT_ID` `bnw-items-dev`, `worker`'s `POSTGRES_PASS` made by the gateway. Nothing deployed: the stack's first deploy is IC-18.4.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-17",
