@@ -1025,7 +1025,8 @@
             "Takeover is proven by killing the worker mid-crawl and also by a temporary second worker, not during a deploy: the plan asks for takeover, and the connection budget holds two workers only outside a rollout (IC-20.9) (your answer on IC-9).",
             "The worker fetches the fixture site through a setting that names the host and port pairs it may fetch beyond public addresses on ports 80 and 443, empty by default; it is set only for the local baseline and, during the acceptance, on the gateway, then removed. The address guard stays as it is everywhere else (your answer, 2026-10-16).",
             "With no model provider, the site crawl's analysis records an empty proposal and waits for you; you write the site's page rules in the console's proposal editor and approve them, and the crawl goes on. The acceptance's fixture crawls get the same rules in both runs (your answer, 2026-10-16).",
-            "The worker gets a browser fetch host over the stack's browser, under the same address guard and allow setting, so sites that need rendering crawl on the gateway, and the acceptance's rendered checks stay (your answer, 2026-10-16)."
+            "The worker gets a browser fetch host over the stack's browser, under the same address guard and allow setting, so sites that need rendering crawl on the gateway, and the acceptance's rendered checks stay (your answer, 2026-10-16).",
+            "Each site's settings choose plain or rendered fetching, plain by default, and the site crawl fetches that site's pages the chosen way, through the browser profile the site picks; the acceptance's rendered checks stay (your answer, 2026-10-16)."
           ],
           "chosenOn": "2026-10-16",
           "plan": [
@@ -1185,6 +1186,10 @@
                 {
                   "id": "IC-20.16",
                   "why": "rendered fetching reaches the browser only through the worker's browser fetch host"
+                },
+                {
+                  "id": "IC-20.17",
+                  "why": "a site crawl reaches the browser only once its graph chooses it"
                 }
               ],
               "byYou": true,
@@ -1249,6 +1254,10 @@
                 {
                   "id": "IC-20.16",
                   "why": "rendered fetching reaches the browser only through the worker's browser fetch host"
+                },
+                {
+                  "id": "IC-20.17",
+                  "why": "a site crawl reaches the browser only once its graph chooses it"
                 }
               ],
               "byYou": true,
@@ -1324,24 +1333,37 @@
             {
               "id": "IC-20.15",
               "title": "Make the site crawl wait for your rules when the worker has no model provider",
-              "description": "When the analysis stage would ask a model for rules and the host has no generation provider, it records a proposal with no rules, marked as made without a model, and the run waits for the owner exactly as it waits after a model's proposal; nothing fails. The console's proposal editor shows it empty and says no model proposed it, so you write the site's page rules there and approve them, and discovery goes round again as it does after an approved proposal. A host with a provider behaves as today. Tests: a crawl with undecided pages and no provider waits with an empty proposal, approving rules moves it on, and a host with a provider still calls it (your answer).",
+              "description": "When the analysis stage would ask a model for rules and the host has no generation provider, it records a proposal with no rules, marked as made without a model, and the run waits for the owner exactly as it waits after a model's proposal; nothing fails. The console's proposal editor shows it empty and says no model proposed it, so you write the site's page rules there and approve them, and discovery goes round again as it does after an approved proposal. A host with a provider behaves as today. Tests: a crawl with undecided pages and no provider waits with an empty proposal, approving rules moves it on, and a host with a provider still calls it (your answer).\n\nDone 2026-10-16 (`e35779ab` on items-core's main). `makeGenerateNode(contracts, { refusedWithoutProvider })` answers `refused`, reason `noProvider`, for the contracts a host names, asking nothing and reserving no budget; the crawl hosts name only `crawls.sitemapAnalysis`, so every other contract still fails without a provider. `crawls.recordRuleProposal` records outcome `noModel` with no rules, and the run waits as after a model's proposal. The console's card shows a \"No model\" pill and a note; its editor starts from the site's own rules (empty for a site with none), since approving replaces them. The site-crawl graph is unchanged (still v6). Checks in Docker: 122 of 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/crawls (site-crawl analysis stage), packages/domain/workflow (ai.generate), apps/console-web (sites proposal editor)"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-20.16",
               "title": "Add a browser fetch host to the worker over the stack's browser",
-              "description": "The worker builds the crawls service's browser fetch host (`makeBrowserFetchHost`) next to its http one, over the browser it is configured with (`BROWSER_CDP_HOST` and `BROWSER_CDP_PORT`, the stack's `browser:9222`), with the same address policy and `WORKER_FETCH_ALLOWED_HOST_PORTS`. A site crawl set to rendered fetching then captures through it. Without a configured browser the worker builds none, as today, and a rendered fetch fails with a clear reason. Tests: a rendered capture through a browser over CDP (in Docker), and the address guard applied to the rendered fetch's requests (your answer).",
+              "description": "The worker builds the crawls service's browser fetch host (`makeBrowserFetchHost`) next to its http one, over the browser it is configured with (`BROWSER_CDP_HOST` and `BROWSER_CDP_PORT`, the stack's `browser:9222`), with the same address policy and `WORKER_FETCH_ALLOWED_HOST_PORTS`. A site crawl set to rendered fetching then captures through it. Without a configured browser the worker builds none, as today, and a rendered fetch fails with a clear reason. Tests: a rendered capture through a browser over CDP (in Docker), and the address guard applied to the rendered fetch's requests (your answer).\n\nDone 2026-10-16 (`8dde7069` on items-core's main). The browser fetch host shares the scraper's CDP connection and opens an isolated context per capture. A rendered capture sends the page's traffic through a proxy of the worker's, which a browser in another container can't reach on loopback, so `BROWSER_PROXY_HOST` (`worker` in `deploy/compose.yaml`) makes it listen beyond loopback with a password per capture. `browser.fetch` isn't routed by capability: the worker that claims a run drives it, so every worker that may claim a rendered crawl needs a browser (IC-20.9's second worker too). Real-browser tests are opt-in (`WORKER_BROWSER_TEST=1`) and passed in Docker. The site-crawl graph still calls only `http.fetch`, so IC-20.17 makes it choose. Checks in Docker: 122 of 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "apps/worker/src/runtime/make-worker-runtime.ts, services/crawls (browser-fetch host)"
+                }
+              ],
+              "done": true,
+              "approved": true
+            },
+            {
+              "id": "IC-20.17",
+              "title": "Make the site crawl fetch a site's pages through the browser when its settings choose rendering",
+              "description": "Each site's settings gain a fetch mode, plain or rendered, plain by default (the console's site settings, beside the capability profiles it already picks). A crawl freezes it with its other settings, and the site-crawl graph's page body fetches with `browser.fetch` under the site's browser profile when it is rendered, and `http.fetch` as today when it is plain; robots, politeness, the address guard and the capture's storage hold the same either way. It is a new version of the site-crawl graph, which the `seed-workflows` job inserts on the gateway. Tests: a plain site fetches as today, a rendered site's pages are captured through the browser (in Docker, with the repository's browser image), and a crawl started before a site's mode changes keeps the mode it froze (your answer).",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/crawls (site-crawl graph, page body, crawl scope), services/sites (site settings), apps/console-web (site settings)"
                 }
               ],
               "done": false,
