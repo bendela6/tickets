@@ -120,7 +120,9 @@
                 "Keep it. It costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; revisit once a host outside GCP is decided.",
                 "Delete it. Cloud Build and Artifact Registry are the only pipeline the cloud uses, and the plan leaves remote machines browsers and proxies only."
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "Keep it. It costs the VM nothing, and `docker/worker/README.md` points machines outside GCP at it; revisit once a host outside GCP is decided.",
+              "answeredOn": "2026-10-15"
             }
           ],
           "plan": [
@@ -269,7 +271,9 @@
                 "The migration's own tip, `396d36ad`, first. Every migration is additive, the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The later work goes out as its own push once IC-6.6 and IC-6.7 are done.",
                 "The `bbendeliani/detection` tip. One push carries everything. It needs IC-6.6 and IC-6.7 first, a rollback becomes a dev reset, the runbook's rollback must be rewritten, and the acceptance crawl needs a new baseline."
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "The migration's own tip, `396d36ad`, first. Every migration is additive, the runbook and its image-only rollback hold as written, and the acceptance tests the worker migration alone. The later work goes out as its own push once IC-6.6 and IC-6.7 are done.",
+              "answeredOn": "2026-10-15"
             }
           ],
           "plan": [
@@ -431,7 +435,9 @@
                 "The fixture site, served where the VM can reach it (a container on its `items` network), compared with the baseline, then one seeded real site, rendered.",
                 "Real sites only, judged on business outcomes without a comparison with the baseline."
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "The fixture site, served where the VM can reach it (a container on its `items` network), compared with the baseline, then one seeded real site, rendered.",
+              "answeredOn": "2026-10-15"
             },
             {
               "question": "How is takeover proven?",
@@ -439,7 +445,9 @@
                 "Kill the worker mid-crawl, and also start a temporary second container, `gcp-dev-2`, outside a gateway rollout. The plan asks for takeover, and the budget holds two workers only outside a rollout.",
                 "Kill the worker only, and let the restarted container reclaim the run under a new boot."
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "Kill the worker mid-crawl, and also start a temporary second container, `gcp-dev-2`, outside a gateway rollout. The plan asks for takeover, and the budget holds two workers only outside a rollout.",
+              "answeredOn": "2026-10-15"
             }
           ],
           "plan": [

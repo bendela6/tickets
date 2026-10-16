@@ -320,7 +320,7 @@
                   "part": "@bh/ui"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-75",
@@ -1674,7 +1674,7 @@
               "why": "needs bh's next version in tickets' copy"
             }
           ],
-          "statusNote": "TK-5.12, 5.17, 5.18 and 5.19 merged into tickets' main (5e3c00e9) and live since 2026-10-15. Left: TK-5.6, TK-5.8, TK-5.11, TK-5.16, TK-5.20, TK-5.22.",
+          "statusNote": "TK-5.12, 5.17, 5.18 and 5.19 merged into tickets' main (5e3c00e9) and live since 2026-10-15. TK-5.20 (2763e920): local storage through bh's readStored, writeStored and usePersistedState, live 2026-10-16.",
           "notes": [
             {
               "at": "2026-10-13T08:00:45.644Z",
@@ -2036,7 +2036,7 @@
             {
               "id": "TK-5.16",
               "title": "Format dates with bh's formatters (TK-32)",
-              "description": "`get-cell-content.tsx`'s own `formatDateTime` becomes bh's, `formatDateTime(raw, { timeZone: 'UTC' })`, which adds a comma after the year (`Jul 13, 2026, 09:05`); the age column uses `relativeLabel`'s minute and hour steps (TK-32.1).",
+              "description": "`get-cell-content.tsx`'s own `formatDateTime` becomes bh's, `formatDateTime(raw, { timeZone: 'UTC' })`, which adds a comma after the year (`Jul 13, 2026, 09:05`); the age column uses `relativeLabel`'s minute and hour steps (TK-32.1). Moved (your answer, 2026-10-16): the date columns get bh's formats from the formatter registry when the board's table and All items become `DataTable`s with column templates (TK-21).",
               "where": [
                 {
                   "repo": "tickets",
@@ -2050,7 +2050,7 @@
                   "why": "tickets' update to the bh version with bh's new date helpers"
                 }
               ],
-              "approved": true,
+              "cancelled": true,
               "notes": [
                 {
                   "at": "2026-10-14T03:30:57.806Z",
@@ -2145,7 +2145,7 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-31.1",
@@ -2225,7 +2225,8 @@
                   "id": "TK-4.5",
                   "why": "the item page is on `Page` and `PageHeader` on tickets branch `tk-4`"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -2798,7 +2799,9 @@
                 "Run the fork in the dialog's `onConfirm`",
                 "Keep the toast; give focus back to the button once the fork ends"
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "Run the fork in the dialog's `onConfirm`",
+              "answeredOn": "2026-10-16"
             },
             {
               "question": "What does tickets' status picker show on its field, now that it draws the status's kind icon (TK-103.6) beside its color dot: \"○ ● Backlog\"?",
@@ -2808,7 +2811,9 @@
                 "Keep both",
                 "Drop the icon on the field, keeping it in the list"
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "Drop the dot",
+              "answeredOn": "2026-10-16"
             },
             {
               "question": "A subtask row in tickets shows its status's kind icon twice, at the row's start and in its status picker (TK-103.6). Which goes?",
@@ -2818,7 +2823,9 @@
                 "The picker's icon, on subtask rows only",
                 "Keep both"
               ],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "The row's own icon",
+              "answeredOn": "2026-10-16"
             }
           ],
           "plan": [
@@ -4308,7 +4315,8 @@
                   "part": "@bh/source-postgres"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         }
@@ -4951,7 +4959,8 @@
                   "id": "TK-79.6",
                   "why": "the `Host` it adds to"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -5435,7 +5444,7 @@
         {
           "id": "TK-76",
           "title": "Make bh's `Card` configurable: a number and what helps read it",
-          "description": "Cards with numbers, at the top of a page and on dashboards, set up as data: what each card measures, how it's shown, and which cards a reader sees. Split out of TK-2.4 (`Stat` tiles) on 2026-10-12, and named `Card` at your word: bh's `Card` (`layout/components/card/card.tsx`) is today a raised surface with `CardHeader`, `CardTitle` and `CardBody`, and given a `value` it draws a number with its parts. A card's size comes from the parts it has and its layout, never from its state, so a page doesn't jump while cards load or fail. Its body is a template (TK-79), so a card is configured like a column or a tile: the value, the change, the trend, the meter and the note are parts from the shared registries, and its icon and title stay fixed (2026-10-12). One `Card` covers a number tile, a row and a titled group, by its `shape`, so gateway's `Figure` rows and `Figures` group are shapes, not parts of their own; its values are numbers the app passes in until measures come with TK-11; its labels have one style (2026-10-14).",
+          "description": "Cards with numbers, at the top of a page and on dashboards, set up as data: what each card measures, how it's shown, and which cards a reader sees. Split out of TK-2.4 (`Stat` tiles) on 2026-10-12, and named `Card` at your word: bh's `Card` (`layout/components/card/card.tsx`) is today a raised surface with `CardHeader`, `CardTitle` and `CardBody`; its content is always a template (2026-10-16). A card's size comes from the parts it has and its layout, never from its state, so a page doesn't jump while cards load or fail. Its body is a template (TK-79), so a card is configured like a column or a tile: the value, the change, the trend, the meter and the note are parts from the shared registries, and its icon and title stay fixed (2026-10-12). One `Card` covers a number tile, a row and a titled group, by its `shape`, so gateway's `Figure` rows and `Figures` group are shapes, not parts of their own; its values are numbers the app passes in until measures come with TK-11; its labels have one style (2026-10-14).",
           "status": "In progress",
           "waitingOn": ["your choices (below)"],
           "statusNote": "TK-76.1 done (2026-10-14): the design redrawn from your five answers, same link (https://claude.ai/artifact/PDcJkQcg28U5khXFsVtgHB, version 11, \"Card design\"), in 7 artboards: a card is a TK-79 host (fixed icon, tone and title, then its template), its config the real `{ fixed, template }`, its numbers from a `record` the app passes in; the shapes tile, row (was `Figure`) and group (was `Figures` and `MetricCard`), sizes and surfaces, one label style; five apps' tiles and gateway's card parts each beside its config; the formats, then the change, line and meter (next, TK-76.3); `CardGroup` as strip, grid, wrap and list; the states at one size, then click-to-filter and choosing cards (later, TK-76.4). Not rendered or screenshotted. Its eight choices are answered (2026-10-15), not yet folded by the planner. TK-76.2, the plan, isn't written: its worker was stopped at your word on 2026-10-15 while it was still reading, and wrote nothing. Moved into E6 on 2026-10-12: the design's `shape` becomes the template's rows and grids (TK-79).",
@@ -5486,7 +5495,7 @@
             "A card shows numbers the app passes in first; measures over a resource come when TK-11 lands (your answer).",
             "A card's label has one style, with no uppercase option (your answer).",
             "The first version is the card, its formats, `CardGroup` and the states; the change, trend and meter come next, then click-to-filter and the reader's choice of cards (your answer).",
-            "No new name: bh's existing `Card` grows these parts, and a `Card` given a `value` draws a number; without one it stays a plain surface (your answer)."
+            "No new name: bh's existing `Card` grows these parts. Its content is always a template: its own props are only its label, icon and card settings (shape, tone, state), and a number is a template part the `figure` renderer draws, with its format; no `value` shortcut (your answers, 2026-10-12 and 2026-10-16)."
           ],
           "chosenOn": "2026-10-14",
           "openChoices": [
@@ -6404,7 +6413,8 @@
                   "id": "TK-103.2",
                   "why": "`ColorPicker`'s swatch changes on bh branch `tk-103`"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-24.10",
@@ -6422,7 +6432,8 @@
                   "id": "TK-24.4",
                   "why": "the cell copy that shows the pill"
                 }
-              ]
+              ],
+              "approved": true
             },
             {
               "id": "TK-24.11",
@@ -6440,7 +6451,8 @@
                   "id": "TK-24.2.1",
                   "why": "the icon-only `xs` size"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -7640,7 +7652,9 @@
             {
               "question": "Where do `Sparkline` and `TimeChart` live?",
               "options": ["In `@bh/ui`", "In a package of their own"],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "In `@bh/ui`",
+              "answeredOn": "2026-10-16"
             }
           ],
           "plan": [
@@ -7754,7 +7768,9 @@
                   "by": "claude",
                   "text": "Rewritten: the recommended option was to drop it in the breaking release that deleted `CopyButton`, and that release, bh 0.4.0, has gone out without dropping it. Under bh's new numbering a breaking change below 1.0.0 is only a minor version, so dropping it now is the recommendation."
                 }
-              ]
+              ],
+              "answer": "Dropped now",
+              "answeredOn": "2026-10-16"
             }
           ],
           "plan": [
@@ -8618,7 +8634,9 @@
             {
               "question": "Which icon system do bh and wallet-passes both use?",
               "options": ["bh's `Icon` registry", "lucide"],
-              "recommended": 0
+              "recommended": 0,
+              "answer": "bh's `Icon` registry",
+              "answeredOn": "2026-10-16"
             }
           ],
           "plan": [
@@ -9330,7 +9348,7 @@
                   "part": "packages/web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -9925,7 +9943,7 @@
           "title": "Update medialib to bh's new parts and drop its copies",
           "description": "medialib drops its own copies as bh's arrive.",
           "status": "Not planned",
-          "statusNote": "medialib took bh 0.6.0 on the bh page (pull request 1, merged as b9f282d, live 2026-10-15): Select became Combobox without search, and two tests follow 0.6.0's key hint and option counts. Left: TK-70.2.1, TK-70.2.2, TK-70.2.3, TK-70.2.4, TK-70.2.5, TK-70.2.6, TK-70.2.7, TK-70.2.8, TK-70.3, TK-70.4.",
+          "statusNote": "medialib took bh 0.6.0 on the bh page on 2026-10-15 (pull request 1, merged as b9f282d), at your word to update every app: Select became Combobox without search, and two tests follow 0.6.0. TK-70.1 still stands: the one update to the first version holding every part TK-70.2 uses.",
           "where": [
             {
               "repo": "medialib",
@@ -9948,7 +9966,6 @@
                   "part": "bh page"
                 }
               ],
-              "done": true,
               "blockedBy": [
                 {
                   "id": "TK-31.1",
@@ -10015,7 +10032,8 @@
                   "why": "in the version it copies, for TK-70.2.8"
                 }
               ],
-              "approved": true
+              "approved": true,
+              "done": false
             },
             {
               "id": "TK-70.2",
@@ -10055,7 +10073,8 @@
                       "id": "TK-31.7",
                       "why": "bh's `useHotkeys`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.2",
@@ -10075,7 +10094,8 @@
                       "id": "TK-29.3",
                       "why": "bh's `ConfirmDialog` asking for a typed phrase"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.3",
@@ -10090,7 +10110,8 @@
                       "id": "TK-38.1",
                       "why": "bh's `Kbd`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.4",
@@ -10106,7 +10127,8 @@
                       "id": "TK-35.1",
                       "why": "bh's exported `formatBytes`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.5",
@@ -10121,7 +10143,8 @@
                       "id": "TK-34.1",
                       "why": "`ScreenState`'s loading state"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.6",
@@ -10136,7 +10159,8 @@
                       "id": "GW-2.2",
                       "why": "bh's `CardState`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.7",
@@ -10147,7 +10171,8 @@
                       "id": "GW-2.2",
                       "why": "bh's `TextLink` and `Field`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 },
                 {
                   "id": "TK-70.2.8",
@@ -10158,7 +10183,8 @@
                       "id": "TK-19.4",
                       "why": "bh's `DataTable`"
                     }
-                  ]
+                  ],
+                  "approved": true
                 }
               ]
             },
@@ -10171,7 +10197,8 @@
                   "part": "apps/web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-70.4",
@@ -10196,7 +10223,8 @@
                   "id": "TK-70.3",
                   "why": "checks the replaced cards and buttons"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -11367,7 +11395,8 @@
                   "part": "packages/db"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "TK-80.14",
@@ -11379,7 +11408,8 @@
                   "part": "packages/db"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         },
