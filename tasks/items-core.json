@@ -931,14 +931,14 @@
             {
               "id": "IC-19.1",
               "title": "Replace `docs/workflow/deploy.md`'s Google Cloud runbook with the gateway's",
-              "description": "`docs/workflow/deploy.md` describes the gateway instead of Google Cloud:\n\n- **Topology**: the stack's services and jobs, the shared Postgres, the content volume the API and the worker share, the addresses.\n- **Configuration**: the API's and the worker's settings, as the compose sets them.\n- **Credentials**: the owner role migrates; `worker-role` makes `aitems_worker` before each deploy; rotating the worker's password is a new made secret and a deploy. On a credential failure the worker exits 1 with its one-line reason and `on-failure` restarts it.\n- **The connection budget** on the shared Postgres: the same terms, the API's start-first rollout counted twice, `max_connections` 100 (Postgres's default; the preset sets none) shared with every stack. The census (IC-20.1) fills in what the others use.\n- **Partition upkeep and health**, as chosen on IC-17; the sweep endpoint is closed.\n- **Operating the worker**: pause, resume and stop from the fleet page; start after a stop (delete the row, then start its container); restart; take it out of service; each with how it's done on the gateway (its page, or `docker` in its WSL distro where the page has no control). A deploy while the worker is stopped fails its check until the row is deleted.\n- **Deploying and rolling back**, replacing the cutover runbook: a push to `main` deploys. Roll back by deploying the previous commit from the stack's page, which holds while the migrations between only add; past a migration that drops or renames, restore items-core's database from the shared Postgres's nightly dump (a week kept) or reset it (drop it, deploy, seed), with the worker stopped throughout. The deployer's own roll-back after a failed start runs the old images on a schema the new `migrate` already changed: say so.\n\n`docker/worker/README.md` points at the gateway instead of the cloud VM.",
+              "description": "`docs/workflow/deploy.md` describes the gateway instead of Google Cloud:\n\n- **Topology**: the stack's services and jobs, the shared Postgres, the content volume the API and the worker share, the addresses.\n- **Configuration**: the API's and the worker's settings, as the compose sets them.\n- **Credentials**: the owner role migrates; `worker-role` makes `aitems_worker` before each deploy; rotating the worker's password is a new made secret and a deploy. On a credential failure the worker exits 1 with its one-line reason and `on-failure` restarts it.\n- **The connection budget** on the shared Postgres: the same terms, the API's start-first rollout counted twice, `max_connections` 100 (Postgres's default; the preset sets none) shared with every stack. The census (IC-20.1) fills in what the others use.\n- **Partition upkeep and health**, as chosen on IC-17; the sweep endpoint is closed.\n- **Operating the worker**: pause, resume and stop from the fleet page; start after a stop (delete the row, then start its container); restart; take it out of service; each with how it's done on the gateway (its page, or `docker` in its WSL distro where the page has no control). A deploy while the worker is stopped fails its check until the row is deleted.\n- **Deploying and rolling back**, replacing the cutover runbook: a push to `main` deploys. Roll back by deploying the previous commit from the stack's page, which holds while the migrations between only add; past a migration that drops or renames, restore items-core's database from the shared Postgres's nightly dump (a week kept) or reset it (drop it, deploy, seed), with the worker stopped throughout. The deployer's own roll-back after a failed start runs the old images on a schema the new `migrate` already changed: say so.\n\n`docker/worker/README.md` points at the gateway instead of the cloud VM.\n\nDone 2026-10-16 (`e5f67da1`): `docs/workflow/deploy.md` is the gateway's runbook. The budget takes `max_connections` 100, counts the API's start-first rollout twice and adds a term for the other stacks: items-core's own terms come to 47, so the others must stay at 53 or fewer (IC-20.1 checks). The gateway has no per-container start, stop or restart control, so those steps use `docker` in its WSL distro; its README gives no restore procedure, so restoring from the nightly dump (which holds every database) is an outline. `docker/worker/README.md` points at the gateway.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "docs/workflow/deploy.md, docker/worker/README.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-17",
@@ -950,27 +950,27 @@
             {
               "id": "IC-19.2",
               "title": "Update the recovery-proof paths in `WORKER.md` and `deploy.md`",
-              "description": "Replace the deleted `takeover.direct.e2e.test.ts` with the site-crawl proof that replaced it, in `WORKER.md` (\"Operational checks\") and `docs/workflow/deploy.md` (\"Recovery proofs\"). The final acceptance needs the docs to match the deployed system (IC-7.6's work).",
+              "description": "Replace the deleted `takeover.direct.e2e.test.ts` with the site-crawl proof that replaced it, in `WORKER.md` (\"Operational checks\") and `docs/workflow/deploy.md` (\"Recovery proofs\"). The final acceptance needs the docs to match the deployed system (IC-7.6's work).\n\nDone 2026-10-16 (`0bc5886b`): the proof is `services/crawls/src/graphs/__tests__/nike-se-site-crawl.integration.test.ts` (\"survives its owner dying\"), one process rather than two, which skips itself without `items_test` and a captured Nike site; the two-worker fence is `apps/worker/src/__tests__/direct-fencing.test.ts`.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "WORKER.md, docs/workflow/deploy.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-19.3",
               "title": "Replace `ARCHITECTURE.md`'s HTTP-worker diagrams with the direct worker on the gateway",
-              "description": "Its component and sequence diagrams show workers as token-holding API clients that upload through signed URLs. Redraw them from `deploy.md`'s topology: items-core's API, console, worker and browser as a stack on the gateway, on its shared Postgres, page content on a volume the API and the worker share (IC-7.7's work).",
+              "description": "Its component and sequence diagrams show workers as token-holding API clients that upload through signed URLs. Redraw them from `deploy.md`'s topology: items-core's API, console, worker and browser as a stack on the gateway, on its shared Postgres, page content on a volume the API and the worker share (IC-7.7's work).\n\nDone 2026-10-16 (`e56502aa`): one stack behind Caddy's two addresses, a flowchart and a sequence diagram, both parsed by mermaid.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "ARCHITECTURE.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-19.1",
@@ -978,6 +978,18 @@
                 }
               ],
               "approved": true
+            },
+            {
+              "id": "IC-19.4",
+              "title": "Remove the Google Cloud and deleted-test mentions left outside the runbooks",
+              "description": "Found while rewriting the runbooks, outside IC-19's files: `docs/workflow/worker-role.sql`'s header still describes Cloud SQL and Terraform, the pool comment in the API's `environment.ts` does too, and several package READMEs cite `weekly-crawl-recovery.e2e.test.ts`, deleted long ago. Bring each in line with `docs/workflow/deploy.md`, or drop the sentence.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "docs/workflow/worker-role.sql, apps/gateway/src/environment.ts, package READMEs"
+                }
+              ],
+              "done": false
             }
           ]
         },
@@ -1001,11 +1013,14 @@
             "The checks are `deploy.md`'s cutover step 6 and `WORKER.md`'s operational checks, written for the cloud. None has run anywhere but locally.",
             "`transport-parity.md` holds the fixture-crawl baseline: 200 pages of `tools/dev/fixture-site.mjs`, taken on the HTTP worker (2026-09-22) and on two direct workers across a kill (2026-09-23), all on the corpus-crawl graph, which `252b077c` (2026-09-24) deleted. `POST /api/crawls/from-url` now runs the site-crawl graph.",
             "The site crawl asks a model for rules when some page's purpose is undecided, then waits for the owner. The worker's model provider (`GENERATION_PROVIDER`) takes only `claude-code`, the CLI on a developer's machine, so on the gateway that step records a refused proposal and the crawl waits for your answer in the console.",
-            "The worker fetches from the gateway machine's internet address, your home connection, not a datacenter's."
+            "The worker fetches from the gateway machine's internet address, your home connection, not a datacenter's.",
+            "Since `29b609f9` the worker fetches only http and https on ports 80 and 443 at public addresses, and nothing configures it otherwise (`makeAddressPolicy()` with no options, in the crawls service's http and browser fetch hosts). The fixture site, on port 8089 at a private Docker address, is refused: the first baseline run on `9abb0f61` failed at robots.txt with nothing fetched.",
+            "A crawl's page limit is `limits.maxPages` since `94e963b8`; the old baseline's `overrides.budget` is dropped silently, and `maxFrontierUrls` no longer exists."
           ],
           "chosen": [
             "The acceptance crawl runs against the fixture site, served where the worker can reach it (a temporary service on the stack's network, IC-20.4) and compared with the baseline, then against one seeded real site, rendered (IC-20.12) (your answer on IC-9).",
-            "Takeover is proven by killing the worker mid-crawl and also by a temporary second worker, not during a deploy: the plan asks for takeover, and the connection budget holds two workers only outside a rollout (IC-20.9) (your answer on IC-9)."
+            "Takeover is proven by killing the worker mid-crawl and also by a temporary second worker, not during a deploy: the plan asks for takeover, and the connection budget holds two workers only outside a rollout (IC-20.9) (your answer on IC-9).",
+            "The worker fetches the fixture site through a setting that names the host and port pairs it may fetch beyond public addresses on ports 80 and 443, empty by default; it is set only for the local baseline and, during the acceptance, on the gateway, then removed. The address guard stays as it is everywhere else (your answer, 2026-10-16)."
           ],
           "chosenOn": "2026-10-16",
           "plan": [
@@ -1064,7 +1079,7 @@
             {
               "id": "IC-20.4",
               "title": "Serve the fixture site from a temporary service on the stack's network",
-              "description": "The baseline is a crawl of `tools/dev/fixture-site.mjs`, which binds and advertises `127.0.0.1:8089` by default, an address the worker's container can't reach. A temporary service of the stack, `fixture-site` (`node:24-slim`, the repository's `tools/dev` mounted read-only, `--host fixture-site --urls 20000`), serves it, so the worker reaches it by that name (your answer on IC-9). The script uses only Node's built-ins. It is taken out of the compose after the acceptance crawl (IC-20.6). It changes the live stack.",
+              "description": "The baseline is a crawl of `tools/dev/fixture-site.mjs`, which binds and advertises `127.0.0.1:8089` by default, an address the worker's container can't reach. A temporary service of the stack, `fixture-site` (`node:24-slim`, the repository's `tools/dev` mounted read-only, `--host fixture-site --urls 20000`), serves it, so the worker reaches it by that name (your answer on IC-9). The script uses only Node's built-ins. It is taken out of the compose after the acceptance crawl (IC-20.6). It changes the live stack. The worker reaches it only with the allow setting (IC-20.14) set to `fixture-site:8089`; that variable is removed with the service.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -1080,6 +1095,10 @@
                 {
                   "id": "IC-18.4",
                   "why": "checks the deployed stack"
+                },
+                {
+                  "id": "IC-20.14",
+                  "why": "the worker reaches the fixture site only through the setting"
                 }
               ],
               "byYou": true,
@@ -1088,7 +1107,7 @@
             {
               "id": "IC-20.5",
               "title": "Take a baseline of the fixture crawl on the commit the gateway runs",
-              "description": "The recorded baseline ran the corpus-crawl graph, which is gone; the gateway runs the site-crawl graph. Locally, on items-core's `main` after the detection merge, run the crawl as `transport-parity.md` describes (`pnpm dev` with one worker, `node tools/dev/fixture-site.mjs --urls 20000`, `POST /api/crawls/from-url` with `maxPages` 200), with no `GENERATION_PROVIDER`, as on the gateway; if the analysis stage stops on a rule proposal, answer it as the gateway's run will be answered. Capture it with `docs/workflow/perf/parity-capture.sh` and add it to `transport-parity.md` as the site-crawl baseline. By your answer on IC-18's first commit.",
+              "description": "The recorded baseline ran the corpus-crawl graph, which is gone; the gateway runs the site-crawl graph. Locally, on items-core's `main` after the detection merge, run the crawl as `transport-parity.md` describes, with the fixture site at `fixture-site:8089` on the stack's network, the allow setting set to it (IC-20.14), and `limits.maxPages` 200 (`pnpm dev` with one worker, `node tools/dev/fixture-site.mjs --urls 20000`, `POST /api/crawls/from-url` with `maxPages` 200), with no `GENERATION_PROVIDER`, as on the gateway; if the analysis stage stops on a rule proposal, answer it as the gateway's run will be answered. Capture it with `docs/workflow/perf/parity-capture.sh` and add it to `transport-parity.md` as the site-crawl baseline. By your answer on IC-18's first commit.",
               "where": [
                 {
                   "repo": "items-core",
@@ -1100,6 +1119,10 @@
                 {
                   "id": "TK-66.4",
                   "why": "runs on items-core's `main` after the detection merge"
+                },
+                {
+                  "id": "IC-20.14",
+                  "why": "the worker refuses the fixture site's address and port without the setting"
                 }
               ],
               "approved": true
@@ -1107,7 +1130,7 @@
             {
               "id": "IC-20.6",
               "title": "Run the fixture crawl on the gateway and compare it with the baseline",
-              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run, and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes.",
+              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run (`limits.maxPages` 200), and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes.",
               "done": false,
               "blockedBy": [
                 {
@@ -1266,6 +1289,19 @@
                 }
               ],
               "byYou": true,
+              "approved": true
+            },
+            {
+              "id": "IC-20.14",
+              "title": "Add a worker setting that lets it fetch named host and port pairs the address guard refuses",
+              "description": "A setting of the worker (its name in `DEPLOY.md` and `docs/workflow/deploy.md`), empty by default, listing `host:port` pairs the crawls service's http and browser fetch hosts may reach although the address policy would refuse them: a private address, or a port other than 80 and 443. Only a listed host on its listed port passes; every other request is judged as today, and a redirect to an unlisted one is refused. Empty, nothing changes. It is set to `fixture-site:8089` for the local baseline (IC-20.5) and on the gateway for the fixture crawl (IC-20.6), then removed (your answer). Tests cover a listed pair allowed, the same host on another port refused, an unlisted private host refused, and a redirect from a listed host to an unlisted one refused.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/crawls (http and browser fetch hosts), apps/worker environment"
+                }
+              ],
+              "done": false,
               "approved": true
             }
           ]
