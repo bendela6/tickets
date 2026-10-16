@@ -842,7 +842,7 @@
             {
               "id": "IC-18.3",
               "title": "Add the console's gateway address to `bnw-items-dev`'s authorized sign-in domains",
-              "description": "In the Firebase console of `bnw-items-dev`, Authentication › Settings › Authorized domains: add the console's address on the gateway, so sign-in is allowed there, then check that a sign-in works with the project's billing off. By your answer on sign-in.",
+              "description": "In the Firebase console of `bnw-items-dev`, Authentication › Settings › Authorized domains: add the console's address on the gateway, so sign-in is allowed there, then check that a sign-in works with the project's billing off. By your answer on sign-in.\n\nCancelled 2026-10-16: `bnw-items-dev` was deleted (its state is DELETE_REQUESTED; adding the address was refused, \"Project bnw-items-dev has been deleted\"), and the console signs in through Rauthy instead: IC-21 (your answer).",
               "where": [
                 {
                   "repo": "gcp",
@@ -851,7 +851,7 @@
               ],
               "done": false,
               "byYou": true,
-              "approved": true
+              "cancelled": true
             },
             {
               "id": "IC-18.4",
@@ -892,6 +892,10 @@
                 {
                   "id": "IC-18.4",
                   "why": "the console and the jobs are deployed"
+                },
+                {
+                  "id": "IC-21",
+                  "why": "the console's sign-in, without which no one can claim the first admin"
                 }
               ],
               "byYou": true,
@@ -899,7 +903,7 @@
             }
           ],
           "chosen": [
-            "The console keeps Firebase sign-in of `bnw-items-dev`, with its new address added to the project's authorized domains, then a sign-in checked with billing off (your answer).",
+            "The console signs in through Rauthy, the gateway's own sign-in service (IC-21), since `bnw-items-dev` and its Firebase were deleted on 2026-10-16 (your answer; it replaces the earlier one, to keep Firebase sign-in of `bnw-items-dev`).",
             "items-core answers at two addresses on the gateway: `items.bendelhome.cc` for the console and `items-api.bendelhome.cc` for the consumer API, so items-app on your own devices has a running API again (your answer).",
             "The first deploy and acceptance are of items-core's `main` after the detection merge, with a new local baseline of the fixture crawl on that commit (IC-20.5); deploy on push is on from the start (your answer)."
           ]
@@ -1370,6 +1374,104 @@
               ],
               "done": true,
               "approved": true
+            }
+          ]
+        },
+        {
+          "id": "IC-21",
+          "title": "Replace the console's Firebase sign-in with Rauthy's",
+          "description": "The items-core console signs in through Rauthy, the gateway's shared sign-in service at `auth.bendelhome.cc`, instead of the Firebase of `bnw-items-dev`, which was deleted on 2026-10-16. Who may use the console doesn't change: the API still checks the token's verified email against `console.admins`, and the first admin is still claimed in the setup wizard.",
+          "status": "Planning",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "apps/console-web: sign-in, the setup wizard"
+            },
+            {
+              "repo": "items-core",
+              "part": "packages/backend/auth, apps/gateway: the token check"
+            },
+            {
+              "repo": "items-core",
+              "part": "deploy/compose.yaml, DEPLOY.md"
+            },
+            {
+              "repo": "live gateway",
+              "part": "the items-core stack, the auth stack"
+            }
+          ],
+          "today": [
+            "`bnw-items-dev`, the Google Cloud project whose Firebase the console and the consumer API signed in with, was deleted on 2026-10-16 while Google Cloud was being cleaned up (it can be restored for 30 days). Nobody can sign in to the console at `items.bendelhome.cc`, so its first admin can't be claimed (IC-18.5).",
+            "The console signs in with Firebase in the browser (`apps/console-web/src/app/lib/firebase.ts`, `auth/auth-context.tsx`, the setup wizard) and sends its ID token as a Bearer. The API checks it with firebase-admin (`packages/backend/auth`: `verify-firebase-token.ts`, `user-auth.ts`; `apps/gateway/src/console-glue/auth/user-auth.ts` and `setup/setup-auth.ts`), requiring a verified email, which `console.admins` is keyed by.",
+            "The API refuses to boot without `FIREBASE_PROJECT_ID`, which the stack sets to `bnw-items-dev`. Tokens are checked per request, not at boot, so the stack runs without the project.",
+            "The consumer API (items-app's) checks Firebase tokens too, anonymous ones included, keys `users` by the Firebase uid, and sends push notifications through Firebase Cloud Messaging. All of that went with the project; it isn't in this feature.",
+            "Rauthy runs at `auth.bendelhome.cc` (AU-1.2); its first admin is AU-1.4. tickets plans the same move (TK-91.7, with its app AU-2.1)."
+          ],
+          "chosen": [
+            "The console signs in through Rauthy, rather than through a new Firebase project of yours or `bnw-items-dev` restored (your answer, 2026-10-16)."
+          ],
+          "plan": [
+            {
+              "id": "IC-21.1",
+              "title": "Replace the console's Firebase sign-in with Rauthy's, by authorization code with PKCE",
+              "description": "The console's sign-in sends the person to Rauthy and comes back with a code it turns into tokens, kept for the tab and renewed before they expire; it sends the access token as the Bearer, as it sent Firebase's. The setup wizard's claim of the first admin signs in the same way. Sign-out ends Rauthy's session too. Rauthy's address and the console's client id are the build's settings, as the Firebase web config was (`.env.production`), and the local sign-in bypass stays as it is. Its tests cover signing in, a token renewed, a sign-in refused, and sign-out.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "apps/console-web"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "AU-2.5",
+                  "why": "the console's client at Rauthy, which its sign-in names"
+                }
+              ]
+            },
+            {
+              "id": "IC-21.2",
+              "title": "Replace the API's Firebase token check with a check of Rauthy's tokens against its published keys",
+              "description": "The console group and `/api/setup/claim-admin` check a Rauthy token: its signature against the keys Rauthy publishes (fetched once and kept, fetched again for a key it doesn't know), its issuer, its audience (the console's client), its expiry, and a verified email, then `console.admins` as now. The API's environment names Rauthy's issuer and the console's client id; the consumer group keeps its Firebase check until its own move, so `FIREBASE_PROJECT_ID` stays for it. Its tests cover a good token, each way one is refused, and a key rotated.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "packages/backend/auth, apps/gateway"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "AU-2.5",
+                  "why": "the console's client id, which a token's audience must name"
+                }
+              ]
+            },
+            {
+              "id": "IC-21.3",
+              "title": "Add Rauthy's address and the console's client to the stack's settings and DEPLOY.md, and deploy it",
+              "description": "`deploy/compose.yaml` and DEPLOY.md name the new settings, and the stack's compose on the gateway is sent again with them, since the gateway keeps its own copy: a change to the file in the repo reaches the stack only when it is sent too. DEPLOY.md says so where it now says such a change deploys on push. Then a push deploys it, and a sign-in at `items.bendelhome.cc` is checked. Done from your gateway session with your permission.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "deploy/compose.yaml, DEPLOY.md"
+                },
+                {
+                  "repo": "live gateway",
+                  "part": "the items-core stack"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-21.1",
+                  "why": "deploys its sign-in"
+                },
+                {
+                  "id": "IC-21.2",
+                  "why": "deploys its token check"
+                }
+              ]
             }
           ]
         }
