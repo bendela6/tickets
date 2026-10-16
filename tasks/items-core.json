@@ -908,7 +908,7 @@
           "id": "IC-19",
           "title": "Replace items-core's Google Cloud runbooks with the gateway's",
           "description": "The operator docs describe the deployed system on the gateway: its topology and settings, the connection budget, partition upkeep, operating the worker (stop, restart, take out of service), deploying and rolling back by deploying the previous commit. The two doc fixes the cloud plan left open come with them.",
-          "status": "Planned",
+          "status": "Done",
           "blockedBy": [
             {
               "id": "TK-66.4",
@@ -982,14 +982,14 @@
             {
               "id": "IC-19.4",
               "title": "Remove the Google Cloud and deleted-test mentions left outside the runbooks",
-              "description": "Found while rewriting the runbooks, outside IC-19's files: `docs/workflow/worker-role.sql`'s header still describes Cloud SQL and Terraform, the pool comment in the API's `environment.ts` does too, and several package READMEs cite `weekly-crawl-recovery.e2e.test.ts`, deleted long ago. Bring each in line with `docs/workflow/deploy.md`, or drop the sentence.",
+              "description": "Found while rewriting the runbooks, outside IC-19's files: `docs/workflow/worker-role.sql`'s header still describes Cloud SQL and Terraform, the pool comment in the API's `environment.ts` does too, and several package READMEs cite `weekly-crawl-recovery.e2e.test.ts`, deleted long ago. Bring each in line with `docs/workflow/deploy.md`, or drop the sentence.\n\nDone 2026-10-16 (`ba0b5dfe` on items-core's main), comments and docs only, 20 files: `worker-role.sql`'s header (its SQL unchanged), the pool comment in `environment.ts`, the deleted-test citations in `DB-AND-API.md`, `FEATURES.md` and `services/runs/README.md`, and Cloud Run, Scheduler and Build wording in 13 more comments. Left on purpose: `TASKS.md` (stale; your main checkout already shows it deleted, not committed), historical audit and proposal docs, the generated OpenAPI summary that still says Cloud Scheduler (it needs regenerating), and live Google code paths (the Cloud Run guard, the gcs provider, the GCP trace exporter).",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "docs/workflow/worker-role.sql, apps/gateway/src/environment.ts, package READMEs"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
