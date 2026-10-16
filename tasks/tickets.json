@@ -9350,14 +9350,14 @@
             {
               "id": "TK-66.4",
               "title": "Merge `bbendeliani/detection` into items-core's main",
-              "description": "A worker merges items-core's `bbendeliani/detection` into its main and pushes it only if the merge's checks pass; if any fail it pushes nothing and tells you (your answer on TK-66). `@bh/config` and the `node-file-suffix` rule, which TK-66.2 needs, exist only on that branch.\n\nIt waits on no cloud cutover any more: Google Cloud is dropped (your words, 2026-10-16), and while `bnw-items-dev`'s billing is off a push to items-core's main deploys nothing there. items-core deploys to the gateway instead (IC/E4): its stack deploys `main` on each push once it exists (IC-18.2). Whichever comes first: if the stack exists with deploy on push before this push, the push is its first deploy (IC-18.4); otherwise IC-18.4 deploys `main` by hand after it. The stack's compose file, the gateway's docs and the fixture crawl's new baseline are built on main after this merge (IC-17, IC-19, IC-20.5). The branch's later migrations drop columns and tables; on the gateway, whose database starts empty, rolling back past them is a restore from the shared Postgres's nightly dump or a reset (IC-19.1).",
+              "description": "A worker merges items-core's `bbendeliani/detection` into its main and pushes it only if the merge's checks pass; if any fail it pushes nothing and tells you (your answer on TK-66). `@bh/config` and the `node-file-suffix` rule, which TK-66.2 needs, exist only on that branch.\n\nIt waits on no cloud cutover any more: Google Cloud is dropped (your words, 2026-10-16), and while `bnw-items-dev`'s billing is off a push to items-core's main deploys nothing there. items-core deploys to the gateway instead (IC/E4): its stack deploys `main` on each push once it exists (IC-18.2). Whichever comes first: if the stack exists with deploy on push before this push, the push is its first deploy (IC-18.4); otherwise IC-18.4 deploys `main` by hand after it. The stack's compose file, the gateway's docs and the fixture crawl's new baseline are built on main after this merge (IC-17, IC-19, IC-20.5). The branch's later migrations drop columns and tables; on the gateway, whose database starts empty, rolling back past them is a restore from the shared Postgres's nightly dump or a reset (IC-19.1).\n\nDone 2026-10-16: merged as `7776b1e1` and pushed to items-core's main (`b1ccebf8..7776b1e1`, 265 commits). Its checks passed in Docker on the database's network, on Node 24 with Playwright's Chromium: typecheck, lint and every test, 125 of 125 turbo tasks, with the isolated database suites run against `items_test`. Four suites stay skipped as designed: they need a browser over CDP, a live Nike capture, a worker-role setup, or `CRAWLER_BROWSER_TEST` passed through turbo. Nothing deployed: Cloud Build can't run with billing off, and the gateway has no items-core stack yet.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "main"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
