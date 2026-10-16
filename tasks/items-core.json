@@ -989,7 +989,8 @@
                   "part": "docs/workflow/worker-role.sql, apps/gateway/src/environment.ts, package READMEs"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         },
