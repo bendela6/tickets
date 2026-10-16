@@ -10,4 +10,6 @@ export { environment, connectionUrl } from './environment';
 export { seedProject } from './seed/seed-project';
 export { ensurePlanScheme, ensureScheme, ensureSoftwareScheme } from './seed/ensure-scheme';
 export { planScheme } from './seed/plan-scheme';
+export { softwareScheme } from './seed/software-scheme';
+export type { SchemeDef } from './seed/scheme-types';
 export { ensureUser } from './seed/ensure-user';

@@ -20,6 +20,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@bh/resource':
+        specifier: workspace:*
+        version: link:../../packages/bh/resource
       '@tickets/db':
         specifier: workspace:*
         version: link:../../packages/db
