@@ -1359,14 +1359,14 @@
             {
               "id": "IC-20.17",
               "title": "Make the site crawl fetch a site's pages through the browser when its settings choose rendering",
-              "description": "Each site's settings gain a fetch mode, plain or rendered, plain by default (the console's site settings, beside the capability profiles it already picks). A crawl freezes it with its other settings, and the site-crawl graph's page body fetches with `browser.fetch` under the site's browser profile when it is rendered, and `http.fetch` as today when it is plain; robots, politeness, the address guard and the capture's storage hold the same either way. It is a new version of the site-crawl graph, which the `seed-workflows` job inserts on the gateway. Tests: a plain site fetches as today, a rendered site's pages are captured through the browser (in Docker, with the repository's browser image), and a crawl started before a site's mode changes keeps the mode it froze (your answer).",
+              "description": "Each site's settings gain a fetch mode, plain or rendered, plain by default (the console's site settings, beside the capability profiles it already picks). A crawl freezes it with its other settings, and the site-crawl graph's page body fetches with `browser.fetch` under the site's browser profile when it is rendered, and `http.fetch` as today when it is plain; robots, politeness, the address guard and the capture's storage hold the same either way. It is a new version of the site-crawl graph, which the `seed-workflows` job inserts on the gateway. Tests: a plain site fetches as today, a rendered site's pages are captured through the browser (in Docker, with the repository's browser image), and a crawl started before a site's mode changes keeps the mode it froze (your answer).\n\nDone 2026-10-16 (`1efb96a9` on items-core's main). The mode is the site config's `crawl.fetchMode` (jsonb, so no migration), frozen as `scope.fetchMode` when a crawl is created; a scope without one reads as plain. The page body's `core.switch` sends rendered pages to `browser.fetch` (with the site's browser profile, resource policy and allowed hosts) and the rest to `http.fetch`; five `core.merge` nodes join them, so storing, links and commit are shared. It is site-crawl v7; `seed-workflows` now moves a workflow to its seeded version when the current one is older (a newer one saved in the console stays). Also fixed on the way: an unhandled rejection in the scraper's `BrowserManager`. Not fixed, from before: `BrowserManager.close()` over CDP closes pages other clients of the same browser opened; a capture it kills retries about a minute later. Checks in Docker: 122 of 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/crawls (site-crawl graph, page body, crawl scope), services/sites (site settings), apps/console-web (site settings)"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
