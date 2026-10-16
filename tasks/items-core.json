@@ -669,7 +669,7 @@
           "id": "IC-17",
           "title": "Add the `items-core` stack's compose file and settings to items-core",
           "description": "items-core's services as a stack of the gateway, `items-core`: a compose file in items-core that the gateway keeps as the stack's text (as the auth repo keeps its `compose.yaml`), with the jobs a deploy runs first, and the stack's settings written into `DEPLOY.md`.",
-          "status": "Planning",
+          "status": "Done",
           "waitingOn": ["your choices (below)"],
           "blockedBy": [
             {
@@ -707,27 +707,27 @@
             {
               "id": "IC-17.1",
               "title": "Add the stack's compose file with the API, console, worker and browser services",
-              "description": "`deploy/compose.yaml`, the stack's compose text, with four services. None publishes a port: Caddy reaches the API and the console through the stack's Caddy connection (IC-18.2).\n\n- **`api`**, items-core's API (`@bw/gateway`, `docker/gateway/Dockerfile`), not named `gateway`, which on this machine is the gateway's own stack. Postgres from the stack's shared-Postgres connection, renamed by interpolation (`POSTGRES_HOST: ${GW_api__PGHOST}`, and so on for the port, database, user and password). `API_HOST=0.0.0.0`, port 3000, `LOG_FORMAT=json`, `FIREBASE_PROJECT_ID`, `GATEWAY_CONSUMER_HOSTS=items-api.bendelhome.cc` (the consumer API's address, by your answer on IC-18), and `AI_PROVIDER` and `AI_API_KEY` as placeholders, since boot requires them and nothing reads them. `init: true`, and `order: start-first` so the console keeps answering through a deploy (two containers at once, as Cloud Run's rollouts had, which the connection budget counts). Its healthcheck asks the partitions endpoint with Node's `fetch` (the image has no curl), by your answer on alerts.\n- **`console`**, `docker/web/Dockerfile` with its production `build` (no sign-in bypass), `API_UPSTREAM=http://api:3000`, a healthcheck with busybox `wget`.\n- **`worker`**, `docker/worker/Dockerfile`: `WORKER_NAME=gw-1`, `WORKER_CONCURRENCY=4` (the cloud plan's), `BROWSER_CDP_HOST=browser`, `BROWSER_CDP_PORT=9222`. The Postgres host, port and database come from the API's connection variables by interpolation, but it connects as `aitems_worker` with a password of its own, made by the gateway, never the owner's. `init: true`; `restart: on-failure`, so a stop from the fleet page (exit 0) leaves it down while a crash (exit 1) restarts it; `order: stop-first`, since two containers under one `WORKER_NAME` evict each other. No healthcheck: it listens on nothing, a deploy watches it for 10 s, and the fleet page shows its presence beat.\n- **`browser`**, `docker/browser/Dockerfile`'s `prod` target with `PLAYWRIGHT_VERSION=1.63.0`, `shm_size: 2gb`, a healthcheck with `curl` on `/json/version`. The worker reaches it at `browser:9222` on the stack's own network.\n\nStorage: `STORAGE_PROVIDER=local` and `WORKFLOW_BLOB_STORAGE_PROVIDER=postgres` on both the API and the worker, page content on one named volume both mount at the same `CONTENT_STORAGE_DIR` (the API reads what the worker writes), screenshots on the API's own volume, and no bucket (the storage part of IC-6.6). The sweep endpoint stays closed (`WORKFLOW_SWEEP_TOKEN` unset): Cloud Scheduler backed up an instance Cloud Run could idle, and here the API's container is always on, so its in-process sweep and hourly partition upkeep run.",
+              "description": "`deploy/compose.yaml`, the stack's compose text, with four services. None publishes a port: Caddy reaches the API and the console through the stack's Caddy connection (IC-18.2).\n\n- **`api`**, items-core's API (`@bw/gateway`, `docker/gateway/Dockerfile`), not named `gateway`, which on this machine is the gateway's own stack. Postgres from the stack's shared-Postgres connection, renamed by interpolation (`POSTGRES_HOST: ${GW_api__PGHOST}`, and so on for the port, database, user and password). `API_HOST=0.0.0.0`, port 3000, `LOG_FORMAT=json`, `FIREBASE_PROJECT_ID`, `GATEWAY_CONSUMER_HOSTS=items-api.bendelhome.cc` (the consumer API's address, by your answer on IC-18), and `AI_PROVIDER` and `AI_API_KEY` as placeholders, since boot requires them and nothing reads them. `init: true`, and `order: start-first` so the console keeps answering through a deploy (two containers at once, as Cloud Run's rollouts had, which the connection budget counts). Its healthcheck asks the partitions endpoint with Node's `fetch` (the image has no curl), by your answer on alerts.\n- **`console`**, `docker/web/Dockerfile` with its production `build` (no sign-in bypass), `API_UPSTREAM=http://api:3000`, a healthcheck with busybox `wget`.\n- **`worker`**, `docker/worker/Dockerfile`: `WORKER_NAME=gw-1`, `WORKER_CONCURRENCY=4` (the cloud plan's), `BROWSER_CDP_HOST=browser`, `BROWSER_CDP_PORT=9222`. The Postgres host, port and database come from the API's connection variables by interpolation, but it connects as `aitems_worker` with a password of its own, made by the gateway, never the owner's. `init: true`; `restart: on-failure`, so a stop from the fleet page (exit 0) leaves it down while a crash (exit 1) restarts it; `order: stop-first`, since two containers under one `WORKER_NAME` evict each other. No healthcheck: it listens on nothing, a deploy watches it for 10 s, and the fleet page shows its presence beat.\n- **`browser`**, `docker/browser/Dockerfile`'s `prod` target with `PLAYWRIGHT_VERSION=1.63.0`, `shm_size: 2gb`, a healthcheck with `curl` on `/json/version`. The worker reaches it at `browser:9222` on the stack's own network.\n\nStorage: `STORAGE_PROVIDER=local` and `WORKFLOW_BLOB_STORAGE_PROVIDER=postgres` on both the API and the worker, page content on one named volume both mount at the same `CONTENT_STORAGE_DIR` (the API reads what the worker writes), screenshots on the API's own volume, and no bucket (the storage part of IC-6.6). The sweep endpoint stays closed (`WORKFLOW_SWEEP_TOKEN` unset): Cloud Scheduler backed up an instance Cloud Run could idle, and here the API's container is always on, so its in-process sweep and hourly partition upkeep run.\n\nDone 2026-10-16 (`e0b99793`, with IC-17.2). As planned, with two additions: `IMAGE_STORAGE_MAX_AGE=30d`, which the API's boot requires and the plan didn't list; and a fix to the console's nginx (`0ccc00c7`): it resolved `api` once at start, so after a start-first API deploy every `/api` call answered 502. It now looks the name up every 5 s. The worker and the jobs read the API's renamed Postgres variables, so only `api` takes the connection's variables. Checked against a throwaway `postgres:18.4`: the four services healthy, the worker boots as `aitems_worker`, dropped partitions turn the API unhealthy and `migrate` restores them, a fleet stop stays down and a crash restarts. The gateway's own `readCompose` accepts the file.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "deploy/compose.yaml"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-17.2",
               "title": "Add the `migrate`, `worker-role`, `seed` and `seed-workflows` jobs to the stack's compose file",
-              "description": "Four one-off jobs in `deploy/compose.yaml`, the first two run before each deploy, in this order:\n\n- **`migrate`** (`profiles: [job, before-deploy]`): the API's image running `pnpm --filter @bw/cli db:migrate:all` as the database's owner role. It also seeds the `run_events` partitions, without which a worker refuses to boot.\n- **`worker-role`** (`profiles: [job, before-deploy]`): `postgres:18.4` running `docs/workflow/worker-role.sql` (the repository's `docs/workflow` mounted read-only) as the owner role, with the worker's password, so `aitems_worker` exists with its grants before the worker starts, and a new password reaches the role before the worker uses it. It is safe to run again (`CREATE` or `ALTER ROLE`). The owner role needs `may_create: roles` on the Postgres connection, which since Postgres 16 reaches only the roles it made; the worker's probe, which refuses a role that is a member of another, is unaffected, since the owner is a member of `aitems_worker`, not the other way round. The password is made once, as the worker's variable, and read here by interpolation.\n- **`seed`** (`profiles: [job]`): the API's image running the structural seeds (`apps/gateway/src/cli/seed.ts`, no fakes): the sites, merchants and brands, and the workflow definitions. It empties every table it seeds first, so it runs once, on the new database (IC-18.5).\n- **`seed-workflows`** (`profiles: [job]`): the API's image running `seed-workflow-engine.ts`, which only inserts missing workflow definitions and versions; run after a graph changes (the cloud runbook's step 5).",
+              "description": "Four one-off jobs in `deploy/compose.yaml`, the first two run before each deploy, in this order:\n\n- **`migrate`** (`profiles: [job, before-deploy]`): the API's image running `pnpm --filter @bw/cli db:migrate:all` as the database's owner role. It also seeds the `run_events` partitions, without which a worker refuses to boot.\n- **`worker-role`** (`profiles: [job, before-deploy]`): `postgres:18.4` running `docs/workflow/worker-role.sql` (the repository's `docs/workflow` mounted read-only) as the owner role, with the worker's password, so `aitems_worker` exists with its grants before the worker starts, and a new password reaches the role before the worker uses it. It is safe to run again (`CREATE` or `ALTER ROLE`). The owner role needs `may_create: roles` on the Postgres connection, which since Postgres 16 reaches only the roles it made; the worker's probe, which refuses a role that is a member of another, is unaffected, since the owner is a member of `aitems_worker`, not the other way round. The password is made once, as the worker's variable, and read here by interpolation.\n- **`seed`** (`profiles: [job]`): the API's image running the structural seeds (`apps/gateway/src/cli/seed.ts`, no fakes): the sites, merchants and brands, and the workflow definitions. It empties every table it seeds first, so it runs once, on the new database (IC-18.5).\n- **`seed-workflows`** (`profiles: [job]`): the API's image running `seed-workflow-engine.ts`, which only inserts missing workflow definitions and versions; run after a graph changes (the cloud runbook's step 5).\n\nDone 2026-10-16 (`e0b99793`). `worker-role` takes the password from its environment (`WORKER_PASSWORD`, from `${GW_worker__POSTGRES_PASS}`) through psql's `getenv`, so it is on no command line; `worker-role.sql` is unchanged. A second run changes the password and the old one is refused. `seed` and `seed-workflows` run `node --import tsx` directly, since the package scripts need a dotenv file. All four jobs exit 0 on a new database.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "deploy/compose.yaml"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-17.1",
@@ -739,14 +739,14 @@
             {
               "id": "IC-17.3",
               "title": "Replace `DEPLOY.md`'s Google Cloud setup with the `items-core` stack's settings",
-              "description": "`DEPLOY.md` says how items-core reaches the gateway: the stack `items-core`, from `bob-and-weave/items-core`'s `main`, deploy on push; its shared-Postgres connection (database and role `items-core`, `may_create: roles`, the API and the jobs taking its variables, the worker joining without them); its Caddy addresses, each with its service and port; each variable, plain or secret, and which secrets the gateway makes; the jobs and when each runs. Cloud Run, Firebase Hosting's rewrite, Secret Manager and the Terraform go from it. No secret's value is written.",
+              "description": "`DEPLOY.md` says how items-core reaches the gateway: the stack `items-core`, from `bob-and-weave/items-core`'s `main`, deploy on push; its shared-Postgres connection (database and role `items-core`, `may_create: roles`, the API and the jobs taking its variables, the worker joining without them); its Caddy addresses, each with its service and port; each variable, plain or secret, and which secrets the gateway makes; the jobs and when each runs. Cloud Run, Firebase Hosting's rewrite, Secret Manager and the Terraform go from it. No secret's value is written.\n\nDone 2026-10-16 (`9abb0f61`): `DEPLOY.md` lists the stack's settings, the Postgres connection, the two variables (the API's `FIREBASE_PROJECT_ID`; the worker's `POSTGRES_PASS`, made by the gateway), the jobs, deploying, a partition shortfall, first time on a new gateway, console access and the consumer address. No Google Cloud is left in it.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "DEPLOY.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-17.2",
@@ -758,7 +758,7 @@
             {
               "id": "IC-17.4",
               "title": "Delete `.github/workflows/worker-images.yml` and the worker README's pointer to it",
-              "description": "The workflow builds the worker and browser images and pushes them to `ghcr.io/bob-and-weave` on every push to `main`; the gateway builds its own images from the repository, so nothing pulls them. Delete the workflow, and the part of `docker/worker/README.md` that points machines outside Google Cloud at those images. A remote machine that later needs the browser image builds it from `docker/browser/Dockerfile`. The packages already on ghcr.io stay until you delete them there.",
+              "description": "The workflow builds the worker and browser images and pushes them to `ghcr.io/bob-and-weave` on every push to `main`; the gateway builds its own images from the repository, so nothing pulls them. Delete the workflow, and the part of `docker/worker/README.md` that points machines outside Google Cloud at those images. A remote machine that later needs the browser image builds it from `docker/browser/Dockerfile`. The packages already on ghcr.io stay until you delete them there.\n\nDone 2026-10-16 (`d70fc90b`). `docker-compose.prod.yml` and `.env.example` still point at the old cutover in `DEPLOY.md`; IC-19 takes them.",
               "where": [
                 {
                   "repo": "items-core",
@@ -769,7 +769,7 @@
                   "part": "docker/worker/README.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
