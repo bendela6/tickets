@@ -1639,7 +1639,7 @@
           "id": "IC-25",
           "title": "Fix deleting a site leaving its pages, crawls, runs and stored files behind",
           "description": "Deleting a site from the console removes everything that belongs to it: its pages, its captures and their stored files, its crawls with their queues and attempts, and the crawls' workflow runs with their events. The confirmation says what goes.",
-          "status": "Planned",
+          "status": "In progress",
           "where": [
             {
               "repo": "items-core",
