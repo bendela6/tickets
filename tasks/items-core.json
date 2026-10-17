@@ -1665,27 +1665,27 @@
             {
               "id": "IC-25.1",
               "title": "Make deleting a site remove its pages, captures, crawls and their runs in one transaction",
-              "description": "One operation removes the site and everything that holds its id, in one transaction, in the order the keys need: the crawls' runs and their events, signals, tasks, blobs, holds, allocations and budget reservations; the crawls with their queues and attempts; the rule proposals; the captures; the products and their variants; the pages; the site, whose own keys cascade. While a crawl of the site is running or queued, the delete is refused with a 409 that says so, and nothing is removed. Each service deletes its own tables through the operation, as the services own their schemas. It also removes the site's pattern versions and experiments if a cascade doesn't. Its tests cover a site with crawls, runs, captures and pages, which leaves nothing behind, a second site, which keeps everything, and a site with a running crawl, whose delete is refused.",
+              "description": "One operation removes the site and everything that holds its id, in one transaction, in the order the keys need: the crawls' runs and their events, signals, tasks, blobs, holds, allocations and budget reservations; the crawls with their queues and attempts; the rule proposals; the captures; the products and their variants; the pages; the site, whose own keys cascade. While a crawl of the site is running or queued, the delete is refused with a 409 that says so, and nothing is removed. Each service deletes its own tables through the operation, as the services own their schemas. It also removes the site's pattern versions and experiments if a cascade doesn't. Its tests cover a site with crawls, runs, captures and pages, which leaves nothing behind, a second site, which keeps everything, and a site with a running crawl, whose delete is refused.\n\nDone 2026-10-17. `DELETE /resource/sites/:id` is unchanged; the site repo's delete calls a site-deletion port the gateway provides (`apps/gateway/src/console-glue/site-deletion/make-site-deletion.ts`). In one transaction it takes the same per-site lock a crawl start takes, refuses with a 409 `SITE_HAS_ACTIVE_CRAWL` while a crawl is queued, running or paused (an engine run that already ended is reconciled first), then each service deletes its own rows: the site, the crawls' runs and their child runs with their rows, the page operations, the crawls, the captures, the products and variants, the pages. A site whose approved pattern history is retained still answers the existing typed 409 `RETAINED_PATTERN_REVISIONS` and keeps everything, as that history is protected on purpose; draft patterns go with the site. Not removed: sitemap download runs, which have no key to the site, and GCS blob objects, which the bucket's lifecycle removes. `site-deletion.integration.test.ts` (9) covers a full site leaving nothing, a second site kept whole, the active-crawl refusals, retained history, and an unknown site; changing any delete step makes it fail. items-core `a8f2bfdc`, live on the gateway as deploy 15 (2026-10-17). The full suite passed on Linux with Postgres: 122 turbo tasks, the 9 site-deletion cases among them.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/sites, services/crawls, services/runs, services/products"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-25.2",
               "title": "Delete a deleted site's stored page files once its rows are gone",
-              "description": "After the transaction commits, the captures' stored files (`storage_key`, and `globals_storage_key` where no other capture uses it) are removed from the content storage. A file another site's capture shares stays. A file already missing is skipped. A failure is logged and doesn't undo the delete. Its tests cover the shared and the missing file.",
+              "description": "After the transaction commits, the captures' stored files (`storage_key`, and `globals_storage_key` where no other capture uses it) are removed from the content storage. A file another site's capture shares stays. A file already missing is skipped. A failure is logged and doesn't undo the delete. Its tests cover the shared and the missing file.\n\nDone 2026-10-17. `ContentStorage` has `delete(key)` (`deleted`, `missing` or `held`) for the local and GCS providers. The keys are read inside the transaction, leaving out any a capture of another site still names, and the files are removed after it commits, 16 at a time; a missing or held file is skipped, a failure is logged and never undoes the delete. `remove-stored-files.test.ts` (7) and the storage package's tests cover it. items-core `a8f2bfdc`, live on the gateway as deploy 15 (2026-10-17). The full suite passed on Linux with Postgres: 122 turbo tasks, the 9 site-deletion cases among them.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/sites, packages/storage"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-25.1",
@@ -1697,14 +1697,14 @@
             {
               "id": "IC-25.3",
               "title": "Show what goes in the Delete site confirmation",
-              "description": "The Config tab's card and confirmation say what goes: the site's pages, crawls and their runs, and its stored pages. The confirmation names how many of each.",
+              "description": "The Config tab's card and confirmation say what goes: the site's pages, crawls and their runs, and its stored pages. The confirmation names how many of each.\n\nDone 2026-10-17. The Config tab's danger zone lists what goes (pages, crawls and their runs, products, stored pages) and says a running crawl blocks the delete; the confirmation names the page and crawl counts, read when the button is clicked, and a refusal shows the server's message. The sites list's row action asks the same. Tests: `delete-site-confirmation.test.ts` (4) and 6 in `config-tab.test.tsx`. items-core `a8f2bfdc`, live on the gateway as deploy 15 (2026-10-17). The full suite passed on Linux with Postgres: 122 turbo tasks, the 9 site-deletion cases among them.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "apps/console-web: the site's Config tab"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
