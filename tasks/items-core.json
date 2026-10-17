@@ -1002,7 +1002,7 @@
           "id": "IC-20",
           "title": "Check items-core on the gateway and accept the worker migration",
           "description": "The worker migration's final acceptance, on the gateway: every check passes there, the docs match the deployed system, and no execution path uses HTTP or worker tokens. If a check fails, roll back as `docs/workflow/deploy.md` says (IC-19.1).",
-          "status": "In progress",
+          "status": "Done",
           "waitingOn": ["your choice on IC-18: which commit is deployed and accepted first"],
           "where": [
             {
@@ -1272,8 +1272,8 @@
             {
               "id": "IC-20.13",
               "title": "Mark the worker migration complete",
-              "description": "The plan's final acceptance: every check above passed on the gateway, the docs match the deployed system, and no execution path uses HTTP or worker tokens.",
-              "done": false,
+              "description": "The plan's final acceptance: every check above passed on the gateway, the docs match the deployed system, and no execution path uses HTTP or worker tokens.\n\nDone 2026-10-17. Every check above passed on the gateway. No worker holds a token or a pairing code: `workers.workers` has one row, `gw-1`, which connects to Postgres directly as `aitems_worker`. The docs match the deployed system: items-core `32d38878` records the results in `transport-parity.md` (the gateway's crawl and its capture) and `deploy.md` (the census, the checks with their evidence, the fixture and takeover procedure). It also records the findings now planned as IC-22, IC-23 and IC-24.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-20.1",
