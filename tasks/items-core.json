@@ -1741,7 +1741,7 @@
           "id": "IC-26",
           "title": "Remove FIREBASE_PROJECT_ID from the gateway, with app sign-in and push notifications off without it",
           "description": "The items-core API starts with no Firebase project named. Without one, items-app's sign-in refuses every app token and says why, push notifications are skipped, and the API says both once at boot. The gateway's items-core stack no longer has the variable.",
-          "status": "Planned",
+          "status": "In progress",
           "where": [
             {
               "repo": "items-core",
@@ -1773,27 +1773,27 @@
             {
               "id": "IC-26.1",
               "title": "Make the API start without FIREBASE_PROJECT_ID, refusing app tokens and skipping push notifications",
-              "description": "`FIREBASE_PROJECT_ID` becomes optional, as `CONSOLE_AUTH_ISSUER` is. Unset, no Firebase app is made: the consumer group answers every request that needs a user with 401 and a code that says app sign-in is off, without calling Firebase; push notifications are skipped with one warning instead of throwing; the boot banner reads `app auth: off`, and the API logs once that app sign-in is off. Set, everything works as today. Tests cover both.",
+              "description": "`FIREBASE_PROJECT_ID` becomes optional, as `CONSOLE_AUTH_ISSUER` is. Unset, no Firebase app is made: the consumer group answers every request that needs a user with 401 and a code that says app sign-in is off, without calling Firebase; push notifications are skipped with one warning instead of throwing; the boot banner reads `app auth: off`, and the API logs once that app sign-in is off. Set, everything works as today. Tests cover both.\n\nDone 2026-10-17 on branch `ic-26` (`4e15a25b`). `FIREBASE_PROJECT_ID` is optional; an empty value counts as unset. Unset, `makeConsumerUserAuth` uses the new `makeRefusingUserAuth` (`@bw/auth`): every consumer request, with a token or without, gets 401 `{\"error\":\"app sign-in is off\",\"code\":\"APP_SIGN_IN_OFF\"}`, and Firebase is never called. Push notifications log one warning and return. The banner reads `app auth: off`, and the boot log warns once that app sign-in is off. Tests: `app-sign-in.test.ts` (9), `user-auth.test.ts`, the environment and banner tests. The full suite passed on Linux with Postgres: 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "apps/gateway, services/notifications, packages/backend/auth"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
               "id": "IC-26.2",
               "title": "Remove FIREBASE_PROJECT_ID from the deploy files and their docs",
-              "description": "`deploy/compose.yaml` no longer names it for the api or requires it for the `seed` and `seed-workflows` jobs, and its comments say app sign-in is off until a project is named. `docker-compose.prod.yml`, the openapi-drift workflow's stub, `.env.worker.cloud`'s comment and `DEPLOY.md` follow.",
+              "description": "`deploy/compose.yaml` no longer names it for the api or requires it for the `seed` and `seed-workflows` jobs, and its comments say app sign-in is off until a project is named. `docker-compose.prod.yml`, the openapi-drift workflow's stub, `.env.worker.cloud`'s comment and `DEPLOY.md` follow.\n\nDone 2026-10-17 on branch `ic-26` (`6b76c2f6`). `deploy/compose.yaml` no longer names it for the api, and the `seed` and `seed-workflows` jobs no longer require `GW_api__FIREBASE_PROJECT_ID`; its comment says how to name a project again. `docker-compose.prod.yml`, the openapi-drift stub, `DEPLOY.md` and `docs/workflow/deploy.md` follow. `.env.worker.cloud` is untracked, so its comment stays.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "`deploy/compose.yaml`, `DEPLOY.md`, `docker-compose.prod.yml`, `.github/workflows/openapi-drift.yml`"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true,
               "blockedBy": [
                 {
@@ -1821,7 +1821,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "statusNote": "Deploy 16 (items-core 6b76c2f6) is live: the stack took the new compose and lost the api's FIREBASE_PROJECT_ID (your yes), the banner reads `app auth: off`, and items-api answers 401 APP_SIGN_IN_OFF. Waiting on your sign-in to the console to finish IC-26.3."
         }
       ]
     },
