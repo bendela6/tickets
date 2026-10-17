@@ -1474,7 +1474,7 @@
           "id": "IC-22",
           "title": "Fix the worker staying down when Docker or the gateway machine restarts",
           "description": "After Docker or the gateway machine restarts, items-core's worker comes back by itself, as the API, the console and the browser do. A Stop from the console's fleet page still keeps it down.",
-          "status": "In progress",
+          "status": "Done",
           "where": [
             {
               "repo": "items-core",
@@ -1508,14 +1508,14 @@
             {
               "id": "IC-22.2",
               "title": "Check on the gateway that the worker comes back after Docker restarts",
-              "description": "With the fix deployed, restart Docker on the gateway machine, or simulate it by restarting the worker's container through the Docker daemon. The worker comes back under a new boot, and a Stop from the fleet page still leaves it down. Done from your gateway session with your permission.",
+              "description": "With the fix deployed, restart Docker on the gateway machine, or simulate it by restarting the worker's container through the Docker daemon. The worker comes back under a new boot, and a Stop from the fleet page still leaves it down. Done from your gateway session with your permission.\n\nDone 2026-10-17 on deploy 10 (`b432d829`), with your permission:\n- **`docker kill --signal=SIGTERM`:** the worker drained and exited 143, but Docker left it down. Docker counts anything sent through `docker kill` as a stop by hand, as it does `docker stop`, so this can't stand in for a restart.\n- **SIGTERM from inside the container** (`kill -TERM 1`), the way a Docker or machine restart reaches it without a stop by hand: it exited 143, and Docker started it again within the same second (restart count 1). The fleet showed `gw-1` Idle again.\n- **Your Stop from the fleet page:** the worker exited 0 and Docker left it down. After you deleted its row, deploy 12 started it under a fresh `gw-1` row.\n- **Deploy 11** (`f2bd656d`) was rolled back with \"worker is exited\", because the stopped row was still there when the push landed; deploy 12, after the row was deleted, went live. A push while the worker is stopped from the fleet page fails the same way.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-22.1",
@@ -1533,7 +1533,7 @@
           "id": "IC-23",
           "title": "Fix a site's later crawls waiting for rule approval again when its rules skip a page",
           "description": "Once a site's page rules are approved, its later crawls go straight to fetching, even when a rule skips some pages. A scheduled recrawl never waits for an approval nobody asked for.",
-          "status": "In progress",
+          "status": "Done",
           "where": [
             {
               "repo": "items-core",
@@ -1566,14 +1566,14 @@
             {
               "id": "IC-23.2",
               "title": "Check on the gateway that a second crawl of a site with approved rules doesn't wait",
-              "description": "With the fix deployed, crawl Lyko again (its rules are approved, and they skip three paths), capped at a few pages: it fetches without a new proposal. Done from your gateway session with your permission.\n\nFirst check, 2026-10-17: Lyko's crawl `18cefef9` (5 pages) recorded a new `noModel` proposal and waited, because of the start page `https://lyko.com/sv` (IC-23.3). Approved with your same rules, it fetched its 5 pages; its row recorded 264 seconds waited, so IC-24's fix works on the gateway. To be checked again once IC-23.3 is deployed.",
+              "description": "With the fix deployed, crawl Lyko again (its rules are approved, and they skip three paths), capped at a few pages: it fetches without a new proposal. Done from your gateway session with your permission.\n\nFirst check, 2026-10-17: Lyko's crawl `18cefef9` (5 pages) recorded a new `noModel` proposal and waited, because of the start page `https://lyko.com/sv` (IC-23.3). Approved with your same rules, it fetched its 5 pages; its row recorded 264 seconds waited, so IC-24's fix works on the gateway. To be checked again once IC-23.3 is deployed.\n\nDone 2026-10-17 on deploy 12 (`f2bd656d`): Lyko's crawl `d5b1001f` (5 pages) went straight to fetching, with no new proposal and no wait (0 seconds waited). It fetched 5 pages with no retries, in about 20 seconds.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-23.1",
@@ -1589,14 +1589,14 @@
             {
               "id": "IC-23.3",
               "title": "Make the page a crawl starts from never count as undecided in the sitemap analysis",
-              "description": "Lyko's crawl `18cefef9` (2026-10-17, on items-core `b432d829`) still asked. In the storefront, the only page whose row read `unknown` with no rule naming it was the crawl's start page, `https://lyko.com/sv`. The rules name `/sv/*`, which doesn't match `/sv`, and no sitemap lists the page, so it keeps the row that creating the crawl wrote. It isn't among the templates the approval card lists either, so the owner can't write a rule for it. The analysis (`analysisTemplates`) leaves the crawl's own start pages out of what it counts as undecided: the URLs creating the crawl wrote rows for (`createFromSite`, `createFromUrl`), compared as discovery normalizes them. Every other page counts as now. Its tests cover a site whose rules don't name its start page, which crawls again without asking, and a sitemap page no rule names, which still asks. The docs that describe the analysis's question say so.",
+              "description": "Lyko's crawl `18cefef9` (2026-10-17, on items-core `b432d829`) still asked. In the storefront, the only page whose row read `unknown` with no rule naming it was the crawl's start page, `https://lyko.com/sv`. The rules name `/sv/*`, which doesn't match `/sv`, and no sitemap lists the page, so it keeps the row that creating the crawl wrote. It isn't among the templates the approval card lists either, so the owner can't write a rule for it. The analysis (`analysisTemplates`) leaves the crawl's own start pages out of what it counts as undecided: the URLs creating the crawl wrote rows for (`createFromSite`, `createFromUrl`), compared as discovery normalizes them. Every other page counts as now. Its tests cover a site whose rules don't name its start page, which crawls again without asking, and a sitemap page no rule names, which still asks. The docs that describe the analysis's question say so.\n\nDone 2026-10-17. `analysisTemplates` also reads the crawl's `seed_url`, which creating the crawl writes for every creator, and leaves the page whose URL matches it out of what it counts as undecided. Both URLs are normalized as discovery normalizes them (canonical host, dropped parameters); `/sv` and `/sv/` stay apart, as discovery keeps them. Tests: `is-crawl-seed-page.test.ts` (9), 4 new cases in `analysis-templates.operations.test.ts`, and an end-to-end case in `site-crawl-analysis.integration.test.ts` (a site whose rules don't name its start page completes without asking). The full suite passed on Linux with Postgres: 122 turbo tasks. items-core `f2bd656d`, live on the gateway as deploy 12.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/crawls"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
