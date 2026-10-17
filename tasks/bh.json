@@ -400,6 +400,355 @@
           ]
         }
       ]
+    },
+    {
+      "id": "E8",
+      "title": "Show each app's version in its sidebar",
+      "description": "Every bh package and every app's package and service gets a semantic version of its own, made from its commits; the deployer deploys when a push makes one and builds each service knowing its version; and `@bh/shell` shows that version at the sidebar's foot, with the details a click away. Planned in a session on 2026-10-17 and 2026-10-18. The gateway's part is GW-19 and GW-20.",
+      "features": [
+        {
+          "id": "BH-20",
+          "title": "Release each package and service at its own version",
+          "description": "bh's release script makes one version for the whole repository. It moves into `@bh/config` as `bh-release`, which versions each package and service on its own, so bh and every app follow the same rules and a package nothing touched keeps its version.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/config, `scripts/release.mjs`, `.github/workflows/release.yml`, docs"
+            }
+          ],
+          "today": [
+            "`scripts/release.mjs`, run by `.github/workflows/release.yml` on every push to main, tags one version for every package from the conventional commits since the last tag that touch `packages/` or `copy.json`: `v0.1.0` to `v0.6.1`, each with a GitHub release listing its commits;",
+            "bh's packages say `0.0.1` in their `package.json`; the gateway writes the release's version into each package of a copy (`apps/api/src/library/copy.ts:147` in gateway);",
+            "the docs' Versions and updates page (`apps/docs/content/getting-started/versions.doc.yaml`) says bh has one version for all its packages;",
+            "no app has a version tag; gateway, signals and wallet-passes say a fixed `0.1.0` in their `package.json`;",
+            "the apps already write conventional commits (`feat(web): …`, `fix(db): …`)."
+          ],
+          "chosen": [
+            "Every package and every service has its own version, since not every one changes on every push (your answer). A version is a tag `<package name>@<version>` (`@bh/ui@0.7.0`, `@tickets/web@0.3.2`) with a GitHub release of its notes; no release commits.",
+            "Everything stays below 1.0.0 until you say a package is ready, and that package goes to 1.0.0 by hand (your answer). Below it, bh's rule: a breaking change (`!`, `BREAKING CHANGE:`) makes a minor version, and `feat`, `fix` and `perf` a patch; `build` and `chore(deps)` make a patch too (your answer); any other type makes none and goes out with the next. From 1.0.0, a breaking change makes a major version and a feature a minor one.",
+            "A commit belongs to each package whose folder it touches, whatever its scope says. Root files (the lockfile, the root `package.json`) belong to none.",
+            "A service (an app under `apps/`) also takes a patch when a workspace package it depends on makes a version, the vendored bh copy included, so its version changes whenever its build does. bh's own packages don't pass versions on: a package's version says its own code changed.",
+            "An app's release skips `packages/bh/*`, which carry bh's versions.",
+            "A bh package with no tag of its own takes `v0.6.1` as its last version; an app's package with none starts at 0.1.0."
+          ],
+          "chosenOn": "2026-10-18",
+          "plan": [
+            {
+              "id": "BH-20.1",
+              "title": "Move the release logic into `@bh/config` as `bh-release`, versioning each package",
+              "description": "`scripts/release.mjs` and its tests move to `@bh/config` (`bin/release.mjs`, beside `bh-lint`, `bh-format` and `bh-madge`), so the gateway's copy brings it to every app; `bh-release` joins `copy.json`'s `rename`, for items-core's `bw`. It finds the workspace's packages from `pnpm-workspace.yaml`, gives each the commits since its last tag that touch its folder, bumps each by the rules above, and passes a service's dependencies' versions on to it, read from the `package.json`s. Without `--publish` it says what each would become; with it, it tags each and makes its GitHub release. A repository says which folders it skips and which are services (a `bhRelease` field in the root `package.json`, or the like).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/config, `copy.json`"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-20.2",
+              "title": "Switch bh's release workflow to `bh-release`",
+              "description": "`.github/workflows/release.yml` runs `bh-release --publish`; `scripts/release.mjs` and `scripts/release.test.mjs` go, and the root `test` script stops naming them. The first push after it tags each package that changed since `v0.6.1`.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "`.github/workflows/release.yml`, `scripts/`"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-20.3",
+              "title": "Update the Versions and updates page for a version per package",
+              "description": "`apps/docs/content/getting-started/versions.doc.yaml`: each package's own version and tag, the table with `build` and `chore(deps)`, services taking their dependencies' versions, and an app's copy being bh at one commit (GW-20).",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "docs"
+                }
+              ],
+              "done": false
+            }
+          ]
+        },
+        {
+          "id": "BH-21",
+          "title": "Add `BuildFooter` to `@bh/shell`: the app's version at the sidebar's foot, and its details",
+          "description": "A footer block an app puts in `AppShell`'s `footer`: its service's version and date on one small line, and, a click away, when it was released and deployed, from which commit and branch, what changed since the previous deploy, the services deployed with it and the bh packages in it.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "bh",
+              "part": "@bh/shell, docs"
+            }
+          ],
+          "today": [
+            "`AppShell`'s `footer` already names \"a deployment line\" among its uses (`packages/web/shell/src/shell/app-shell.tsx:19`), and apps stack blocks in it: tickets `UserFooter` and `ThemeFooter`, gateway `LogoutButton` and `ThemeFooter`;",
+            "`AppShell` frames gateway, tickets, cv, signals, wallet-passes, medialib and items-core;",
+            "the gateway's deployer builds from GitHub's tarball of a commit, with no `.git` (`apps/api/src/deployer/source.ts` in gateway), so a deployed build can't ask git for its version;",
+            "timer stamps its build with a `__BUILD_ID__` and writes it to `build/version.txt`, and its `UpdateBanner` shows when the two differ: BH-21.3's pattern."
+          ],
+          "rule": "`@bh/shell` knows nothing of any app (`src/domain-free.test.ts`): `BuildFooter` takes a `BuildInfo` and never knows where it came from.",
+          "chosen": [
+            "The line shows the service's semantic version and its date, `v0.3.2 · 17 Oct`, not a commit (your answer); the commit and branch are in the details.",
+            "The changelog is the GitHub release notes of each version since the previous deploy."
+          ],
+          "chosenOn": "2026-10-18",
+          "plan": [
+            {
+              "id": "BH-21.1",
+              "title": "Add `BuildInfo` and `BuildFooter` to `@bh/shell`",
+              "description": "`BuildFooter` takes `collapsed`, as `ThemeFooter` does, and a `BuildInfo`:\n\n```ts\ninterface BuildInfo {\n  /** The service, as its package.json names it: `@tickets/web`. */\n  name: string;\n  /** `0.3.2`, or `0.3.2+3` three commits past its tag. */\n  version: string;\n  releasedAt?: string;\n  deployedAt?: string;\n  commit: { sha: string; url?: string };\n  branch?: string;\n  environment: 'production' | 'preview' | 'dev';\n  /** Dev only: the tree has uncommitted changes. */\n  dirty?: boolean;\n  /** Each version since the previous deploy, newest first. */\n  notes: { version: string; body: string; url?: string }[];\n  /** The stack's other services, as deployed with it. */\n  services: { name: string; version: string; changed: boolean }[];\n  /** bh's packages in this build. */\n  packages: { name: string; version: string }[];\n}\n```\n\nExpanded, one line: the version and the date, relative within a week; at rail width an icon whose tooltip says the same. A click opens a popover above it: the version, released, deployed, the commit (copyable, linked), the branch, the notes, the services deployed with it with those that changed marked, and bh's packages folded. Copy details puts all of it, with the browser, on the clipboard for a ticket. Tests, and a page in the shell's docs.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-21.2",
+              "title": "Add a Vite plugin that gives a build its `BuildInfo`",
+              "description": "`@bh/shell/vite` exports a plugin serving a `virtual:bh-build` module of the build's `BuildInfo`. In a deploy it takes its own service's from what the deployer passes (`BH_BUILD_INFO`, GW-19.2); elsewhere it asks git, as a `dev` build: `git describe --tags --match '<name>@*'` for the version and the commits past it, the branch, and whether the tree is dirty. It also writes the info to `build.json` beside `index.html`, for BH-21.3.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-21.3",
+              "title": "Show a dot and Reload on the line when a newer version is live",
+              "description": "The footer fetches `build.json`, uncached, when the window regains focus; when its version isn't the build's, a dot on the line and a Reload in the popover, as timer's `UpdateBanner` does with `version.txt`.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-21.4",
+              "title": "Show a dot on the line until a new version's notes are opened",
+              "description": "Each browser remembers the last version whose notes it opened (`localStorage`, under the app's `storagePrefix`); a newer one gets a dot until the popover opens.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "@bh/shell"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-21.5",
+              "title": "Mount `BuildFooter` in the docs site",
+              "description": "`apps/docs` is a service of bh's, versioned like an app's (BH-20); its footer goes last, under `ThemeFooter`, in `apps/docs/src/app/frame.tsx`, and its details list bh's packages at their versions.",
+              "where": [
+                {
+                  "repo": "bh",
+                  "part": "docs (`apps/docs/src/app/frame.tsx`)"
+                }
+              ],
+              "blockedBy": [
+                {
+                  "id": "BH-20.2",
+                  "why": "bh's packages have their own versions"
+                }
+              ],
+              "done": false
+            }
+          ]
+        },
+        {
+          "id": "BH-22",
+          "title": "Put versions and `BuildFooter` in every app",
+          "description": "In each app: a release workflow like bh's running `bh-release --publish`, with its root `package.json` naming its services and skipping `packages/bh/*`; its Dockerfiles passing the deployer's `BH_BUILD_INFO` to the build; and, in those `AppShell` frames, `BuildFooter` last in the footer. Each first takes a bh copy with BH-20 and BH-21 in it.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "BH-20.1",
+              "why": "runs `bh-release`"
+            },
+            {
+              "id": "BH-21.1",
+              "why": "mounts `BuildFooter`"
+            },
+            {
+              "id": "BH-21.2",
+              "why": "builds with the Vite plugin"
+            },
+            {
+              "id": "GW-19.2",
+              "why": "the deployer passes the versions"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "apps/api, apps/web"
+            },
+            {
+              "repo": "tickets",
+              "part": "apps/api, apps/mcp, apps/web"
+            },
+            {
+              "repo": "signals",
+              "part": "apps/collector, apps/web"
+            },
+            {
+              "repo": "wallet-passes",
+              "part": "apps/api, apps/dashboard, apps/scanner, apps/worker"
+            },
+            {
+              "repo": "cv",
+              "part": "the app, extension"
+            },
+            {
+              "repo": "medialib",
+              "part": "apps/api, apps/web"
+            },
+            {
+              "repo": "items-core",
+              "part": "apps/console-web, apps/gateway, apps/worker"
+            },
+            {
+              "repo": "session-board",
+              "part": "the app"
+            },
+            {
+              "repo": "icon-editor",
+              "part": "the app"
+            }
+          ],
+          "openChoices": [
+            {
+              "question": "Should wallet-passes' dashboard, which its customers use, show the version line at its sidebar's foot?",
+              "context": "The other apps are yours alone. A customer has little use for a version, but it helps when one reports a problem.",
+              "options": [
+                "Yes, like every other app",
+                "No: it releases versions, but shows no footer",
+                "Only to its admins"
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "BH-22.1",
+              "title": "Put versions and `BuildFooter` in gateway",
+              "description": "Services `apps/api` (`@gateway/api`) and `apps/web` (`@gateway/web`), built in one image by `apps/api/Dockerfile`; `BuildFooter` under `ThemeFooter` in `apps/web/src/app/frame.tsx`.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.2",
+              "title": "Put versions and `BuildFooter` in tickets",
+              "description": "Services `apps/api`, `apps/mcp` and `apps/web` (`@tickets/web`), built by the root `Dockerfile`; `BuildFooter` under `ThemeFooter` in `apps/web/src/components/shell/frame.tsx`. Its `chore(tasks)` commits make no version.",
+              "where": [
+                {
+                  "repo": "tickets",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.3",
+              "title": "Put versions and `BuildFooter` in signals",
+              "description": "Services `apps/collector` and `apps/web` (`@signals/web`), in one image, the collector serving the web app; `BuildFooter` under `ThemeFooter` in `apps/web/src/app/frame.tsx`.",
+              "where": [
+                {
+                  "repo": "signals",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.4",
+              "title": "Put versions and `BuildFooter` in wallet-passes",
+              "description": "Services `apps/api`, `apps/dashboard` (`@wp/dashboard`), `apps/scanner` and `apps/worker`; `BuildFooter` under `AccountFooter` in `apps/dashboard/src/app/frame.tsx`, as the open choice above says.",
+              "where": [
+                {
+                  "repo": "wallet-passes",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.5",
+              "title": "Put versions and `BuildFooter` in cv",
+              "description": "The app at the repository's root (`cv`) and the browser extension (`extension/`), each a service; `BuildFooter` under `ThemeFooter` in `src/viewer/Dashboard.tsx`.",
+              "where": [
+                {
+                  "repo": "cv",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.6",
+              "title": "Put versions and `BuildFooter` in medialib",
+              "description": "Services `apps/api` and `apps/web` (`@medialib/web`); `BuildFooter` in `apps/web`'s `AppShell` (`apps/web/src/app/app.tsx`).",
+              "where": [
+                {
+                  "repo": "medialib",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.7",
+              "title": "Put versions and `BuildFooter` in items-core",
+              "description": "Services `apps/console-web` (`@bw/console-web`), `apps/gateway` and `apps/worker`. Its copy names bh `bw`, so the command is `bw-release` and the vendored packages sit under its own folder name; `BuildFooter` in `apps/console-web/src/app/app.tsx`.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.8",
+              "title": "Put versions in session-board",
+              "description": "One app at the repository's root, with no `AppShell`: versions only.",
+              "where": [
+                {
+                  "repo": "session-board",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "BH-22.9",
+              "title": "Put versions in icon-editor",
+              "description": "One app at the repository's root, with no `AppShell`: versions only.",
+              "where": [
+                {
+                  "repo": "icon-editor",
+                  "part": "release workflow, Dockerfile, frame"
+                }
+              ],
+              "done": false
+            }
+          ]
+        }
+      ]
     }
   ]
 }
