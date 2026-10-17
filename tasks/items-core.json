@@ -1002,7 +1002,7 @@
           "id": "IC-20",
           "title": "Check items-core on the gateway and accept the worker migration",
           "description": "The worker migration's final acceptance, on the gateway: every check passes there, the docs match the deployed system, and no execution path uses HTTP or worker tokens. If a check fails, roll back as `docs/workflow/deploy.md` says (IC-19.1).",
-          "status": "Planning",
+          "status": "In progress",
           "waitingOn": ["your choice on IC-18: which commit is deployed and accepted first"],
           "where": [
             {
@@ -1039,7 +1039,7 @@
             {
               "id": "IC-20.1",
               "title": "Take the connection census on the shared Postgres and correct the budget",
-              "description": "With the stack idle, on the shared Postgres: `SHOW max_connections`, `SHOW superuser_reserved_connections`, and `pg_stat_activity` counted by `application_name` and by database, as `deploy.md` gives it. Correct items-core's budget there if a term differs, and note what the other stacks use, which decides whether a second worker fits (IC-20.9). IC-5.3's work, on the gateway. Needs the shared Postgres's superuser.",
+              "description": "With the stack idle, on the shared Postgres: `SHOW max_connections`, `SHOW superuser_reserved_connections`, and `pg_stat_activity` counted by `application_name` and by database, as `deploy.md` gives it. Correct items-core's budget there if a term differs, and note what the other stacks use, which decides whether a second worker fits (IC-20.9). IC-5.3's work, on the gateway. Needs the shared Postgres's superuser.\n\nDone 2026-10-16 on the gateway, idle, as the shared Postgres's superuser. `max_connections` 100 and `superuser_reserved_connections` 3, as the budget has them. items-core held 12, every one named as the budget's table says: console pool 6, worker main 3, presence 1, listen 1, partition-gaps 1. The other stacks held 14: Rauthy 10 (its cap), tickets 3, wallet-passes 1. Their ceilings come to about 32, under the 53 the budget leaves them, so a second worker fits (57 + 32 ≤ 100). No term needed correcting.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -1050,7 +1050,7 @@
                   "part": "docs/workflow/deploy.md"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.4",
@@ -1063,8 +1063,8 @@
             {
               "id": "IC-20.2",
               "title": "Check the fleet page shows `gw-1` with the expected version and capabilities",
-              "description": "Its capabilities are the expected ones and its version is the API's. Both read `dev`: the gateway builds an image without its commit, so `GATEWAY_VERSION` and `WORKER_VERSION` keep their default, and both come from one commit in one deploy.",
-              "done": false,
+              "description": "Its capabilities are the expected ones and its version is the API's. Both read `dev`: the gateway builds an image without its commit, so `GATEWAY_VERSION` and `WORKER_VERSION` keep their default, and both come from one commit in one deploy.\n\nDone 2026-10-16: the fleet page showed `gw-1` Idle, version `dev` (the API's is `dev` too), capacity 4. In `workers.workers` its capabilities are `{}`, as the compose sets none, and it has no token.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1077,8 +1077,8 @@
             {
               "id": "IC-20.3",
               "title": "Check the partitions endpoint answers 200",
-              "description": "`GET /api/internal/workflow/partitions` at the console's address, which needs no sign-in, answers 200. The cloud plan's scheduler job went with Google Cloud.",
-              "done": false,
+              "description": "`GET /api/internal/workflow/partitions` at the console's address, which needs no sign-in, answers 200. The cloud plan's scheduler job went with Google Cloud.\n\nDone 2026-10-16: `GET /api/internal/workflow/partitions` answered 200, `status ok`, covered until 2026-11-16.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.4",
@@ -1091,7 +1091,7 @@
             {
               "id": "IC-20.4",
               "title": "Serve the fixture site from a temporary service on the stack's network",
-              "description": "The baseline is a crawl of `tools/dev/fixture-site.mjs`, which binds and advertises `127.0.0.1:8089` by default, an address the worker's container can't reach. A temporary service of the stack, `fixture-site` (`node:24-slim`, the repository's `tools/dev` mounted read-only, `--host fixture-site --urls 5000`), serves it, so the worker reaches it by that name (your answer on IC-9). The script uses only Node's built-ins. It is taken out of the compose after the acceptance crawl (IC-20.6). It changes the live stack. The worker reaches it only with the allow setting (IC-20.14) set to `fixture-site:8089`; that variable is removed with the service.",
+              "description": "The baseline is a crawl of `tools/dev/fixture-site.mjs`, which binds and advertises `127.0.0.1:8089` by default, an address the worker's container can't reach. A temporary service of the stack, `fixture-site` (`node:24-slim`, the repository's `tools/dev` mounted read-only, `--host fixture-site --urls 5000`), serves it, so the worker reaches it by that name (your answer on IC-9). The script uses only Node's built-ins. It is taken out of the compose after the acceptance crawl (IC-20.6). It changes the live stack. The worker reaches it only with the allow setting (IC-20.14) set to `fixture-site:8089`; that variable is removed with the service.\n\nDone 2026-10-16 with your permission. Deploy 5 added the service `fixture-site` (`node:24-slim`, `./tools/dev` mounted read-only, 5,000 pages) and the worker's `WORKER_FETCH_ALLOWED_HOST_PORTS=fixture-site:8089`; the worker's banner showed `allowed`. Deploy 8 (2026-10-17) took both out: the stack's compose is main's again.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -1102,7 +1102,7 @@
                   "part": "tools/dev/fixture-site.mjs"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.4",
@@ -1146,8 +1146,8 @@
             {
               "id": "IC-20.6",
               "title": "Run the fixture crawl on the gateway and compare it with the baseline",
-              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run (`limits.maxPages` 200), and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes. When its analysis waits with no model, approve the same rules as the baseline did (IC-20's chosen): `/page/*` a product page, `/` not fetched.",
-              "done": false,
+              "description": "Start the crawl of the fixture site (served by IC-20.4) on the gateway's worker as the baseline was run (`limits.maxPages` 200), and compare it with the baseline (IC-20.5's) on business outcomes, by `transport-parity.md`'s rules: the crawl row, captures by URL, frontier states and completion. Raise `WORKER_CONCURRENCY` only after the rendered crawl of a real site (IC-20.12) passes. When its analysis waits with no model, approve the same rules as the baseline did (IC-20's chosen): `/page/*` a product page, `/` not fetched.\n\nDone 2026-10-16: crawl `40578cd9` at `251415b4` on deploy 5. Every item the rules compare is identical to the baseline:\n- the crawl row and its counters, apart from the bytes;\n- the run, succeeded at epoch 2;\n- the ledger;\n- the 8 URLs both runs captured;\n- the frontier;\n- the event histogram, apart from `pool.blocked`;\n- the per-address sequences of 152 outer addresses and 200 page bodies, with epochs 0/1/2.\n\nThe analysis waited with the same two templates and was approved with the baseline's rules. The gateway machine's WSL restarted during that wait; the worker stayed down (IC-22) until started by hand, and the outcome was unaffected. The capture is `docs/workflow/perf/parity/2026-10-16-251415b4-gateway-site-crawl.txt`.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1168,8 +1168,8 @@
             {
               "id": "IC-20.7",
               "title": "Check pause, resume and stop from the fleet page",
-              "description": "Pause takes no new work and keeps what the worker holds; resume undoes it. Stop finishes within five minutes and exits 0, and `restart: on-failure` leaves it down. To start it again, delete its row, then start its container. A deploy while it's stopped fails its check, as `deploy.md` says (IC-19.1).",
-              "done": false,
+              "description": "Pause takes no new work and keeps what the worker holds; resume undoes it. Stop finishes within five minutes and exits 0, and `restart: on-failure` leaves it down. To start it again, delete its row, then start its container. A deploy while it's stopped fails its check, as `deploy.md` says (IC-19.1).\n\nDone 2026-10-16/17, your Stop and Delete confirmed by you:\n- **Pause:** the worker left a new crawl queued for 21 s.\n- **Resume:** the crawl started at once.\n- **Stop:** the worker logged \"stop requested from the console\", drained, exited 0 within a second, and Docker left it down. The fleet showed Stopped.\n- **Afterwards:** its row was deleted and its container started; a fresh `gw-1` row showed Idle.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1182,8 +1182,8 @@
             {
               "id": "IC-20.8",
               "title": "Check a rendered page loads through the browser, before and after its restart",
-              "description": "Fetch a rendered page, restart the stack's `browser` container, and fetch again. The worker reconnects on its next rendered fetch without restarting (`67134243`).",
-              "done": false,
+              "description": "Fetch a rendered page, restart the stack's `browser` container, and fetch again. The worker reconnects on its next rendered fetch without restarting (`67134243`).\n\nDone 2026-10-16. With the fixture site set to rendered fetching, crawl `80073b4d` fetched 10 pages rendered, all 200. After `docker restart items-core-browser-1`, crawl `bd0a55d4` fetched 10 more rendered, all 200, with no retries, on the same worker boot (`306e1147`, no restart).",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1204,8 +1204,8 @@
             {
               "id": "IC-20.9",
               "title": "Check a killed worker's run is reclaimed and completes, also by a second worker",
-              "description": "`docker kill` the worker mid-crawl. Its leases lapse after 30 seconds, and the run is reclaimed from its durable log and completes. Takeover is proven twice (your answer on IC-9): by the worker started again under a new boot (by its restart policy, or by hand if Docker leaves a killed container down), and by a temporary second worker, `gw-2` (a job of the stack with the worker's image and `WORKER_NAME=gw-2`, run from its page), which takes over a run its first worker lost. Not during a deploy, and only with room on the shared Postgres for 10 more connections (IC-20.1). Afterwards stop `gw-2` from the fleet page, delete its row, and take the job out of the compose.",
-              "done": false,
+              "description": "`docker kill` the worker mid-crawl. Its leases lapse after 30 seconds, and the run is reclaimed from its durable log and completes. Takeover is proven twice (your answer on IC-9): by the worker started again under a new boot (by its restart policy, or by hand if Docker leaves a killed container down), and by a temporary second worker, `gw-2` (a job of the stack with the worker's image and `WORKER_NAME=gw-2`, run from its page), which takes over a run its first worker lost. Not during a deploy, and only with room on the shared Postgres for 10 more connections (IC-20.1). Afterwards stop `gw-2` from the fleet page, delete its row, and take the job out of the compose.\n\nDone 2026-10-16, with your permission.\n- **First kill:** `docker kill` of gw-1 mid-crawl (`d5ac43dd`, at 50 pages). Docker left it down, so it was started by hand. The new boot reclaimed the run: succeeded at epoch 3, 200 pages captured once each.\n- **Second kill:** with a temporary `gw-2`, a one-off job of the worker's image (deploys 6 and 7), crawl `36a17b99` was held by gw-1, then gw-1 was killed and left down. gw-2 took the same run over: succeeded at epoch 3, 300 pages captured once each.\n- **gw-2's first start failed:** a job that reaches the shared Postgres must be listed in the stack's Postgres connection's services.\n- **Afterwards:** gw-2 was stopped from the fleet page, its row deleted, and it was taken out by deploy 8.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1222,8 +1222,8 @@
             {
               "id": "IC-20.10",
               "title": "Check a worker restart leaves no `items-worker:*` session behind",
-              "description": "After a restart of the worker's container (SIGTERM), `pg_stat_activity` holds only the new boot's connections.",
-              "done": false,
+              "description": "After a restart of the worker's container (SIGTERM), `pg_stat_activity` holds only the new boot's connections.\n\nDone 2026-10-16: `docker restart` of the worker (SIGTERM). Before, one boot held 5 connections; after, only the new boot `db75f787` held its 4. No session of the old boot was left.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-18.5",
@@ -1236,8 +1236,8 @@
             {
               "id": "IC-20.11",
               "title": "Measure peak connections under the acceptance crawl against the budget",
-              "description": "Take the census again while the fixture crawl (IC-20.6) runs. items-core's peak stays within `deploy.md`'s budget, and the shared Postgres's total under its `max_connections`.",
-              "done": false,
+              "description": "Take the census again while the fixture crawl (IC-20.6) runs. items-core's peak stays within `deploy.md`'s budget, and the shared Postgres's total under its `max_connections`.\n\nDone 2026-10-16, sampled every 3 s across the fixture crawl's fetch. items-core peaked at 14 (worker 7, API 7) against its budget of 47, and the whole server at 28 of 100.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-20.1",
@@ -1250,8 +1250,8 @@
             {
               "id": "IC-20.12",
               "title": "Check one seeded real site crawls, rendered, from the gateway",
-              "description": "After the fixture comparison (IC-20.6), crawl one seeded real site (seeded by IC-18.5) with rendered fetching through the browser (your answer on IC-9). It checks rendered fetching and a real site's bot defenses from the gateway's address, your home connection, where a block lands. Judge it on business outcomes (the crawl row, captures, frontier states and completion); there is no baseline. If the analysis stage stops on a rule proposal, answer it in the console. The site is your pick.",
-              "done": false,
+              "description": "After the fixture comparison (IC-20.6), crawl one seeded real site (seeded by IC-18.5) with rendered fetching through the browser (your answer on IC-9). It checks rendered fetching and a real site's bot defenses from the gateway's address, your home connection, where a block lands. Judge it on business outcomes (the crawl row, captures, frontier states and completion); there is no baseline. If the analysis stage stops on a rule proposal, answer it in the console. The site is your pick.\n\nDone 2026-10-17 on Lyko, your pick, fetched rendered, with your rules (magazine, about-Lyko and deals pages skipped; every other `/sv/*` page fetched as mixed content). Crawl `0089aec1`: 50 pages, every one rendered and HTTP 200, no retries, no redirects, 1 min 32 s, 31 MB. No block from your connection. A first crawl, `f8a40229`, ended `budget` with nothing fetched: its approval came 9 h after it started, and the 6-hour limit counts the wait. Lyko is back on default fetching.",
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-20.6",
