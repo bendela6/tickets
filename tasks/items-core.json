@@ -1502,7 +1502,8 @@
                   "part": "apps/worker, deploy/compose.yaml, the docs"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "IC-22.2",
@@ -1520,7 +1521,8 @@
                   "id": "IC-22.1",
                   "why": "deploys the fix it checks"
                 }
-              ]
+              ],
+              "approved": true
             }
           ],
           "chosen": [
@@ -1557,7 +1559,8 @@
                   "part": "services/crawls"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             },
             {
               "id": "IC-23.2",
@@ -1575,7 +1578,8 @@
                   "id": "IC-23.1",
                   "why": "deploys the fix it checks"
                 }
-              ]
+              ],
+              "approved": true
             }
           ]
         },
@@ -1608,7 +1612,8 @@
                   "part": "services/crawls, apps/console-web"
                 }
               ],
-              "done": false
+              "done": false,
+              "approved": true
             }
           ]
         }
