@@ -22,7 +22,7 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 
 1. **Make sure the viewer runs.** If `curl -s http://127.0.0.1:4741/agents` fails, start it with `preview_start` and the name `tasks`. If that tool isn't there, run `node scripts/tasks-view.mjs` in the background.
 2. **Look for abandoned workers.** Any worker in `node scripts/tasks-agents.mjs list` still `working` is left over from an earlier run, because subagents die with their session. For each one:
-   - check its worktree (`git worktree list` in tickets and in `../bh`), and the `statusNote` of its feature;
+   - check its branch (`git branch` and `git status` in the repo's checkout), and the `statusNote` of its feature;
    - then either dispatch it again, picking up from its last commit, or say `abandoned` for it with why.
 3. **Run `node scripts/tasks-builder.mjs ready`.** In chat, list what's ready, what's approved but waiting (and on what), and what you'll skip and why. Then dispatch.
 
@@ -46,10 +46,12 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
   - the worker builds all the feature's ready tickets and subtickets, one after another in the plan's order, on the feature's branch;
   - never split a feature's tickets across workers, and never start a second worker on a feature whose worker is still running;
   - a ticket of that feature that becomes ready while its worker runs waits for it: when its notification comes, continue that worker with SendMessage (it keeps its context), or dispatch a new one for the feature that picks up from the branch;
-  - branch `tk-7`, in a git worktree: `../bh-wt-tk-7` for bh work, `../tickets-wt-tk-7` for tickets work;
-  - never on main, and never in a repo's own checkout, because other sessions may have uncommitted work there;
+  - branch `tk-7`, in the repo's own checkout: `../bh` for bh work, `tickets` for tickets work;
+  - **never create a git worktree** (the user, 2026-10-17): no `git worktree add`, no Agent `isolation: "worktree"`, and no clone in its place;
+  - dispatch only when that checkout is on main with nothing uncommitted the branch would touch; otherwise say so in chat and ask the user;
+  - never commit on main itself;
   - never edit the bh copies under `packages/bh` in an app; bh work happens in `../bh`.
-- Workers for different features run in parallel, unless they share files.
+- **One worker per repo at a time**, since they share its checkout. Workers in different repos run in parallel. In tickets, the worker doesn't touch `tasks/*.json`, so your edits to them carry across its branch switches; commit them only while main is checked out.
 - Before dispatching, set the feature's status to "In progress".
 - Check `node scripts/tasks-agents.mjs list`: never dispatch a feature a worker is already on.
 - **Pick each worker's model** with the Agent tool's `model`, the cheapest that can do the job well, since it's cheaper and faster (the user, 2026-10-15). Don't leave every worker on Opus.
@@ -61,12 +63,12 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 
 Give each worker the whole brief, since it knows nothing else:
 - **Its name and items:** a name like `worker-tk-7`, named after the feature, and every ready item of the feature, in order: their text, their `blockedBy`, their notes (the user's and the planner's replies), and the feature's `chosen`.
-- **Where:** the worktree and branch, and the repo's CLAUDE.md and skills. In tickets those are `implementing-a-component`, `verifying-a-component` and `running-the-stack`.
+- **Where:** the repo's checkout and the branch, and the repo's CLAUDE.md and skills. In tickets those are `implementing-a-component`, `verifying-a-component` and `running-the-stack`.
 - **Checks:** typecheck, tests and build. A "Check in the browser" ticket is done in the browser, with screenshots.
 - **Commits:** one per ticket, on its branch, a conventional commit scoped to the app, with the ticket id in the body.
 - **Last, merge and push:** once its items are built and checked, it merges its branch into main and pushes, as "Merging and releasing" says.
 - **Never:** force-push, push a branch whose checks fail, deploy any other way than that push, or edit `tasks/*.json`.
-- **Saying what it does**, with the absolute path, since it runs in a worktree:
+- **Saying what it does**, with the absolute path, since it may run in another repo:
   - `node C:/Users/bbend/Desktop/Projects/tickets/scripts/tasks-agents.mjs say worker-tk-7 working --item TK-7.2 "Writing the Sort type"`;
   - at the start, at every step, and before any long command. Switch `--item` to the ticket or subticket in hand. Thirty minutes of silence shows as "abandoned?".
   - at the end: `done --item TK-7 "Built TK-7.1–7.3, commit abc1234"`, or `failed --item … "<why>"`.
@@ -89,13 +91,14 @@ Report in chat in two lines: what's built, where it went live (deployed, or the 
 
 Finished work goes on main, never parked on a branch or a pull request, in every repo, though a push to tickets' or the gateway's main deploys and a push to bh's main releases.
 
-- **The worker merges, in its own worktree**, never the repo's checkout:
+- **The worker merges, on its branch in the repo's checkout:**
   1. `git fetch origin`, then `git merge origin/main`, resolving any conflict;
   2. the checks again, on the merged result: typecheck, tests and build;
-  3. `git push origin HEAD:main`. If main moved meanwhile and the push is refused, go back to 1.
-  - A branch whose checks fail isn't pushed: the worker says `failed` with why.
+  3. `git push origin HEAD:main`. If main moved meanwhile and the push is refused, go back to 1;
+  4. `git switch main`, `git merge --ff-only origin/main`, then `git branch -d <branch>`.
+  - A branch whose checks fail isn't pushed: the worker says `failed` with why, and switches back to main, leaving the branch.
 - **After its report:**
-  - in the repo's own checkout, if it has main checked out, run `git merge --ff-only origin/main`. Git refuses rather than overwrite uncommitted files; if it refuses, say so and leave it.
+  - check the checkout is back on main and level with origin/main. If it isn't, say so and leave it.
   - a push to tickets' main deploys tickets.bendelhome.cc within a minute (skill `running-the-stack`), and the gateway's deploys the gateway: check the deploy came up, and say so in the report.
 - **Branches built earlier and never merged:**
   - dispatch a worker to merge each one whose built items are done and checked;
