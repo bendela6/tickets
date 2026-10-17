@@ -1546,7 +1546,8 @@
             "So every crawl after a site's first waits for the same rules again. During the acceptance (2026-10-16/17) it happened on six crawls of the fixture site and on Lyko's second crawl, each approved by hand. A scheduled recrawl would wait forever."
           ],
           "chosen": [
-            "Pages a rule skips count as decided, so a site whose rules are approved crawls again without asking (your answer, 2026-10-17)."
+            "Pages a rule skips count as decided, so a site whose rules are approved crawls again without asking (your answer, 2026-10-17).",
+            "The page a crawl starts from never counts as undecided, whatever the site's rules say. Pages from the sitemap that no rule covers still make the crawl ask (your answer, 2026-10-17, after Lyko's crawl `18cefef9` asked again)."
           ],
           "plan": [
             {
@@ -1565,7 +1566,7 @@
             {
               "id": "IC-23.2",
               "title": "Check on the gateway that a second crawl of a site with approved rules doesn't wait",
-              "description": "With the fix deployed, crawl Lyko again (its rules are approved, and they skip three paths), capped at a few pages: it fetches without a new proposal. Done from your gateway session with your permission.",
+              "description": "With the fix deployed, crawl Lyko again (its rules are approved, and they skip three paths), capped at a few pages: it fetches without a new proposal. Done from your gateway session with your permission.\n\nFirst check, 2026-10-17: Lyko's crawl `18cefef9` (5 pages) recorded a new `noModel` proposal and waited, because of the start page `https://lyko.com/sv` (IC-23.3). Approved with your same rules, it fetched its 5 pages; its row recorded 264 seconds waited, so IC-24's fix works on the gateway. To be checked again once IC-23.3 is deployed.",
               "where": [
                 {
                   "repo": "live gateway",
@@ -1577,8 +1578,25 @@
                 {
                   "id": "IC-23.1",
                   "why": "deploys the fix it checks"
+                },
+                {
+                  "id": "IC-23.3",
+                  "why": "deploys the fix for the start page, which held Lyko's first check"
                 }
               ],
+              "approved": true
+            },
+            {
+              "id": "IC-23.3",
+              "title": "Make the page a crawl starts from never count as undecided in the sitemap analysis",
+              "description": "Lyko's crawl `18cefef9` (2026-10-17, on items-core `b432d829`) still asked. In the storefront, the only page whose row read `unknown` with no rule naming it was the crawl's start page, `https://lyko.com/sv`. The rules name `/sv/*`, which doesn't match `/sv`, and no sitemap lists the page, so it keeps the row that creating the crawl wrote. It isn't among the templates the approval card lists either, so the owner can't write a rule for it. The analysis (`analysisTemplates`) leaves the crawl's own start pages out of what it counts as undecided: the URLs creating the crawl wrote rows for (`createFromSite`, `createFromUrl`), compared as discovery normalizes them. Every other page counts as now. Its tests cover a site whose rules don't name its start page, which crawls again without asking, and a sitemap page no rule names, which still asks. The docs that describe the analysis's question say so.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/crawls"
+                }
+              ],
+              "done": false,
               "approved": true
             }
           ]
