@@ -1634,6 +1634,118 @@
               "approved": true
             }
           ]
+        },
+        {
+          "id": "IC-25",
+          "title": "Fix deleting a site leaving its pages, crawls, runs and stored files behind",
+          "description": "Deleting a site from the console removes everything that belongs to it: its pages, its captures and their stored files, its crawls with their queues and attempts, and the crawls' workflow runs with their events. The confirmation says what goes.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "services/sites: the site resource's delete (`resources.module.ts`)"
+            },
+            {
+              "repo": "items-core",
+              "part": "services/crawls, services/runs, services/products, the content storage"
+            },
+            {
+              "repo": "items-core",
+              "part": "apps/console-web: the site's Config tab, Delete site"
+            }
+          ],
+          "today": [
+            "The console's Delete site (`DELETE /resource/sites/:id`) deletes the `sites.sites` row. The foreign keys cascade to its robots.txt, sitemaps, obstacles, patterns, rule proposals and platforms.",
+            "Nothing else is removed, since those tables hold the site's id with no foreign key: `pages.pages`, `pages.captures`, `crawls.crawls` (its `crawl_pages` cascade from the crawl, its `crawl_attempts` don't), `products.products`, and the crawls' workflow runs (`runs.runs` with `dedupe_key` `site-crawl:<crawl id>`, and their events, signals, holds, allocations and budget reservations). The stored page files (`content/fetched/…`) stay in the content storage.",
+            "A site with pattern versions or experiments probably fails to delete: their keys to `site_patterns` have no cascade.",
+            "The confirmation reads \"Delete <name>? This cannot be undone.\", and the card says \"Remove the site and all of its jobs\".",
+            "Removing the test site on 2026-10-17 took a hand-written script: 5,001 pages, 6 crawls with 30,000 queue rows and 2,150 attempts, 6 runs with 78,776 events and about 24,000 holds and allocations, 1,020 captures and their files."
+          ],
+          "openChoices": [
+            {
+              "question": "When the owner deletes a site while one of its crawls is running, what should happen?",
+              "options": [
+                "Refuse the delete and say a crawl is running, so the owner stops it first",
+                "Stop the crawl, wait for its worker to let go of it, then delete everything"
+              ],
+              "recommended": 0
+            },
+            {
+              "question": "When a site is deleted, what should happen to the products extracted from its pages?",
+              "context": "Products hold the site's id with no foreign key, so today they stay behind like the pages.",
+              "options": [
+                "Delete them with the site, like everything else of it",
+                "Keep them, with the site gone, as a record of what it sold"
+              ],
+              "recommended": 0
+            }
+          ],
+          "plan": [
+            {
+              "id": "IC-25.1",
+              "title": "Make deleting a site remove its pages, captures, crawls and their runs in one transaction",
+              "description": "One operation removes the site and everything that holds its id, in one transaction, in the order the keys need: the crawls' runs and their events, signals, tasks, blobs, holds, allocations and budget reservations; the crawls with their queues and attempts; the rule proposals; the captures; the pages; the site, whose own keys cascade. Each service deletes its own tables through the operation, as the services own their schemas. It also removes the site's pattern versions and experiments if a cascade doesn't. Its tests cover a site with crawls, runs, captures and pages, which leaves nothing behind, and a second site, which keeps everything.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/sites, services/crawls, services/runs, services/products"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "IC-25.2",
+              "title": "Delete a deleted site's stored page files once its rows are gone",
+              "description": "After the transaction commits, the captures' stored files (`storage_key`, and `globals_storage_key` where no other capture uses it) are removed from the content storage. A file another site's capture shares stays. A file already missing is skipped. A failure is logged and doesn't undo the delete. Its tests cover the shared and the missing file.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/sites, packages/storage"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-25.1",
+                  "why": "gives it the captures to read before they go"
+                }
+              ]
+            },
+            {
+              "id": "IC-25.3",
+              "title": "Show what goes in the Delete site confirmation",
+              "description": "The Config tab's card and confirmation say what goes: the site's pages, crawls and their runs, and its stored pages. The confirmation names how many of each.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "apps/console-web: the site's Config tab"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "IC-25.4",
+              "title": "Check on the gateway that deleting a site leaves nothing of it",
+              "description": "With the fix deployed, add a throwaway site from one URL, crawl it for a few pages, and delete it from the console: no row of it is left in any table, and its stored files are gone. Done from your gateway session with your permission.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "the items-core stack"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-25.2",
+                  "why": "deploys the file removal it checks"
+                },
+                {
+                  "id": "IC-25.3",
+                  "why": "deploys the confirmation it checks"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
