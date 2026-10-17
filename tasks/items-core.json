@@ -1474,7 +1474,7 @@
           "id": "IC-22",
           "title": "Fix the worker staying down when Docker or the gateway machine restarts",
           "description": "After Docker or the gateway machine restarts, items-core's worker comes back by itself, as the API, the console and the browser do. A Stop from the console's fleet page still keeps it down.",
-          "status": "Planning",
+          "status": "Planned",
           "where": [
             {
               "repo": "items-core",
@@ -1491,21 +1491,11 @@
             "On 2026-10-16 at 21:35 UTC the gateway machine's WSL restarted during the acceptance's fixture crawl (IC-20.6). Every items-core container came back but the worker, which had exited 0. It stayed down until it was started by hand (`docker start items-core-worker-1`), and the crawl, waiting for its rules, sat until then.",
             "When Docker starts, it restarts an `on-failure` container only if its last exit was non-zero. A container stopped with `docker stop`, or by a compose deploy, counts as stopped by hand, and no policy restarts it."
           ],
-          "openChoices": [
-            {
-              "question": "How should items-core's worker come back after Docker or the gateway machine restarts, while a Stop from the fleet page still keeps it down?",
-              "options": [
-                "The worker exits non-zero (143) when a signal stops it, and 0 only after a Stop from the fleet page. `restart: on-failure` then brings it back after Docker restarts, while a deploy's stop or a `docker stop` still isn't restarted, since Docker counts those as stopped by hand.",
-                "The service gets `restart: unless-stopped`, and a worker whose fleet row says stopped starts but claims no work until its row is deleted."
-              ],
-              "recommended": 0
-            }
-          ],
           "plan": [
             {
               "id": "IC-22.1",
-              "title": "Make the worker come back after Docker restarts, and stay down after a Stop from the fleet page",
-              "description": "Built as the chosen answer says. Its tests cover the exit code after a fleet-page Stop, after a signal, and after a crash. DEPLOY.md, `deploy.md` and WORKER.md say what each does.",
+              "title": "Make the worker exit non-zero when a signal stops it, and 0 only after a Stop from the fleet page",
+              "description": "A SIGTERM or SIGINT still drains the worker as now, but it then exits 143 (or 130 for SIGINT). A Stop from the fleet page exits 0 as now. A crash still exits 1. `deploy/compose.yaml` keeps `restart: on-failure`. Its tests cover each exit code. DEPLOY.md, `deploy.md` and WORKER.md say which stop leaves the worker down and which brings it back.",
               "where": [
                 {
                   "repo": "items-core",
@@ -1531,6 +1521,94 @@
                   "why": "deploys the fix it checks"
                 }
               ]
+            }
+          ],
+          "chosen": [
+            "The worker exits non-zero (143) when a signal stops it, and 0 only after a Stop from the fleet page, so `restart: on-failure` brings it back after Docker or the machine restarts. A deploy's stop and a `docker stop` still aren't restarted, since Docker counts those as stopped by hand (your answer, 2026-10-17)."
+          ]
+        },
+        {
+          "id": "IC-23",
+          "title": "Fix a site's later crawls waiting for rule approval again when its rules skip a page",
+          "description": "Once a site's page rules are approved, its later crawls go straight to fetching, even when a rule skips some pages. A scheduled recrawl never waits for an approval nobody asked for.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "services/crawls: discovery and the analysis stage"
+            }
+          ],
+          "today": [
+            "The analysis stage asks for rules when any page of the site has purpose `unknown` (`services/crawls/src/operations/analysis-templates.ts`); with no model it records a `noModel` proposal and the run waits for the owner.",
+            "A rule with `fetch: false` becomes an exclude in the crawl's scope, and the page it matches keeps purpose `unknown`. On the gateway the fixture's `/` stayed `unknown` while its 5,000 `/page/*` pages became `product_detail`.",
+            "So every crawl after a site's first waits for the same rules again. During the acceptance (2026-10-16/17) it happened on six crawls of the fixture site and on Lyko's second crawl, each approved by hand. A scheduled recrawl would wait forever."
+          ],
+          "chosen": [
+            "Pages a rule skips count as decided, so a site whose rules are approved crawls again without asking (your answer, 2026-10-17)."
+          ],
+          "plan": [
+            {
+              "id": "IC-23.1",
+              "title": "Make a page a skip rule matches count as decided, so the analysis asks nothing on later crawls",
+              "description": "Discovery gives a page an exclude rule matches the rule's purpose, or the analysis leaves excluded pages out of what it counts as undecided, whichever keeps the page tables truest. Its tests cover a site whose approved rules skip a path: its second crawl records no proposal and goes straight to fetching. A page no rule matches still makes the analysis ask.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/crawls"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "IC-23.2",
+              "title": "Check on the gateway that a second crawl of a site with approved rules doesn't wait",
+              "description": "With the fix deployed, crawl Lyko again (its rules are approved, and they skip three paths), capped at a few pages: it fetches without a new proposal. Done from your gateway session with your permission.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "the items-core stack"
+                }
+              ],
+              "done": false,
+              "blockedBy": [
+                {
+                  "id": "IC-23.1",
+                  "why": "deploys the fix it checks"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "IC-24",
+          "title": "Fix a crawl's time limit counting the wait for the owner's rules",
+          "description": "A crawl's `maxDurationMinutes` counts the time it crawls, not the time it waits for the owner to approve its page rules, so a crawl approved the next morning still fetches.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "services/crawls: the crawl policy and the analysis wait"
+            }
+          ],
+          "today": [
+            "The deadline is `started_at + maxDurationMinutes`, read in `services/crawls/src/operations/utils/read-crawl-policy.ts`; the default limit is 360 minutes.",
+            "The analysis wait has no deadline of its own, and it counts toward the limit. Lyko's first crawl on the gateway (`f8a40229`) started 2026-10-16 22:38 UTC and was approved at 07:56 the next day. It ended `budget` at once, having fetched nothing."
+          ],
+          "chosen": [
+            "The time limit pauses while the crawl waits for the owner's rules (your answer, 2026-10-17)."
+          ],
+          "plan": [
+            {
+              "id": "IC-24.1",
+              "title": "Pause a crawl's time limit while its analysis waits for the owner's rules",
+              "description": "The crawl keeps the time it spent waiting at `approval`, and the deadline adds it. Its tests cover a crawl approved after its limit would have passed, which still fetches, and the limit counting again from the approval. The crawl's page in the console shows the time waited.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "services/crawls, apps/console-web"
+                }
+              ],
+              "done": false
             }
           ]
         }
