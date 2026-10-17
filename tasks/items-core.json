@@ -1495,14 +1495,14 @@
             {
               "id": "IC-22.1",
               "title": "Make the worker exit non-zero when a signal stops it, and 0 only after a Stop from the fleet page",
-              "description": "A SIGTERM or SIGINT still drains the worker as now, but it then exits 143 (or 130 for SIGINT). A Stop from the fleet page exits 0 as now. A crash still exits 1. `deploy/compose.yaml` keeps `restart: on-failure`. Its tests cover each exit code. DEPLOY.md, `deploy.md` and WORKER.md say which stop leaves the worker down and which brings it back.",
+              "description": "A SIGTERM or SIGINT still drains the worker as now, but it then exits 143 (or 130 for SIGINT). A Stop from the fleet page exits 0 as now. A crash still exits 1. `deploy/compose.yaml` keeps `restart: on-failure`. Its tests cover each exit code. DEPLOY.md, `deploy.md` and WORKER.md say which stop leaves the worker down and which brings it back.\n\nDone 2026-10-17. The stop controller remembers the signal that stopped the worker, and `main.ts` exits with its code: 143 for SIGTERM, 130 for SIGINT. A Stop from the fleet page, a superseding boot, or a stop before the worker started exits 0. A crash still exits 1. `worker-process.test.ts` covers each code on Linux (8 tests), and `make-stop-controller.test.ts` covers the controller (12). DEPLOY.md, `deploy.md`, WORKER.md and the worker's READMEs say which stop brings it back. Merged with IC-23.1 and IC-24.1 as items-core `b432d829` and deployed to the gateway on 2026-10-17. The full suite passed on Linux with Postgres: 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "apps/worker, deploy/compose.yaml, the docs"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1552,14 +1552,14 @@
             {
               "id": "IC-23.1",
               "title": "Make a page a skip rule matches count as decided, so the analysis asks nothing on later crawls",
-              "description": "Discovery gives a page an exclude rule matches the rule's purpose, or the analysis leaves excluded pages out of what it counts as undecided, whichever keeps the page tables truest. Its tests cover a site whose approved rules skip a path: its second crawl records no proposal and goes straight to fetching. A page no rule matches still makes the analysis ask.",
+              "description": "Discovery gives a page an exclude rule matches the rule's purpose, or the analysis leaves excluded pages out of what it counts as undecided, whichever keeps the page tables truest. Its tests cover a site whose approved rules skip a path: its second crawl records no proposal and goes straight to fetching. A page no rule matches still makes the analysis ask.\n\nDone 2026-10-17. The page that stayed `unknown` was the crawl's seed `/`: creating a crawl writes its row, and no sitemap lists it, so discovery never classified it. Pages the sitemap lists already got their rule's purpose. So the analysis (`analysisTemplates`) now counts a page as undecided only when its row reads `unknown` and no rule names its path, as a purpose rule or as a skip. Any rule that names the page counts, not only a skip, since a rule that gives a purpose has decided it too. A page no rule matches still makes it ask. Tests: `rules-name-url.test.ts` (7), `analysis-templates.operations.test.ts` (5), and 2 end-to-end cases in `site-crawl-analysis.integration.test.ts`: a site with approved rules completes without asking, and one whose sitemap gains a page no rule names asks again. Merged with IC-23.1 and IC-24.1 as items-core `b432d829` and deployed to the gateway on 2026-10-17. The full suite passed on Linux with Postgres: 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/crawls"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             },
             {
@@ -1587,7 +1587,7 @@
           "id": "IC-24",
           "title": "Fix a crawl's time limit counting the wait for the owner's rules",
           "description": "A crawl's `maxDurationMinutes` counts the time it crawls, not the time it waits for the owner to approve its page rules, so a crawl approved the next morning still fetches.",
-          "status": "In progress",
+          "status": "Done",
           "where": [
             {
               "repo": "items-core",
@@ -1605,14 +1605,14 @@
             {
               "id": "IC-24.1",
               "title": "Make a crawl's time limit stop while its analysis waits for the owner's rules",
-              "description": "The crawl keeps the time it spent waiting at `approval`, and the deadline adds it. Its tests cover a crawl approved after its limit would have passed, which still fetches, and the limit counting again from the approval. The crawl's page in the console shows the time waited.",
+              "description": "The crawl keeps the time it spent waiting at `approval`, and the deadline adds it. Its tests cover a crawl approved after its limit would have passed, which still fetches, and the limit counting again from the approval. The crawl's page in the console shows the time waited.\n\nDone 2026-10-17. Migration `0012_crawl_rules_wait` adds two columns to `crawls.crawls`: `rules_wait_started_at` and `rules_waited_seconds`. Recording a pending proposal starts the wait. Applying the decision, approve or reject, adds the wait to the seconds waited, on the database's clock, and the deadline adds them. Replaying either step counts the wait once. A crawl already waiting when this deployed has no recorded start, and its wait still counts. The console's Overview shows \"Waited for rules\", and its Limits card's duration leaves the wait out. Tests: `rules-wait.operations.test.ts` (9), 2 end-to-end cases (8 hours waited still fetches; 8 hours waited plus 7 of its own ends `budget`), and the console's Overview tab (4). On the gateway the new columns are there: the crawls read 0 seconds waited. Merged with IC-23.1 and IC-24.1 as items-core `b432d829` and deployed to the gateway on 2026-10-17. The full suite passed on Linux with Postgres: 122 turbo tasks.",
               "where": [
                 {
                   "repo": "items-core",
                   "part": "services/crawls, apps/console-web"
                 }
               ],
-              "done": false,
+              "done": true,
               "approved": true
             }
           ]
