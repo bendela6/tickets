@@ -1639,7 +1639,7 @@
           "id": "IC-25",
           "title": "Fix deleting a site leaving its pages, crawls, runs and stored files behind",
           "description": "Deleting a site from the console removes everything that belongs to it: its pages, its captures and their stored files, its crawls with their queues and attempts, and the crawls' workflow runs with their events. The confirmation says what goes.",
-          "status": "In progress",
+          "status": "Done",
           "where": [
             {
               "repo": "items-core",
@@ -1710,14 +1710,14 @@
             {
               "id": "IC-25.4",
               "title": "Check on the gateway that deleting a site leaves nothing of it",
-              "description": "With the fix deployed, add a throwaway site from one URL, crawl it for a few pages, and delete it from the console: no row of it is left in any table, and its stored files are gone. Done from your gateway session with your permission.",
+              "description": "With the fix deployed, add a throwaway site from one URL, crawl it for a few pages, and delete it from the console: no row of it is left in any table, and its stored files are gone. Done from your gateway session with your permission.\n\nDone 2026-10-17 on deploy 15 (`a8f2bfdc`), with your permission, while you were away. A throwaway site for example.com was added and crawled (`a5bdcf91`); before the delete it held the site, 1 page, 1 crawl with 8 attempts, 1 run with 229 events, and its robots.txt. The console's Delete site was pressed, with the browser's OK answered by the page for the test: the confirmation read \"Delete example.com? This removes its 1 page, its 1 crawl and its runs, the products found on its pages, and its stored pages. This cannot be undone.\" The API logged `site deleted` (pages 1, crawls 1, runs 1, products 0, no files) and answered 204 in 22 ms. Afterwards every count was 0: the site, its pages, crawls, attempts, runs, robots.txt, and no event of a deleted run anywhere; 515 sites remain.",
               "where": [
                 {
                   "repo": "live gateway",
                   "part": "the items-core stack"
                 }
               ],
-              "done": false,
+              "done": true,
               "blockedBy": [
                 {
                   "id": "IC-25.2",
