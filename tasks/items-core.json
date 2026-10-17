@@ -1736,6 +1736,92 @@
             "The products extracted from the site's pages are deleted with it, like everything else of it (your answer, 2026-10-17)."
           ],
           "chosenOn": "2026-10-17"
+        },
+        {
+          "id": "IC-26",
+          "title": "Remove FIREBASE_PROJECT_ID from the gateway, with app sign-in and push notifications off without it",
+          "description": "The items-core API starts with no Firebase project named. Without one, items-app's sign-in refuses every app token and says why, push notifications are skipped, and the API says both once at boot. The gateway's items-core stack no longer has the variable.",
+          "status": "Planned",
+          "where": [
+            {
+              "repo": "items-core",
+              "part": "apps/gateway: `environment.ts`, `consumer-glue/auth`, the boot banner"
+            },
+            {
+              "repo": "items-core",
+              "part": "services/notifications, packages/backend/auth"
+            },
+            {
+              "repo": "items-core",
+              "part": "`deploy/compose.yaml`, `DEPLOY.md`, `docker-compose.prod.yml`, the openapi-drift workflow"
+            },
+            {
+              "repo": "live gateway",
+              "part": "the items-core stack's api variables"
+            }
+          ],
+          "today": [
+            "`FIREBASE_PROJECT_ID` is required (`environment.ts`): without it the API refuses to boot. It names the Firebase project whose ID tokens the consumer group (items-app's users) accepts, and push notifications use the same Firebase app. The console signs in through Rauthy and doesn't use it.",
+            "The gateway's stack still sets it to `bnw-items-dev`, the Google project deleted on 2026-10-16, so app sign-in and push notifications already don't work. `deploy/compose.yaml` names it for the api, and the `seed` and `seed-workflows` jobs require `GW_api__FIREBASE_PROJECT_ID`.",
+            "The boot banner prints `app auth: firebase <project>`."
+          ],
+          "chosen": [
+            "Clear the variable from the gateway. Since the API won't start without it, the API first starts without one: app sign-in and push notifications are off until a project is set again. The console's Rauthy sign-in isn't affected (your yes, 2026-10-17)."
+          ],
+          "chosenOn": "2026-10-17",
+          "plan": [
+            {
+              "id": "IC-26.1",
+              "title": "Make the API start without FIREBASE_PROJECT_ID, refusing app tokens and skipping push notifications",
+              "description": "`FIREBASE_PROJECT_ID` becomes optional, as `CONSOLE_AUTH_ISSUER` is. Unset, no Firebase app is made: the consumer group answers every request that needs a user with 401 and a code that says app sign-in is off, without calling Firebase; push notifications are skipped with one warning instead of throwing; the boot banner reads `app auth: off`, and the API logs once that app sign-in is off. Set, everything works as today. Tests cover both.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "apps/gateway, services/notifications, packages/backend/auth"
+                }
+              ],
+              "done": false,
+              "approved": true
+            },
+            {
+              "id": "IC-26.2",
+              "title": "Remove FIREBASE_PROJECT_ID from the deploy files and their docs",
+              "description": "`deploy/compose.yaml` no longer names it for the api or requires it for the `seed` and `seed-workflows` jobs, and its comments say app sign-in is off until a project is named. `docker-compose.prod.yml`, the openapi-drift workflow's stub, `.env.worker.cloud`'s comment and `DEPLOY.md` follow.",
+              "where": [
+                {
+                  "repo": "items-core",
+                  "part": "`deploy/compose.yaml`, `DEPLOY.md`, `docker-compose.prod.yml`, `.github/workflows/openapi-drift.yml`"
+                }
+              ],
+              "done": false,
+              "approved": true,
+              "blockedBy": [
+                {
+                  "id": "IC-26.1",
+                  "why": "the API must boot without it before the compose drops it"
+                }
+              ]
+            },
+            {
+              "id": "IC-26.3",
+              "title": "Clear FIREBASE_PROJECT_ID from the gateway's items-core stack and check the deploy",
+              "description": "Before the push, the stack takes the new compose and loses the api's `FIREBASE_PROJECT_ID` (`PATCH /api/stacks/items-core`, every other variable kept as stored). Then the push deploys. Check: the deploy goes live, the API's banner reads `app auth: off`, the console still signs in, and an app request with a token gets the 401 that says app sign-in is off. Done from your gateway session, with your yes.",
+              "where": [
+                {
+                  "repo": "live gateway",
+                  "part": "the items-core stack"
+                }
+              ],
+              "done": false,
+              "approved": true,
+              "blockedBy": [
+                {
+                  "id": "IC-26.2",
+                  "why": "deploys the compose without the variable"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
