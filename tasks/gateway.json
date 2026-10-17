@@ -1413,6 +1413,120 @@
             }
           ],
           "statusNote": "54594cc, live 2026-10-16"
+        },
+        {
+          "id": "GW-19",
+          "title": "Deploy a stack when a push makes a version for one of its services",
+          "description": "A stack that deploys on push deploys its branch's newest commit. It can deploy instead when a push makes a version for one of its services (BH-20), and every deploy hands each service's build the versions of all of them at that commit and the notes since the previous deploy, for the version at the foot of its sidebar (BH-21).",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "BH-20.1",
+              "why": "the services' version tags come from `bh-release`"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "api (`apps/api/src/deployer`, `apps/api/src/contracts/stacks.ts`), web (the stack form, the deploy page)"
+            }
+          ],
+          "today": [
+            "`deployOnPush`: the gateway looks at the stack's branch every minute and deploys its newest commit (`apps/api/src/contracts/stacks.ts:194`);",
+            "a deploy keeps its commit's sha and message (`DeployRecord`, `apps/api/src/deployer/records.ts`) and builds from GitHub's tarball of it, with no `.git` (`apps/api/src/deployer/source.ts`);",
+            "the library already reads a repository's GitHub releases (`github.releases`, `apps/api/src/library/library.ts`)."
+          ],
+          "chosen": [
+            "A push deploys only when it makes a version for one of the stack's services (your answer). A push of docs, tests or refactors alone waits for the next version, and since a deploy starts from a release, its versions are known before the build."
+          ],
+          "chosenOn": "2026-10-18",
+          "plan": [
+            {
+              "id": "GW-19.1",
+              "title": "Deploy on a new version instead of a new commit",
+              "description": "A stack deploys on push (today's), on release, or by hand alone, until every app releases with `bh-release` (BH-22). On release, the minute's check looks for version tags newer than the live deploy's on commits of the branch, and deploys the newest such commit. Deploying by hand at any commit stays.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "api, web"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-19.2",
+              "title": "Pass each build its services' versions and notes",
+              "description": "At the deployed commit, the deployer finds each service's newest `<name>@<version>` tag, the commits past it as `+N` (GitHub's compare, `ahead_by`), and the GitHub release notes of each version since the previous deploy. It passes them, with the deploy's time, branch and commit, as one build arg, `BH_BUILD_INFO` (JSON, from which the Vite plugin of BH-21.2 takes its own service's `BuildInfo`), keeps them on the deploy's record, and the deploy's page shows them.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "api (`apps/api/src/deployer`), web"
+                }
+              ],
+              "done": false
+            }
+          ]
+        },
+        {
+          "id": "GW-20",
+          "title": "Make the library copy bh at one commit, each package at its own version",
+          "description": "With BH-20, bh has no one version. The library copies bh's packages as they are at one of its release commits, writes each package's own version into its `package.json`, and shows an app's copy package by package.",
+          "status": "Planned",
+          "blockedBy": [
+            {
+              "id": "BH-20.2",
+              "why": "bh tags each package"
+            }
+          ],
+          "where": [
+            {
+              "repo": "gateway",
+              "part": "api (`apps/api/src/library`), web (the bh page)"
+            }
+          ],
+          "today": [
+            "the bh page lists bh's releases (`v0.1.0` to `v0.6.1`) and copies one into an app, writing its version into every package's `package.json` (`apps/api/src/library/copy.ts:147`); an app's copy has one version (`versionIn`);",
+            "its update commits say `chore: bh 0.6.0`."
+          ],
+          "rule": "A copy is all of bh at one commit, never packages from different commits: bh's packages import each other (`@bh/ui` is used by 4 of them, `@bh/resource` by 9), so a mix doesn't build.",
+          "plan": [
+            {
+              "id": "GW-20.1",
+              "title": "Make each copy at one of bh's release commits, with each package's own version",
+              "description": "The library's list becomes bh's release commits, each with the packages it tagged and their notes; a copy is made at one, and each package's `package.json` says that package's newest version at that commit.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "api (`apps/api/src/library`)"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-20.2",
+              "title": "Show an app's copy package by package",
+              "description": "The bh page shows each app's packages at their versions, which of them a newer release commit changes, and those versions' notes.",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "web (the bh page)"
+                }
+              ],
+              "done": false
+            },
+            {
+              "id": "GW-20.3",
+              "title": "Name the library's update commits `chore(deps): bh …`",
+              "description": "So an app's services take a patch for a new copy (BH-20).",
+              "where": [
+                {
+                  "repo": "gateway",
+                  "part": "api (`apps/api/src/library`)"
+                }
+              ],
+              "done": false
+            }
+          ]
         }
       ]
     },
