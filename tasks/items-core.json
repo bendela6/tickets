@@ -1474,7 +1474,7 @@
           "id": "IC-22",
           "title": "Fix the worker staying down when Docker or the gateway machine restarts",
           "description": "After Docker or the gateway machine restarts, items-core's worker comes back by itself, as the API, the console and the browser do. A Stop from the console's fleet page still keeps it down.",
-          "status": "Planned",
+          "status": "In progress",
           "where": [
             {
               "repo": "items-core",
@@ -1533,7 +1533,7 @@
           "id": "IC-23",
           "title": "Fix a site's later crawls waiting for rule approval again when its rules skip a page",
           "description": "Once a site's page rules are approved, its later crawls go straight to fetching, even when a rule skips some pages. A scheduled recrawl never waits for an approval nobody asked for.",
-          "status": "Planned",
+          "status": "In progress",
           "where": [
             {
               "repo": "items-core",
@@ -1587,7 +1587,7 @@
           "id": "IC-24",
           "title": "Fix a crawl's time limit counting the wait for the owner's rules",
           "description": "A crawl's `maxDurationMinutes` counts the time it crawls, not the time it waits for the owner to approve its page rules, so a crawl approved the next morning still fetches.",
-          "status": "Planned",
+          "status": "In progress",
           "where": [
             {
               "repo": "items-core",
