@@ -1600,7 +1600,7 @@
           "plan": [
             {
               "id": "IC-24.1",
-              "title": "Pause a crawl's time limit while its analysis waits for the owner's rules",
+              "title": "Make a crawl's time limit stop while its analysis waits for the owner's rules",
               "description": "The crawl keeps the time it spent waiting at `approval`, and the deadline adds it. Its tests cover a crawl approved after its limit would have passed, which still fetches, and the limit counting again from the approval. The crawl's page in the console shows the time waited.",
               "where": [
                 {
