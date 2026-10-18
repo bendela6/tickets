@@ -1,5 +1,5 @@
-// The sidebar's 44px top row: the mark, the wordmark, and the control that
-// shuts the sidebar.
+// The sidebar's top row: the mark, the wordmark with the brand's caption under
+// it, and the control that shuts the sidebar.
 
 import { PanelLeft, X } from 'lucide-react';
 import { cn, Tooltip } from '@bh/ui';
@@ -29,7 +29,8 @@ export interface BrandRowProps {
  * The sidebar's top row: the mark, the name, and the control that collapses
  * the sidebar (or, in the phone's drawer, closes it).
  *
- * Expanded, the mark sits beside the wordmark with the control trailing.
+ * Expanded, the mark sits beside the wordmark, its caption under it, with the
+ * control trailing.
  * Collapsed, the mark IS the control: the rail has no room for a separate
  * button, and a sidebar you can shut but not reopen is a trap.
  */
@@ -57,9 +58,17 @@ export function BrandRow({ brand, collapsed, onToggle, inDrawer = false }: Brand
   const label = inDrawer ? 'Close navigation' : 'Collapse sidebar';
   const IconComponent = inDrawer ? X : PanelLeft;
   return (
-    <div className="flex h-44 shrink-0 items-center gap-8 pr-8 pl-14">
+    <div
+      className={cn(
+        'flex min-h-44 shrink-0 items-center gap-8 pr-8 pl-14',
+        brand.caption ? 'py-6' : null,
+      )}
+    >
       {brand.mark}
-      <span className="text-13 font-500 text-gray-12 flex-1 truncate font-mono">{brand.name}</span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="text-13 font-500 text-gray-12 truncate font-mono">{brand.name}</span>
+        {brand.caption}
+      </div>
       <button
         type="button"
         aria-label={label}

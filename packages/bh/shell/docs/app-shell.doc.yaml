@@ -27,9 +27,10 @@ body:
     file: src/styles.css
   - h2: A whole app
   - |
-    `AppShell` takes the nav as `sections`, the app's `brand` (a `mark` and a
-    `name`), a `storagePrefix`, an optional `footer`, and the page as its
-    children. The footer is a function told whether the sidebar is at rail
+    `AppShell` takes the nav as `sections`, the app's `brand` (a `mark`, a
+    `name` and an optional `caption` under it, such as the
+    [version line](/shell/version#the-line)), a `storagePrefix`, an optional
+    `footer`, and the page as its children. The footer is a function told whether the sidebar is at rail
     width; [`ThemeFooter`](/shell/theme#in-the-footer) is a ready one.
   - demo: examples/a-bookshop.tsx
     width: tablet

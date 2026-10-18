@@ -8,4 +8,6 @@ export interface ShellBrand {
   mark: ReactNode;
   /** The wordmark beside it, set in the mono face. */
   name: string;
+  /** A small line under the name, e.g. `BuildLine`; only in the expanded sidebar. */
+  caption?: ReactNode;
 }

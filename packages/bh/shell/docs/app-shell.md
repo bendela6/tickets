@@ -36,9 +36,10 @@ after `@bh/ui`'s tokens. Without it the frame draws with no styles.
 
 ## A whole app
 
-`AppShell` takes the nav as `sections`, the app's `brand` (a `mark` and a
-`name`), a `storagePrefix`, an optional `footer`, and the page as its
-children. The footer is a function told whether the sidebar is at rail
+`AppShell` takes the nav as `sections`, the app's `brand` (a `mark`, a
+`name` and an optional `caption` under it, such as the
+[version line](version.md#the-line)), a `storagePrefix`, an optional
+`footer`, and the page as its children. The footer is a function told whether the sidebar is at rail
 width; [`ThemeFooter`](theme.md#in-the-footer) is a ready one.
 
 **A bookshop**
@@ -406,7 +407,8 @@ interface ShellBrand
 
 The app's mark and name, drawn at the top of its sidebar and in its phone's top bar.
 
-| Member            | Type        | Default | Description                                                      |
-| ----------------- | ----------- | ------- | ---------------------------------------------------------------- |
-| `mark` (required) | `ReactNode` |         | The mark, about 18px, already coloured the way the app wants it. |
-| `name` (required) | `string`    |         | The wordmark beside it, set in the mono face.                    |
+| Member            | Type        | Default | Description                                                                  |
+| ----------------- | ----------- | ------- | ---------------------------------------------------------------------------- |
+| `mark` (required) | `ReactNode` |         | The mark, about 18px, already coloured the way the app wants it.             |
+| `name` (required) | `string`    |         | The wordmark beside it, set in the mono face.                                |
+| `caption`         | `ReactNode` |         | A small line under the name, e.g. `BuildLine`; only in the expanded sidebar. |

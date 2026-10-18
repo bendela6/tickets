@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 · 2026-10-18 23:58 +04:00
+
+- feat(shell)!: move the version line under the app's name (4873e3e)
+  - Add a caption to the brand, drawn under the name while the sidebar is expanded
+  - Replace BuildFooter with BuildLine, the version line as the brand's caption
+  - Leave the version line out of the rail and the phone's top bar
+  - Document the version line under the name
+  - BREAKING CHANGE: an app moves the version line from AppShell's footer into its brand, `<BuildFooter info={BUILD} collapsed={collapsed} />` in `footer` → `caption: <BuildLine info={BUILD} />` in `brand`.
+
 ## 0.8.8 · 2026-10-18 19:50 +04:00
 
 - fix(shell): pass storageKey in the Version page's footer example (00f26b9)

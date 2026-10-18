@@ -1,17 +1,17 @@
 title: Version
-summary: "Show the stack's version at the sidebar's foot, and open the Version page from it: services, packages and every release's commits."
+summary: "Show the stack's version under the app's name, and open the Version page from it: services, packages and every release's commits."
 order: 9
 related: [AppShell, Pages, Releases, Versions and updates]
 body:
   - |
-    Show the stack's version at the sidebar's foot, and open the Version page
+    Show the stack's version under the app's name, and open the Version page
     from it: services, packages and every release's commits.
 
     Everything comes from the repo at build time. `@bh/shell/vite` reads the
     `package.json` and `CHANGELOG.md` files that `pnpm release` writes
     ([Releases](/tooling/releases)); nothing is passed into the build.
   - h2: Import
-  - code: import { BuildFooter, readBuildInfo, VersionPage } from '@bh/shell';
+  - code: import { BuildLine, readBuildInfo, VersionPage } from '@bh/shell';
     lang: tsx
   - h2: The plugin
   - code: |
@@ -40,28 +40,26 @@ body:
     links to GitHub; a build without `.git` has no remote to read.
   - h2: The line
   - code: |
-      import { BuildFooter, readBuildInfo, ThemeFooter } from '@bh/shell';
+      import { BookOpen } from 'lucide-react';
+      import { BuildLine, readBuildInfo } from '@bh/shell';
 
       const BUILD = readBuildInfo();
 
-      /** AppShell's footer: the theme, then the version line, last. */
-      export function footer(collapsed: boolean) {
-        return (
-          <>
-            <ThemeFooter collapsed={collapsed} storageKey="myapp-theme" />
-            {BUILD ? <BuildFooter info={BUILD} collapsed={collapsed} /> : null}
-          </>
-        );
-      }
+      /** AppShell's brand: the mark, the name, and the version line under it. */
+      export const BRAND = {
+        mark: <BookOpen size={18} strokeWidth={1.75} />,
+        name: 'tickets',
+        caption: BUILD ? <BuildLine info={BUILD} /> : null,
+      };
     lang: tsx
     file: apps/web/src/app/frame.tsx
     numbers: false
   - |
     `v0.4.1 · 2 hours ago`: the stack's version and how long ago it was
-    released, small and muted, the exact time its title. It links to the
-    Version page and wraps when the sidebar is narrow. At rail width it is one
-    icon, the version and time its tooltip. It goes last in the footer, with
-    room below for the browser's link preview.
+    released, small and muted, the exact time its title. It sits under the
+    app's name as the brand's `caption`, links to the Version page and
+    wraps when the sidebar is narrow. The rail and the phone's top bar leave
+    it out; the phone's drawer shows it.
 
     - **Dev server:** `dev v0.4.1+3`, with the build's time.
     - **A dot:** a version this browser has not seen, until its Version page
@@ -111,5 +109,5 @@ body:
       from a tarball shows the same page.
     - **Nothing bundled but the summary.** Releases are separate files,
       fetched as the page opens them.
-    - **Domain-free.** `BuildFooter` and `VersionPage` only take a
+    - **Domain-free.** `BuildLine` and `VersionPage` only take a
       `BuildInfo`.
