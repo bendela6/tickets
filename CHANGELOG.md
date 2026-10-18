@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2 · 2026-10-18 15:39 +04:00
+
+@tickets/web 0.1.2
+
+- feat(web): put the version line last in the sidebar (3957a6d)
+  - Move the version line below the theme switch
+- chore(deps): bring in bh's changes to shell (6e99f96)
+  - Show how long ago the version line's release was
+
 ## 0.1.1 · 2026-10-18 15:09 +04:00
 
 @tickets/api 0.1.1 · @tickets/web 0.1.1
