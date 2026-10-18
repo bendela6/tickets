@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.7 · 2026-10-18 15:36 +04:00
+
+- feat(shell): show how long ago the version line's release was (9d9a66e)
+  - Write the line's time as a relative date, the exact time its title
+  - Draw the line smaller and muted, without the rule above it
+  - Leave room below the line for the browser's link preview
+  - Document the line as the last item in the sidebar's footer
+
 ## 0.8.6 · 2026-10-18 15:04 +04:00
 
 - fix(shell): write "1 commit" on the Version page's overview (2b06934)

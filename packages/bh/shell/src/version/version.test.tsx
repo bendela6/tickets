@@ -191,12 +191,14 @@ describe('BuildFooter', () => {
     );
   };
 
-  it('links the version and release time to the Version page', () => {
+  it('links the version and how long ago it was released to the Version page', () => {
     footer(INFO);
-    const link = screen.getByRole('link');
+    const link = screen.getByRole('link', { name: `Version ${versionLine(INFO)}` });
     expect(link).toHaveAttribute('href', '/version');
-    expect(link).toHaveTextContent(versionLine(INFO).replace(' · ', '· '));
+    expect(link).toHaveTextContent(/^v0\.4\.1·(yesterday|.+ ago)$/);
     expect(versionLine(INFO)).toMatch(/^v0\.4\.1 · \d+ Oct 2026, \d\d:\d\d$/);
+    // The exact time, on hover.
+    expect(within(link).getByTitle(/2026/)).toBeInTheDocument();
   });
 
   it('says dev and how far past the tag a dev server is, with the build time', () => {
