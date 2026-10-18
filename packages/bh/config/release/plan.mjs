@@ -154,11 +154,17 @@ export function planRelease({
       lines,
     });
   }
-  if (released.length === 0 && !set.has(name)) {
+  // Commits outside every package of the repo's own (its root, an app that is
+  // the root, a vendored copy) move the stack alone.
+  const own = (file) => releasing.some((u) => file === u.dir || file.startsWith(`${u.dir}/`));
+  const outside =
+    stackFrom === null ? [] : stackCommits.filter((c) => listed(c) && !c.files.some(own));
+  const outsideChange = largest(outside.map((c) => changeOf(c.message)));
+  if (released.length === 0 && !set.has(name) && stackFrom !== null && outsideChange === null) {
     return null;
   }
 
-  const stackChange = largest(released.map((r) => r.change));
+  const stackChange = largest([...released.map((r) => r.change), outsideChange]);
   const stackTo =
     set.get(name) ?? (stackFrom === null ? '0.1.0' : nextVersion(stackFrom, stackChange ?? 'fix'));
   const rootListed = stackCommits.filter(listed);
@@ -169,9 +175,11 @@ export function planRelease({
 
   const named = released.map((r) => `${r.short} ${r.to}`);
   const header =
-    released.length <= 3
-      ? `chore(release): release ${and(named)} as v${stackTo}`
-      : `chore(release): release ${released.length} packages as v${stackTo}`;
+    released.length === 0
+      ? `chore(release): release v${stackTo}`
+      : released.length <= 3
+        ? `chore(release): release ${and(named)} as v${stackTo}`
+        : `chore(release): release ${released.length} packages as v${stackTo}`;
   const bullets = [
     ...new Set(rootListed.filter(counts).map((c) => `- ${capital(c.message.headline)}`)),
   ];

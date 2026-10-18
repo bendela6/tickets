@@ -1,6 +1,6 @@
 {
   "name": "@bh/shell",
-  "version": "0.8.1",
+  "version": "0.8.6",
   "private": true,
   "type": "module",
   "exports": {

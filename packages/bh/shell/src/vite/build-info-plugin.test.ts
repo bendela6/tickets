@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { buildFiles, makeBuildInfo, repositoryUrl } from './index';
+import { buildFiles, buildInfo, makeBuildInfo, repositoryUrl } from './index';
 
 const root = mkdtempSync(join(tmpdir(), 'bh-build-info-'));
 afterAll(() => rmSync(root, { recursive: true, force: true }));
@@ -134,6 +134,16 @@ describe('makeBuildInfo', () => {
       commits: 1,
     });
     expect(files.has('releases/0.1.0.json')).toBe(true);
+  });
+});
+
+describe('buildInfo', () => {
+  it('gives tests no build info, as Vitest runs in test mode', () => {
+    const config = buildInfo().config as (
+      config: object,
+      env: { command: string; mode: string },
+    ) => unknown;
+    expect(config({}, { command: 'serve', mode: 'test' })).toBeUndefined();
   });
 });
 

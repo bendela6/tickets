@@ -195,7 +195,8 @@ export function buildFiles(
 /**
  * Reads the repo's versions and changelogs once, as the build or the dev
  * server starts. The BuildInfo goes into the bundle; build.json and the
- * releases are served beside it, not bundled.
+ * releases are served beside it, not bundled. Tests get none: Vitest runs in
+ * test mode, and a config it shares with the app draws no version line.
  */
 export function buildInfo(): Plugin {
   let files = new Map<string, string>();
@@ -203,6 +204,9 @@ export function buildInfo(): Plugin {
   return {
     name: 'bh:build-info',
     config(config, env) {
+      if (env.mode === 'test') {
+        return;
+      }
       base = config.base ?? '/';
       const made = makeBuildInfo({
         appDir: resolve(config.root ?? cwd()),

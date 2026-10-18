@@ -3,13 +3,14 @@
 // list per release. Services and Packages: a table each.
 
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 import { Button, CardState, Pill, SearchInput, useCopy } from '@bh/ui';
 import { Page } from '../layout/page';
 import { PageBody } from '../layout/page-body';
 import { PageHeader } from '../layout/page-header';
 import { Section } from '../layout/section';
 import { TabNav } from '../layout/tab-nav';
+import { AppLink, useAppNavigate } from './app-link';
 import {
   shortName,
   versionLabel,
@@ -82,23 +83,29 @@ function Overview({ info, basePath }: { info: BuildInfo; basePath: string }) {
   const { release, error } = useRelease(info, info.stack.version);
   return (
     <>
-      <Section
-        title="Services in this build"
-        action={
-          <Link to={`${basePath}/services`} className="text-13 text-indigo-11 hover:underline">
-            All services →
-          </Link>
-        }
-      >
-        <ServicesSummary info={info} />
-      </Section>
+      {info.services.length > 0 ? (
+        <Section
+          title="Services in this build"
+          action={
+            <AppLink to={`${basePath}/services`} className="text-13 text-indigo-11 hover:underline">
+              All services →
+            </AppLink>
+          }
+        >
+          <ServicesSummary info={info} />
+        </Section>
+      ) : null}
       <Section
         title={`What's new in v${info.stack.version}`}
-        count={release ? `${release.commits.length} commits` : undefined}
+        count={
+          release
+            ? `${release.commits.length} commit${release.commits.length === 1 ? '' : 's'}`
+            : undefined
+        }
         action={
-          <Link to={`${basePath}/releases`} className="text-13 text-indigo-11 hover:underline">
+          <AppLink to={`${basePath}/releases`} className="text-13 text-indigo-11 hover:underline">
             All releases →
-          </Link>
+          </AppLink>
         }
       >
         <CardState
@@ -165,14 +172,16 @@ function ReleaseCard({
 }
 
 function Releases({ info, basePath }: { info: BuildInfo; basePath: string }) {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const search = useRouterState({
     select: (state) => state.location.search as Record<string, unknown>,
   });
   const service = typeof search.service === 'string' ? search.service : 'all';
   const [query, setQuery] = useState('');
   const { releases, total, loading, error, loadMore } = useReleases(info);
-  const chips = ['all', ...info.services.map((s) => shortName(s.name)), 'repo'];
+  // No services, no filter: every commit is the repo's.
+  const chips =
+    info.services.length > 0 ? ['all', ...info.services.map((s) => shortName(s.name)), 'repo'] : [];
   const q = query.trim().toLowerCase();
   const shown = useMemo(() => {
     return releases
@@ -201,21 +210,23 @@ function Releases({ info, basePath }: { info: BuildInfo; basePath: string }) {
   return (
     <>
       <div className="flex flex-col gap-10">
-        <div className="flex flex-wrap gap-6" role="group" aria-label="Show">
-          {chips.map((chip) => {
-            return (
-              <Pill
-                key={chip}
-                label={chip === 'all' ? 'All' : chip === 'repo' ? 'Outside packages' : chip}
-                variant="outline"
-                shape="round"
-                size="sm"
-                pressed={service === chip}
-                onClick={() => pick(chip)}
-              />
-            );
-          })}
-        </div>
+        {chips.length > 0 ? (
+          <div className="flex flex-wrap gap-6" role="group" aria-label="Show">
+            {chips.map((chip) => {
+              return (
+                <Pill
+                  key={chip}
+                  label={chip === 'all' ? 'All' : chip === 'repo' ? 'Outside packages' : chip}
+                  variant="outline"
+                  shape="round"
+                  size="sm"
+                  pressed={service === chip}
+                  onClick={() => pick(chip)}
+                />
+              );
+            })}
+          </div>
+        ) : null}
         <SearchInput
           value={query}
           onChange={setQuery}
@@ -302,7 +313,10 @@ export function VersionPage({ info, basePath = '/version' }: VersionPageProps) {
               tabs={[
                 { to: basePath, label: 'Overview' },
                 { to: `${basePath}/releases`, label: 'Releases' },
-                { to: `${basePath}/services`, label: 'Services', badge: info.services.length },
+                // A repo whose app is its root has no services: no tab for them.
+                ...(info.services.length > 0
+                  ? [{ to: `${basePath}/services`, label: 'Services', badge: info.services.length }]
+                  : []),
                 { to: `${basePath}/packages`, label: 'Packages', badge: info.packages.length },
               ]}
             />

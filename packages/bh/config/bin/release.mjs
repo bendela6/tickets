@@ -11,7 +11,7 @@
 //   bh-release --set @tickets/api=1.0.0   declare a version; the repo's name sets the stack
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { headerOf } from '../release/changelog.mjs';
 import { commitsIn, git, newestTag, tagsOf } from '../release/git.mjs';
@@ -124,10 +124,13 @@ function show(plan) {
   return out.join('\n');
 }
 
+/** A file in the repo's git folder: `.git/<name>`, or the worktree's own in a linked worktree. */
+const gitFile = (root, name) => resolve(root, git(root, ['rev-parse', '--git-path', name]).trim());
+
 /** Commits what is written, tags it and pushes the commit and tags at once. */
 function finish(root, message, tags) {
   git(root, ['add', '--all']);
-  const file = join(root, '.git', 'BH_RELEASE_MSG');
+  const file = gitFile(root, 'BH_RELEASE_MSG');
   writeFileSync(file, message);
   try {
     git(root, ['commit', '--quiet', '-F', file]);
@@ -145,7 +148,7 @@ function finish(root, message, tags) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const root = git(process.cwd(), ['rev-parse', '--show-toplevel']).trim();
-  const pending = join(root, '.git', 'bh-release.json');
+  const pending = gitFile(root, 'bh-release.json');
 
   if (args.cont) {
     if (!existsSync(pending)) {
