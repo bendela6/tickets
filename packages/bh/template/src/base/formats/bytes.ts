@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { sizeOf } from '../../format/bytes';
 import { measuresAsPieces } from '../../format/pieces';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, isNumber, plainPieces } from '../../format/write';
 
 const bytesOptions = v.optional(
@@ -19,7 +19,7 @@ const bytesOptions = v.optional(
 export type BytesOptions = v.InferOutput<typeof bytesOptions>;
 
 /** A size: `12.4 MiB`. A rate: `12.4 MiB/s`. */
-export const bytesFormat = noFormats.define({
+export const bytesFormat = defineFormat({
   name: 'bytes',
   kinds: ['number'],
   options: bytesOptions,

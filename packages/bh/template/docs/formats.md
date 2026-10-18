@@ -1,6 +1,6 @@
 ---
 title: Formats
-summary: A format writes a value as text. bh registers eleven; an app registers its own.
+summary: A format writes a value as text. bh registers its own; an app adds more.
 order: 4
 related: [Overview, Renderers, The resource contract]
 ---
@@ -91,8 +91,8 @@ export function EveryFormat() {
 
 ## The registry
 
-`noFormats` is the empty registry. It checks each format's name, kinds,
-options schema and function.
+`defineFormat` checks a format's name, kinds, options schema and
+function, and types it by its options.
 
 `packages/shared/template/src/format/registry.ts`, line 1:
 
@@ -139,37 +139,37 @@ const formatterData = v.object({
   format: functionSchema<Formatter<any>['format']>('its format'),
 });
 
-/** The empty format registry. `define` types a format by its options. */
+/** The empty format registry. `baseFormats` registers bh's on it. */
 export const noFormats = defineRegistry({
   name: 'format',
   schema: formatterData,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(format: Formatter<O>): Formatter<any> => format,
 });
+
+/** Defines a format: checks it, types it by its options. */
+export const defineFormat = noFormats.define;
 ```
 
 ## The formats
-
-| Format     | Writes                          | Kinds                                   | Options                         |
-| ---------- | ------------------------------- | --------------------------------------- | ------------------------------- |
-| `number`   | `1,234.5`, compact `12.4K`      | number                                  | `digits`, `notation: 'compact'` |
-| `percent`  | 0.427 as `43%`                  | number                                  | `digits`                        |
-| `bytes`    | `12.4 MiB`, a rate `12.4 MiB/s` | number                                  | `units`, `digits`, `per`        |
-| `duration` | `2h 5m`, `840ms`                | number                                  | `unit`, `days`                  |
-| `money`    | `€12.50`                        | number                                  | `currency` (required)           |
-| `date`     | `Jul 13, 2026`                  | date                                    |                                 |
-| `datetime` | `Jul 13, 2026, 09:05`           | datetime                                | `timeZone`                      |
-| `relative` | `5 minutes ago`, `in 2 hours`   | date, datetime                          | `smallestUnit`                  |
-| `plain`    | the text as it is               | text, markdown, url, email, phone, time |                                 |
-| `markdown` | markdown without its marks      | markdown, text                          |                                 |
-| `rich`     | a rich text's words             | richtext                                |                                 |
 
 A field names a format alone, `'bytes'`, or with options,
 `{ "name": "bytes", "options": { "per": "s" } }`. Options its schema
 refuses fail the field's metadata.
 
-Each format is a file of its own, and an export: `numberFormat`,
-`bytesFormat`, and so on.
+| Name       | Description                                     | Kinds                                   | Options                  |
+| ---------- | ----------------------------------------------- | --------------------------------------- | ------------------------ |
+| `number`   | 1234.5 as `1,234.5`; compact, 12400 as `12.4K`. | number                                  | `digits`, `notation`     |
+| `percent`  | A fraction as a percent: 0.427 as `43%`.        | number                                  | `digits`                 |
+| `bytes`    | A size: `12.4 MiB`. A rate: `12.4 MiB/s`.       | number                                  | `units`, `digits`, `per` |
+| `duration` | A length of time: `2h 5m`, `840ms`.             | number                                  | `unit`, `days`           |
+| `money`    | An amount in a currency: `€12.50`.              | number                                  | `currency` (required)    |
+| `date`     | A day: `Jul 13, 2026`.                          | date                                    |                          |
+| `datetime` | A date and a clock: `Jul 13, 2026, 09:05`.      | datetime                                | `timeZone`               |
+| `relative` | Counted from now: `3 days ago`, `in 2 hours`.   | date, datetime                          | `smallestUnit`           |
+| `plain`    | The text as it is.                              | text, markdown, url, email, phone, time |                          |
+| `markdown` | Markdown without its marks.                     | markdown, text                          |                          |
+| `rich`     | A rich text's words, a block to a line.         | richtext                                |                          |
 
 ### number
 
@@ -177,7 +177,7 @@ Each format is a file of its own, and an export: `numberFormat`,
 
 ```ts
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, writeNumber } from '../../format/write';
 
 const numberOptions = v.optional(
@@ -193,7 +193,7 @@ const numberOptions = v.optional(
 export type NumberOptions = v.InferOutput<typeof numberOptions>;
 
 /** 1234.5 as `1,234.5`; compact, 12400 as `12.4K`. */
-export const numberFormat = noFormats.define({
+export const numberFormat = defineFormat({
   name: 'number',
   kinds: ['number'],
   options: numberOptions,
@@ -212,7 +212,7 @@ export const numberFormat = noFormats.define({
 
 ```ts
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, writeNumber } from '../../format/write';
 
 const percentOptions = v.optional(
@@ -226,7 +226,7 @@ const percentOptions = v.optional(
 export type PercentOptions = v.InferOutput<typeof percentOptions>;
 
 /** A fraction as a percent: 0.427 as `43%`. */
-export const percentFormat = noFormats.define({
+export const percentFormat = defineFormat({
   name: 'percent',
   kinds: ['number'],
   options: percentOptions,
@@ -244,7 +244,7 @@ export const percentFormat = noFormats.define({
 import * as v from 'valibot';
 import { sizeOf } from '../../format/bytes';
 import { measuresAsPieces } from '../../format/pieces';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, isNumber, plainPieces } from '../../format/write';
 
 const bytesOptions = v.optional(
@@ -262,7 +262,7 @@ const bytesOptions = v.optional(
 export type BytesOptions = v.InferOutput<typeof bytesOptions>;
 
 /** A size: `12.4 MiB`. A rate: `12.4 MiB/s`. */
-export const bytesFormat = noFormats.define({
+export const bytesFormat = defineFormat({
   name: 'bytes',
   kinds: ['number'],
   options: bytesOptions,
@@ -283,7 +283,7 @@ export const bytesFormat = noFormats.define({
 import * as v from 'valibot';
 import { partsOf } from '../../format/duration';
 import { measuresAsPieces } from '../../format/pieces';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isNumber, plainPieces } from '../../format/write';
 
 const durationOptions = v.optional(
@@ -299,7 +299,7 @@ const durationOptions = v.optional(
 export type DurationOptions = v.InferOutput<typeof durationOptions>;
 
 /** A length of time: `2h 5m`, `840ms`. */
-export const durationFormat = noFormats.define({
+export const durationFormat = defineFormat({
   name: 'duration',
   kinds: ['number'],
   options: durationOptions,
@@ -316,7 +316,7 @@ export const durationFormat = noFormats.define({
 
 ```ts
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { writeNumber } from '../../format/write';
 
 const moneyOptions = v.strictObject({
@@ -330,7 +330,7 @@ const moneyOptions = v.strictObject({
 export type MoneyOptions = v.InferOutput<typeof moneyOptions>;
 
 /** An amount in a currency: `€12.50`. */
-export const moneyFormat = noFormats.define({
+export const moneyFormat = defineFormat({
   name: 'money',
   kinds: ['number'],
   options: moneyOptions,
@@ -346,11 +346,11 @@ export const moneyFormat = noFormats.define({
 
 ```ts
 import { formatExact } from '../../format/dates';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isMoment, plainPieces } from '../../format/write';
 
 /** A day: `Jul 13, 2026`. */
-export const dateFormat = noFormats.define({
+export const dateFormat = defineFormat({
   name: 'date',
   kinds: ['date'],
   format: (value, _options, { locale }) => {
@@ -366,7 +366,7 @@ export const dateFormat = noFormats.define({
 ```ts
 import * as v from 'valibot';
 import { formatDateTime } from '../../format/date-time';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isMoment, plainPieces } from '../../format/write';
 
 /** Whether Intl knows the zone. */
@@ -392,7 +392,7 @@ const datetimeOptions = v.optional(
 export type DatetimeOptions = v.InferOutput<typeof datetimeOptions>;
 
 /** A date and a clock: `Jul 13, 2026, 09:05`. */
-export const datetimeFormat = noFormats.define({
+export const datetimeFormat = defineFormat({
   name: 'datetime',
   kinds: ['datetime'],
   options: datetimeOptions,
@@ -418,7 +418,7 @@ export const datetimeFormat = noFormats.define({
 ```ts
 import * as v from 'valibot';
 import { relativeLabel } from '../../format/dates';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isMoment, plainPieces } from '../../format/write';
 
 const relativeOptions = v.optional(
@@ -434,7 +434,7 @@ export type RelativeOptions = v.InferOutput<typeof relativeOptions>;
 const DAY_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Counted from now: `3 days ago`, `in 2 hours`. */
-export const relativeFormat = noFormats.define({
+export const relativeFormat = defineFormat({
   name: 'relative',
   kinds: ['date', 'datetime'],
   options: relativeOptions,
@@ -458,11 +458,11 @@ export const relativeFormat = noFormats.define({
 `packages/shared/template/src/base/formats/plain.ts`, line 1:
 
 ```ts
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { plainPieces } from '../../format/write';
 
 /** The text as it is. */
-export const plainFormat = noFormats.define({
+export const plainFormat = defineFormat({
   name: 'plain',
   kinds: ['text', 'markdown', 'url', 'email', 'phone', 'time'],
   format: plainPieces,
@@ -475,11 +475,11 @@ export const plainFormat = noFormats.define({
 
 ```ts
 import { readMarkdown } from '../../format/reading';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { asText } from '../../format/write';
 
 /** Markdown without its marks. */
-export const markdownFormat = noFormats.define({
+export const markdownFormat = defineFormat({
   name: 'markdown',
   kinds: ['markdown', 'text'],
   format: (value) => {
@@ -494,11 +494,11 @@ export const markdownFormat = noFormats.define({
 
 ```ts
 import { readRichText } from '../../format/reading';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { asText } from '../../format/write';
 
 /** A rich text's words, a block to a line. */
-export const richFormat = noFormats.define({
+export const richFormat = defineFormat({
   name: 'rich',
   kinds: ['richtext'],
   format: (value) => {
@@ -509,7 +509,7 @@ export const richFormat = noFormats.define({
 
 ## Registering them
 
-`baseFormats` registers all eleven on `noFormats`.
+`baseFormats` registers bh's formats.
 
 `packages/shared/template/src/format/base-formats.ts`, line 1:
 
@@ -560,8 +560,8 @@ export const baseFormats = noFormats.register({
 
 ## Your own format
 
-Define a format on `baseFormats`, then register it. `register` returns a
-new registry; `baseFormats` is unchanged.
+Define a format with `defineFormat`, then register it. `register` returns
+a new registry; `baseFormats` is unchanged.
 
 A format returns pieces. A piece with `unit: true` can be drawn smaller.
 `formatText` joins the pieces. The function gets the value, its checked
@@ -570,9 +570,9 @@ options, and the app's `locale`, `timeZone` and `now`.
 ```ts
 import * as v from 'valibot';
 import { createRegistry } from '@bh/resource';
-import { baseFormats, checkFormats } from '@bh/template';
+import { baseFormats, checkFormats, defineFormat } from '@bh/template';
 
-const rate = baseFormats.define({
+const rate = defineFormat({
   name: 'rate',
   kinds: ['number'],
   options: v.optional(v.strictObject({ per: v.optional(v.picklist(['page', 'visit'])) }), {}),

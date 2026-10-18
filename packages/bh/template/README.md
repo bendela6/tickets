@@ -88,12 +88,12 @@ its component and its entry. row, stack and grid draw their nodes once; a
 layout with `repeats` draws them once per entry of a list field, up to `max`
 (`entriesOf(record, field, max)`). A layout gets its options, its items
 already drawn, and `more`, the entries past `max` (`LayoutProps`). An app
-defines its own with `define` and registers it with `register`, which gives
-a new registry:
+defines its own with `defineTemplateLayout` and registers it with `register`,
+which gives a new registry:
 
 ```ts
 const layouts = baseTemplateLayouts.register({
-  overlay: baseTemplateLayouts.define({
+  overlay: defineTemplateLayout({
     options: v.strictObject({ anchor: v.picklist(['top-end', 'bottom-end']) }),
     Component: Overlay,
   }),
@@ -143,7 +143,8 @@ every host: `@bh/ui`'s `baseRenderers`. Each renderer is one file: the kinds
 it shows, its options' valibot schema, its least width (`minWidth`), its
 component and its entry. A renderer gets `RendererProps`: its values, each
 ready as text in its format (`Shown`), its own options, the part's, the field
-and the record. An app registers its own with `baseRenderers.register`.
+and the record. An app defines its own with `defineRenderer` and registers it with
+`baseRenderers.register`.
 
 | Renderer   | Shows                                                  | Kinds          | Options         |
 | ---------- | ------------------------------------------------------ | -------------- | --------------- |
@@ -253,8 +254,8 @@ options its schema refuses is its own text (`formatValue`), so a stored
 mistake shows and takes nothing down.
 
 `baseFormats` is a registry (`@bh/registry`), as the renderers are: an app
-defines its own with `define`, which checks it and types its function by its
-options' schema, registers it beside bh's with `register`, and passes them to
+defines its own with `defineFormat`, which checks it and types its function by
+its options' schema, registers it beside bh's with `register`, and passes them to
 the resource's registry (`values()`), which checks each field's format and its
 options. `checkFormats(formats, kinds)` checks the formats against the kinds:
 each kind's default format (`KindSpec.format`) registered and taking that kind:
@@ -262,12 +263,12 @@ each kind's default format (`KindSpec.format`) registered and taking that kind:
 ```ts
 import * as v from 'valibot';
 import { createRegistry } from '@bh/resource';
-import { baseFormats, checkFormats } from '@bh/template';
+import { baseFormats, checkFormats, defineFormat } from '@bh/template';
 
 // All its options optional: the schema takes `undefined` too, so `format: 'rate'` alone is valid.
 const options = v.optional(v.strictObject({ per: v.optional(v.picklist(['page', 'visit'])) }), {});
 
-const rate = baseFormats.define({
+const rate = defineFormat({
   name: 'rate',
   kinds: ['number'],
   options,

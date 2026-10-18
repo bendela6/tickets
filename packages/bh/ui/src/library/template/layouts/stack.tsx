@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { Stack } from '../../layout/components/stack';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { gap } from './options';
 import { placed } from './placed';
 
@@ -23,7 +23,7 @@ export function TemplateStackLayout({ options, items }: TemplateLayoutProps<Stac
   );
 }
 
-export const stackLayout = noTemplateLayouts.define({
+export const stackLayout = defineTemplateLayout({
   options: stackOptions,
   Component: TemplateStackLayout,
 });

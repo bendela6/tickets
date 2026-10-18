@@ -22,10 +22,13 @@ export const componentSchema = v.custom<ComponentType<any>>((value) => {
   );
 }, 'its Component is a component');
 
-/** The empty renderer registry. */
+/** The empty renderer registry. `baseRenderers` registers bh's on it. */
 export const noRenderers = defineRegistry({
   name: 'renderer',
   schema: v.object({ ...rendererData.entries, Component: componentSchema }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(renderer: RendererDefinition<O>): RendererDefinition<any> => renderer,
 });
+
+/** Defines a renderer: checks it, types it by its options. */
+export const defineRenderer = noRenderers.define;

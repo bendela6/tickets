@@ -208,6 +208,13 @@ describe('the renderers', () => {
     expect(screen.getByText('Done')).toBeInTheDocument();
   });
 
+  it('pill: one value in a span of its own, so a stretching cell keeps its width', () => {
+    const { container } = draw('pill', [{ value: 'open', text: 'Open', tone: 'green' }]);
+    const own = container.firstElementChild;
+    expect(own).toHaveClass('inline-flex');
+    expect(own?.firstElementChild).toHaveTextContent('Open');
+  });
+
   it('date: its text, as a time, with the exact day on hover', () => {
     draw('date', [{ value: '2026-10-12T09:30:00.000Z', text: '2 days ago' }]);
     const time = screen.getByText('2 days ago');

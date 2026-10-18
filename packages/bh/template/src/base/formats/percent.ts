@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, writeNumber } from '../../format/write';
 
 const percentOptions = v.optional(
@@ -13,7 +13,7 @@ const percentOptions = v.optional(
 export type PercentOptions = v.InferOutput<typeof percentOptions>;
 
 /** A fraction as a percent: 0.427 as `43%`. */
-export const percentFormat = noFormats.define({
+export const percentFormat = defineFormat({
   name: 'percent',
   kinds: ['number'],
   options: percentOptions,

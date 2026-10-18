@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Icon, ICON_NAMES, type IconName } from '../../primitives/components/icon';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText, toneOf } from './look';
 
@@ -39,7 +39,7 @@ export function IconRenderer({ values, options, part }: RendererProps<IconOption
   );
 }
 
-export const iconRenderer = noRenderers.define({
+export const iconRenderer = defineRenderer({
   kinds: ['text'],
   options: iconOptions,
   Component: IconRenderer,

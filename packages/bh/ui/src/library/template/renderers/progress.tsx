@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Progress } from '../../feedback/components/progress';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { PartText, toneOf } from './look';
 import { positive } from './options';
@@ -38,7 +38,7 @@ export function ProgressRenderer({ values, options, part, field }: RendererProps
   );
 }
 
-export const progressRenderer = noRenderers.define({
+export const progressRenderer = defineRenderer({
   kinds: ['number'],
   options: progressOptions,
   minWidth: 64,

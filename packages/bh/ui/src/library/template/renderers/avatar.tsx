@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { avatarSize } from './options';
 import { Picture } from './picture';
@@ -33,7 +33,7 @@ export function AvatarRenderer({ values, options, field }: RendererProps<AvatarO
   );
 }
 
-export const avatarRenderer = noRenderers.define({
+export const avatarRenderer = defineRenderer({
   kinds: ['url', 'ref'],
   options: avatarOptions,
   Component: AvatarRenderer,

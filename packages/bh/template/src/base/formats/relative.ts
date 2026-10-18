@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { relativeLabel } from '../../format/dates';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isMoment, plainPieces } from '../../format/write';
 
 const relativeOptions = v.optional(
@@ -16,7 +16,7 @@ export type RelativeOptions = v.InferOutput<typeof relativeOptions>;
 const DAY_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Counted from now: `3 days ago`, `in 2 hours`. */
-export const relativeFormat = noFormats.define({
+export const relativeFormat = defineFormat({
   name: 'relative',
   kinds: ['date', 'datetime'],
   options: relativeOptions,

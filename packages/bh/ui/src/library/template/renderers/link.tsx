@@ -2,7 +2,7 @@ import type { ComponentType, CSSProperties, ReactNode } from 'react';
 import * as v from 'valibot';
 import { isRoute, linkTarget, type RendererProps } from '@bh/template';
 import { TextLink } from '../../primitives/components/text-link';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, hrefOf } from './each';
 import { partLook, PartText } from './look';
 
@@ -75,7 +75,7 @@ export function createLinkRenderer(Anchor?: LinkAnchor) {
 /** Its text, linked to `to` or to the url. Unlinked when neither works. */
 export const LinkRenderer = createLinkRenderer();
 
-export const linkRenderer = noRenderers.define({
+export const linkRenderer = defineRenderer({
   kinds: 'any',
   options: linkOptions,
   Component: LinkRenderer,

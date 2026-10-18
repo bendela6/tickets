@@ -1,7 +1,6 @@
 ---
 title: Renderers
-summary: A renderer draws a part's value. bh registers thirteen; an app
-  registers its own.
+summary: A renderer draws a part's value. bh registers its own; an app adds more.
 order: 3
 related: [Overview, Layouts, Formats]
 ---
@@ -103,8 +102,8 @@ export function EveryRenderer() {
 
 ## The registry
 
-`noRenderers`, in `@bh/ui`, is the empty registry. It checks each
-renderer's kinds, options schema, least width and component.
+`defineRenderer`, in `@bh/ui`, checks a renderer's kinds, options
+schema, least width and component, and types it by its options.
 
 `packages/web/ui/src/library/template/renderer-registry.ts`, line 1:
 
@@ -133,41 +132,42 @@ export const componentSchema = v.custom<ComponentType<any>>((value) => {
   );
 }, 'its Component is a component');
 
-/** The empty renderer registry. */
+/** The empty renderer registry. `baseRenderers` registers bh's on it. */
 export const noRenderers = defineRegistry({
   name: 'renderer',
   schema: v.object({ ...rendererData.entries, Component: componentSchema }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(renderer: RendererDefinition<O>): RendererDefinition<any> => renderer,
 });
+
+/** Defines a renderer: checks it, types it by its options. */
+export const defineRenderer = noRenderers.define;
 ```
 
 ## The renderers
 
-| Renderer   | Draws                           | Kinds          | Options         | Default for                    |
-| ---------- | ------------------------------- | -------------- | --------------- | ------------------------------ |
-| `text`     | its text                        | any            |                 | text, markdown, richtext, time |
-| `link`     | a link to `to`, or to the url   | any            | `to`            | url, email, phone, file        |
-| `pill`     | a pill in the option's color    | option, text   | `variant`       | option                         |
-| `date`     | a date, the exact time on hover | date, datetime |                 | date, datetime                 |
-| `number`   | digits of even width            | number         |                 | number                         |
-| `avatar`   | a picture, else initials        | url, ref       | `size`, `shape` |                                |
-| `user`     | a picture and a name            | ref            | `size`          | ref                            |
-| `icon`     | an icon by name                 | text           | `size`          |                                |
-| `progress` | a bar out of `max` (100)        | number         | `max`           |                                |
-| `meter`    | a bar out of `max` (1)          | number         | `max`           |                                |
-| `trend`    | an arrow, green the good way    | number         | `good`          |                                |
-| `check`    | a check for true                | boolean        |                 | boolean                        |
-| `code`     | mono text                       | json, text     |                 | json                           |
-
-`user` and `progress` need 64px, `meter` 80px, `trend` 40px. A narrower
-host leaves them out. Every renderer takes the part's `options` too:
-`tone`, `mono`, `weight`, `clamp`, `prefix` and `empty`.
+Every renderer takes the part's `options` too: `tone`, `mono`,
+`weight`, `clamp`, `prefix` and `empty`. A host narrower than a
+renderer's least width leaves it out.
 
 A link's `to` is a route filled from the record: `/rooms/{code}`. A
 missing value leaves it unlinked.
 
-Each renderer is one file: its options, its component and its entry.
+| Name       | Description                                                          | Kinds          | Options         | Least width | Default for                    |
+| ---------- | -------------------------------------------------------------------- | -------------- | --------------- | ----------- | ------------------------------ |
+| `text`     | Its text, any kind.                                                  | any            |                 |             | text, markdown, richtext, time |
+| `link`     | Its text, linked to `to` or to the url. Unlinked when neither works. | any            | `to`            |             | url, email, phone, file        |
+| `pill`     | Each value in a pill, in its tone.                                   | option, text   | `variant`       |             | option                         |
+| `date`     | A date, the exact moment on hover.                                   | date, datetime |                 |             | date, datetime                 |
+| `number`   | A number, its digits of even width.                                  | number         |                 |             | number                         |
+| `avatar`   | A picture, else initials.                                            | url, ref       | `size`, `shape` |             |                                |
+| `user`     | A ref's picture and title.                                           | ref            | `size`          | 64px        | ref                            |
+| `icon`     | An icon, by the value's name. An unknown name shows as text.         | text           | `size`          |             |                                |
+| `progress` | A bar: the value out of `max`, its text after.                       | number         | `max`           | 64px        |                                |
+| `meter`    | A share of a whole, toned by how full.                               | number         | `max`           | 80px        |                                |
+| `trend`    | A change, with an arrow, green the good way.                         | number         | `good`          | 40px        |                                |
+| `check`    | A check for true. False is read out, not shown.                      | boolean        |                 |             | boolean                        |
+| `code`     | JSON or text, in mono.                                               | json, text     |                 |             | json                           |
 
 ### text
 
@@ -175,7 +175,7 @@ Each renderer is one file: its options, its component and its entry.
 
 ```tsx
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { joined, ownTone } from './each';
 import { PartText } from './look';
 
@@ -188,7 +188,7 @@ export function TextRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const textRenderer = noRenderers.define({
+export const textRenderer = defineRenderer({
   kinds: 'any',
   Component: TextRenderer,
 });
@@ -203,7 +203,7 @@ import type { ComponentType, CSSProperties, ReactNode } from 'react';
 import * as v from 'valibot';
 import { isRoute, linkTarget, type RendererProps } from '@bh/template';
 import { TextLink } from '../../primitives/components/text-link';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, hrefOf } from './each';
 import { partLook, PartText } from './look';
 
@@ -276,7 +276,7 @@ export function createLinkRenderer(Anchor?: LinkAnchor) {
 /** Its text, linked to `to` or to the url. Unlinked when neither works. */
 export const LinkRenderer = createLinkRenderer();
 
-export const linkRenderer = noRenderers.define({
+export const linkRenderer = defineRenderer({
   kinds: 'any',
   options: linkOptions,
   Component: LinkRenderer,
@@ -291,7 +291,7 @@ export const linkRenderer = noRenderers.define({
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Pill } from '../../primitives/components/pill';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { toneOf } from './look';
 
@@ -304,24 +304,27 @@ export type PillOptions = v.InferOutput<typeof pillOptions>;
 
 /** Each value in a pill, in its tone. */
 export function PillRenderer({ values, options, part }: RendererProps<PillOptions>) {
+  // Its own span: a grid cell or a stack stretches its item, not the pill.
   return (
-    <Each
-      values={values}
-      draw={(shown) => {
-        return (
-          <Pill
-            size="sm"
-            variant={options.variant}
-            tone={toneOf(part.tone ?? shown.tone) ?? 'neutral'}
-            label={`${part.prefix ?? ''}${shown.text}`}
-          />
-        );
-      }}
-    />
+    <span className="inline-flex max-w-full min-w-0">
+      <Each
+        values={values}
+        draw={(shown) => {
+          return (
+            <Pill
+              size="sm"
+              variant={options.variant}
+              tone={toneOf(part.tone ?? shown.tone) ?? 'neutral'}
+              label={`${part.prefix ?? ''}${shown.text}`}
+            />
+          );
+        }}
+      />
+    </span>
   );
 }
 
-export const pillRenderer = noRenderers.define({
+export const pillRenderer = defineRenderer({
   kinds: ['option', 'text'],
   options: pillOptions,
   Component: PillRenderer,
@@ -335,7 +338,7 @@ export const pillRenderer = noRenderers.define({
 ```tsx
 import type { RendererProps } from '@bh/template';
 import { formatExact } from '../../primitives/components/relative-date';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText } from './look';
 
@@ -359,7 +362,7 @@ export function DateRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const dateRenderer = noRenderers.define({
+export const dateRenderer = defineRenderer({
   kinds: ['date', 'datetime'],
   Component: DateRenderer,
 });
@@ -371,7 +374,7 @@ export const dateRenderer = noRenderers.define({
 
 ```tsx
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { joined, ownTone } from './each';
 import { PartText } from './look';
 
@@ -384,7 +387,7 @@ export function NumberRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const numberRenderer = noRenderers.define({
+export const numberRenderer = defineRenderer({
   kinds: ['number'],
   Component: NumberRenderer,
 });
@@ -397,7 +400,7 @@ export const numberRenderer = noRenderers.define({
 ```tsx
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { avatarSize } from './options';
 import { Picture } from './picture';
@@ -430,7 +433,7 @@ export function AvatarRenderer({ values, options, field }: RendererProps<AvatarO
   );
 }
 
-export const avatarRenderer = noRenderers.define({
+export const avatarRenderer = defineRenderer({
   kinds: ['url', 'ref'],
   options: avatarOptions,
   Component: AvatarRenderer,
@@ -444,7 +447,7 @@ export const avatarRenderer = noRenderers.define({
 ```tsx
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText } from './look';
 import { avatarSize } from './options';
@@ -476,7 +479,7 @@ export function UserRenderer({ values, options, part }: RendererProps<UserOption
   );
 }
 
-export const userRenderer = noRenderers.define({
+export const userRenderer = defineRenderer({
   kinds: ['ref'],
   options: userOptions,
   minWidth: 64,
@@ -492,7 +495,7 @@ export const userRenderer = noRenderers.define({
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Icon, ICON_NAMES, type IconName } from '../../primitives/components/icon';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText, toneOf } from './look';
 
@@ -530,7 +533,7 @@ export function IconRenderer({ values, options, part }: RendererProps<IconOption
   );
 }
 
-export const iconRenderer = noRenderers.define({
+export const iconRenderer = defineRenderer({
   kinds: ['text'],
   options: iconOptions,
   Component: IconRenderer,
@@ -545,7 +548,7 @@ export const iconRenderer = noRenderers.define({
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Progress } from '../../feedback/components/progress';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { PartText, toneOf } from './look';
 import { positive } from './options';
@@ -582,7 +585,7 @@ export function ProgressRenderer({ values, options, part, field }: RendererProps
   );
 }
 
-export const progressRenderer = noRenderers.define({
+export const progressRenderer = defineRenderer({
   kinds: ['number'],
   options: progressOptions,
   minWidth: 64,
@@ -598,7 +601,7 @@ export const progressRenderer = noRenderers.define({
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Meter } from '../../feedback/components/meter';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { PartText, toneOf } from './look';
 import { positive } from './options';
@@ -633,7 +636,7 @@ export function MeterRenderer({ values, options, part, field }: RendererProps<Me
   );
 }
 
-export const meterRenderer = noRenderers.define({
+export const meterRenderer = defineRenderer({
   kinds: ['number'],
   options: meterOptions,
   minWidth: 80,
@@ -650,7 +653,7 @@ import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { cn } from '../../../style';
 import { Icon } from '../../primitives/components/icon';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { partLook } from './look';
 
@@ -686,7 +689,7 @@ export function TrendRenderer({ values, options, part }: RendererProps<TrendOpti
   );
 }
 
-export const trendRenderer = noRenderers.define({
+export const trendRenderer = defineRenderer({
   kinds: ['number'],
   options: trendOptions,
   minWidth: 40,
@@ -701,7 +704,7 @@ export const trendRenderer = noRenderers.define({
 ```tsx
 import type { RendererProps } from '@bh/template';
 import { Icon } from '../../primitives/components/icon';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { toneOf } from './look';
 
@@ -720,7 +723,7 @@ export function CheckRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const checkRenderer = noRenderers.define({
+export const checkRenderer = defineRenderer({
   kinds: ['boolean'],
   Component: CheckRenderer,
 });
@@ -732,7 +735,7 @@ export const checkRenderer = noRenderers.define({
 
 ```tsx
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { joined } from './each';
 import { PartText } from './look';
 
@@ -745,7 +748,7 @@ export function CodeRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const codeRenderer = noRenderers.define({
+export const codeRenderer = defineRenderer({
   kinds: ['json', 'text'],
   Component: CodeRenderer,
 });
@@ -753,7 +756,7 @@ export const codeRenderer = noRenderers.define({
 
 ## Registering them
 
-`baseRenderers` registers all thirteen. `BaseRenderers` types their
+`baseRenderers` registers bh's renderers. `BaseRenderers` types their
 options. `baseDefaultRenderers` names each kind's default.
 
 `packages/web/ui/src/library/template/base-renderers.ts`, line 1:
@@ -834,14 +837,14 @@ export const baseDefaultRenderers: Readonly<Record<BaseKind, keyof BaseRenderers
 
 ## Your own renderer
 
-Define a renderer on `baseRenderers`, then register it. `register`
+Define a renderer with `defineRenderer`, then register it. `register`
 returns a new registry; `baseRenderers` is unchanged. The component gets
 `RendererProps`: the values in their format, its options, the part's
 options and the record.
 
 ```tsx
 import type { RendererProps } from '@bh/template';
-import { baseRenderers } from '@bh/ui';
+import { baseRenderers, defineRenderer } from '@bh/ui';
 
 function Swatch({ values }: RendererProps) {
   return values.map((shown, index) => (
@@ -853,7 +856,7 @@ function Swatch({ values }: RendererProps) {
   ));
 }
 
-const swatch = baseRenderers.define({ kinds: ['text'], Component: Swatch });
+const swatch = defineRenderer({ kinds: ['text'], Component: Swatch });
 
 export const renderers = baseRenderers.register({ swatch });
 ```

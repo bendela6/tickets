@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { cn } from '../../../style';
 import { Row } from '../../layout/components/row';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { gap } from './options';
 import { placed } from './placed';
 
@@ -31,7 +31,7 @@ export function TemplateRowLayout({ options, items }: TemplateLayoutProps<RowOpt
   );
 }
 
-export const rowLayout = noTemplateLayouts.define({
+export const rowLayout = defineTemplateLayout({
   options: rowOptions,
   Component: TemplateRowLayout,
 });

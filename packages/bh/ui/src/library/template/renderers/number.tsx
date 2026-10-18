@@ -1,5 +1,5 @@
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { joined, ownTone } from './each';
 import { PartText } from './look';
 
@@ -12,7 +12,7 @@ export function NumberRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const numberRenderer = noRenderers.define({
+export const numberRenderer = defineRenderer({
   kinds: ['number'],
   Component: NumberRenderer,
 });

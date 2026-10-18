@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { formatDateTime } from '../../format/date-time';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isMoment, plainPieces } from '../../format/write';
 
 /** Whether Intl knows the zone. */
@@ -26,7 +26,7 @@ const datetimeOptions = v.optional(
 export type DatetimeOptions = v.InferOutput<typeof datetimeOptions>;
 
 /** A date and a clock: `Jul 13, 2026, 09:05`. */
-export const datetimeFormat = noFormats.define({
+export const datetimeFormat = defineFormat({
   name: 'datetime',
   kinds: ['datetime'],
   options: datetimeOptions,

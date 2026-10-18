@@ -40,10 +40,13 @@ const formatterData = v.object({
   format: functionSchema<Formatter<any>['format']>('its format'),
 });
 
-/** The empty format registry. `define` types a format by its options. */
+/** The empty format registry. `baseFormats` registers bh's on it. */
 export const noFormats = defineRegistry({
   name: 'format',
   schema: formatterData,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(format: Formatter<O>): Formatter<any> => format,
 });
+
+/** Defines a format: checks it, types it by its options. */
+export const defineFormat = noFormats.define;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.8 · 2026-10-18 19:50 +04:00
+
+- fix(shell): pass storageKey in the Version page's footer example (00f26b9)
+  - Give ThemeFooter its required storageKey in the example, so the page's code type-checks
+  - Regenerate the page's markdown copy
+
 ## 0.8.7 · 2026-10-18 15:36 +04:00
 
 - feat(shell): show how long ago the version line's release was (9d9a66e)

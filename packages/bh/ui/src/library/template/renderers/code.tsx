@@ -1,5 +1,5 @@
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { joined } from './each';
 import { PartText } from './look';
 
@@ -12,7 +12,7 @@ export function CodeRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const codeRenderer = noRenderers.define({
+export const codeRenderer = defineRenderer({
   kinds: ['json', 'text'],
   Component: CodeRenderer,
 });

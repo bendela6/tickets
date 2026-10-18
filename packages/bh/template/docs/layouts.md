@@ -1,7 +1,6 @@
 ---
 title: Layouts
-summary: A layout places a template's nodes. bh registers four; an app registers
-  its own.
+summary: A layout places a template's nodes. bh registers its own; an app adds more.
 order: 2
 related: [Overview, Renderers, Formats]
 ---
@@ -73,8 +72,8 @@ export function EveryLayout() {
 
 ## The registry
 
-`noTemplateLayouts`, in `@bh/ui`, is the empty registry. It checks each
-layout's options schema, how it repeats and its component.
+`defineTemplateLayout`, in `@bh/ui`, checks a layout's options schema,
+how it repeats and its component, and types it by its options.
 
 `packages/web/ui/src/library/template/layout-registry.ts`, line 1:
 
@@ -95,29 +94,29 @@ export type TemplateLayoutDefinition<O> = LayoutEntry<ComponentType<TemplateLayo
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TemplateLayoutRegistry = RegistryOf<TemplateLayoutDefinition<any>>;
 
-/** The empty template layout registry. Not `noLayouts`, a form's. */
+/** The empty template layout registry. `baseTemplateLayouts` registers bh's on it. */
 export const noTemplateLayouts = defineRegistry({
   name: 'layout',
   schema: v.object({ ...layoutData.entries, Component: componentSchema }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(layout: TemplateLayoutDefinition<O>): TemplateLayoutDefinition<any> => layout,
 });
+
+/** Defines a template layout: checks it, types it by its options. Not a form's layout. */
+export const defineTemplateLayout = noTemplateLayouts.define;
 ```
 
 ## The layouts
 
-| Layout   | Places its nodes                       | Options                                          |
-| -------- | -------------------------------------- | ------------------------------------------------ |
-| `row`    | side by side                           | `justify`, `align`, `gap`, `wrap`                |
-| `stack`  | one under another                      | `align`, `gap`                                   |
-| `grid`   | in columns: a count, or as many as fit | `columns` (a count or `{ min }`), `gap`, `align` |
-| `repeat` | once per entry of a list, then +N      | `field` (required), `max`, and row's options     |
+`gap` is a spacing step: `0`, `1`, `2`, `3`, `4`, `6` or `8`.
+`repeat` gives each pass one entry of `field`, up to `max`.
 
-`justify` is `start`, `center`, `end` or `between`. `gap` is a spacing
-step: `0`, `1`, `2`, `3`, `4`, `6` or `8`. `repeat` gives each pass one
-entry of `field`, up to `max`.
-
-Each layout is one file: its options, its component and its entry.
+| Name     | Description                                                               | Options                                                      |
+| -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `row`    | Its items side by side.                                                   | `justify`, `align`, `gap`, `wrap`                            |
+| `stack`  | Its items one under another.                                              | `align`, `gap`                                               |
+| `grid`   | Its items in columns.                                                     | `columns` (required), `gap`, `align`                         |
+| `repeat` | Its items once per entry of a list field, in a row, then "+N" past `max`. | `field` (required), `max`, `justify`, `align`, `gap`, `wrap` |
 
 ### row
 
@@ -127,7 +126,7 @@ Each layout is one file: its options, its component and its entry.
 import * as v from 'valibot';
 import { cn } from '../../../style';
 import { Row } from '../../layout/components/row';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { gap } from './options';
 import { placed } from './placed';
 
@@ -157,7 +156,7 @@ export function TemplateRowLayout({ options, items }: TemplateLayoutProps<RowOpt
   );
 }
 
-export const rowLayout = noTemplateLayouts.define({
+export const rowLayout = defineTemplateLayout({
   options: rowOptions,
   Component: TemplateRowLayout,
 });
@@ -170,7 +169,7 @@ export const rowLayout = noTemplateLayouts.define({
 ```tsx
 import * as v from 'valibot';
 import { Stack } from '../../layout/components/stack';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { gap } from './options';
 import { placed } from './placed';
 
@@ -193,7 +192,7 @@ export function TemplateStackLayout({ options, items }: TemplateLayoutProps<Stac
   );
 }
 
-export const stackLayout = noTemplateLayouts.define({
+export const stackLayout = defineTemplateLayout({
   options: stackOptions,
   Component: TemplateStackLayout,
 });
@@ -207,7 +206,7 @@ export const stackLayout = noTemplateLayouts.define({
 import * as v from 'valibot';
 import { cn } from '../../../style';
 import { ALIGN, GAP } from '../../layout/components/stack';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { count, gap } from './options';
 import { placed } from './placed';
 
@@ -240,7 +239,7 @@ export function TemplateGridLayout({ options, items }: TemplateLayoutProps<GridO
   );
 }
 
-export const gridLayout = noTemplateLayouts.define({
+export const gridLayout = defineTemplateLayout({
   options: gridOptions,
   Component: TemplateGridLayout,
 });
@@ -252,7 +251,7 @@ export const gridLayout = noTemplateLayouts.define({
 
 ```tsx
 import * as v from 'valibot';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { count } from './options';
 import { rowEntries, TemplateRowLayout } from './row';
 
@@ -280,7 +279,7 @@ export function TemplateRepeatLayout({ options, items, more }: TemplateLayoutPro
   );
 }
 
-export const repeatLayout = noTemplateLayouts.define({
+export const repeatLayout = defineTemplateLayout({
   options: repeatOptions,
   repeats: ({ field, max }) => {
     return max === undefined ? { field } : { field, max };
@@ -291,7 +290,7 @@ export const repeatLayout = noTemplateLayouts.define({
 
 ## Registering them
 
-`baseTemplateLayouts` registers all four. `BaseLayouts` types their
+`baseTemplateLayouts` registers bh's layouts. `BaseLayouts` types their
 options: a `TemplateNode<BaseLayouts>` checks its layouts.
 
 `packages/web/ui/src/library/template/base-layouts.ts`, line 1:
@@ -325,13 +324,13 @@ export const baseTemplateLayouts = noTemplateLayouts.register({
 
 ## Your own layout
 
-Define a layout on `baseTemplateLayouts`, then register it. `register`
+Define a layout with `defineTemplateLayout`, then register it. `register`
 returns a new registry; `baseTemplateLayouts` is unchanged. The component
 gets its options and its `items`, already drawn.
 
 ```tsx
 import * as v from 'valibot';
-import { baseTemplateLayouts, type TemplateLayoutProps } from '@bh/ui';
+import { baseTemplateLayouts, defineTemplateLayout, type TemplateLayoutProps } from '@bh/ui';
 
 const overlay = v.strictObject({ corner: v.picklist(['start', 'end']) });
 
@@ -350,7 +349,7 @@ function Overlay({
 }
 
 export const layouts = baseTemplateLayouts.register({
-  overlay: baseTemplateLayouts.define({ options: overlay, Component: Overlay }),
+  overlay: defineTemplateLayout({ options: overlay, Component: Overlay }),
 });
 ```
 

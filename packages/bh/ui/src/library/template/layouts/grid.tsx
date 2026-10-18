@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { cn } from '../../../style';
 import { ALIGN, GAP } from '../../layout/components/stack';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { count, gap } from './options';
 import { placed } from './placed';
 
@@ -34,7 +34,7 @@ export function TemplateGridLayout({ options, items }: TemplateLayoutProps<GridO
   );
 }
 
-export const gridLayout = noTemplateLayouts.define({
+export const gridLayout = defineTemplateLayout({
   options: gridOptions,
   Component: TemplateGridLayout,
 });

@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { partsOf } from '../../format/duration';
 import { measuresAsPieces } from '../../format/pieces';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { isNumber, plainPieces } from '../../format/write';
 
 const durationOptions = v.optional(
@@ -17,7 +17,7 @@ const durationOptions = v.optional(
 export type DurationOptions = v.InferOutput<typeof durationOptions>;
 
 /** A length of time: `2h 5m`, `840ms`. */
-export const durationFormat = noFormats.define({
+export const durationFormat = defineFormat({
   name: 'duration',
   kinds: ['number'],
   options: durationOptions,
