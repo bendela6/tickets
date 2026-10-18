@@ -14,7 +14,7 @@ const BRAND = { mark: <BrandMark size={18} />, name: 'tickets' };
 /**
  * The frame every page mounts inside: @bh/shell's AppShell (a docked sidebar,
  * a rail when collapsed, a top bar and a drawer on a phone) with tickets' nav,
- * and in its footer who is acting, the version line and the theme. It is
+ * and in its footer who is acting, the theme and the version line. It is
  * mounted once, in the root route, around the routed page. The rail's icons
  * name themselves in tooltips, which need their provider above them. The new
  * project dialog is the frame's, since the sidebar's Projects section opens it
@@ -34,8 +34,8 @@ export function Frame({ children }: { children: ReactNode }) {
           return (
             <>
               <UserFooter collapsed={collapsed} />
-              {BUILD ? <BuildFooter info={BUILD} collapsed={collapsed} /> : null}
               <ThemeFooter collapsed={collapsed} storageKey={STORAGE_KEYS.theme} />
+              {BUILD ? <BuildFooter info={BUILD} collapsed={collapsed} /> : null}
             </>
           );
         }}
