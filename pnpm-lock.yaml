@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@bh/config':
+        specifier: workspace:*
+        version: link:packages/bh/config
       mprocs:
         specifier: ^0.9.6
         version: 0.9.6

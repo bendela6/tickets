@@ -8,6 +8,7 @@ import { rootRoute } from './routes/root-route';
 import { schemaRoute } from './routes/schema-route';
 import { settingsRouteTree } from './routes/settings-route';
 import { ticketPageRoute } from './routes/ticket-page-route';
+import { versionRoute, versionTabRoute } from './routes/version-route';
 import { viewRoute } from './routes/view-route';
 
 const routeTree = rootRoute.addChildren([
@@ -16,6 +17,8 @@ const routeTree = rootRoute.addChildren([
   itemKeyRoute,
   schemaRoute,
   settingsRouteTree,
+  versionRoute,
+  versionTabRoute,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),
 ]);
 
