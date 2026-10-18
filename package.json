@@ -2,6 +2,7 @@
   "name": "tickets",
   "private": true,
   "type": "module",
+  "repository": "github:bendela6/tickets",
   "scripts": {
     "build": "turbo build",
     "db:generate": "turbo run db:generate",
@@ -15,9 +16,12 @@
     "tasks:check": "node scripts/tasks-check.mjs",
     "test:tasks": "node --test scripts/tasks-*.test.mjs",
     "typecheck": "turbo typecheck",
-    "test": "turbo test"
+    "test": "turbo test",
+    "prepare": "bh-hooks",
+    "release": "bh-release"
   },
   "devDependencies": {
+    "@bh/config": "workspace:*",
     "mprocs": "^0.9.6",
     "prettier": "^3.6.2",
     "turbo": "~2.9.6"
@@ -27,6 +31,14 @@
   },
   "packageManager": "pnpm@9.15.0",
   "release": {
+    "services": [
+      "apps/api",
+      "apps/mcp",
+      "apps/web"
+    ],
+    "vendored": [
+      "packages/bh/*"
+    ],
     "copies": {
       "bh": "0.9.0"
     }

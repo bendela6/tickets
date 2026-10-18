@@ -1,9 +1,10 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { buildInfo } from '@bh/shell/vite';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), buildInfo()],
   // One React and one router, whichever package imports them: bh's copies are
   // workspace packages, and two copies make hooks and every Link in @bh/shell
   // fail at run time.
