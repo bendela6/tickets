@@ -14,10 +14,13 @@ export type TemplateLayoutDefinition<O> = LayoutEntry<ComponentType<TemplateLayo
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TemplateLayoutRegistry = RegistryOf<TemplateLayoutDefinition<any>>;
 
-/** The empty template layout registry. Not `noLayouts`, a form's. */
+/** The empty template layout registry. `baseTemplateLayouts` registers bh's on it. */
 export const noTemplateLayouts = defineRegistry({
   name: 'layout',
   schema: v.object({ ...layoutData.entries, Component: componentSchema }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   define: <O>(layout: TemplateLayoutDefinition<O>): TemplateLayoutDefinition<any> => layout,
 });
+
+/** Defines a template layout: checks it, types it by its options. Not a form's layout. */
+export const defineTemplateLayout = noTemplateLayouts.define;

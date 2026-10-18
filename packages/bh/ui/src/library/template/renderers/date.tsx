@@ -1,6 +1,6 @@
 import type { RendererProps } from '@bh/template';
 import { formatExact } from '../../primitives/components/relative-date';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText } from './look';
 
@@ -24,7 +24,7 @@ export function DateRenderer({ values, part }: RendererProps) {
   );
 }
 
-export const dateRenderer = noRenderers.define({
+export const dateRenderer = defineRenderer({
   kinds: ['date', 'datetime'],
   Component: DateRenderer,
 });

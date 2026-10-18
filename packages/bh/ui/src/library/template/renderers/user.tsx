@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each } from './each';
 import { PartText } from './look';
 import { avatarSize } from './options';
@@ -32,7 +32,7 @@ export function UserRenderer({ values, options, part }: RendererProps<UserOption
   );
 }
 
-export const userRenderer = noRenderers.define({
+export const userRenderer = defineRenderer({
   kinds: ['ref'],
   options: userOptions,
   minWidth: 64,

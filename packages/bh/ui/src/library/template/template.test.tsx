@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import type { RendererProps, TemplateField, TemplateNode } from '@bh/template';
 import { describe, expect, it } from 'vitest';
 import { baseRenderers } from './base-renderers';
+import { defineRenderer } from './renderer-registry';
 import { baseTemplateRegistry, Template, TemplateProvider } from './template';
 
 const FIELDS: TemplateField[] = [
@@ -134,7 +135,7 @@ describe('Template', () => {
     const registry = {
       ...baseTemplateRegistry,
       renderers: baseRenderers.register({
-        shout: baseRenderers.define({ kinds: 'any', Component: Shout }),
+        shout: defineRenderer({ kinds: 'any', Component: Shout }),
       }),
     };
     render(

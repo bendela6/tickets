@@ -1,9 +1,9 @@
 import { readMarkdown } from '../../format/reading';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { asText } from '../../format/write';
 
 /** Markdown without its marks. */
-export const markdownFormat = noFormats.define({
+export const markdownFormat = defineFormat({
   name: 'markdown',
   kinds: ['markdown', 'text'],
   format: (value) => {

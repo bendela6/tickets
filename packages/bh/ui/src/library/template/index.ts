@@ -3,13 +3,13 @@
 // its entry.
 export {
   componentSchema,
-  noRenderers,
+  defineRenderer,
   type RendererDefinition,
   type RendererRegistry,
 } from './renderer-registry';
 export { baseDefaultRenderers, baseRenderers, type BaseRenderers } from './base-renderers';
 export {
-  noTemplateLayouts,
+  defineTemplateLayout,
   type TemplateLayoutDefinition,
   type TemplateLayoutProps,
   type TemplateLayoutRegistry,

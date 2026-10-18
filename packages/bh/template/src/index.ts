@@ -42,7 +42,7 @@ export { isAddress, isRoute, linkTarget } from './link';
 export { checkFormats, formatValue } from './format/formats';
 export { baseFormats, type BaseFormats } from './format/base-formats';
 export {
-  noFormats,
+  defineFormat,
   type FormatContext,
   type FormatRegistry,
   type Formatter,

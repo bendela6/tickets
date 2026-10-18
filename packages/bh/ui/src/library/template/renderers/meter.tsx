@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { Meter } from '../../feedback/components/meter';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { PartText, toneOf } from './look';
 import { positive } from './options';
@@ -36,7 +36,7 @@ export function MeterRenderer({ values, options, part, field }: RendererProps<Me
   );
 }
 
-export const meterRenderer = noRenderers.define({
+export const meterRenderer = defineRenderer({
   kinds: ['number'],
   options: meterOptions,
   minWidth: 80,

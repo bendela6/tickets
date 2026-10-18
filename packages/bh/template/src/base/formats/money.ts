@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { writeNumber } from '../../format/write';
 
 const moneyOptions = v.strictObject({
@@ -13,7 +13,7 @@ const moneyOptions = v.strictObject({
 export type MoneyOptions = v.InferOutput<typeof moneyOptions>;
 
 /** An amount in a currency: `€12.50`. */
-export const moneyFormat = noFormats.define({
+export const moneyFormat = defineFormat({
   name: 'money',
   kinds: ['number'],
   options: moneyOptions,

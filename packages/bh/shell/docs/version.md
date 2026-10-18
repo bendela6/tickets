@@ -60,7 +60,7 @@ const BUILD = readBuildInfo();
 export function footer(collapsed: boolean) {
   return (
     <>
-      <ThemeFooter collapsed={collapsed} />
+      <ThemeFooter collapsed={collapsed} storageKey="myapp-theme" />
       {BUILD ? <BuildFooter info={BUILD} collapsed={collapsed} /> : null}
     </>
   );

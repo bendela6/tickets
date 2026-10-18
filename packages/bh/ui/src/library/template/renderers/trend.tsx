@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import type { RendererProps } from '@bh/template';
 import { cn } from '../../../style';
 import { Icon } from '../../primitives/components/icon';
-import { noRenderers } from '../renderer-registry';
+import { defineRenderer } from '../renderer-registry';
 import { Each, numberOf } from './each';
 import { partLook } from './look';
 
@@ -38,7 +38,7 @@ export function TrendRenderer({ values, options, part }: RendererProps<TrendOpti
   );
 }
 
-export const trendRenderer = noRenderers.define({
+export const trendRenderer = defineRenderer({
   kinds: ['number'],
   options: trendOptions,
   minWidth: 40,

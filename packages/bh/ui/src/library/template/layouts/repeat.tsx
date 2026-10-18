@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { noTemplateLayouts, type TemplateLayoutProps } from '../layout-registry';
+import { defineTemplateLayout, type TemplateLayoutProps } from '../layout-registry';
 import { count } from './options';
 import { rowEntries, TemplateRowLayout } from './row';
 
@@ -27,7 +27,7 @@ export function TemplateRepeatLayout({ options, items, more }: TemplateLayoutPro
   );
 }
 
-export const repeatLayout = noTemplateLayouts.define({
+export const repeatLayout = defineTemplateLayout({
   options: repeatOptions,
   repeats: ({ field, max }) => {
     return max === undefined ? { field } : { field, max };

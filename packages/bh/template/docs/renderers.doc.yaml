@@ -1,5 +1,5 @@
 title: Renderers
-summary: A renderer draws a part's value. bh registers thirteen; an app registers its own.
+summary: A renderer draws a part's value. bh registers its own; an app adds more.
 order: 3
 related: [Overview, Layouts, Formats]
 body:
@@ -10,75 +10,33 @@ body:
     mode: split
   - h2: The registry
   - |
-    `noRenderers`, in `@bh/ui`, is the empty registry. It checks each
-    renderer's kinds, options schema, least width and component.
-  - source: noRenderers
+    `defineRenderer`, in `@bh/ui`, checks a renderer's kinds, options
+    schema, least width and component, and types it by its options.
+  - source: defineRenderer
   - h2: The renderers
   - |
-    | Renderer   | Draws                           | Kinds          | Options         | Default for                    |
-    | ---------- | ------------------------------- | -------------- | --------------- | ------------------------------ |
-    | `text`     | its text                        | any            |                 | text, markdown, richtext, time |
-    | `link`     | a link to `to`, or to the url   | any            | `to`            | url, email, phone, file        |
-    | `pill`     | a pill in the option's color    | option, text   | `variant`       | option                         |
-    | `date`     | a date, the exact time on hover | date, datetime |                 | date, datetime                 |
-    | `number`   | digits of even width            | number         |                 | number                         |
-    | `avatar`   | a picture, else initials        | url, ref       | `size`, `shape` |                                |
-    | `user`     | a picture and a name            | ref            | `size`          | ref                            |
-    | `icon`     | an icon by name                 | text           | `size`          |                                |
-    | `progress` | a bar out of `max` (100)        | number         | `max`           |                                |
-    | `meter`    | a bar out of `max` (1)          | number         | `max`           |                                |
-    | `trend`    | an arrow, green the good way    | number         | `good`          |                                |
-    | `check`    | a check for true                | boolean        |                 | boolean                        |
-    | `code`     | mono text                       | json, text     |                 | json                           |
-
-    `user` and `progress` need 64px, `meter` 80px, `trend` 40px. A narrower
-    host leaves them out. Every renderer takes the part's `options` too:
-    `tone`, `mono`, `weight`, `clamp`, `prefix` and `empty`.
+    Every renderer takes the part's `options` too: `tone`, `mono`,
+    `weight`, `clamp`, `prefix` and `empty`. A host narrower than a
+    renderer's least width leaves it out.
 
     A link's `to` is a route filled from the record: `/rooms/{code}`. A
     missing value leaves it unlinked.
-
-    Each renderer is one file: its options, its component and its entry.
-  - h3: text
-  - source: textRenderer
-  - h3: link
-  - source: linkRenderer
-  - h3: pill
-  - source: pillRenderer
-  - h3: date
-  - source: dateRenderer
-  - h3: number
-  - source: numberRenderer
-  - h3: avatar
-  - source: avatarRenderer
-  - h3: user
-  - source: userRenderer
-  - h3: icon
-  - source: iconRenderer
-  - h3: progress
-  - source: progressRenderer
-  - h3: meter
-  - source: meterRenderer
-  - h3: trend
-  - source: trendRenderer
-  - h3: check
-  - source: checkRenderer
-  - h3: code
-  - source: codeRenderer
+  - entries: baseRenderers
+    defaults: baseDefaultRenderers
   - h2: Registering them
   - |
-    `baseRenderers` registers all thirteen. `BaseRenderers` types their
+    `baseRenderers` registers bh's renderers. `BaseRenderers` types their
     options. `baseDefaultRenderers` names each kind's default.
   - source: baseRenderers
   - h2: Your own renderer
   - |
-    Define a renderer on `baseRenderers`, then register it. `register`
+    Define a renderer with `defineRenderer`, then register it. `register`
     returns a new registry; `baseRenderers` is unchanged. The component gets
     `RendererProps`: the values in their format, its options, the part's
     options and the record.
   - code: |
       import type { RendererProps } from '@bh/template';
-      import { baseRenderers } from '@bh/ui';
+      import { baseRenderers, defineRenderer } from '@bh/ui';
 
       function Swatch({ values }: RendererProps) {
         return values.map((shown, index) => (
@@ -86,7 +44,7 @@ body:
         ));
       }
 
-      const swatch = baseRenderers.define({ kinds: ['text'], Component: Swatch });
+      const swatch = defineRenderer({ kinds: ['text'], Component: Swatch });
 
       export const renderers = baseRenderers.register({ swatch });
     lang: tsx

@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { noFormats } from '../../format/registry';
+import { defineFormat } from '../../format/registry';
 import { digits, writeNumber } from '../../format/write';
 
 const numberOptions = v.optional(
@@ -15,7 +15,7 @@ const numberOptions = v.optional(
 export type NumberOptions = v.InferOutput<typeof numberOptions>;
 
 /** 1234.5 as `1,234.5`; compact, 12400 as `12.4K`. */
-export const numberFormat = noFormats.define({
+export const numberFormat = defineFormat({
   name: 'number',
   kinds: ['number'],
   options: numberOptions,
