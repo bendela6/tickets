@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from './registry';
+import { noBlocks } from './registry';
 import { isBlockNode, type Renderer } from './types';
 
 const note: Renderer = {
@@ -10,47 +10,42 @@ const note: Renderer = {
   component: () => null,
 };
 
-describe('createRegistry', () => {
-  it('looks renderers up by name', () => {
-    const registry = createRegistry([note]);
+describe('noBlocks', () => {
+  it('holds none, and register gives a registry of blocks by name, leaving it as it was', () => {
+    const registry = noBlocks.register({ note });
     expect(registry.get('note')).toBe(note);
-    expect(registry.get('missing')).toBeUndefined();
+    expect(registry.names).toEqual(['note']);
+    expect(registry.has('missing')).toBe(false);
+    expect(() => registry.get('missing')).toThrow('No block is registered as "missing".');
+    expect(noBlocks.names).toEqual([]);
   });
 
-  it('exposes the name set for the scanner', () => {
-    expect([...createRegistry([note]).names()]).toEqual(['note']);
-  });
-
-  it('accepts renderers registered after construction', () => {
-    const registry = createRegistry([]);
-    registry.register(note);
-    expect(registry.get('note')).toBe(note);
-  });
-
-  it('rejects a duplicate name', () => {
-    const registry = createRegistry([note]);
-    expect(() => registry.register(note)).toThrow(/already registered/);
-  });
-
-  it('rejects a duplicate name in the initial array', () => {
-    expect(() => createRegistry([note, note])).toThrow(/already registered/);
-  });
-
-  it('rejects a renderer with no description', () => {
-    const registry = createRegistry([]);
-    expect(() => registry.register({ ...note, description: '' })).toThrow(/has no description/);
-  });
-
-  it('rejects a renderer whose description is only whitespace', () => {
-    const registry = createRegistry([]);
-    expect(() => registry.register({ ...note, description: '  \n  ' })).toThrow(
-      /has no description/,
+  it('rejects a name taken already', () => {
+    const registry = noBlocks.register({ note });
+    expect(() => registry.register({ note })).toThrow(
+      'A block is registered as "note" already: override replaces one.',
     );
   });
 
-  it('rejects a renderer with no examples', () => {
-    const registry = createRegistry([]);
-    expect(() => registry.register({ ...note, examples: [] })).toThrow(/has no examples/);
+  it('rejects a block registered by a name other than its own', () => {
+    expect(() => noBlocks.register({ callout: note })).toThrow(
+      'The block "callout" is named "note": register it by its own name.',
+    );
+  });
+
+  it('rejects a block with no description, or one only whitespace', () => {
+    expect(() => noBlocks.register({ note: { ...note, description: '' } })).toThrow(
+      'block "note": description: says what the block is',
+    );
+    expect(() => noBlocks.register({ note: { ...note, description: '  \n  ' } })).toThrow(
+      'description: says what the block is',
+    );
+  });
+
+  it('rejects a block with no examples', () => {
+    expect(() => noBlocks.register({ note: { ...note, examples: [] } })).toThrow(
+      'block "note": examples: shows one at least',
+    );
   });
 });
 

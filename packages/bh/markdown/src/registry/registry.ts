@@ -1,33 +1,36 @@
-import { toPrompt } from '../prompt';
-import type { AnyRenderer, Registry } from './types';
+import * as v from 'valibot';
+import { defineRegistry } from '@bh/registry';
+import type { AnyRenderer, Example, Renderer } from './types';
 
 /**
- * The set of blocks a page may use, by name. A renderer must say what it is
- * and show at least one example, since `toPrompt` teaches an authoring model
- * from exactly those.
+ * What the block registry checks of each block: a name, a description that
+ * says something, at least one example and a component, since `toPrompt`
+ * teaches an authoring model from exactly those.
  */
-export function createRegistry(renderers: readonly AnyRenderer[] = []): Registry {
-  const map = new Map<string, AnyRenderer>();
+export const rendererData = v.object({
+  name: v.pipe(v.string(), v.nonEmpty('a block has a name')),
+  description: v.custom<string>(
+    (value) => typeof value === 'string' && value.trim() !== '',
+    'says what the block is',
+  ),
+  examples: v.pipe(
+    v.array(v.custom<Example>((value) => typeof value === 'string' || typeof value === 'object')),
+    v.minLength(1, 'shows one at least'),
+  ),
+  component: v.custom<AnyRenderer['component']>(
+    (value) => typeof value === 'function' || (typeof value === 'object' && value !== null),
+    'is a component',
+  ),
+});
 
-  const register = (renderer: AnyRenderer) => {
-    if (map.has(renderer.name)) {
-      throw new Error(`Renderer "${renderer.name}" is already registered`);
-    }
-    if (!renderer.description.trim()) {
-      throw new Error(`Renderer "${renderer.name}" has no description`);
-    }
-    if (renderer.examples.length === 0) {
-      throw new Error(`Renderer "${renderer.name}" has no examples`);
-    }
-    map.set(renderer.name, renderer);
-  };
-  renderers.forEach(register);
-
-  return {
-    get: (name) => map.get(name),
-    names: () => new Set(map.keys()),
-    all: () => [...map.values()],
-    register,
-    toPrompt: (options) => toPrompt([...map.values()], options),
-  };
-}
+/**
+ * A registry holding no blocks, for a page that draws none of this package's:
+ * `noBlocks.register({ plant })`. `define` types a block by its schema, so
+ * its component is given what that schema gives.
+ */
+export const noBlocks = defineRegistry({
+  name: 'block',
+  schema: rendererData,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  define: <T>(renderer: Renderer<T>): Renderer<any> => renderer,
+});

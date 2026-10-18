@@ -1,0 +1,69 @@
+title: Layouts
+summary: A layout places a template's nodes. bh registers four; an app registers its own.
+order: 2
+related: [Overview, Renderers, Formats]
+body:
+  - |
+    A layout node places the nodes it holds. It names a layout in `layout`
+    and sets its `options`.
+  - demo: examples/every-layout.tsx
+    mode: view
+  - h2: The registry
+  - |
+    `noTemplateLayouts`, in `@bh/ui`, is the empty registry. It checks each
+    layout's options schema, how it repeats and its component.
+  - source: noTemplateLayouts
+  - h2: The layouts
+  - |
+    | Layout   | Places its nodes                       | Options                                          |
+    | -------- | -------------------------------------- | ------------------------------------------------ |
+    | `row`    | side by side                           | `justify`, `align`, `gap`, `wrap`                |
+    | `stack`  | one under another                      | `align`, `gap`                                   |
+    | `grid`   | in columns: a count, or as many as fit | `columns` (a count or `{ min }`), `gap`, `align` |
+    | `repeat` | once per entry of a list, then +N      | `field` (required), `max`, and row's options     |
+
+    `justify` is `start`, `center`, `end` or `between`. `gap` is a spacing
+    step: `0`, `1`, `2`, `3`, `4`, `6` or `8`. `repeat` gives each pass one
+    entry of `field`, up to `max`.
+
+    Each layout is one file: its options, its component and its entry.
+  - h3: row
+  - source: rowLayout
+  - h3: stack
+  - source: stackLayout
+  - h3: grid
+  - source: gridLayout
+  - h3: repeat
+  - source: repeatLayout
+  - h2: Registering them
+  - |
+    `baseTemplateLayouts` registers all four. `BaseLayouts` types their
+    options: a `TemplateNode<BaseLayouts>` checks its layouts.
+  - source: baseTemplateLayouts
+  - h2: Your own layout
+  - |
+    Define a layout on `baseTemplateLayouts`, then register it. `register`
+    returns a new registry; `baseTemplateLayouts` is unchanged. The component
+    gets its options and its `items`, already drawn.
+  - code: |
+      import * as v from 'valibot';
+      import { baseTemplateLayouts, type TemplateLayoutProps } from '@bh/ui';
+
+      const overlay = v.strictObject({ corner: v.picklist(['start', 'end']) });
+
+      // The first node, with the rest over one of its corners.
+      function Overlay({ options, items: [base, ...layers] }: TemplateLayoutProps<v.InferOutput<typeof overlay>>) {
+        const corner = options.corner === 'end' ? 'right-0' : 'left-0';
+        return (
+          <div className="relative">
+            {base}
+            <div className={`absolute top-0 ${corner}`}>{layers}</div>
+          </div>
+        );
+      }
+
+      export const layouts = baseTemplateLayouts.register({
+        overlay: baseTemplateLayouts.define({ options: overlay, Component: Overlay }),
+      });
+    lang: tsx
+  - ref: TemplateLayoutProps

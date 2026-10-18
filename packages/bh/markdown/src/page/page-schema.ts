@@ -87,7 +87,7 @@ export function pageSchema(
   options: PageSchemaOptions = {},
 ): Record<string, unknown> {
   const blocks = registry
-    .all()
+    .values()
     .filter((renderer) => !renderer.inline)
     .sort((a, b) => a.name.localeCompare(b.name));
   const { properties = {}, required = [] } = options.frontmatter ?? {};

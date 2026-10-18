@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import * as v from 'valibot';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldWrapper } from './components/field-wrapper';
-import { baseInputs, baseLayouts, type InputKind } from './registry';
+import { baseInputs, baseLayouts, type BaseInputs, type InputKind } from './registry';
 
 const registry = defineRegistry({
   inputs: baseInputs,
@@ -14,7 +14,7 @@ const registry = defineRegistry({
 
 // A list and an object draw fields of their own, and rules a chip per rule,
 // tested below.
-const KINDS = (Object.keys(baseInputs) as InputKind[]).filter(
+const KINDS = [...baseInputs.names].filter(
   (kind) => kind !== 'list' && kind !== 'object' && kind !== 'rules',
 );
 
@@ -44,7 +44,7 @@ function renderField(type: InputKind, readOnly: boolean) {
       ? { people: PEOPLE }
       : {};
   const field = { kind: 'field', name: 'pick', type, label: 'Pick', config, readOnly };
-  const node = field as FieldNode<typeof baseInputs>;
+  const node = field as FieldNode<BaseInputs>;
   return render(<Form registry={registry} form={{ nodes: [node] }} onSubmit={vi.fn()} />);
 }
 
@@ -58,10 +58,10 @@ describe('a read-only form field', () => {
   });
 
   it('of kind list offers nothing that changes it, and its items are read-only', () => {
-    const config = schemaToFormConfig<typeof baseInputs>(
+    const config = schemaToFormConfig<BaseInputs>(
       v.object({ links: v.array(v.object({ url: v.pipe(v.string(), v.title('Url')) })) }),
     );
-    const list = config.nodes[0] as FieldNode<typeof baseInputs>;
+    const list = config.nodes[0] as FieldNode<BaseInputs>;
     render(
       <Form
         registry={registry}
@@ -76,10 +76,10 @@ describe('a read-only form field', () => {
   });
 
   it('of kind object makes its fields read-only', () => {
-    const config = schemaToFormConfig<typeof baseInputs>(
+    const config = schemaToFormConfig<BaseInputs>(
       v.object({ size: v.object({ width: v.pipe(v.number(), v.title('Width')) }) }),
     );
-    const object = config.nodes[0] as FieldNode<typeof baseInputs>;
+    const object = config.nodes[0] as FieldNode<BaseInputs>;
     render(
       <Form
         registry={registry}

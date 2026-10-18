@@ -10,6 +10,7 @@ import { FilterForm, type FilterValue } from './filter-form';
 import type { FilterQuery } from './fold';
 import { kinds, operators, tasks } from './meta.fixture';
 import type { FilterOption } from './meta';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const Text = (p: InputProps<object, string>) => {
   return (
@@ -77,12 +78,12 @@ function Sheet({ title, count, open, onOpenChange, children }: FilterSheetProps)
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: Text, defaultValue: '' },
     check: { Component: Check, defaultValue: false },
     pick: { Component: Pick, defaultValue: [] as string[] },
-  },
-  layouts: { bar: { Component: Bar } },
+  }),
+  layouts: noLayouts.register({ bar: { Component: Bar } }),
   field: { Component: ({ children }: { children?: ReactNode }) => <>{children}</> },
   filter: { count: () => null, changes: () => null, sheet: Sheet },
 });

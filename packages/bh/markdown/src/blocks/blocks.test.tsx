@@ -1,4 +1,4 @@
-import { createRegistry, toExample } from '../registry';
+import { toExample } from '../registry';
 import { MarkdownDoc } from '../render';
 import { validateDocument } from '../validate';
 import { render, screen } from '@testing-library/react';
@@ -9,9 +9,9 @@ import { markdownBlocks } from '.';
 // Every block teaches by its examples (toPrompt shows them to an authoring
 // model), so every example must be a page that validates and renders.
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 
-const cases = markdownBlocks.flatMap((block) => {
+const cases = markdownBlocks.values().flatMap((block) => {
   return block.examples.map((example, index) => {
     return { name: `${block.name} #${index + 1}`, source: toExample(example).source };
   });

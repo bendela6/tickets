@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { defineForm, defineRegistry, Form } from '../index';
 import type { FieldWrapperProps, InputProps, LayoutComponentProps } from '../types/registry';
+import { noInputs, noLayouts } from './registries';
 
 const Stub = (p: InputProps<Record<string, never>, string>) => {
   return (
@@ -27,12 +28,12 @@ function FieldStub({ children }: FieldWrapperProps) {
 }
 
 const formRegistry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: Stub, defaultValue: '' },
-  },
-  layouts: {
+  }),
+  layouts: noLayouts.register({
     panel: { Component: Panel },
-  },
+  }),
   field: { Component: FieldStub },
 });
 

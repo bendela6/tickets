@@ -269,11 +269,11 @@ export function parsePage(
     if (at !== undefined) {
       items.push({ kind: 'block', index: at, nodes: [node], node });
     }
-    const renderer = registry.get(name);
-    if (!renderer) {
+    if (!registry.has(name)) {
       report(line, name, `No renderer named "${name}" is registered`);
       return [node];
     }
+    const renderer = registry.get(name);
     if (renderer.inline) {
       report(line, name, `${name} is an inline mark: write it inside prose, as \`:${name}[…]\``);
       return [node];

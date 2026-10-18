@@ -30,6 +30,7 @@ vi.mock('./use-form', async (importOriginal) => {
 // Pulled in after the mock is registered so the spy reference is the same
 // instance the production code will see.
 import { useForm as wrappedUseForm } from './use-form';
+import { noInputs, noLayouts } from '../builder/registries';
 const useFormSpy = wrappedUseForm as unknown as ReturnType<typeof vi.fn>;
 
 const TextInput = (p: InputProps<Record<string, never>, string>) => {
@@ -41,10 +42,10 @@ function FieldStub({ children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: FieldStub },
 });
 

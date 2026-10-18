@@ -1,9 +1,4 @@
-import {
-  createKindRegistry,
-  createOperatorRegistry,
-  type FieldMeta,
-  type ResourceMeta,
-} from '@bh/resource';
+import { baseKinds, baseOperators, type FieldMeta, type ResourceMeta } from '@bh/resource';
 
 // A made-up resource for the filter form's tests: tasks, with a field of each
 // family a filter form fills from the metadata.
@@ -91,5 +86,5 @@ export const tasks: ResourceMeta = {
   },
 };
 
-export const operators = createOperatorRegistry();
-export const kinds = createKindRegistry([], operators);
+export const operators = baseOperators;
+export const kinds = baseKinds;

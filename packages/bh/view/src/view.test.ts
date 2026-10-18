@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { createRegistry, issuesOf, type OperatorSpec } from '@bh/resource';
+import { baseOperators, createRegistry, issuesOf, type OperatorSpec } from '@bh/resource';
 import { View, viewOf } from './view';
 
 // Three views of one resource: a table of open items with its filters, sort,
@@ -10,7 +10,7 @@ import { View, viewOf } from './view';
 const name = {
   fixed: { key: 'name', label: 'Name', width: { mode: 'fill', min: 240 }, sort: 'title' },
   template: {
-    layout: 'flex',
+    layout: 'row',
     options: { gap: 2 },
     nodes: [{ text: '{project}-{number}', options: { mono: true } }, { field: 'title' }],
   },
@@ -66,8 +66,8 @@ const board = {
   item: {
     fixed: { icon: 'square', title: 'Item' },
     template: {
-      layout: 'flex',
-      options: { direction: 'column', gap: 1 },
+      layout: 'stack',
+      options: { gap: 1 },
       nodes: [{ field: 'title' }, { field: 'assignee', renderer: 'user' }],
     },
   },
@@ -262,6 +262,8 @@ describe('viewOf', () => {
     expect(refusals(view, viewOf())).toEqual([
       { path: ['columns', 1, 'fixed', 'filter', 'op'], message: 'no operator "between"' },
     ]);
-    expect(refusals(view, viewOf(createRegistry({ operators: [between] })))).toEqual([]);
+    expect(
+      refusals(view, viewOf(createRegistry({ operators: baseOperators.register({ between }) }))),
+    ).toEqual([]);
   });
 });

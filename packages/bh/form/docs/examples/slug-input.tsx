@@ -30,7 +30,7 @@ function SlugField(p: InputProps<SlugConfig, string>) {
 }
 
 const registry = defineRegistry({
-  inputs: { ...baseInputs, slug: { Component: SlugField, defaultValue: '' } },
+  inputs: baseInputs.register({ slug: { Component: SlugField, defaultValue: '' } }),
   layouts: baseLayouts,
   field: { Component: FieldWrapper },
   root: { Component: RootWrapper },

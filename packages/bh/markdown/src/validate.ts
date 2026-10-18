@@ -58,7 +58,7 @@ export function validateDocument(source: string, registry: Registry): Validation
   const warnings: ValidationWarning[] = [];
 
   for (const block of doc.blocks) {
-    const renderer = registry.get(block.name);
+    const renderer = registry.has(block.name) ? registry.get(block.name) : undefined;
     if (!renderer) {
       errors.push({
         block: block.name,
@@ -103,7 +103,7 @@ export function validateDocument(source: string, registry: Registry): Validation
     const [, lang, name = ''] = match;
     const line = lineAt(source, match.index);
     if (lang === undefined) {
-      if (!registry.get(name) && !KNOWN_LANGUAGES.has(name)) {
+      if (!registry.has(name) && !KNOWN_LANGUAGES.has(name)) {
         warnings.push({ line, message: `Unknown fence language "${name}" — renderer typo?` });
       }
       continue;
@@ -111,7 +111,7 @@ export function validateDocument(source: string, registry: Registry): Validation
     if (!KNOWN_LANGUAGES.has(lang)) {
       warnings.push({ line, message: `Unknown fence language "${lang}" — typo?` });
     }
-    if (!registry.get(name)) {
+    if (!registry.has(name)) {
       warnings.push({ line, message: `Unknown block "${name}" after "${lang}" — renderer typo?` });
     }
   }
@@ -146,7 +146,7 @@ export function validateDocument(source: string, registry: Registry): Validation
 
   for (const match of scannable.matchAll(/:([A-Za-z][\w-]*)\[[^\]]*\]/g)) {
     const name = match[1] ?? '';
-    if (registry.get(name)?.inline) {
+    if (registry.has(name) && registry.get(name).inline) {
       continue;
     }
     warnings.push({

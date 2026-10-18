@@ -6,7 +6,7 @@ import type { BaseKind, KindSettings, KindSpec, KindValue } from './types';
 import type { Json, Scalar } from './values';
 
 function kind(name: BaseKind): KindSpec {
-  const spec = baseKinds.find((each) => each.name === name);
+  const spec = baseKinds.get(name);
   if (!spec) {
     throw new Error(`bh registers no kind "${name}"`);
   }
@@ -30,8 +30,8 @@ function settles(name: BaseKind, settings: unknown): boolean {
 // The table above BaseKind: what each of bh's kinds allows.
 const TABLE: Record<BaseKind, Pick<KindSpec, 'many' | 'sort' | 'group' | 'search' | 'format'>> = {
   text: { many: true, sort: true, group: false, search: true, format: 'plain' },
-  markdown: { many: true, sort: false, group: false, search: true },
-  richtext: { many: true, sort: false, group: false, search: true },
+  markdown: { many: true, sort: false, group: false, search: true, format: 'markdown' },
+  richtext: { many: true, sort: false, group: false, search: true, format: 'rich' },
   url: { many: true, sort: true, group: false, search: true },
   email: { many: true, sort: true, group: false, search: true },
   phone: { many: true, sort: true, group: false, search: true },
@@ -103,11 +103,11 @@ const STATUS: KindSettings['option'] = {
 describe('bh’s kinds', () => {
   it('are the fifteen of KindValue, each once, in the table’s order', () => {
     const names: (keyof KindValue)[] = Object.keys(TABLE) as BaseKind[];
-    expect(baseKinds.map((spec) => spec.name)).toEqual(names);
+    expect(baseKinds.values().map((spec) => spec.name)).toEqual(names);
   });
 
   it('each may hold a list', () => {
-    expect(baseKinds.filter((spec) => !spec.many)).toEqual([]);
+    expect(baseKinds.values().filter((spec) => !spec.many)).toEqual([]);
   });
 
   it.each(Object.entries(TABLE))('registers %s with the table’s flags', (name, flags) => {
@@ -120,14 +120,14 @@ describe('bh’s kinds', () => {
   });
 
   it('name only operators bh registers', () => {
-    const registered = baseOperators.map((spec) => spec.name);
-    for (const spec of baseKinds) {
+    const registered = baseOperators.values().map((spec) => spec.name);
+    for (const spec of baseKinds.values()) {
       expect(registered, spec.name).toEqual(expect.arrayContaining(spec.operators));
     }
   });
 
   it('let every field be found empty or not, and rich text, a file and json nothing more', () => {
-    for (const spec of baseKinds) {
+    for (const spec of baseKinds.values()) {
       expect(spec.operators).toEqual(expect.arrayContaining(['empty', 'notEmpty']));
     }
     for (const name of ['richtext', 'file', 'json'] as const) {
@@ -137,7 +137,10 @@ describe('bh’s kinds', () => {
 
   it('look into text only where a kind is text, and compare by range only where it orders by value', () => {
     const allowing = (operator: string) => {
-      return baseKinds.filter((spec) => spec.operators.includes(operator)).map((spec) => spec.name);
+      return baseKinds
+        .values()
+        .filter((spec) => spec.operators.includes(operator))
+        .map((spec) => spec.name);
     };
     expect(allowing('contains')).toEqual(['text', 'markdown', 'url', 'email', 'phone']);
     expect(allowing('startsWith')).toEqual(['text', 'url', 'email', 'phone']);
@@ -146,18 +149,19 @@ describe('bh’s kinds', () => {
   });
 
   it('give settings to text, number, option and ref, text’s and number’s none needed', () => {
-    expect(baseKinds.filter((spec) => spec.settings).map((spec) => spec.name)).toEqual([
-      'text',
-      'number',
-      'option',
-      'ref',
-    ]);
+    expect(
+      baseKinds
+        .values()
+        .filter((spec) => spec.settings)
+        .map((spec) => spec.name),
+    ).toEqual(['text', 'number', 'option', 'ref']);
     expect(settles('text', undefined)).toBe(true);
     expect(settles('number', undefined)).toBe(true);
   });
 
   it('are frozen: an app adds its own beside them, never changes them', () => {
-    expect(() => (baseKinds as KindSpec[]).push(kind('text'))).toThrow(TypeError);
+    expect(Object.isFrozen(baseKinds)).toBe(true);
+    expect(() => (baseKinds.names as string[]).push('color')).toThrow(TypeError);
     expect(() => {
       kind('text').many = false;
     }).toThrow(TypeError);
@@ -407,7 +411,7 @@ describe('how each kind orders, where bh holds the rows itself', () => {
   });
 
   it('gives every kind that sorts an order, but a ref, which its source orders by title', () => {
-    const unordered = baseKinds.filter((spec) => spec.sort && !spec.compare);
+    const unordered = baseKinds.values().filter((spec) => spec.sort && !spec.compare);
     expect(unordered.map((spec) => spec.name)).toEqual(['ref']);
   });
 

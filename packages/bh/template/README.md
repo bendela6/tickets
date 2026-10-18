@@ -10,7 +10,7 @@ of which an app extends.
 
 It holds no code, so a view stores it as it is; anything a template would
 compute, the app adds to the record first. That is why it imports no React and
-no DOM, only `@bh/resource`'s types, and sits under `packages/shared/`: a
+no DOM, only `@bh/resource`'s types and `@bh/registry`, and sits under `packages/shared/`: a
 server checks and stores a template as a browser draws it. The components that
 draw one come from `@bh/ui`.
 
@@ -25,11 +25,11 @@ it, only while it holds.
 
 ```json
 {
-  "layout": "flex",
-  "options": { "direction": "column", "gap": 1 },
+  "layout": "stack",
+  "options": { "gap": 1 },
   "nodes": [
     {
-      "layout": "flex",
+      "layout": "row",
       "options": { "justify": "between" },
       "nodes": [{ "field": "key" }, { "field": "status" }]
     },
@@ -46,28 +46,30 @@ it, only while it holds.
 
 ## Layouts
 
-A layout node names its layout by a string. bh's three (`BaseLayouts`):
+A layout node names its layout by a string. bh's four are `@bh/ui`'s
+(`BaseLayouts`):
 
-- **`flex`** (`FlexOptions`): its nodes side by side or one under another, so a
-  row, two sides and a stack are one layout. `direction` (row, column),
-  `justify` (start, center, end, between), `align` (start, center, end,
-  stretch, baseline), `gap` and `wrap`; a row, packed at its start, centered
-  across, with no gap, when it says nothing.
+- **`row`** (`RowOptions`): its nodes side by side. `justify` (start, center,
+  end, between), `align` (start, center, end, stretch, baseline), `gap` and
+  `wrap`. Default: packed at the start, centered across, no gap.
+- **`stack`** (`StackOptions`): its nodes one under another. `align` (start,
+  center, end, stretch) and `gap`. Default: stretched across, no gap.
 - **`grid`** (`GridOptions`): its nodes in columns, row after row. `columns` is
   a count of equal ones (`2`), or a least width (`{min: 160}`), as many as fit;
   and `gap`, `align`.
 - **`repeat`** (`RepeatOptions`): its nodes once per entry of a list field
   (`field`: labels, assignees, a stack's services), up to `max`, then "+N",
-  laid out with flex's options. In its nodes the field holds that one entry,
+  in a row, with row's options. In its nodes the field holds that one entry,
   so a part showing the field shows the entry; an object entry's keys are a
   level down, 'services.name'.
 
 A gap is a step of 4 pixels, as `@bh/ui`'s Row and Stack take it: 0, 1, 2, 3,
-4, 6 or 8. An app registers its own layouts beside bh's, an overlay among them,
-and types its templates with them:
+4, 6 or 8. An untyped template takes any layout. An app types its templates with
+its own layouts:
 
 ```ts
-import type { BaseLayouts, TemplateNode } from '@bh/template';
+import type { TemplateNode } from '@bh/template';
+import type { BaseLayouts } from '@bh/ui';
 
 interface AppLayouts extends BaseLayouts {
   overlay: { anchor: 'top-end' | 'bottom-end' };
@@ -80,25 +82,22 @@ const avatar: TemplateNode<AppLayouts> = {
 };
 ```
 
-The layouts are a registry, as the renderers are, one set for every host. Its
-half without React is here (`baseLayoutSpecs`): each layout's options' valibot
-schema, whose output is its `BaseLayouts` entry, and how it lays out the nodes
-it holds. flex and grid draw them once, each an item; a layout with `repeats`
-draws them once per entry of the list field its options name, up to `max`,
-the field holding that one entry (`entriesOf(record, field, max)` gives those
-records and how many are past `max`). A layout is given its options, its
-items already drawn, and `more`, the entries it counts ("+3") rather than
-draws (`LayoutProps`). `@bh/ui` puts a component beside each
-(`baseTemplateLayouts`), and an app spreads those and adds its own:
+The layouts are a registry, one set for every host: `@bh/ui`'s
+`baseTemplateLayouts`. Each layout is one file: its options' valibot schema,
+its component and its entry. row, stack and grid draw their nodes once; a
+layout with `repeats` draws them once per entry of a list field, up to `max`
+(`entriesOf(record, field, max)`). A layout gets its options, its items
+already drawn, and `more`, the entries past `max` (`LayoutProps`). An app
+defines its own with `define` and registers it with `register`, which gives
+a new registry:
 
 ```ts
-const layouts = {
-  ...baseTemplateLayouts,
-  overlay: {
+const layouts = baseTemplateLayouts.register({
+  overlay: baseTemplateLayouts.define({
     options: v.strictObject({ anchor: v.picklist(['top-end', 'bottom-end']) }),
     Component: Overlay,
-  },
-};
+  }),
+});
 ```
 
 ## Parts
@@ -132,7 +131,7 @@ A part that names no renderer or format takes its field's, so a field shows
 the same everywhere unless a template says otherwise: its kind's default
 renderer, and its `format`, else its kind's. `resolvePart(part, field,
 defaults)` fills them in, given the renderer registry's default for each kind
-and the kinds (`createKindRegistry()`); a constant or a text template is drawn
+and the kinds (`baseKinds`); a constant or a text template is drawn
 as text. `fillText(text, show)` fills a text template with each path's value as
 `show` gives it, trimmed, its runs of spaces folded, `{{` and `}}` a brace;
 `textPaths(text)` names the paths it holds.
@@ -140,15 +139,11 @@ as text. `fillText(text, show)` fills a text template with each path's value as
 ## Renderers
 
 A registry of renderers, by the name a part gives (`renderer`), one set for
-every host. Its half without React is here: each renderer's spec
-(`RendererSpec`), the kinds of field it shows, its options' valibot schema and
-the least width it needs (`minWidth`), so a narrow host leaves a part drawn
-with it out; and what a renderer is given (`RendererProps`): its values, each
-made ready as text in its format (`Shown`: its value, its text, an option's
-tone, a ref's picture), its own options, the part's, the field and the record.
-`@bh/ui` puts a component beside each (`baseRenderers`); an app spreads them
-and adds its own, as a form's inputs are, and a server checks a template
-against the specs alone.
+every host: `@bh/ui`'s `baseRenderers`. Each renderer is one file: the kinds
+it shows, its options' valibot schema, its least width (`minWidth`), its
+component and its entry. A renderer gets `RendererProps`: its values, each
+ready as text in its format (`Shown`), its own options, the part's, the field
+and the record. An app registers its own with `baseRenderers.register`.
 
 | Renderer   | Shows                                                  | Kinds          | Options         |
 | ---------- | ------------------------------------------------------ | -------------- | --------------- |
@@ -166,7 +161,7 @@ against the specs alone.
 | `check`    | a check for true                                       | boolean        |                 |
 | `code`     | JSON, or text, as code                                 | json, text     |                 |
 
-Each of bh's kinds has a default renderer (`baseDefaultRenderers`), the one a
+Each of bh's kinds has a default renderer (`@bh/ui`'s `baseDefaultRenderers`), the one a
 part showing a field of it gets when it names none: text as `text`, a url as
 `link`, a number as `number`, a date or datetime as `date`, a boolean as
 `check`, an option as `pill`, a ref as `user` and json as `code`. An app's
@@ -174,18 +169,19 @@ own kind adds its default beside them, and `partDefaults(renderers, kinds)`
 gives `resolvePart` both:
 
 ```ts
-import { createKindRegistry } from '@bh/resource';
-import { baseDefaultRenderers, partDefaults, resolvePart } from '@bh/template';
+import { baseKinds } from '@bh/resource';
+import { partDefaults, resolvePart } from '@bh/template';
+import { baseDefaultRenderers } from '@bh/ui';
 
 const defaults = partDefaults(
   { ...baseDefaultRenderers, color: 'swatch' },
-  createKindRegistry([color]),
+  baseKinds.register({ color }),
 );
 resolvePart({ field: 'status' }, status, defaults); // { field: 'status', renderer: 'pill' }
 ```
 
-`entryOf(registry, name)` finds an entry by its own name only, so a template
-naming 'constructor' finds nothing; `named(ref)` reads a renderer or a format
+`entryOf(record, name)` finds an entry of a plain record, as the kinds'
+defaults, by its own name only, so a kind named 'constructor' finds nothing; `named(ref)` reads a renderer or a format
 named alone or as `{name, options}`; `canShow` and `fits` say whether a
 renderer shows a kind and fits a width.
 
@@ -209,6 +205,86 @@ for every link: absolute with its scheme, or a path from the root; never
 `textPaths(to)` names the fields it needs. How the app's router follows the
 address is the app's: `@bh/ui`'s `createLinkRenderer(Anchor)` draws its links
 with the app's router link in TextLink's look.
+
+## Formats
+
+A registry of formats, by the name a field's `format` or a part's `format`
+gives, one set for every host and for a server as for a browser. A format
+turns a value into the text a renderer shows. Each entry (`Formatter`) is its
+function and its spec, `@bh/resource`'s `FormatSpec`: its name, the kinds it
+takes and its options' valibot schema. The function is called with the value,
+its options (the schema's output, `{}` when it takes none) and the app's
+context, the locale and time zone it sets once and the moment `relative`
+counts from (`FormatContext`), and answers with pieces (`FormatPiece`), as
+`Intl`'s `formatToParts` does:
+
+```ts
+import { baseFormats, formatText, formatValue } from '@bh/template';
+
+const pieces = formatValue(baseFormats, { name: 'bytes', options: { per: 's' } }, 13_002_342);
+// [{ text: '12.4' }, { text: ' ' }, { text: 'MiB/s', unit: true }]
+formatText(pieces); // '12.4 MiB/s', for a filter chip, a tooltip, an export, an MCP answer
+```
+
+A unit is a piece with `unit: true`, so a card draws it smaller than its
+number and a cell joins them. bh registers eleven (`baseFormats`):
+
+| Format     | Writes                                      | Kinds                                   | Options                         |
+| ---------- | ------------------------------------------- | --------------------------------------- | ------------------------------- |
+| `number`   | `1,234.5`, compact `12.4K`                  | number                                  | `digits`, `notation: 'compact'` |
+| `percent`  | a fraction as a percent: 0.427 is `43%`     | number                                  | `digits`                        |
+| `bytes`    | `12.4 MiB`, as a rate `12.4 MiB/s`          | number                                  | `units`, `digits`, `per`        |
+| `duration` | `2h 5m`, `840ms`                            | number                                  | `unit`, `days`                  |
+| `money`    | `€12.50`                                    | number                                  | `currency` (required)           |
+| `date`     | `Jul 13, 2026`, the UTC day                 | date                                    |                                 |
+| `datetime` | `Jul 13, 2026, 09:05`                       | datetime                                | `timeZone`                      |
+| `relative` | `5 minutes ago`, `in 2 hours`, `3 days ago` | date, datetime                          | `smallestUnit`                  |
+| `plain`    | the text as it is                           | text, markdown, url, email, phone, time |                                 |
+| `markdown` | markdown as the text it reads as            | markdown, text                          |                                 |
+| `rich`     | a rich text's words, a block to a line      | richtext                                |                                 |
+
+`digits` is the most digits after the point, and a whole amount drops its
+zeros; `percent` takes a fraction; `duration` reads its number in `unit` (`ms`,
+`s`, `min` or `h`, minutes unless given). A format's `timeZone` wins over the
+context's. `markdown` and `rich` are the default formats of the markdown and
+richtext kinds: they write the words of the text, so a cell shows neither
+marks nor JSON. A value in no format, in one nothing registered, or with
+options its schema refuses is its own text (`formatValue`), so a stored
+mistake shows and takes nothing down.
+
+`baseFormats` is a registry (`@bh/registry`), as the renderers are: an app
+defines its own with `define`, which checks it and types its function by its
+options' schema, registers it beside bh's with `register`, and passes them to
+the resource's registry (`values()`), which checks each field's format and its
+options. `checkFormats(formats, kinds)` checks the formats against the kinds:
+each kind's default format (`KindSpec.format`) registered and taking that kind:
+
+```ts
+import * as v from 'valibot';
+import { createRegistry } from '@bh/resource';
+import { baseFormats, checkFormats } from '@bh/template';
+
+// All its options optional: the schema takes `undefined` too, so `format: 'rate'` alone is valid.
+const options = v.optional(v.strictObject({ per: v.optional(v.picklist(['page', 'visit'])) }), {});
+
+const rate = baseFormats.define({
+  name: 'rate',
+  kinds: ['number'],
+  options,
+  format: (value, { per = 'page' }) => [
+    { text: String(value) },
+    { text: ` per ${per}`, unit: true },
+  ],
+});
+
+const formats = baseFormats.register({ rate });
+checkFormats(formats);
+const registry = createRegistry({ formats });
+```
+
+The pure functions the formats write with live here too, so a server formats
+as a browser does: `formatBytes`, `formatDuration`, `formatDateTime`,
+`formatExact` and `relativeLabel`. `@bh/ui` exports them by the same names.
 
 ## Hosts
 
@@ -238,8 +314,9 @@ const hosts: Host<v.InferOutput<typeof card.fixed>> = {
 
 ## Docs
 
-The Templates guide is in [`docs/`](docs/INDEX.md), one page so far; the docs
-site (`pnpm docs:dev` in bh) shows it at `/templates/overview`.
+The Templates guide is in [`docs/`](docs/INDEX.md), two pages so far, the
+overview and the formats; the docs site (`pnpm docs:dev` in bh) shows them at
+`/templates/overview` and `/templates/formats`.
 
 ## Layer
 

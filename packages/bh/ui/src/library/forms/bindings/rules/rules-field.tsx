@@ -1,7 +1,7 @@
 import type { InputProps } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
+  baseKinds,
+  baseOperators,
   type FieldMeta,
   type Filter,
   type KindRegistry,
@@ -44,8 +44,6 @@ export interface RulesFieldConfig {
 }
 
 // bh's own, for a rules field given none.
-const OPERATORS = createOperatorRegistry();
-const KINDS = createKindRegistry([], OPERATORS);
 
 /**
  * A filter's rules: one chip per condition, each read in words, and ways to
@@ -56,8 +54,8 @@ export function RulesField(p: InputProps<RulesFieldConfig, Filter[]>) {
   const entries = p.value ?? [];
   const meta: RulesMeta = {
     fields: p.config.fields ?? [],
-    operators: p.config.operators ?? OPERATORS,
-    kinds: p.config.kinds ?? KINDS,
+    operators: p.config.operators ?? baseOperators,
+    kinds: p.config.kinds ?? baseKinds,
     ...(p.config.operatorInputs ? { operatorInputs: p.config.operatorInputs } : {}),
     ...(p.config.optionsFor ? { optionsFor: p.config.optionsFor } : {}),
   };

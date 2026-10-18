@@ -82,7 +82,7 @@ export function partsOf(
   refs: RefTitles = new Map(),
 ): { field: string; op: string; values: ValuePart[] } {
   const at = fieldAt(meta, condition.field);
-  const spec = meta.operators.get(condition.op);
+  const spec = meta.operators.has(condition.op) ? meta.operators.get(condition.op) : undefined;
   return {
     field: at ? pathLabel(at) : condition.field,
     op: spec && at ? wordsFor(spec, at.field) : (spec?.label ?? condition.op),

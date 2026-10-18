@@ -1,8 +1,9 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+
 import type { AnyRenderer, BlockNode } from '../registry/types';
 import { parsePage, readPageFrontmatter } from './parse-page';
+import { blocksOf } from '../registry/blocks.fixture';
 
 const component = () => null;
 
@@ -50,7 +51,7 @@ const RENDERERS: AnyRenderer[] = [
     component,
   },
 ];
-const registry = createRegistry(RENDERERS);
+const registry = blocksOf(RENDERERS);
 
 const META = v.strictObject({ title: v.string(), summary: v.string() });
 

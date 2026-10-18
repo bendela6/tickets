@@ -11,6 +11,7 @@ import { countAsks } from './counts';
 import { FilterForm, type FilterValue } from './filter-form';
 import type { FilterQuery } from './fold';
 import { kinds, operators, tasks } from './meta.fixture';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const Text = (p: InputProps<object, string>) => {
   return (
@@ -46,14 +47,14 @@ function Bar({ children }: LayoutComponentProps<object>) {
   return <div role="toolbar">{children}</div>;
 }
 
-const inputs = {
+const inputs = noInputs.register({
   text: { Component: Text, defaultValue: '' },
   rules: { Component: Rules, defaultValue: [] as Filter[] },
-};
+});
 
 const registry = defineRegistry({
   inputs,
-  layouts: { bar: { Component: Bar } },
+  layouts: noLayouts.register({ bar: { Component: Bar } }),
   field: { Component: ({ children }) => <>{children}</> },
 });
 
@@ -142,8 +143,8 @@ describe('FilterForm’s locked conditions', () => {
 
   it('apply without a rules input to draw them', () => {
     const plain = defineRegistry({
-      inputs: { text: inputs.text },
-      layouts: {},
+      inputs: noInputs.register({ text: inputs.get('text') }),
+      layouts: noLayouts,
       field: { Component: ({ children }) => <>{children}</> },
     });
     const one = defineForm(plain).build((b) => {

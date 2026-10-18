@@ -8,10 +8,11 @@ body:
     each kind of field its starting value.
   - h2: What a registry holds
   - |
-    - **`inputs`**: by kind, the component that draws a field of that kind
-      and the value it starts at. A field names its kind as its `type`.
-    - **`layouts`**: by kind, the component that draws a layout node around
-      its children: a card, a row. `{}` for none. A layout may name a `field`
+    - **`inputs`**: a registry (`@bh/registry`) of, by kind, the component
+      that draws a field of that kind and the value it starts at. A field
+      names its kind as its `type`.
+    - **`layouts`**: a registry of, by kind, the component that draws a
+      layout node around its children: a card, a row. `noLayouts` for none. A layout may name a `field`
       wrapper of its own, which its fields get, at any depth until another
       layout names one: a filter bar's fields named inside their controls.
       A form inside a field (a list's item, an object) starts at the
@@ -43,6 +44,12 @@ body:
         action: { Component: FormButton },
       });
     lang: tsx
+  - |
+    `@bh/ui`'s `baseInputs` and `baseLayouts` are registries: an app
+    registers its own kinds beside them, `baseInputs.register({ slug })`,
+    which gives a new registry and leaves bh's as it is. Without `@bh/ui`, an
+    app registers its own on `noInputs` and `noLayouts`. A kind registered
+    twice throws, and so does one whose `Component` isn't a component.
   - |
     `defineRegistry` returns what it is given. It is there for the types:
     `defineForm` reads each kind's config and value from them, so a field

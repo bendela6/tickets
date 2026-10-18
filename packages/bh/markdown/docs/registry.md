@@ -15,20 +15,36 @@ the page of each block there is.
 
 ## A registry
 
-`createRegistry` takes renderers and holds them by name. `get` finds
-one, `names` lists them, `all` gives them in the order registered,
-`register` adds one more, and `toPrompt` writes the
-[block reference](to-prompt.md) over all of them. It throws on a
-name already taken, and on a renderer with no description or no example,
-since the block reference teaches a model from exactly those.
-
-The package's own blocks are `markdownBlocks`, drawn with `@bh/ui`, to
-spread into a registry. A page is read and drawn with the same one:
+A registry holds blocks by name, a `@bh/registry` registry. The
+package's own blocks are `markdownBlocks`, drawn with `@bh/ui`; an app
+registers its own beside them with `register`, which gives a new
+registry and leaves `markdownBlocks` as it is, and `noBlocks` holds none.
+`get` finds a block and throws for a name nothing registered, `has` asks
+first, `names` lists them and `values()` gives them in the order
+registered, which [`toPrompt`](to-prompt.md) writes the block
+reference over. Registering throws on a name already taken, on a block
+registered by a name other than its own, and on one with no description
+or no example, since the block reference teaches a model from exactly
+those. A page is read and drawn with the same registry:
 
 ```ts
-import { createRegistry, markdownBlocks } from '@bh/markdown';
+import * as v from 'valibot';
+import { markdownBlocks, toPrompt } from '@bh/markdown';
 
-export const registry = createRegistry(markdownBlocks);
+// Checked as it is defined; `component` is given what `schema` gives.
+const plant = markdownBlocks.define({
+  name: 'plant',
+  body: 'data',
+  description: 'A plant, by its `name`.',
+  schema: v.object({ name: v.string() }),
+  examples: ['- plant:\n    name: Fern'],
+  component: ({ data }) => data.name,
+});
+
+// markdown's blocks and plant; markdownBlocks stays as it is.
+export const registry = markdownBlocks.register({ plant });
+
+export const prompt = toPrompt(registry.values());
 ```
 
 ## A block
@@ -67,7 +83,6 @@ import * as v from 'valibot';
 import {
   BlockErrorCard,
   CodeBlock,
-  createRegistry,
   DocView,
   markdownBlocks,
   type MarkdownElements,
@@ -117,7 +132,7 @@ const plantBlock: Renderer<Plant> = {
   },
 };
 
-const registry = createRegistry([...markdownBlocks, plantBlock]);
+const registry = markdownBlocks.register({ plant: plantBlock });
 
 const elements: MarkdownElements = {
   p: (p) => <p {...p} className="text-13/20 text-gray-11" />,
@@ -303,43 +318,45 @@ The site's own, which need its plugins or its live runtime:
 ## Reference
 
 ```ts
-createRegistry(renderers?: readonly AnyRenderer[]): Registry
+const noBlocks: Registry<
+  Renderer<any>,
+  <T>(renderer: Renderer<T>) => Renderer<any>,
+  Record<never, Renderer<any>>
+>;
 ```
 
-The set of blocks a page may use, by name. A renderer must say what it is
-and show at least one example, since `toPrompt` teaches an authoring model
-from exactly those.
-
-| Parameter   | Type                     | Default | Description |
-| ----------- | ------------------------ | ------- | ----------- |
-| `renderers` | `readonly AnyRenderer[]` | `[]`    |             |
-
-Returns `Registry`.
+A registry holding no blocks, for a page that draws none of this package's:
+`noBlocks.register({ plant })`. `define` types a block by its schema, so
+its component is given what that schema gives.
 
 ```ts
-interface Registry
+type Registry = RegistryOf<AnyRenderer>;
 ```
 
-The blocks a page may use, by name: what `createRegistry` gives.
+The blocks a page may use, by name: `markdownBlocks`, or a registry with an
+app's own beside them (`markdownBlocks.register({ plant })`). `get` throws
+for a name nothing registered; `has` asks first.
 
-| Member                | Type                                               | Default | Description                                                                     |
-| --------------------- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `get` (required)      | `(name: string) => AnyRenderer \| undefined`       |         | The renderer of that name, if one is registered.                                |
-| `names` (required)    | `() => ReadonlySet<string>`                        |         | Every registered name: a fence is a block only when its language is one.        |
-| `all` (required)      | `() => readonly AnyRenderer[]`                     |         | Every renderer, in the order registered.                                        |
-| `register` (required) | `(renderer: AnyRenderer) => void`                  |         | Adds a renderer; throws on a name already taken, no description, or no example. |
-| `toPrompt` (required) | `(options?: PromptOptions \| undefined) => string` |         | The block reference for an authoring model, over every renderer: `toPrompt`.    |
+| Member               | Type                            | Default | Description                                                                     |
+| -------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `name` (required)    | `string`                        |         | What an entry is called, in messages: 'renderer'.                               |
+| `names` (required)   | `readonly string[]`             |         | Its entries' names, in the order they were registered.                          |
+| `get` (required)     | `(name: string) => AnyRenderer` |         | The entry by its name. Throws, saying which names it holds, for one it doesn't. |
+| `has` (required)     | `(name: string) => boolean`     |         | Whether it holds an entry by this name.                                         |
+| `values` (required)  | `() => AnyRenderer[]`           |         | Its entries, in the order they were registered.                                 |
+| `entries` (required) | `() => [string, AnyRenderer][]` |         | Its entries with their names, in the order they were registered.                |
 
 ```ts
-type RendererLookup = Pick<Registry, 'get' | 'names'>;
+type RendererLookup = Pick<Registry, 'get' | 'has' | 'names'>;
 ```
 
-What reading a page needs of a registry: its renderers, by name.
+What reading a page needs of a registry: its blocks, by name.
 
-| Member             | Type                                         | Default | Description                                                              |
-| ------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------ |
-| `get` (required)   | `(name: string) => AnyRenderer \| undefined` |         | The renderer of that name, if one is registered.                         |
-| `names` (required) | `() => ReadonlySet<string>`                  |         | Every registered name: a fence is a block only when its language is one. |
+| Member             | Type                            | Default | Description                                                                     |
+| ------------------ | ------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `names` (required) | `readonly string[]`             |         | Its entries' names, in the order they were registered.                          |
+| `get` (required)   | `(name: string) => AnyRenderer` |         | The entry by its name. Throws, saying which names it holds, for one it doesn't. |
+| `has` (required)   | `(name: string) => boolean`     |         | Whether it holds an entry by this name.                                         |
 
 ```ts
 type AnyRenderer = Renderer<any>;

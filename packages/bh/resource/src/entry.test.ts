@@ -35,11 +35,16 @@ function graphOf(entry: string): { files: string[]; packages: Set<string> } {
 describe('the package’s main entry', () => {
   const { files, packages } = graphOf(resolve(SRC, 'index.ts'));
 
-  // Servers and browsers both import it, so it takes valibot, its JSON Schema
-  // converter and OpenAPI's types alone: no React, nothing drawn with it, and
-  // nothing of Node's.
-  it('imports valibot, its JSON Schema converter and OpenAPI’s types, and nothing else', () => {
-    expect([...packages].sort()).toEqual(['@valibot/to-json-schema', 'openapi-types', 'valibot']);
+  // Servers and browsers both import it, so it takes @bh/registry, valibot,
+  // its JSON Schema converter and OpenAPI's types alone: no React, nothing
+  // drawn with it, and nothing of Node's.
+  it('imports @bh/registry, valibot, its JSON Schema converter and OpenAPI’s types, and nothing else', () => {
+    expect([...packages].sort()).toEqual([
+      '@bh/registry',
+      '@valibot/to-json-schema',
+      'openapi-types',
+      'valibot',
+    ]);
   });
 
   it('touches nothing of the DOM', () => {
@@ -56,8 +61,8 @@ describe('the client’s entry (@bh/resource/client)', () => {
 
   // A browser and a server calling another app's API take the same client:
   // the platform's fetch, Headers and crypto, and nothing of React or the DOM.
-  it('imports valibot alone', () => {
-    expect([...packages].sort()).toEqual(['valibot']);
+  it('imports @bh/registry and valibot alone', () => {
+    expect([...packages].sort()).toEqual(['@bh/registry', 'valibot']);
   });
 
   it('touches nothing of the DOM', () => {

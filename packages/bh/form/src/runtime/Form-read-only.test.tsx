@@ -6,6 +6,7 @@ import { NestedFields } from './nested-fields';
 import { defineRegistry } from '../builder/define-registry';
 import { defineForm } from '../builder/define-form';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 // Calls onChange whatever it's told, so the form's own guard is what's tested.
 const TextInput = (p: InputProps<object, string>) => {
@@ -36,11 +37,11 @@ function FieldStub({ children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
     group: { Component: GroupInput, defaultValue: {} },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: FieldStub },
 });
 

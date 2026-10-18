@@ -1,9 +1,10 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { describe, expect, it } from 'vitest';
 import { parsePage } from './page/parse-page';
-import { createRegistry } from './registry/registry';
+
 import type { AnyRenderer } from './registry/types';
 import { toPage } from './to-page';
+import { blocksOf } from './registry/blocks.fixture';
 
 const component = () => null;
 
@@ -34,7 +35,7 @@ const tag: AnyRenderer = {
   component,
 };
 
-const registry = createRegistry([
+const registry = blocksOf([
   note,
   tag,
   {

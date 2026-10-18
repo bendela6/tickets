@@ -1,4 +1,4 @@
-import { createRegistry, toExample } from '../../registry';
+import { noBlocks, toExample } from '../../registry';
 import { parseDocument } from '../../parse';
 import { describe, expect, it } from 'vitest';
 import { lifecycleExamples } from './examples';
@@ -6,7 +6,7 @@ import { LABEL_HEIGHT, NODE_HEIGHT, layoutStates, type Box, type Layout } from '
 import { lifecycleBlock } from './renderer';
 import type { LifecycleData } from './schema';
 
-const registry = createRegistry([lifecycleBlock]);
+const registry = noBlocks.register({ lifecycle: lifecycleBlock });
 
 const overlap = (a: Box, b: Box) => {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;

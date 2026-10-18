@@ -1,5 +1,4 @@
 import type { Filter } from '@bh/resource';
-import type { BaseLayouts } from './layouts';
 import type { Part } from './part';
 
 // A template: what a record shows, as JSON. A table column's cell, a list
@@ -11,27 +10,26 @@ import type { Part } from './part';
  * A template, or any node in one: a layout holding nodes, or a part. Its root
  * is a node like any other, so a cell showing one field is one part.
  *
- * `L` names the layouts it may use, with their options: bh's three
- * (BaseLayouts) unless an app adds its own.
+ * `L` types its layouts; any layout, with any options, without it.
  */
-export type TemplateNode<L extends Layouts<L> = BaseLayouts> = LayoutNode<L> | Part;
+export type TemplateNode<L extends Layouts<L> = AnyLayouts> = LayoutNode<L> | Part;
 
-/**
- * Layouts by name, each with the options it takes: BaseLayouts, or an
- * interface an app extends it with.
- */
+/** Layouts by name, each with its options. */
 export type Layouts<L> = Record<keyof L, object>;
+
+/** Any layout, with any options. */
+export type AnyLayouts = Record<string, object>;
 
 /**
  * A layout node: the nodes it holds, drawn by the layout it names. Layouts
  * nest in each other as deep as a template needs.
  */
-export type LayoutNode<L extends Layouts<L> = BaseLayouts> = {
+export type LayoutNode<L extends Layouts<L> = AnyLayouts> = {
   [K in keyof L & string]: LayoutNodeBase<K, L> & OptionsOf<L[K]>;
 }[keyof L & string];
 
 interface LayoutNodeBase<K extends string, L extends Layouts<L>> {
-  /** A registered layout's name: 'flex', 'grid', 'repeat', or an app's own. */
+  /** A registered layout's name: 'row', 'stack', 'grid', 'repeat', or an app's own. */
   layout: K;
   /** What it lays out, in order: parts, and layouts holding more. */
   nodes: TemplateNode<L>[];

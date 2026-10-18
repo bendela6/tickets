@@ -1,4 +1,7 @@
+import { noLayouts } from './registries';
 import type {
+  AnyInputs,
+  AnyLayouts,
   InputRegistry,
   InferConfig,
   InferValue,
@@ -80,8 +83,8 @@ const ACTIONS: readonly string[] = ['submit', 'reset'] satisfies FormAction[];
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export function createBuilder<R extends InputRegistry, L extends LayoutComponentRegistry = {}>(
-  registry: R,
-  layoutRegistry: L = {} as L,
+  inputs: AnyInputs,
+  layouts: AnyLayouts = noLayouts,
 ): Builder<R, L> {
   return new Proxy({} as Builder<R, L>, {
     get(_t, prop) {
@@ -105,7 +108,7 @@ export function createBuilder<R extends InputRegistry, L extends LayoutComponent
           };
         };
       }
-      if (prop in registry) {
+      if (inputs.has(prop)) {
         return (opts: FieldOptions<R, keyof R>) => {
           return {
             kind: 'field' as const,
@@ -123,7 +126,7 @@ export function createBuilder<R extends InputRegistry, L extends LayoutComponent
           };
         };
       }
-      if (prop in layoutRegistry) {
+      if (layouts.has(prop)) {
         return (
           opts: { when?: WhenClause } & Record<string, unknown>,
           children: LayoutNode<R, L>[],

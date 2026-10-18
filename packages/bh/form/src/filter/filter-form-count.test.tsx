@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { defineForm } from '../builder/define-form';
@@ -7,6 +8,7 @@ import { FormProvider } from '../runtime/form-provider';
 import type { FilterCountProps, InputProps } from '../types/registry';
 import { FilterForm, type FilterFormProps } from './filter-form';
 import { kinds, operators, tasks } from './meta.fixture';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const Text = (p: InputProps<object, string>) => {
   return (
@@ -21,15 +23,15 @@ function Count({ shown, total, label, loading }: FilterCountProps) {
   );
 }
 
-const inputs = { text: { Component: Text, defaultValue: '' } };
+const inputs = noInputs.register({ text: { Component: Text, defaultValue: '' } });
 const field = { Component: ({ children }: { children?: React.ReactNode }) => <>{children}</> };
 const counted = defineRegistry({
   inputs,
-  layouts: {},
+  layouts: noLayouts,
   field,
   filter: { count: Count, changes: () => null, sheet: () => null },
 });
-const plain = defineRegistry({ inputs, layouts: {}, field });
+const plain = defineRegistry({ inputs, layouts: noLayouts, field });
 
 const form = defineForm(counted).build((b) => {
   return [
@@ -40,7 +42,7 @@ const form = defineForm(counted).build((b) => {
 
 function draw(
   registry: typeof counted | typeof plain,
-  count: FilterFormProps<typeof inputs>['count'],
+  count: FilterFormProps<EntriesOf<typeof inputs>>['count'],
 ) {
   return (
     <FormProvider registry={registry}>

@@ -80,7 +80,7 @@ function targetOf(source: FilterMeta, path: string): Target | string {
     return `"${key}" has no attribute "${name}"`;
   }
   const kindName = attribute?.kind ?? field.type.kind;
-  const kind = source.kinds.get(kindName);
+  const kind = source.kinds.has(kindName) ? source.kinds.get(kindName) : undefined;
   if (!kind) {
     return `no kind "${kindName}" is registered`;
   }
@@ -96,7 +96,7 @@ function refusal(source: FilterMeta, path: string, op: string): string | undefin
   if (target.field.query.filter.length === 0) {
     return `"${target.field.key}" can't be filtered`;
   }
-  if (!source.operators.get(op)) {
+  if (!source.operators.has(op)) {
     return `no operator "${op}" is registered`;
   }
   const allowed =

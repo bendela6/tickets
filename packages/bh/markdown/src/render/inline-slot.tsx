@@ -14,7 +14,7 @@ interface InlineSlotProps {
 /** An inline mark, `:badge[stable]{color=green}`, inside a run of text. */
 export function InlineSlot({ name, label, attrsSource, raw }: InlineSlotProps) {
   const { registry, doc, ctx, elements } = useDocContext();
-  const renderer = registry.get(name);
+  const renderer = registry.has(name) ? registry.get(name) : undefined;
   if (!renderer?.inline) {
     return raw;
   }

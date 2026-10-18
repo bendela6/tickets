@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+
 import type { Renderer } from '../registry/types';
 import { parseDocument, readFrontmatter } from './parse';
+import { blocksOf } from '../registry/blocks.fixture';
 
 const stub = (name: string, body: Renderer['body']): Renderer => {
   return {
@@ -13,7 +14,7 @@ const stub = (name: string, body: Renderer['body']): Renderer => {
   };
 };
 
-const registry = createRegistry([
+const registry = blocksOf([
   stub('erd', 'data'),
   stub('transcript', 'text'),
   stub('note', 'markdown'),

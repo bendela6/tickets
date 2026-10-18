@@ -18,8 +18,8 @@ document, and each block's own page.
 `toPrompt(renderers, options)` writes every block a model may use, as
 markdown, in name order: its name, its description, how it is written,
 its data as JSON Schema when you pass a converter, and its examples.
-`registry.toPrompt(options)` is the same over a registry's blocks. It
-comes in two forms, for the two ways a page writes a block:
+Over a registry's blocks, it is `toPrompt(registry.values(), options)`.
+It comes in two forms, for the two ways a page writes a block:
 
 - **`markdown`**, the default, for a [markdown document](markdown-documents.md).
   Each block says what its body is: `YAML`, `markdown`,
@@ -47,7 +47,7 @@ switch to the markdown form to see them as authored.
 ```tsx
 import { useState } from 'react';
 import * as v from 'valibot';
-import { CodeBlock, createRegistry, keyboardBlock, type Renderer } from '@bh/markdown';
+import { CodeBlock, keyboardBlock, noBlocks, type Renderer, toPrompt } from '@bh/markdown';
 import { SegmentedControl } from '@bh/ui';
 
 const plantSchema = v.object({
@@ -69,7 +69,7 @@ const plantBlock: Renderer<v.InferOutput<typeof plantSchema>> = {
 
 // keyboard's examples are written as markdown fences; the page form
 // writes them again as page items.
-const registry = createRegistry([keyboardBlock, plantBlock]);
+const registry = noBlocks.register({ keyboard: keyboardBlock, plant: plantBlock });
 
 const FORMS = [
   { value: 'page', label: 'Page items' },
@@ -78,7 +78,7 @@ const FORMS = [
 
 export function BothForms() {
   const [form, setForm] = useState('page');
-  const prompt = registry.toPrompt({ form: form === 'page' ? 'page' : 'markdown' });
+  const prompt = toPrompt(registry.values(), { form: form === 'page' ? 'page' : 'markdown' });
   return (
     <div className="flex w-full flex-col gap-12">
       <SegmentedControl label="Form" options={FORMS} value={form} onChange={setForm} />

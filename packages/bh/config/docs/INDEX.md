@@ -14,4 +14,4 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [tsconfig presets](../docs/tsconfig.md): The compiler options every bh project shares, and the presets for React, Node and a package tsc builds.
 - [Vitest](../docs/vitest.md): The coverage and exclusions every vitest.config.ts shares, and the setup bh's packages test with.
 - [tokens:build](../docs/tokens-build.md): Regenerate @bh/ui's stylesheets, token modules and safelist from its token files.
-- [Releases](../docs/releases.md): How bh's commits make its versions: the release workflow, the script it runs, and pnpm release:next.
+- [Releases](../docs/releases.md): bh-release, a repo's pnpm release: a version for every package, service and stack, with changelogs, from the commits since each was last versioned.

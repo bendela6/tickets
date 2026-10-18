@@ -1,6 +1,5 @@
 import type * as v from 'valibot';
-import type { BaseLayouts } from './layouts';
-import type { Layouts, TemplateNode } from './template';
+import type { AnyLayouts, Layouts, TemplateNode } from './template';
 
 // A host: what draws a record with a template. A table column's cell, a list
 // item, a tile and a card's body are templates; each host keeps a few fixed
@@ -42,7 +41,7 @@ export interface HostSpec<F> {
  * rest of a record with. A card:
  * `{ fixed: { icon: 'server', title: 'Hosts' }, template: { field: 'name' } }`.
  */
-export interface Host<F, L extends Layouts<L> = BaseLayouts> {
+export interface Host<F, L extends Layouts<L> = AnyLayouts> {
   /** Its fixed parts, plain values its kind's schema checks (HostSpec.fixed). */
   fixed: F;
   /** What it draws from the record, where its kind's `order` puts it. */

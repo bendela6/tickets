@@ -1,3 +1,5 @@
+import { noInputs, noLayouts } from '@bh/form';
+import type { EntriesOf } from '@bh/registry';
 import type { Filter } from '@bh/resource';
 import type { UploadFile } from '../inputs/components/file-input';
 import { AvatarsField } from './bindings/avatars/avatars-field';
@@ -46,8 +48,9 @@ import {
   RowLayout,
 } from './layouts';
 
-/** The standard input set. Apps spread this and add their own kinds
- *  (`{ ...baseInputs, directory: … }`). Each defaultValue
+/** The standard input set, a registry (@bh/registry). Apps register their own
+ *  kinds beside them (`baseInputs.register({ directory: … })`), which gives a
+ *  new registry and leaves this one as it is. Each defaultValue
  *  matches its adapter's value channel; a mismatch seeds the field wrong.
  *
  *  One kind per CONTROL, not per value type. `checkbox` and `toggle` both hold a
@@ -56,7 +59,7 @@ import {
  *  a checkbox as a value saved with the form; a radio group shows every option,
  *  a select hides them behind a trigger. That decision is what a stored config
  *  records, so it needs two names to record it with. */
-export const baseInputs = {
+export const baseInputs = noInputs.register({
   text: { Component: TextField, defaultValue: '' },
   email: { Component: EmailField, defaultValue: '' },
   textarea: { Component: TextAreaField, defaultValue: '' },
@@ -100,7 +103,10 @@ export const baseInputs = {
   // gives a list of objects `list` and a nested object `object`.
   list: { Component: ListField, defaultValue: [] as Record<string, unknown>[] },
   object: { Component: ObjectField, defaultValue: null as Record<string, unknown> | null },
-};
+});
+
+/** bh's inputs by kind, as `FormConfig` and `FieldNode` take them: `FormConfig<BaseInputs, BaseFormLayouts>`. */
+export type BaseInputs = EntriesOf<typeof baseInputs>;
 
 /**
  * The kinds a FormConfig may name — the vocabulary anything GENERATING one has
@@ -115,7 +121,7 @@ export const baseInputs = {
  * These strings are serialised into stored FormConfigs, so renaming one is a
  * data migration, not a refactor.
  */
-export type InputKind = keyof typeof baseInputs;
+export type InputKind = keyof BaseInputs;
 
 /**
  * What a field of each kind holds — the other half of the contract, and the
@@ -195,7 +201,7 @@ type KindsAgree = InputKind extends keyof ValueOfKind
 const _kindsAgree: KindsAgree = true;
 void _kindsAgree;
 
-export const baseLayouts = {
+export const baseLayouts = noLayouts.register({
   card: { Component: CardLayout },
   group: { Component: GroupLayout },
   row: { Component: RowLayout },
@@ -203,7 +209,10 @@ export const baseLayouts = {
   actions: { Component: ActionsLayout },
   // A filter bar's row: its fields name themselves inside it, not above.
   inline: { Component: InlineLayout, field: { Component: InlineFieldWrapper } },
-};
+});
+
+/** bh's form layouts by kind, as `FormConfig` and `LayoutNode` take them. */
+export type BaseFormLayouts = EntriesOf<typeof baseLayouts>;
 
 /**
  * What a filter form draws besides its fields, as the registry's `filter`:

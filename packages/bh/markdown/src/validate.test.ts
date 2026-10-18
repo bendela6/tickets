@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parse/parse';
-import { createRegistry } from './registry/registry';
+import { noBlocks } from './registry/registry';
 import type { Renderer } from './registry/types';
 import { validateDocument } from './validate';
 
@@ -23,7 +23,7 @@ const code: Renderer<{ lang?: string }> = {
   component: () => null,
 };
 
-const registry = createRegistry([erd, code]);
+const registry = noBlocks.register({ erd, code });
 
 describe('validateDocument', () => {
   it('reports nothing for a valid document', () => {
@@ -127,7 +127,7 @@ describe('validateDocument', () => {
       examples: ['```slow\ntitle: x\n```'],
       component: () => null,
     };
-    const { errors } = validateDocument('```slow\ntitle: x\n```', createRegistry([erd, slow]));
+    const { errors } = validateDocument('```slow\ntitle: x\n```', noBlocks.register({ erd, slow }));
     expect(errors[0]).toMatchObject({ block: 'slow' });
     expect(errors[0]?.message).toMatch(/synchronous/i);
   });
@@ -141,7 +141,7 @@ describe('validateDocument — unrecognised directive lines', () => {
     examples: [':::warning\nx\n:::'],
     component: () => null,
   };
-  const directives = createRegistry([warning]);
+  const directives = noBlocks.register({ warning });
 
   it('warns once on a directive whose quoted attribute value contains a brace', () => {
     const src = ':::warning{title="Do {not} run"}\nBody.\n:::';

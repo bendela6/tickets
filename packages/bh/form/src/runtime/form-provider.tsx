@@ -1,11 +1,19 @@
 import { useContext, type ReactNode } from 'react';
-import type { FormRegistry, InputRegistry, LayoutComponentRegistry } from '../types/registry';
+import type {
+  AnyFormRegistry,
+  FormRegistry,
+  InputRegistry,
+  LayoutComponentRegistry,
+} from '../types/registry';
 import { RegistryContext } from './nested-fields';
 
 /** Props for FormProvider component. */
 export interface FormProviderProps<I extends InputRegistry, L extends LayoutComponentRegistry> {
-  /** The inputs, layouts and wrappers every form under it is drawn with. */
-  registry: FormRegistry<I, L>;
+  /**
+   * The inputs, layouts and wrappers every form under it is drawn with: a
+   * registry an input reads of the form around it (useFormRegistry) too.
+   */
+  registry: FormRegistry<I, L> | AnyFormRegistry;
   /** The app, or the part of it whose forms take this registry. */
   children: ReactNode;
 }

@@ -1,4 +1,4 @@
-import { createRegistry, toExample, type RenderContext } from '../../registry';
+import { type RenderContext, toExample } from '../../registry';
 import { MarkdownDoc } from '../../render';
 import { pageMarkdown, parsePage } from '../../page';
 import { validateDocument } from '../../validate';
@@ -7,14 +7,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { markdownBlocks } from '..';
 import { erdExamples } from './examples';
 import { COLUMN_WIDTH, ORIGIN } from './layout';
-import { erdBlock } from './renderer';
 import { readErd, type ErdLayout } from './schema';
 
-// Filtered, so this still builds once `erd` is among markdownBlocks itself.
-const registry = createRegistry([
-  ...markdownBlocks.filter((block) => block.name !== 'erd'),
-  erdBlock,
-]);
+const registry = markdownBlocks;
 
 const src = [
   '```erd',

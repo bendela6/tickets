@@ -14,10 +14,11 @@ each kind of field its starting value.
 
 ## What a registry holds
 
-- **`inputs`**: by kind, the component that draws a field of that kind
-  and the value it starts at. A field names its kind as its `type`.
-- **`layouts`**: by kind, the component that draws a layout node around
-  its children: a card, a row. `{}` for none. A layout may name a `field`
+- **`inputs`**: a registry (`@bh/registry`) of, by kind, the component
+  that draws a field of that kind and the value it starts at. A field
+  names its kind as its `type`.
+- **`layouts`**: a registry of, by kind, the component that draws a
+  layout node around its children: a card, a row. `noLayouts` for none. A layout may name a `field`
   wrapper of its own, which its fields get, at any depth until another
   layout names one: a filter bar's fields named inside their controls.
   A form inside a field (a list's item, an object) starts at the
@@ -50,6 +51,12 @@ export const registry = defineRegistry({
   action: { Component: FormButton },
 });
 ```
+
+`@bh/ui`'s `baseInputs` and `baseLayouts` are registries: an app
+registers its own kinds beside them, `baseInputs.register({ slug })`,
+which gives a new registry and leaves bh's as it is. Without `@bh/ui`, an
+app registers its own on `noInputs` and `noLayouts`. A kind registered
+twice throws, and so does one whose `Component` isn't a component.
 
 `defineRegistry` returns what it is given. It is there for the types:
 `defineForm` reads each kind's config and value from them, so a field
@@ -109,9 +116,10 @@ compact label, a dot for required, the problem in place of the help.
 import {
   defineForm,
   defineRegistry,
+  type FieldWrapperProps,
   Form,
   FormProvider,
-  type FieldWrapperProps,
+  noLayouts,
   type RootWrapperProps,
 } from '@bh/form';
 import { baseInputs } from '@bh/ui';
@@ -157,7 +165,7 @@ function Stacked({ children }: RootWrapperProps) {
 
 const registry = defineRegistry({
   inputs: baseInputs,
-  layouts: {},
+  layouts: noLayouts,
   field: { Component: CompactField },
   root: { Component: Stacked },
 });
@@ -226,10 +234,10 @@ component and keep its name.
 
 ## Reference
 
-| Prop                  | Type                 | Default | Description                                                         |
-| --------------------- | -------------------- | ------- | ------------------------------------------------------------------- |
-| `registry` (required) | `FormRegistry<I, L>` |         | The inputs, layouts and wrappers every form under it is drawn with. |
-| `children` (required) | `ReactNode`          |         | The app, or the part of it whose forms take this registry.          |
+| Prop                  | Type                                    | Default | Description                                                                                                                                |
+| --------------------- | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `registry` (required) | `FormRegistry<I, L> \| AnyFormRegistry` |         | The inputs, layouts and wrappers every form under it is drawn with: a registry an input reads of the form around it (useFormRegistry) too. |
+| `children` (required) | `ReactNode`                             |         | The app, or the part of it whose forms take this registry.                                                                                 |
 
 ```ts
 defineRegistry<I extends InputRegistry, L extends LayoutComponentRegistry>(registry): FormRegistry<I, L>
@@ -255,8 +263,8 @@ What a form is drawn with: an input per kind, a layout per kind, and the wrapper
 
 | Member               | Type                     | Default | Description                                                                       |
 | -------------------- | ------------------------ | ------- | --------------------------------------------------------------------------------- |
-| `inputs` (required)  | `I`                      |         | The inputs a field may name, by kind.                                             |
-| `layouts` (required) | `L`                      |         | The layouts a node may name, by kind; `{}` for none.                              |
+| `inputs` (required)  | `FormInputs<I>`          |         | The inputs a field may name, by kind.                                             |
+| `layouts` (required) | `FormLayouts<L>`         |         | The layouts a node may name, by kind; `noLayouts` for none.                       |
 | `field` (required)   | `FieldWrapperDefinition` |         | The wrapper drawn around every field.                                             |
 | `root`               | `RootWrapperDefinition`  |         | The wrapper drawn around the whole form; without one, the fields are drawn bare.  |
 | `action`             | `ActionDefinition`       |         | The button drawn for a submit or reset node; without one, a plain `<button>`.     |

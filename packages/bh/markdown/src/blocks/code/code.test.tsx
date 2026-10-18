@@ -1,11 +1,10 @@
-import { createRegistry } from '../../registry';
 import { MarkdownDoc } from '../../render';
 import { pageMarkdown, parsePage } from '../../page';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { markdownBlocks } from '..';
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 const fence = (info: string, ...lines: string[]) => ['```code' + info, ...lines, '```'].join('\n');
 
 const rows = (container: HTMLElement) => [...container.querySelectorAll('[data-line]')];

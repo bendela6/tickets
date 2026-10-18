@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import type { ResourceMeta } from './meta';
 import type { Filter } from './query';
 import type { Registry } from './registry';
+import type { FieldMeta } from './types';
 import { optionSettings } from './schemas';
 import type { Json, Row, Scalar } from './values';
 
@@ -13,6 +14,14 @@ import type { Json, Row, Scalar } from './values';
 
 /** What an operator's `matches` takes: one value, a list of them, or null. */
 type Matched = Scalar | Scalar[] | null;
+
+/**
+ * What a path is read through: the fields, for an option's attributes. A
+ * resource's metadata is one; a template passes the fields it draws with.
+ */
+interface FieldsOf {
+  readonly fields: readonly Pick<FieldMeta, 'key' | 'type'>[];
+}
 
 /** Whether `value` is an object of keys, not a list or null. */
 function isObject(value: Json | undefined): value is Record<string, Json> {
@@ -30,7 +39,7 @@ function isObject(value: Json | undefined): value is Record<string, Json> {
  *   template's `repeat` shows one entry of a list field at a time, and a
  *   `when` inside it reads into that entry (TK-79.1).
  */
-export function valueAt(path: string, row: Row, meta: ResourceMeta): Matched {
+export function valueAt(path: string, row: Row, meta: FieldsOf): Matched {
   const [key = '', name] = path.split('.');
   const value = row[key] ?? null;
   if (name === undefined) {
@@ -63,7 +72,7 @@ export function valueAt(path: string, row: Row, meta: ResourceMeta): Matched {
 export function matchesFilter(
   filter: Filter,
   row: Row,
-  meta: ResourceMeta,
+  meta: FieldsOf,
   registry: Registry,
   viewer?: Scalar,
 ): boolean {
@@ -76,7 +85,9 @@ export function matchesFilter(
   if ('not' in filter) {
     return !matchesFilter(filter.not, row, meta, registry, viewer);
   }
-  const operator = registry.operators.find((spec) => spec.name === filter.op);
+  const operator = registry.operators.has(filter.op)
+    ? registry.operators.get(filter.op)
+    : undefined;
   if (!operator) {
     throw new Error(`No operator is registered as "${filter.op}".`);
   }
@@ -109,7 +120,9 @@ export function matchesSearch(
     if (!field.query.search) {
       return false;
     }
-    const kind = registry.kinds.find((spec) => spec.name === field.type.kind);
+    const kind = registry.kinds.has(field.type.kind)
+      ? registry.kinds.get(field.type.kind)
+      : undefined;
     return entriesOf(row[field.key]).some((each) => {
       if (typeof each === 'object' || each === null) {
         return false;

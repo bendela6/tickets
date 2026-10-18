@@ -33,7 +33,8 @@ const nextId = () => {
 /** An entry as a row: in place if the panel can draw its operator, else in words. */
 function toRow(meta: RulesMeta, entry: Filter): Row {
   const at = isCondition(entry) ? fieldAt(meta, entry.field) : undefined;
-  const spec = isCondition(entry) ? meta.operators.get(entry.op) : undefined;
+  const spec =
+    isCondition(entry) && meta.operators.has(entry.op) ? meta.operators.get(entry.op) : undefined;
   if (
     !isCondition(entry) ||
     !at ||
@@ -55,7 +56,7 @@ function toRow(meta: RulesMeta, entry: Filter): Row {
 
 /** A row's condition; null while its value is still wanted. */
 function conditionOf(meta: RulesMeta, row: Row & { kind: 'edit' }): Condition | null {
-  const spec = meta.operators.get(row.op);
+  const spec = meta.operators.has(row.op) ? meta.operators.get(row.op) : undefined;
   if (!spec) {
     return null;
   }
@@ -227,7 +228,9 @@ function PanelBody({
                           return;
                         }
                         const was = input;
-                        const nextSpec = meta.operators.get(op);
+                        const nextSpec = meta.operators.has(op)
+                          ? meta.operators.get(op)
+                          : undefined;
                         const drawn = nextSpec ? operandInput(meta, row.field, nextSpec) : null;
                         // The value stays while the new operator draws the same input.
                         update(row.id, {

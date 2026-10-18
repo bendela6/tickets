@@ -1,12 +1,13 @@
 {
   "name": "@bh/shell",
-  "version": "0.6.0",
+  "version": "0.8.1",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./layout": "./src/layout/index.ts",
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./vite": "./src/vite/index.ts"
   },
   "scripts": {
     "check:circular": "bh-madge src",
@@ -16,11 +17,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bh/config": "workspace:*",
     "@bh/hooks": "workspace:*",
     "@bh/ui": "workspace:*"
   },
   "devDependencies": {
-    "@bh/config": "workspace:*",
     "@tanstack/react-router": "^1.170.38",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

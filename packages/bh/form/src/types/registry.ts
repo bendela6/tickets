@@ -1,3 +1,4 @@
+import type { Registry, RegistryOf } from '@bh/registry';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormAction } from './action-node';
 import type { Commit } from './commit';
@@ -223,12 +224,27 @@ export interface FilterDefinition {
   sheet: ComponentType<FilterSheetProps>;
 }
 
+/**
+ * A registry of inputs (@bh/registry), `I` its entries by the kind a field
+ * names: `noInputs.register({ text })`, or @bh/ui's `baseInputs` and more.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type FormInputs<I extends InputRegistry> = Registry<InputDefinition<any, any>, unknown, I>;
+
+/** A registry of layouts, `L` its entries by the kind a layout node names. */
+export type FormLayouts<L extends LayoutComponentRegistry> = Registry<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  LayoutComponentDefinition<any>,
+  unknown,
+  L
+>;
+
 /** What a form is drawn with: an input per kind, a layout per kind, and the wrappers. */
 export interface FormRegistry<I extends InputRegistry, L extends LayoutComponentRegistry> {
   /** The inputs a field may name, by kind. */
-  inputs: I;
-  /** The layouts a node may name, by kind; `{}` for none. */
-  layouts: L;
+  inputs: FormInputs<I>;
+  /** The layouts a node may name, by kind; `noLayouts` for none. */
+  layouts: FormLayouts<L>;
   /** The wrapper drawn around every field. */
   field: FieldWrapperDefinition;
   /** The wrapper drawn around the whole form; without one, the fields are drawn bare. */
@@ -237,6 +253,26 @@ export interface FormRegistry<I extends InputRegistry, L extends LayoutComponent
   action?: ActionDefinition;
   /** What a filter form draws besides its fields: its count, and its sheet on a phone. */
   filter?: FilterDefinition;
+}
+
+/** Any registry's inputs, as a form looks one up by the kind a field names. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyInputs = RegistryOf<InputDefinition<any, any>>;
+
+/** Any registry's layouts, as a form looks one up by the kind a layout node names. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyLayouts = RegistryOf<LayoutComponentDefinition<any>>;
+
+/**
+ * A form registry of any inputs and layouts, as a form reads it while it
+ * draws: what a field's input reads of the `<Form>` around it.
+ */
+export interface AnyFormRegistry extends Omit<
+  FormRegistry<InputRegistry, LayoutComponentRegistry>,
+  'inputs' | 'layouts'
+> {
+  inputs: AnyInputs;
+  layouts: AnyLayouts;
 }
 
 /** The props a layout kind takes, read off its definition. */

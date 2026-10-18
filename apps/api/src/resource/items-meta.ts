@@ -92,7 +92,7 @@ const READ_ONLY: FieldWrite = { create: false, update: false, required: false };
  * compared one to one and doesn't sort; `isMe` only on a ref to users.
  */
 function everything(type: FieldType): FieldQuery {
-  const kind = baseKinds.find((spec) => spec.name === type.kind);
+  const kind = baseKinds.has(type.kind) ? baseKinds.get(type.kind) : undefined;
   if (!kind) {
     throw new Error(`bh registers no kind "${type.kind}"`);
   }

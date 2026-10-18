@@ -83,7 +83,7 @@ function marksWritten(text: string, registry: Registry): string {
   let last = 0;
   for (const match of scannable.matchAll(INLINE)) {
     const [raw, name = '', label = '', attrsSource = ''] = match;
-    const renderer = registry.get(name);
+    const renderer = registry.has(name) ? registry.get(name) : undefined;
     if (!renderer?.inline || !renderer.toMarkdown) {
       continue;
     }
@@ -119,10 +119,10 @@ function itemMarkdown(item: PageItem, registry: Registry): string {
   if (item.kind === 'heading') {
     return `${'#'.repeat(item.depth)} ${marksWritten(item.text, registry)}`;
   }
-  const renderer = registry.get(item.node.name);
-  if (!renderer) {
+  if (!registry.has(item.node.name)) {
     return '';
   }
+  const renderer = registry.get(item.node.name);
   return renderer.toMarkdown?.(item.node) ?? asWritten(item.node, renderer.body);
 }
 

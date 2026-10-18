@@ -5,6 +5,7 @@ import * as v from 'valibot';
 import { Form } from './Form';
 import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const TextInput = (p: InputProps<{ placeholder?: string }, string>) => {
   return (
@@ -32,10 +33,10 @@ function FieldStub({ name, label, required, error, children }: FieldWrapperProps
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: FieldStub },
 });
 

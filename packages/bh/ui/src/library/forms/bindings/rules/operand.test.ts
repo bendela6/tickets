@@ -1,4 +1,4 @@
-import { createKindRegistry, createOperatorRegistry, type OperatorSpec } from '@bh/resource';
+import { baseKinds, baseOperators, type OperatorSpec } from '@bh/resource';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { operandInput } from './operand';
@@ -10,9 +10,9 @@ const near: OperatorSpec = {
   operand: () => v.number(),
   matches: () => true,
 };
-const operators = createOperatorRegistry([near]);
-const meta = { fields: FIELDS, operators, kinds: createKindRegistry([], operators) };
-const spec = (name: string) => operators.get(name) as OperatorSpec;
+const operators = baseOperators.register({ near });
+const meta = { fields: FIELDS, operators, kinds: baseKinds };
+const spec = (name: string) => operators.get(name);
 
 describe('the input a rule’s value is drawn with', () => {
   it('is a date for a date, and a datetime’s operand is its day’s first moment', () => {

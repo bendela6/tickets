@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as v from 'valibot';
-import { CodeBlock, createRegistry, keyboardBlock, type Renderer } from '@bh/markdown';
+import { CodeBlock, keyboardBlock, noBlocks, type Renderer, toPrompt } from '@bh/markdown';
 import { SegmentedControl } from '@bh/ui';
 
 const plantSchema = v.object({
@@ -22,7 +22,7 @@ const plantBlock: Renderer<v.InferOutput<typeof plantSchema>> = {
 
 // keyboard's examples are written as markdown fences; the page form
 // writes them again as page items.
-const registry = createRegistry([keyboardBlock, plantBlock]);
+const registry = noBlocks.register({ keyboard: keyboardBlock, plant: plantBlock });
 
 const FORMS = [
   { value: 'page', label: 'Page items' },
@@ -31,7 +31,7 @@ const FORMS = [
 
 export function BothForms() {
   const [form, setForm] = useState('page');
-  const prompt = registry.toPrompt({ form: form === 'page' ? 'page' : 'markdown' });
+  const prompt = toPrompt(registry.values(), { form: form === 'page' ? 'page' : 'markdown' });
   return (
     <div className="flex w-full flex-col gap-12">
       <SegmentedControl label="Form" options={FORMS} value={form} onChange={setForm} />

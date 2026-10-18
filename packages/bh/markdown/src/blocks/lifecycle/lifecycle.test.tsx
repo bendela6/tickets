@@ -1,4 +1,4 @@
-import { createRegistry, toExample } from '../../registry';
+import { toExample } from '../../registry';
 import { MarkdownDoc } from '../../render';
 import { pageMarkdown, parsePage } from '../../page';
 import { validateDocument } from '../../validate';
@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { markdownBlocks } from '..';
 import { lifecycleBlock } from '.';
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 
 const fence = (...lines: string[]) => ['```lifecycle', ...lines, '```'].join('\n');
 

@@ -1,3 +1,4 @@
+import type { RegistryOf } from '@bh/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { RootContent } from 'mdast';
 import type { ComponentType, ReactNode } from 'react';
@@ -237,22 +238,15 @@ export interface PromptOptions {
   form?: 'markdown' | 'page';
 }
 
-/** What reading a page needs of a registry: its renderers, by name. */
-export type RendererLookup = Pick<Registry, 'get' | 'names'>;
+/** What reading a page needs of a registry: its blocks, by name. */
+export type RendererLookup = Pick<Registry, 'get' | 'has' | 'names'>;
 
-/** The blocks a page may use, by name: what `createRegistry` gives. */
-export interface Registry {
-  /** The renderer of that name, if one is registered. */
-  get(name: string): AnyRenderer | undefined;
-  /** Every registered name: a fence is a block only when its language is one. */
-  names(): ReadonlySet<string>;
-  /** Every renderer, in the order registered. */
-  all(): readonly AnyRenderer[];
-  /** Adds a renderer; throws on a name already taken, no description, or no example. */
-  register(renderer: AnyRenderer): void;
-  /** The block reference for an authoring model, over every renderer: `toPrompt`. */
-  toPrompt(options?: PromptOptions): string;
-}
+/**
+ * The blocks a page may use, by name: `markdownBlocks`, or a registry with an
+ * app's own beside them (`markdownBlocks.register({ plant })`). `get` throws
+ * for a name nothing registered; `has` asks first.
+ */
+export type Registry = RegistryOf<AnyRenderer>;
 
 /** Whether a node is a block rather than markdown. */
 export function isBlockNode(node: Node): node is BlockNode {

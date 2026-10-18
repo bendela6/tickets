@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { Json } from '@bh/resource';
-import type { BaseLayouts, Layouts, TemplateNode } from '@bh/template';
+import type { AnyLayouts, Layouts, TemplateNode } from '@bh/template';
 
 // What the view's shapes share: a name, a width in pixels, a JSON object, a
 // template a host holds, and the path a check reports a problem at.
@@ -74,7 +74,7 @@ const template = v.pipe(
  * The template's schema, typed with the layouts `L` its nodes may name: the
  * app's, which only validateTemplate checks against its registry.
  */
-export function templateOf<L extends Layouts<L> = BaseLayouts>(): v.GenericSchema<
+export function templateOf<L extends Layouts<L> = AnyLayouts>(): v.GenericSchema<
   unknown,
   TemplateNode<L>
 > {

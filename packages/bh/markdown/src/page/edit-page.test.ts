@@ -1,9 +1,10 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+
 import type { AnyRenderer } from '../registry/types';
 import { editPage, pageItem } from './edit-page';
 import { parsePage } from './parse-page';
+import { blocksOf } from '../registry/blocks.fixture';
 
 const component = () => null;
 
@@ -42,7 +43,7 @@ const RENDERERS: AnyRenderer[] = [
   },
   { name: 'aside', body: 'markdown', description: 'An aside.', examples: ['x'], component },
 ];
-const registry = createRegistry(RENDERERS);
+const registry = blocksOf(RENDERERS);
 
 const page = (...lines: string[]) => `${lines.join('\n')}\n`;
 

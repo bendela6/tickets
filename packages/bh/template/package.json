@@ -1,6 +1,6 @@
 {
   "name": "@bh/template",
-  "version": "0.6.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bh/registry": "workspace:*",
     "@bh/resource": "workspace:*",
     "valibot": "^1.5.0"
   },

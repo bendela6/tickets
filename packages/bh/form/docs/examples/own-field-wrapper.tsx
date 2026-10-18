@@ -1,9 +1,10 @@
 import {
   defineForm,
   defineRegistry,
+  type FieldWrapperProps,
   Form,
   FormProvider,
-  type FieldWrapperProps,
+  noLayouts,
   type RootWrapperProps,
 } from '@bh/form';
 import { baseInputs } from '@bh/ui';
@@ -49,7 +50,7 @@ function Stacked({ children }: RootWrapperProps) {
 
 const registry = defineRegistry({
   inputs: baseInputs,
-  layouts: {},
+  layouts: noLayouts,
   field: { Component: CompactField },
   root: { Component: Stacked },
 });

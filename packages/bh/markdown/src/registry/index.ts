@@ -1,2 +1,2 @@
-export { createRegistry } from './registry';
+export { noBlocks, rendererData } from './registry';
 export * from './types';

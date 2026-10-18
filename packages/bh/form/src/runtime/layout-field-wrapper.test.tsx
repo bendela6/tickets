@@ -6,6 +6,7 @@ import { NestedFields } from './nested-fields';
 import { defineRegistry } from '../builder/define-registry';
 import { defineForm } from '../builder/define-form';
 import type { FieldWrapperProps, InputProps, LayoutComponentProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const TextInput = (p: InputProps<object, string>) => {
   return (
@@ -47,15 +48,15 @@ function Plain({ children }: LayoutComponentProps<Record<string, never>>) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
     object: { Component: ObjectInput, defaultValue: {} },
-  },
-  layouts: {
+  }),
+  layouts: noLayouts.register({
     inline: { Component: Plain, field: { Component: wrapper('inline') } },
     sheet: { Component: Plain, field: { Component: wrapper('sheet') } },
     box: { Component: Plain },
-  },
+  }),
   field: { Component: wrapper('registry') },
 });
 

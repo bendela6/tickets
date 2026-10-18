@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { defineRegistry } from '@bh/registry';
 import {
   dateValue,
   datetimeValue,
@@ -21,6 +22,7 @@ import {
 import { ordered } from './operators';
 import type { BaseKind, KindSpec } from './types';
 import { Json, type Scalar } from './values';
+import { functionSchema, nameSchema } from './words';
 
 /**
  * What one of bh's kinds allows: its row in the table above BaseKind, the
@@ -106,6 +108,29 @@ function wordsOf(value: Scalar): string {
   return words.join(' ');
 }
 
+/**
+ * What the kind registry checks of each kind: a word for its name, its value
+ * schema from a function, its settings' schema, and the operators it allows,
+ * each named by a word and once. That each of those is registered is
+ * createRegistry's to check, which holds the operators too.
+ */
+export const kindData = v.object({
+  name: nameSchema,
+  settings: v.optional(
+    v.custom<v.GenericSchema>(
+      (value) => typeof value === 'object' && value !== null,
+      'its settings are a valibot schema',
+    ),
+  ),
+  value: functionSchema<KindSpec['value']>('its value schema'),
+  operators: v.pipe(
+    v.array(nameSchema),
+    v.check((names) => new Set(names).size === names.length, 'names each operator once'),
+  ),
+});
+
+const kinds = defineRegistry<KindSpec>({ name: 'kind', schema: kindData });
+
 /** One of bh's kinds, frozen: an app adds its own beside them, never changes them. */
 function baseKind(
   name: BaseKind,
@@ -130,11 +155,12 @@ const boolean = v.boolean();
  * The fifteen kinds bh registers, in the table's order: text, markdown,
  * richtext, url, email, phone, number, boolean, date, time, datetime, option,
  * ref, file and json. Each names the operators it allows, by their names in
- * the operator registry (baseOperators), as an app's kind does. An app's own
- * go beside them through createKindRegistry.
+ * the operator registry (baseOperators), as an app's kind does. A registry
+ * (@bh/registry): an app registers its own beside them,
+ * `baseKinds.register({ color: { … } })`.
  */
-export const baseKinds: readonly KindSpec[] = Object.freeze([
-  baseKind(
+export const baseKinds = kinds.register({
+  text: baseKind(
     'text',
     {
       compare: byText,
@@ -157,18 +183,19 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     textValue,
     textSettings,
   ),
-  baseKind(
+  markdown: baseKind(
     'markdown',
     {
       many: true,
       sort: false,
       group: false,
       search: true,
+      format: 'markdown',
       operators: ['contains', 'empty', 'notEmpty'],
     },
     () => markdownValue,
   ),
-  baseKind(
+  richtext: baseKind(
     'richtext',
     {
       searchText: wordsOf,
@@ -178,11 +205,12 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
       // A search looks in its text (@bh/richtext's docToText), never its JSON,
       // so no operator looks into it.
       search: true,
+      format: 'rich',
       operators: ['empty', 'notEmpty'],
     },
     () => richtextValue,
   ),
-  baseKind(
+  url: baseKind(
     'url',
     {
       compare: byText,
@@ -203,7 +231,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => urlValue,
   ),
-  baseKind(
+  email: baseKind(
     'email',
     {
       compare: byText,
@@ -224,7 +252,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => emailValue,
   ),
-  baseKind(
+  phone: baseKind(
     'phone',
     {
       compare: byText,
@@ -245,7 +273,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => phoneValue,
   ),
-  baseKind(
+  number: baseKind(
     'number',
     {
       compare: byValue,
@@ -270,7 +298,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     numberValue,
     numberSettings,
   ),
-  baseKind(
+  boolean: baseKind(
     'boolean',
     {
       compare: byTruth,
@@ -283,7 +311,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => boolean,
   ),
-  baseKind(
+  date: baseKind(
     'date',
     {
       compare: byIso,
@@ -309,7 +337,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => dateValue,
   ),
-  baseKind(
+  time: baseKind(
     'time',
     {
       compare: byIso,
@@ -332,7 +360,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => timeValue,
   ),
-  baseKind(
+  datetime: baseKind(
     'datetime',
     {
       compare: byIso,
@@ -345,7 +373,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     },
     () => datetimeValue,
   ),
-  baseKind(
+  option: baseKind(
     'option',
     {
       compare: byOrder,
@@ -358,7 +386,7 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     optionValue,
     optionSettings,
   ),
-  baseKind(
+  ref: baseKind(
     'ref',
     {
       many: true,
@@ -372,14 +400,14 @@ export const baseKinds: readonly KindSpec[] = Object.freeze([
     () => idValue,
     refSettings,
   ),
-  baseKind(
+  file: baseKind(
     'file',
     { many: true, sort: false, group: false, search: false, operators: ['empty', 'notEmpty'] },
     () => FileValue,
   ),
-  baseKind(
+  json: baseKind(
     'json',
     { many: true, sort: false, group: false, search: false, operators: ['empty', 'notEmpty'] },
     () => Json,
   ),
-]);
+});

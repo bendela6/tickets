@@ -1,11 +1,10 @@
-import { createRegistry } from '../../registry';
 import { MarkdownDoc } from '../../render';
 import { pageMarkdown, parsePage } from '../../page';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { markdownBlocks } from '..';
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 const line = 'Release :badge[stable]{tone=success} today.';
 
 describe('badge', () => {

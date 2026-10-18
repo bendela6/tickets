@@ -1,29 +1,49 @@
-// What draws a template (@bh/template): the renderers a part names and the
-// layouts a layout node names, each beside its spec, in registries every host
-// shares.
-export { baseRenderers, type RendererDefinition, type RendererRegistry } from './registry';
+// What draws a template (@bh/template): Template, and the renderers and
+// layouts it names. Each of bh's is one file: its options, its component and
+// its entry.
 export {
-  baseTemplateLayouts,
+  componentSchema,
+  noRenderers,
+  type RendererDefinition,
+  type RendererRegistry,
+} from './renderer-registry';
+export { baseDefaultRenderers, baseRenderers, type BaseRenderers } from './base-renderers';
+export {
+  noTemplateLayouts,
   type TemplateLayoutDefinition,
   type TemplateLayoutProps,
   type TemplateLayoutRegistry,
 } from './layout-registry';
-export { FlexLayout, GridLayout, RepeatLayout } from './layouts';
-export { PartText } from './renderers/look';
+export { baseTemplateLayouts, type BaseLayouts } from './base-layouts';
+export { rowLayout, TemplateRowLayout, type RowOptions } from './layouts/row';
+export { stackLayout, TemplateStackLayout, type StackOptions } from './layouts/stack';
+export { gridLayout, TemplateGridLayout, type GridOptions } from './layouts/grid';
+export { repeatLayout, TemplateRepeatLayout, type RepeatOptions } from './layouts/repeat';
 export {
-  AvatarRenderer,
-  CheckRenderer,
-  CodeRenderer,
+  baseTemplateRegistry,
+  Template,
+  TemplateProvider,
+  type TemplateProps,
+  type TemplateProviderProps,
+  type TemplateRegistry,
+} from './template';
+export { PartText } from './renderers/look';
+export { AvatarRenderer, avatarRenderer, type AvatarOptions } from './renderers/avatar';
+export { CheckRenderer, checkRenderer } from './renderers/check';
+export { CodeRenderer, codeRenderer } from './renderers/code';
+export { DateRenderer, dateRenderer } from './renderers/date';
+export { IconRenderer, iconRenderer, type IconOptions } from './renderers/icon';
+export {
   createLinkRenderer,
-  DateRenderer,
-  IconRenderer,
   LinkRenderer,
-  MeterRenderer,
-  NumberRenderer,
-  PillRenderer,
-  ProgressRenderer,
-  TextRenderer,
-  TrendRenderer,
-  UserRenderer,
+  linkRenderer,
   type LinkAnchor,
-} from './renderers/renderers';
+  type LinkOptions,
+} from './renderers/link';
+export { MeterRenderer, meterRenderer, type MeterOptions } from './renderers/meter';
+export { NumberRenderer, numberRenderer } from './renderers/number';
+export { PillRenderer, pillRenderer, type PillOptions } from './renderers/pill';
+export { ProgressRenderer, progressRenderer, type ProgressOptions } from './renderers/progress';
+export { TextRenderer, textRenderer } from './renderers/text';
+export { TrendRenderer, trendRenderer, type TrendOptions } from './renderers/trend';
+export { UserRenderer, userRenderer, type UserOptions } from './renderers/user';

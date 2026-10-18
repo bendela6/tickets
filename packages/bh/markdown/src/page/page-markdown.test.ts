@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+
 import type { AnyRenderer } from '../registry/types';
 import { pageLinks } from './page-links';
 import { fenced, pageMarkdown } from './page-markdown';
 import { parsePage } from './parse-page';
+import { blocksOf } from '../registry/blocks.fixture';
 
 const component = () => null;
 const base = { description: 'What it is.', examples: ['x'], component };
 
-const registry = createRegistry([
+const registry = blocksOf([
   {
     ...base,
     name: 'shout',
@@ -83,7 +84,7 @@ describe('pageMarkdown', () => {
   });
 
   it('writes an inline mark as its renderer does, in prose and headings, but not in code', () => {
-    const marks = createRegistry([
+    const marks = blocksOf([
       {
         ...base,
         name: 'tag',

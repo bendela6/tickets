@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import * as v from 'valibot';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldWrapper } from '../../components/field-wrapper';
-import { baseInputs, baseLayouts } from '../../registry';
+import { baseInputs, baseLayouts, type BaseInputs } from '../../registry';
 import { EmailField } from './email-field';
 
 const base = { name: 'email', loading: false, onBlur: vi.fn(), config: {} };
@@ -31,7 +31,7 @@ describe('EmailField', () => {
       layouts: baseLayouts,
       field: { Component: FieldWrapper },
     });
-    const config = schemaToFormConfig<typeof baseInputs>(
+    const config = schemaToFormConfig<BaseInputs>(
       v.object({ email: v.pipe(v.string(), v.title('Email'), v.email('That is not an email.')) }),
     );
     render(

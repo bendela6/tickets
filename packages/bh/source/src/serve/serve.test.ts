@@ -499,6 +499,11 @@ describe('serve, a source that pages itself', () => {
 describe('router', () => {
   const route = router([serve(tasks, fileSource(fileOf()))]);
 
+  it('refuses two resources of one name, so neither hides the other', () => {
+    const twice = [serve(tasks, fileSource(fileOf())), serve(tasks, fileSource(fileOf()))];
+    expect(() => router(twice)).toThrow('A resource is registered as "tasks" already');
+  });
+
   it('answers each route with its status, and an error in ErrorBody’s shape', async () => {
     expect(await route({ method: 'GET', path: '/tasks/meta' })).toMatchObject({ status: 200 });
     expect(

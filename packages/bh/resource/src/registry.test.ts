@@ -1,8 +1,9 @@
 import * as v from 'valibot';
+import { defineRegistry } from '@bh/registry';
 import { describe, expect, it } from 'vitest';
 import { baseKinds } from './kinds';
 import { baseOperators } from './operators';
-import { createKindRegistry, createOperatorRegistry, createRegistry } from './registry';
+import { createRegistry, formatData } from './registry';
 import type { FormatSpec, KindSpec, OperatorSpec } from './types';
 import type { Scalar } from './values';
 
@@ -31,10 +32,9 @@ const color: KindSpec = {
   search: false,
 };
 
-describe('createKindRegistry', () => {
+describe('baseKinds', () => {
   it('holds bh’s fifteen, in their table’s order', () => {
-    const registry = createKindRegistry();
-    expect(registry.kinds.map((spec) => spec.name)).toEqual([
+    expect(baseKinds.names).toEqual([
       'text',
       'markdown',
       'richtext',
@@ -51,91 +51,50 @@ describe('createKindRegistry', () => {
       'file',
       'json',
     ]);
-    expect(registry.get('option')).toBe(baseKinds[11]);
+    expect(baseKinds.get('option').name).toBe('option');
   });
 
   it('knows no user kind: a person is a ref of users', () => {
-    expect(createKindRegistry().get('user')).toBeUndefined();
+    expect(baseKinds.has('user')).toBe(false);
+    expect(() => baseKinds.get('user')).toThrow('No kind is registered as "user".');
   });
 
-  it('registers an app’s own kind beside bh’s, and finds it by name', () => {
-    const registry = createKindRegistry([color]);
-    expect(registry.kinds).toHaveLength(baseKinds.length + 1);
-    expect(registry.kinds.at(-1)).toBe(color);
-    expect(registry.get('color')).toBe(color);
-    expect(registry.get('text')).toBe(baseKinds[0]);
-    const value = registry.get('color')?.value() ?? v.never();
+  it('registers an app’s own kind beside bh’s in a new registry, leaving bh’s as they are', () => {
+    const kinds = baseKinds.register({ color });
+    expect(kinds.names).toHaveLength(baseKinds.names.length + 1);
+    expect(kinds.values().at(-1)).toBe(color);
+    expect(kinds.get('text')).toBe(baseKinds.get('text'));
+    expect(baseKinds.has('color')).toBe(false);
+    const value = kinds.get('color').value();
     expect(v.is(value, '#3366ff')).toBe(true);
     expect(v.is(value, 'blue')).toBe(false);
   });
 
-  it('takes an app kind with settings, and operators of its own once registered', () => {
-    const money: KindSpec = {
-      name: 'money',
-      settings: v.strictObject({ currency: v.pipe(v.string(), v.length(3)) }),
-      value: () => v.pipe(v.number(), v.integer()),
-      many: false,
-      operators: ['equals', 'lt', 'gt', 'between'],
-      sort: true,
-      group: false,
-      search: false,
-      format: 'money',
-    };
-    const registry = createKindRegistry([money], createOperatorRegistry([between]));
-    expect(registry.get('money')?.operators).toContain('between');
-    expect(v.is(registry.get('money')?.settings ?? v.never(), { currency: 'EUR' })).toBe(true);
-  });
-
-  it('refuses a kind allowing an operator nothing registered, so a misspelling fails at start', () => {
-    expect(() => createKindRegistry([{ ...color, operators: ['equals', 'between'] }])).toThrow(
-      'The kind "color" allows "between", but no operator is registered by that name.',
-    );
-    expect(() => createKindRegistry([{ ...color, operators: ['equal'] }])).toThrow(
-      'allows "equal"',
-    );
-  });
-
-  it('checks bh’s kinds against the operators it is given', () => {
-    const without = { operators: [], get: () => undefined };
-    expect(() => createKindRegistry([], without)).toThrow('The kind "text" allows "equals"');
-  });
-
-  it('keeps one app’s kinds out of another registry', () => {
-    createKindRegistry([color]);
-    expect(createKindRegistry().get('color')).toBeUndefined();
-  });
-
   it('refuses a kind named as one of bh’s, so none is replaced unseen', () => {
-    expect(() => createKindRegistry([{ ...color, name: 'text' }])).toThrow(
-      'bh registers the kind "text" itself',
+    expect(() => baseKinds.register({ text: { ...color, name: 'text' } })).toThrow(
+      'A kind is registered as "text" already',
     );
   });
 
-  it('refuses two of the app’s kinds named alike', () => {
-    expect(() => createKindRegistry([color, { ...color }])).toThrow('Two kinds are named "color"');
-  });
-
-  it('refuses a kind without a name, or naming an operator twice or not by a word', () => {
-    expect(() => createKindRegistry([{ ...color, name: '' }])).toThrow('named by a word');
-    expect(() => createKindRegistry([{ ...color, name: ' color' }])).toThrow('named by a word');
-    expect(() => createKindRegistry([{ ...color, operators: ['equals', 'equals'] }])).toThrow(
-      'allows "equals" twice',
+  it('refuses a kind without a name, a value schema, or naming an operator twice or not by a word', () => {
+    expect(() => baseKinds.register({ ' color': { ...color, name: ' color' } })).toThrow(
+      'kind " color": name: is a word, with no space around it',
     );
-    expect(() => createKindRegistry([{ ...color, operators: [''] }])).toThrow(
-      'an operator is named by a word',
+    const noValue = { ...color, value: undefined } as unknown as KindSpec;
+    expect(() => baseKinds.register({ color: noValue })).toThrow('its value schema is a function');
+    const twice = { ...color, operators: ['equals', 'equals'] };
+    expect(() => baseKinds.register({ color: twice })).toThrow(
+      'kind "color": operators: names each operator once',
     );
-  });
-
-  it('hands out a registry that can’t be changed', () => {
-    const registry = createKindRegistry([color]);
-    expect(() => (registry.kinds as KindSpec[]).push(color)).toThrow(TypeError);
+    expect(() => baseKinds.register({ color: { ...color, operators: [''] } })).toThrow(
+      'operators.0: is a word',
+    );
   });
 });
 
-describe('createOperatorRegistry', () => {
+describe('baseOperators', () => {
   it('holds bh’s fifteen, in their order', () => {
-    const registry = createOperatorRegistry();
-    expect(registry.operators.map((spec) => spec.name)).toEqual([
+    expect(baseOperators.names).toEqual([
       'equals',
       'notEquals',
       'in',
@@ -152,65 +111,47 @@ describe('createOperatorRegistry', () => {
       'notEmpty',
       'isMe',
     ]);
-    expect(registry.get('in')).toBe(baseOperators[2]);
-    expect(registry.get('between')).toBeUndefined();
+    expect(baseOperators.get('in').label).toBe('is any of');
+    expect(baseOperators.has('between')).toBe(false);
   });
 
-  it('registers an app’s own operator beside bh’s, and finds it by name', () => {
-    const registry = createOperatorRegistry([between]);
-    expect(registry.operators).toHaveLength(baseOperators.length + 1);
-    expect(registry.operators.at(-1)).toBe(between);
-    expect(registry.get('between')?.matches(5, [1, 10])).toBe(true);
-    expect(registry.get('between')?.matches(11, [1, 10])).toBe(false);
-    const operand = registry.get('between')?.operand?.(v.number()) ?? v.never();
+  it('registers an app’s own operator beside bh’s in a new registry', () => {
+    const operators = baseOperators.register({ between });
+    expect(operators.values().at(-1)).toBe(between);
+    expect(operators.get('between').matches(5, [1, 10])).toBe(true);
+    expect(operators.get('between').matches(11, [1, 10])).toBe(false);
+    const operand = operators.get('between').operand?.(v.number()) ?? v.never();
     expect(v.is(operand, [1, 10])).toBe(true);
     expect(v.is(operand, [1])).toBe(false);
-  });
-
-  it('keeps one app’s operators out of another registry', () => {
-    createOperatorRegistry([between]);
-    expect(createOperatorRegistry().get('between')).toBeUndefined();
+    expect(baseOperators.has('between')).toBe(false);
   });
 
   it('refuses an operator named as one of bh’s, so none is replaced unseen', () => {
-    expect(() => createOperatorRegistry([{ ...between, name: 'in' }])).toThrow(
-      'bh registers the operator "in" itself',
-    );
-  });
-
-  it('refuses two of the app’s operators named alike', () => {
-    expect(() => createOperatorRegistry([between, { ...between }])).toThrow(
-      'Two operators are named "between"',
+    expect(() => baseOperators.register({ in: { ...between, name: 'in' } })).toThrow(
+      'An operator is registered as "in" already',
     );
   });
 
   it('refuses an operator without a name, a label or its matches', () => {
-    expect(() => createOperatorRegistry([{ ...between, name: '' }])).toThrow('named by a word');
-    expect(() => createOperatorRegistry([{ ...between, name: 'between ' }])).toThrow(
-      'named by a word',
-    );
-    expect(() => createOperatorRegistry([{ ...between, label: ' ' }])).toThrow('has no label');
-    expect(() => createOperatorRegistry([{ ...between, labels: { many: '' } }])).toThrow(
-      'words in its labels that say nothing',
+    const named = (spec: OperatorSpec) => baseOperators.register({ [spec.name]: spec });
+    expect(() => named({ ...between, name: 'between ' })).toThrow('name: is a word');
+    expect(() => named({ ...between, label: ' ' })).toThrow('label: says something');
+    expect(() => named({ ...between, labels: { many: '' } })).toThrow(
+      'labels.many: says something',
     );
     const blank = { ...between, labels: { kinds: { date: ' ' } } };
-    expect(() => createOperatorRegistry([blank])).toThrow('words in its labels that say nothing');
+    expect(() => named(blank)).toThrow('labels.kinds.date: says something');
     const dated = { ...between, labels: { kinds: { date: 'is between the days' } } };
-    expect(createOperatorRegistry([dated]).get('between')?.labels).toEqual(dated.labels);
+    expect(named(dated).get('between').labels).toEqual(dated.labels);
     const noMatches = { ...between, matches: undefined } as unknown as OperatorSpec;
-    expect(() => createOperatorRegistry([noMatches])).toThrow('has no matches');
+    expect(() => named(noMatches)).toThrow('matches: its matches is a function');
     const badOperand = { ...between, operand: v.string() } as unknown as OperatorSpec;
-    expect(() => createOperatorRegistry([badOperand])).toThrow('from a function');
+    expect(() => named(badOperand)).toThrow('operand: its operand is a function');
   });
 
   it('takes an operator with no operand, as empty is', () => {
     const blank: OperatorSpec = { name: 'blank', label: 'is blank', matches: (a) => a === '' };
-    expect(createOperatorRegistry([blank]).get('blank')?.matches('')).toBe(true);
-  });
-
-  it('hands out a registry that can’t be changed', () => {
-    const registry = createOperatorRegistry([between]);
-    expect(() => (registry.operators as OperatorSpec[]).push(between)).toThrow(TypeError);
+    expect(baseOperators.register({ blank }).get('blank').matches('')).toBe(true);
   });
 });
 
@@ -219,6 +160,7 @@ describe('createRegistry', () => {
   interface Formatter extends FormatSpec {
     format: (value: unknown) => string;
   }
+  const formats = defineRegistry<Formatter>({ name: 'format', schema: formatData });
   const bytes: Formatter = {
     name: 'bytes',
     kinds: ['number'],
@@ -227,54 +169,56 @@ describe('createRegistry', () => {
 
   it('holds bh’s kinds and operators, and no format until one is passed in', () => {
     const registry = createRegistry();
-    expect(registry.kinds).toEqual(baseKinds);
-    expect(registry.operators).toEqual(baseOperators);
-    expect(registry.formats).toEqual([]);
+    expect(registry.kinds).toBe(baseKinds);
+    expect(registry.operators).toBe(baseOperators);
+    expect(registry.formats.names).toEqual([]);
   });
 
-  it('registers an app’s kinds, operators and formats beside bh’s, handing formats back as given', () => {
-    const registry = createRegistry({ kinds: [color], operators: [between], formats: [bytes] });
-    expect(registry.kinds.at(-1)).toBe(color);
-    expect(registry.operators.at(-1)).toBe(between);
-    expect(registry.formats[0]?.format(512)).toBe('512 B');
+  it('holds the app’s kinds, operators and formats, handing formats back as given', () => {
+    const registry = createRegistry({
+      kinds: baseKinds.register({ color }),
+      operators: baseOperators.register({ between }),
+      formats: formats.register({ bytes }),
+    });
+    expect(registry.kinds.get('color')).toBe(color);
+    expect(registry.operators.get('between')).toBe(between);
+    expect(registry.formats.get('bytes').format(512)).toBe('512 B');
   });
 
-  it('checks the kinds against the operators as it is built', () => {
-    expect(() => createRegistry({ kinds: [{ ...color, operators: ['between'] }] })).toThrow(
+  it('checks the kinds against the operators as it is built, so a misspelling fails at start', () => {
+    const kinds = baseKinds.register({ color: { ...color, operators: ['between'] } });
+    expect(() => createRegistry({ kinds })).toThrow(
       'The kind "color" allows "between", but no operator is registered by that name.',
     );
-    const both = createRegistry({
-      kinds: [{ ...color, operators: ['between'] }],
-      operators: [between],
-    });
-    expect(both.kinds.at(-1)?.operators).toEqual(['between']);
+    const both = createRegistry({ kinds, operators: baseOperators.register({ between }) });
+    expect(both.kinds.get('color').operators).toEqual(['between']);
+    const without = defineRegistry<OperatorSpec>({ name: 'operator' });
+    expect(() => createRegistry({ operators: without })).toThrow('The kind "text" allows "equals"');
   });
 
-  it('refuses a format named twice, not by a word, taking no kind or one nothing registered', () => {
-    expect(() => createRegistry({ formats: [bytes, { ...bytes }] })).toThrow(
-      'Two formats are named "bytes"',
-    );
-    expect(() => createRegistry({ formats: [{ ...bytes, name: 'my bytes ' }] })).toThrow(
-      'A format is named by a word',
-    );
-    expect(() => createRegistry({ formats: [{ ...bytes, kinds: [] }] })).toThrow(
-      'The format "bytes" takes no kind.',
-    );
-    expect(() => createRegistry({ formats: [{ ...bytes, kinds: ['color'] }] })).toThrow(
+  it('checks the formats against the kinds as it is built', () => {
+    const colored = formats.register({ bytes: { ...bytes, kinds: ['color'] } });
+    expect(() => createRegistry({ formats: colored })).toThrow(
       'The format "bytes" takes "color", but no kind is registered by that name.',
     );
-    expect(
-      createRegistry({ kinds: [color], formats: [{ ...bytes, kinds: ['color'] }] }).formats,
-    ).toHaveLength(1);
+    const kinds = baseKinds.register({ color });
+    expect(createRegistry({ kinds, formats: colored }).formats.names).toEqual(['bytes']);
+  });
+
+  it('checks a format by formatData: a word for its name, a kind at least, options a schema', () => {
+    expect(() => formats.register({ 'my bytes ': { ...bytes, name: 'my bytes ' } })).toThrow(
+      'name: is a word',
+    );
+    expect(() => formats.register({ bytes: { ...bytes, kinds: [] } })).toThrow(
+      'format "bytes": kinds: takes a kind at least',
+    );
     const options = 'currency' as unknown as v.GenericSchema;
-    expect(() => createRegistry({ formats: [{ ...bytes, options }] })).toThrow(
-      'checks its options with a valibot schema',
+    expect(() => formats.register({ bytes: { ...bytes, options } })).toThrow(
+      'options: is a valibot schema',
     );
   });
 
   it('hands out a registry that can’t be changed', () => {
-    const registry = createRegistry({ formats: [bytes] });
-    expect(() => (registry.formats as Formatter[]).push(bytes)).toThrow(TypeError);
-    expect(Object.isFrozen(registry)).toBe(true);
+    expect(Object.isFrozen(createRegistry({ formats: formats.register({ bytes }) }))).toBe(true);
   });
 });

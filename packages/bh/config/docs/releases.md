@@ -1,7 +1,8 @@
 ---
 title: Releases
-summary: "How bh's commits make its versions: the release workflow, the script
-  it runs, and pnpm release:next."
+summary: "bh-release, a repo's pnpm release: a version for every package,
+  service and stack, with changelogs, from the commits since each was last
+  versioned."
 order: 8
 related: [Versions and updates, Adding bh to an app, 'tokens:build']
 ---
@@ -10,115 +11,139 @@ related: [Versions and updates, Adding bh to an app, 'tokens:build']
 
 # Releases
 
-How bh's commits make its versions: the release workflow, the script it
-runs, and `pnpm release:next`.
-
-bh has one version for all its packages: a tag such as `v0.4.0` on the
-commit it was made from, and a GitHub release beside it. What an app does
-with one is in Getting started:
-[Versions and updates](../../../../apps/docs/content/getting-started/versions.md). This page is the
-script's reference. It is `scripts/release.mjs` at bh's root.
+`bh-release` is a repo's `pnpm release`, in bh and in every app. You run
+it by hand on `main`; a push alone releases nothing. What a version means
+to an app is in Getting started: [Versions and updates](../../../../apps/docs/content/getting-started/versions.md).
 
 ## Running it
 
 ```sh
-pnpm release:next
+pnpm release
 ```
 
-Says what the next version would be, with its notes, and changes nothing.
-It reads the tags of the clone it runs in, so fetch them first:
-`git fetch --tags`.
+| Run as                            | Does                                                       |
+| --------------------------------- | ---------------------------------------------------------- |
+| `pnpm release`                    | Shows the plan, asks, then releases                        |
+| `pnpm release --dry-run`          | Shows the plan; changes nothing                            |
+| `pnpm release --no-commit`        | Writes the versions and changelogs, then stops             |
+| `pnpm release --continue`         | Commits, tags and pushes what `--no-commit` wrote          |
+| `pnpm release --yes`              | Releases without asking; needed where there is no terminal |
+| `pnpm release --set @bh/ui=1.0.0` | Declares a version; the repo's own name sets the stack     |
 
-| Run as                               | Does                                                              |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| `node scripts/release.mjs`           | What `pnpm release:next` runs: says the next version              |
-| `node scripts/release.mjs --publish` | Tags `HEAD` with it, pushes the tag, and makes the GitHub release |
+## What it does
 
-`--publish` is the workflow's. It needs `gh`, with a token that may push
-tags and make releases.
-
-## The workflow
-
-`.github/workflows/release.yml` runs on every push to `main`, one at a
-time and in push order, since each reads the tags the one before made. It
-checks out the whole history, runs the script's tests, then
-`release.mjs --publish` with the workflow's own token.
+1. Refuses unless it is on `main`, clean, and not behind `origin`.
+2. Finds the packages (`pnpm-workspace.yaml`) and each one's commits
+   since its last tag, by folder. Merges are skipped: their commits are
+   listed already.
+3. Bumps each package by its commits. A service also takes a patch when
+   a package it uses gets a version. Then the stack, by the largest
+   change.
+4. Shows the plan and asks.
+5. Writes each `package.json` version and `CHANGELOG.md` entry, and the
+   root's.
+6. Commits `chore(release): release <versions> as v<stack>`, tags it,
+   and pushes the commit and tags with `git push --atomic`.
 
 ## Which commits count
 
-The commits since the newest `vX.Y.Z` tag that touch `packages/` or
-`copy.json`: what an app's copy is made of. A push that touches only the
-docs site, the scripts or the workflow makes no version.
+| The commit                                               | Makes                               |
+| -------------------------------------------------------- | ----------------------------------- |
+| `feat:`, `fix:`, `perf:`, `build:`, `chore(deps):`       | a patch: `0.4.0` to `0.4.1`         |
+| `!` before the colon, or a `BREAKING CHANGE:` footer     | a minor version: `0.4.0` to `0.5.0` |
+| `refactor:`, `docs:`, `test:`, `chore:`, `style:`, `ci:` | none of its own                     |
 
-Each is read by its subject, written as a conventional commit:
-`type(scope)!: summary`, the scope and the `!` optional.
+The largest wins. A commit that makes none goes out with the next version,
+in its notes. Everything stays below `1.0.0` until you declare it ready
+with `--set`; from then on a feature makes a minor version and a breaking
+change a major one.
 
-| The commit                                                                    | Makes                               |
-| ----------------------------------------------------------------------------- | ----------------------------------- |
-| `fix:`, `perf:`, `feat:`                                                      | a patch: `0.4.0` to `0.4.1`         |
-| `!` before the colon, any type (`feat(ui)!:`), or a `BREAKING CHANGE:` footer | a minor version: `0.4.0` to `0.5.0` |
-| Any other type: `refactor:`, `docs:`, `chore:`, `test:`                       | none of its own                     |
+## Versions and tags
 
-The largest among them wins. Commits that make none go out with the next
-version that is made, and are in its notes. With no tag yet, the first
-version is `0.1.0`.
+- **A package or service**: `@tickets/api@0.5.1`, its tag, and the
+  `version` in its `package.json`.
+- **The stack**: `v0.4.1`, the repo as a whole, in the root
+  `package.json`. It moves whenever anything gets a version.
+- **The first release** gives everything a version. In a repo with `v*`
+  tags already (bh), each package starts at the newest one, bumped if it
+  changed since. In a repo with none, each starts at its `package.json`
+  version, `0.1.0` at least.
 
-bh is below `1.0.0`, so the middle number moves only for a breaking
-change. `1.0.0` is tagged by hand when bh is ready, with its release, and
-the script counts from the newest tag as always: from then on `feat:`
-makes a minor version and a breaking change a major one.
+## Changelogs
 
-## What a release holds
-
-- **The tag**, `v0.4.1`, on the commit the push ended at. A push whose
-  `HEAD` has a version's tag already makes none, so running the workflow
-  again is safe.
-- **A GitHub release** of the same name, whose notes list the commits
-  since the last version, each with its short hash, under Breaking,
-  Features, Fixes and Also. The first release's notes say it is the
-  first.
+Every package and service has a `CHANGELOG.md`, and the root has one for
+the stack. An entry is a fixed heading, then one list of commits, newest
+first, each with its bullets. No groups by type.
 
 ```markdown
-### Features
+## 0.3.2 · 2026-10-17 14:32 +04:00
 
-- feat(ui): a date range by month, with an open end (bd3c818)
-
-### Fixes
-
-- fix(shell): a branch opens and lights while one of its pages is on screen (c7b51f8)
+- fix(api,web): refuse tickets with an empty title (8e7d6c5)
+  - Disable Save in the new-ticket form until the title has text
+- fix(shared): store and compare dates in UTC (b7c2e19)
 ```
 
-The packages' own `version` in bh is a placeholder, never bumped. The tag
-is the version: the gateway writes it into each copy's `package.json`
-when it copies the release into an app.
+- A commit's scopes are the folders it touched, whatever its header says.
+- A service's list also has the features, fixes and breaking changes of
+  the packages it uses.
+- A breaking change's text is the last bullet: `BREAKING CHANGE: …`.
+- The root's entry puts the new versions on one line under the heading,
+  then lists every commit of the release.
+- Each new year starts a fresh file: older entries move to
+  `changelog/<year>.md`.
 
-## The versions before 0.x
+`@bh/shell`'s Vite plugin and the gateway read these files, so the
+heading's format is fixed.
 
-bh's first four versions were numbered `1.0.0`, `1.1.0`, `2.0.0` and
-`3.0.0`. On 2026-10-14 they were renamed `0.1.0`, `0.2.0`, `0.3.0` and
-`0.4.0`: the same commits and notes, their tags and releases made again
-under the new names, and each app's copy saying the new name of the
-version it has.
+## Setting up a repo
+
+The root `package.json` names the services, and the folders that are
+another repo's copies, which are never versioned here:
+
+```json
+"scripts": {
+  "prepare": "bh-hooks",
+  "release": "bh-release"
+},
+"release": {
+  "services": ["apps/api", "apps/web"],
+  "vendored": ["packages/bh/*"]
+}
+```
+
+A commit to a vendored folder, such as the gateway's
+`chore(deps): bring in bh's changes to …`, counts for each service that
+uses that copy.
+
+## The commit check
+
+`bh-hooks`, a repo's `prepare` script, installs a `commit-msg` hook on
+`pnpm install`. The hook runs `bh-commit-check`, which refuses:
+
+- a header that is not `type(scope): what it does`;
+- a ticket id anywhere in the message.
+
+It warns when the headline starts with an article rather than a verb, and
+when the header's scopes differ from the staged folders'. Outside a git
+repo, as in a Docker build, `bh-hooks` does nothing.
 
 ## copy.json
 
 `copy.json`, at bh's root, tells the gateway how to make a copy: bh's
 name, and the strings that carry it. An app that names bh otherwise gets
 each string with `bh` replaced by its name. items-core names it `bw`, so
-`@bh/` becomes `@bw/`, `bh-lint` becomes `bw-lint`, and
-`bh/multiline-arrow-needs-body` becomes `bw/multiline-arrow-needs-body`.
-A change to it changes the copies, so it counts toward a version as a
-change to `packages/` does.
+`@bh/` becomes `@bw/` and `bh-release` becomes `bw-release`.
 
 ## The tests
 
-`node --test scripts/release.test.mjs`, the first step of `pnpm test` at
-bh's root and of the workflow: which commits make which version, and the
-notes they make.
+`@bh/config`'s `tests/release.test.mjs`: reading commits, the changelog
+format both ways, planning, and whole releases in throwaway repos with an
+origin.
 
 ## Rules
 
-- One version for every package; the tag is the version.
-- Only commits that touch `packages/` or `copy.json` count.
+- You release by hand, with `pnpm release`, from a clean `main`.
+- Every package and service has its own version; the stack has one too.
 - A change an app must meet is marked breaking: `!` before the colon, or
   a `BREAKING CHANGE:` footer.
+- Tags and changelogs are the whole history: no GitHub releases.

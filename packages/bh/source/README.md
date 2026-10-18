@@ -74,7 +74,8 @@ const route = router([
 ]);
 ```
 
-The router takes a plain request and gives back a status and a body, so one
+Each resource is served under its own name, and two of one name throw, so
+neither hides the other. The router takes a plain request and gives back a status and a body, so one
 fetch handler serves it on Hono, Bun, Deno or Cloudflare Workers:
 
 ```ts

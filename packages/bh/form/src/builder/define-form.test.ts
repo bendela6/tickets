@@ -1,8 +1,10 @@
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 import type { InputProps, LayoutComponentProps } from '../types/registry';
 import type { FieldOptions } from './build-proxy';
 import { defineRegistry } from './define-registry';
 import { defineForm } from './define-form';
+import { noInputs, noLayouts } from './registries';
 
 const Stub = () => null;
 const FieldStub = () => null;
@@ -13,14 +15,14 @@ const RowLayout = ({ children }: LayoutComponentProps<Record<string, never>>) =>
   return children as React.ReactElement;
 };
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: Stub as never, defaultValue: '' },
     select: { Component: Stub as never, defaultValue: null },
-  },
-  layouts: {
+  }),
+  layouts: noLayouts.register({
     group: { Component: GroupLayout },
     row: { Component: RowLayout },
-  },
+  }),
   field: { Component: FieldStub as never },
 });
 
@@ -60,13 +62,13 @@ describe('defineForm', () => {
   test("types a field's default as its input takes it, not as its kind's empty value", () => {
     const Picker = (_: InputProps<object, string | null>) => null;
     const picks = defineRegistry({
-      inputs: { pick: { Component: Picker, defaultValue: null } },
-      layouts: {},
+      inputs: noInputs.register({ pick: { Component: Picker, defaultValue: null } }),
+      layouts: noLayouts,
       field: { Component: FieldStub as never },
     });
-    expectTypeOf<FieldOptions<typeof picks.inputs, 'pick'>['defaultValue']>().toEqualTypeOf<
-      string | null | undefined
-    >();
+    expectTypeOf<
+      FieldOptions<EntriesOf<typeof picks.inputs>, 'pick'>['defaultValue']
+    >().toEqualTypeOf<string | null | undefined>();
     const config = defineForm(picks).build((b) => {
       return [b.pick({ name: 'p', defaultValue: 'first', config: {} })];
     });

@@ -1,7 +1,5 @@
-import * as v from 'valibot';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { isAddress, isRoute, linkTarget } from './link';
-import { baseRendererSpecs, canShow, type BaseRenderers } from './renderers';
 import { textPaths } from './text';
 
 const ticket = { id: 12, project: 'TIX', number: 12, title: 'Fix the login', status: 'active' };
@@ -65,31 +63,16 @@ describe('isAddress', () => {
   });
 });
 
-describe('a link’s `to`', () => {
-  const accepts = (options: unknown) => {
-    return v.is(baseRendererSpecs.link.options ?? v.never(), options);
-  };
-
-  it('is a route: braces in pairs, starting as an address does', () => {
-    expectTypeOf<BaseRenderers['link']>().toEqualTypeOf<{ to?: string }>();
-    expect(accepts({})).toBe(true);
-    expect(accepts({ to: '/p/{project}/t/{number}' })).toBe(true);
-    expect(accepts({ to: 'https://tracker.example/{id}' })).toBe(true);
-    expect(accepts({ to: '/p/{project' })).toBe(false);
-    expect(accepts({ to: '{url}' })).toBe(false);
-    expect(accepts({ to: '//elsewhere/{id}' })).toBe(false);
-    expect(accepts({ to: 7 })).toBe(false);
-    expect(accepts({ href: '/p' })).toBe(false);
-    expect(isRoute('/p/{project}')).toBe(true);
+describe('a route', () => {
+  it('has its braces in pairs, and starts as an address does', () => {
+    expect(isRoute('/p/{project}/t/{number}')).toBe(true);
+    expect(isRoute('https://tracker.example/{id}')).toBe(true);
+    expect(isRoute('/p/{project')).toBe(false);
+    expect(isRoute('{url}')).toBe(false);
+    expect(isRoute('//elsewhere/{id}')).toBe(false);
   });
 
   it('names its fields, for a check of them against the resource', () => {
     expect(textPaths('/p/{project}/t/{number}')).toEqual(['project', 'number']);
-  });
-
-  it('lets a field of any kind link to its row', () => {
-    expect(canShow(baseRendererSpecs.link, 'text')).toBe(true);
-    expect(canShow(baseRendererSpecs.link, 'number')).toBe(true);
-    expect(canShow(baseRendererSpecs.link, 'url')).toBe(true);
   });
 });

@@ -8,6 +8,7 @@ import type {
   KindRegistry,
   Template,
 } from '@bh/resource';
+import { entryOf } from './registry';
 
 // A part: a leaf of a template, one thing the record shows. What it shows is a
 // field, a constant or a text template; a registered renderer draws it, a
@@ -106,6 +107,12 @@ export interface TextPart extends PartBase {
  */
 export type Part = FieldPart | ValuePart | TextPart;
 
+/**
+ * A field as a template reads it: its key and label, its kind and settings,
+ * and its format. A resource's FieldMeta is one; a template needs no more.
+ */
+export type TemplateField = Pick<FieldMeta, 'key' | 'label' | 'type' | 'format'>;
+
 /** Where a part's defaults come from. */
 export interface PartDefaults {
   /**
@@ -142,6 +149,22 @@ export function resolvePart<P extends Part>(
     part.renderer ?? (kind === undefined ? undefined : defaults.renderer(kind)) ?? TEXT;
   const format =
     part.format ??
-    (kind === undefined ? undefined : (field?.format ?? defaults.kinds.get(kind)?.format));
+    (kind === undefined
+      ? undefined
+      : (field?.format ??
+        (defaults.kinds.has(kind) ? defaults.kinds.get(kind).format : undefined)));
   return { ...part, renderer, ...(format === undefined ? {} : { format }) };
+}
+
+/** A part's defaults: each kind's renderer, and the kinds for their formats. */
+export function partDefaults(
+  renderers: Readonly<Record<FieldKind, string>>,
+  kinds: KindRegistry,
+): PartDefaults {
+  return {
+    renderer: (kind) => {
+      return entryOf(renderers, kind);
+    },
+    kinds,
+  };
 }

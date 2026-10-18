@@ -9,7 +9,7 @@ body:
     components.
   - h2: Import
   - code: |
-      import { BlockErrorCard, createRegistry, DocView, markdownBlocks, parsePage } from '@bh/markdown';
+      import { BlockErrorCard, DocView, markdownBlocks, parsePage, toPrompt } from '@bh/markdown';
     lang: tsx
   - h2: A first page
   - |

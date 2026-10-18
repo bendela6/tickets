@@ -6,7 +6,7 @@ import {
   type FilterValue,
   FormProvider,
 } from '@bh/form';
-import { createKindRegistry, createOperatorRegistry, type Filter } from '@bh/resource';
+import { baseKinds, baseOperators, type Filter } from '@bh/resource';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
@@ -37,8 +37,8 @@ const registry = defineRegistry({
   filter: baseFilter,
 });
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
+const operators = baseOperators;
+const kinds = baseKinds;
 const USERS = [
   { value: 'u1', label: 'Ana Beridze' },
   { value: 'u2', label: 'Bo Chen' },

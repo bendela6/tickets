@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryOf } from './checks';
 import { matchesFilter, matchesSearch } from './matches';
 import type { ResourceMeta } from './meta';
+import { baseOperators } from './operators';
 import type { Filter } from './query';
 import { createRegistry } from './registry';
 import type { FieldMeta, OperatorSpec } from './types';
@@ -178,7 +179,7 @@ describe('matchesFilter', () => {
       label: 'is odd',
       matches: (a) => typeof a === 'number' && a % 2 === 1,
     };
-    const own = createRegistry({ operators: [odd] });
+    const own = createRegistry({ operators: baseOperators.register({ odd }) });
     expect(matchesFilter({ field: 'id', op: 'odd' }, fix, items, own)).toBe(true);
   });
 

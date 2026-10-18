@@ -1,13 +1,12 @@
 import {
   BlockErrorCard,
-  createRegistry,
   DocView,
   markdownBlocks,
   type MarkdownElements,
   parsePage,
 } from '@bh/markdown';
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 
 // The look is the app's: a component per element, and the error card.
 const elements: MarkdownElements = {
