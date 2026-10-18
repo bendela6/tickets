@@ -221,6 +221,16 @@ describe('RichTextEditor', () => {
     expect(textbox()).not.toHaveAttribute('aria-label');
   });
 
+  it('stays a textbox, with its new name, when its attributes change', () => {
+    // Tiptap before 3.31.4 drops the role here.
+    const { rerender } = render(<RichTextEditor label="Body" value="" onChange={vi.fn()} />);
+    rerender(<RichTextEditor label="Reply" placeholder="Write…" value="" onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox', { name: 'Reply' })).toHaveAttribute(
+      'aria-placeholder',
+      'Write…',
+    );
+  });
+
   it('is invalid when its tone is danger, and only then', () => {
     const { rerender } = render(<RichTextEditor label="Body" value="" onChange={vi.fn()} />);
     expect(textbox()).not.toHaveAttribute('aria-invalid');

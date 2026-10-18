@@ -15,4 +15,4 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 - [SearchDialog](../docs/search-dialog.md): Search what the app holds in a dialog: type, move with the arrows, open with Enter.
 - [OnThisPage](../docs/on-this-page.md): List a page's sections beside it, the one being read lit as the page scrolls, and go to one with a click.
 - [Pager](../docs/pager.md): Link a page to the pages either side of it in reading order, at its foot.
-- [Version](../docs/version.md): Show the stack's version at the sidebar's foot, and open the Version page from it: services, packages and every release's commits.
+- [Version](../docs/version.md): Show the stack's version under the app's name, and open the Version page from it: services, packages and every release's commits.

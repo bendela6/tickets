@@ -60,7 +60,11 @@ const SECTIONS: readonly NavSection[] = [
   },
 ];
 
-const BRAND = { mark: <Sparkles size={18} aria-hidden />, name: 'acme' };
+const BRAND = {
+  mark: <Sparkles size={18} aria-hidden />,
+  name: 'acme',
+  caption: <span>the caption</span>,
+};
 
 function renderShell(onSearch?: () => void) {
   return render(
@@ -87,6 +91,7 @@ describe('AppShell on a wide screen', () => {
     expect(boxes[0]).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('acme')).toBeInTheDocument();
+    expect(screen.getByText('the caption')).toBeInTheDocument();
     expect(screen.getByText('footer in full')).toBeInTheDocument();
     expect(screen.getByText('content')).toBeInTheDocument();
     // The phone's bar is not drawn beside the docked sidebar.
@@ -100,6 +105,7 @@ describe('AppShell on a wide screen', () => {
     expect(screen.getByRole('link', { name: 'Boxes' })).toHaveAttribute('aria-current', 'page');
     expect(screen.queryByRole('button', { name: 'Things' })).toBeNull();
     expect(screen.getByText('footer at rail width')).toBeInTheDocument();
+    expect(screen.queryByText('the caption')).toBeNull();
     expect(localStorage.getItem('test-nav:collapsed')).not.toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }));

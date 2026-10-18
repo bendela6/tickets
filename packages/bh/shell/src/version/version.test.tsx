@@ -1,12 +1,11 @@
 // The version line and the Version page: the line's text, its dot and Reload,
-// the rail's icon, each tab at its path, Releases filtered by service and by
+// each tab at its path, Releases filtered by service and by
 // search, and the details a bug report copies.
 
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TooltipProvider } from '@bh/ui';
 
 const router = vi.hoisted(() => {
   return { pathname: '/version', search: {}, navigate: vi.fn() };
@@ -42,7 +41,7 @@ vi.mock('@tanstack/react-router', () => {
 });
 
 import type { BuildInfo, Release } from './build-info';
-import { BuildFooter, versionLine } from './build-footer';
+import { BuildLine, versionLine } from './build-line';
 import { formatReleaseTime } from './release-time';
 import { seenKey } from './use-seen-version';
 import { detailsText, tabOf, VersionPage } from './version-page';
@@ -182,17 +181,13 @@ describe('formatReleaseTime', () => {
   });
 });
 
-describe('BuildFooter', () => {
-  const footer = (info: BuildInfo, collapsed = false) => {
-    return render(
-      <TooltipProvider>
-        <BuildFooter info={info} collapsed={collapsed} />
-      </TooltipProvider>,
-    );
+describe('BuildLine', () => {
+  const line = (info: BuildInfo) => {
+    return render(<BuildLine info={info} />);
   };
 
   it('links the version and how long ago it was released to the Version page', () => {
-    footer(INFO);
+    line(INFO);
     const link = screen.getByRole('link', { name: `Version ${versionLine(INFO)}` });
     expect(link).toHaveAttribute('href', '/version');
     expect(link).toHaveTextContent(/^v0\.4\.1·(yesterday|.+ ago)$/);
@@ -202,36 +197,28 @@ describe('BuildFooter', () => {
   });
 
   it('says dev and how far past the tag a dev server is, with the build time', () => {
-    footer({ ...INFO, dev: { branch: 'main', ahead: 3, dirty: true } });
+    line({ ...INFO, dev: { branch: 'main', ahead: 3, dirty: true } });
     expect(screen.getByText('dev')).toBeInTheDocument();
     expect(screen.getByText('v0.4.1+3')).toBeInTheDocument();
   });
 
   it('dots a version this browser has not seen, not on its first visit', () => {
-    const { unmount } = footer(INFO);
+    const { unmount } = line(INFO);
     expect(screen.queryByRole('img', { name: 'New version' })).toBeNull();
     expect(localStorage.getItem(seenKey('tickets'))).toBe('0.4.1');
     unmount();
-    footer({ ...INFO, stack: { ...INFO.stack, version: '0.4.2' } });
+    line({ ...INFO, stack: { ...INFO.stack, version: '0.4.2' } });
     expect(screen.getByRole('img', { name: 'New version' })).toBeInTheDocument();
   });
 
   it('offers Reload when the window regains focus and a newer version is live', async () => {
     serve({ version: '0.4.2' });
-    footer(INFO);
+    line(INFO);
     expect(screen.queryByRole('button', { name: 'Reload' })).toBeNull();
     act(() => {
       window.dispatchEvent(new Event('focus'));
     });
     expect(await screen.findByRole('button', { name: 'Reload' })).toBeInTheDocument();
-  });
-
-  it('is one icon at rail width, named by the line', () => {
-    footer(INFO, true);
-    expect(screen.getByRole('link', { name: `Version ${versionLine(INFO)}` })).toHaveAttribute(
-      'href',
-      '/version',
-    );
   });
 });
 
