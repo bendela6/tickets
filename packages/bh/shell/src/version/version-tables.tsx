@@ -3,7 +3,7 @@
 // when this release changed it, and when it last changed.
 
 import type { ReactNode } from 'react';
-import { Link } from '@tanstack/react-router';
+import { AppLink } from './app-link';
 import { shortName, type BuildInfo, type BuildPackage, type BuildService } from './build-info';
 import { formatReleaseTime } from './release-time';
 
@@ -125,13 +125,13 @@ export function ServicesTable({ info, releasesPath }: { info: BuildInfo; release
             </td>
             <td className={s.previous ? TD : `${TD} text-gray-10`}>{changedText(s)}</td>
             <td className={`${TD} whitespace-nowrap`}>
-              <Link
+              <AppLink
                 to={releasesPath}
                 search={{ service: shortName(s.name) }}
                 className="text-indigo-11 hover:underline"
               >
                 History
-              </Link>
+              </AppLink>
               {info.repository ? (
                 <>
                   {' · '}

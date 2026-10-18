@@ -267,6 +267,47 @@ test('a commit to a vendored copy versions the services that use it', () => {
   assert.equal(plan.released[0].lines[0].scopes.join(), 'deps');
 });
 
+test('commits outside every package move the stack alone, as in a repo whose app is its root', () => {
+  const units = [unit('@bh/ui', 'packages/bh/ui', { vendored: true })];
+  const fix = commit('fix: keep the sort on reload', ['src/list.tsx'], 'ddddddd');
+  const docs = commit('docs: describe the list', ['README.md'], 'eeeeeee');
+  const plan = planRelease({
+    name: 'cv',
+    units,
+    stackFrom: '0.1.0',
+    tagged: new Map(),
+    commits: new Map(),
+    stackCommits: [docs, fix],
+  });
+  assert.deepEqual(plan.released, []);
+  assert.equal(plan.stack.to, '0.1.1');
+  assert.equal(plan.message, 'chore(release): release v0.1.1\n\n- Keep the sort on reload\n');
+  assert.deepEqual(plan.tags, ['v0.1.1']);
+  const quiet = planRelease({
+    name: 'cv',
+    units,
+    stackFrom: '0.1.1',
+    tagged: new Map(),
+    commits: new Map(),
+    stackCommits: [docs],
+  });
+  assert.equal(quiet, null);
+});
+
+test("a repo's first release, with no package of its own, versions the stack alone", () => {
+  const plan = planRelease({
+    name: 'cv',
+    units: [unit('@bh/ui', 'packages/bh/ui', { vendored: true })],
+    stackFrom: null,
+    tagged: new Map(),
+    commits: new Map(),
+    stackCommits: [],
+  });
+  assert.equal(plan.stack.to, '0.1.0');
+  assert.deepEqual(plan.tags, ['v0.1.0']);
+  assert.equal(plan.rootLines[0].headline, 'Start keeping versions and this changelog');
+});
+
 test('nothing to release is null', () => {
   const plan = planRelease({
     name: 't',
@@ -419,6 +460,18 @@ test('--no-commit writes and stops; --continue commits, tags and pushes', () => 
   assert.notEqual(run(dir, 'git', ['status', '--porcelain']), '');
   release(dir, '--continue');
   assert.match(run(origin, 'git', ['tag', '--list']), /@tickets\/api@0\.1\.1/);
+});
+
+test('a release runs from a linked worktree, whose .git is a file', () => {
+  const { dir, origin } = repo('worktree');
+  const linked = join(tmp, 'worktree-main');
+  run(dir, 'git', ['checkout', '--quiet', '-b', 'side']);
+  run(dir, 'git', ['worktree', 'add', '--quiet', linked, 'main']);
+  assert.match(release(linked, '--yes'), /pushed with 4 tags/);
+  assert.equal(
+    run(origin, 'git', ['log', '-1', '--format=%s', 'main']).trim(),
+    'chore(release): release api 0.1.0, web 0.1.0 and shared 0.1.0 as v0.1.0',
+  );
 });
 
 test('a release is refused off main or with changes', () => {

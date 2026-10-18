@@ -255,6 +255,20 @@ describe('VersionPage', () => {
     expect(localStorage.getItem(seenKey('tickets'))).toBe('0.4.1');
   });
 
+  it('leaves out the services, their tab and the filter for a repo whose app is its root', async () => {
+    const cv: BuildInfo = { ...INFO, self: 'cv', services: [] };
+    const { unmount } = render(<VersionPage info={cv} />);
+    expect(screen.queryByRole('button', { name: /^Services/ })).toBeNull();
+    expect(screen.queryByText('Services in this build')).toBeNull();
+    expect(await screen.findByText('add drag and drop between board columns')).toBeInTheDocument();
+    unmount();
+
+    router.pathname = '/version/releases';
+    render(<VersionPage info={cv} />);
+    expect(await screen.findByText('list tickets by board')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Show' })).toBeNull();
+  });
+
   it('lists every release, filtered by the service in the address, and by search', async () => {
     router.pathname = '/version/releases';
     router.search = { service: 'mcp' };

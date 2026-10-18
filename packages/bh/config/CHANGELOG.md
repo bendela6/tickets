@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.3 · 2026-10-18 15:01 +04:00
+
+- fix(config): let bh-release run in a linked worktree (be41f71)
+  - Ask git for the release's message and pending files' paths, as a worktree's .git is a file
+  - Stop a release in a worktree failing after writing versions, before its commit
+
+## 0.8.2 · 2026-10-18 14:24 +04:00
+
+- feat(config): move the stack on commits outside every package (e945860)
+  - Count a feature or fix outside every package of the repo's own, such as the root or a bh copy, toward the stack's version
+  - Release a repo whose app is its root, such as cv, as the stack alone, from its first release on
+  - Write such a release's commit as chore(release): release v<stack>
+
 ## 0.8.1 · 2026-10-18 13:35 +04:00
 
 - feat(config,shell): add the version line, the Version page and the build-info plugin (600fa40)

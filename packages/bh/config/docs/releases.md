@@ -38,7 +38,7 @@ pnpm release
    listed already.
 3. Bumps each package by its commits. A service also takes a patch when
    a package it uses gets a version. Then the stack, by the largest
-   change.
+   change, counting commits outside every package too.
 4. Shows the plan and asks.
 5. Writes each `package.json` version and `CHANGELOG.md` entry, and the
    root's.
@@ -63,7 +63,9 @@ change a major one.
 - **A package or service**: `@tickets/api@0.5.1`, its tag, and the
   `version` in its `package.json`.
 - **The stack**: `v0.4.1`, the repo as a whole, in the root
-  `package.json`. It moves whenever anything gets a version.
+  `package.json`. It moves whenever anything gets a version, or a
+  feature or fix lands outside every package: the root, a copy. A repo
+  whose app is its root (cv) has the stack alone.
 - **The first release** gives everything a version. In a repo with `v*`
   tags already (bh), each package starts at the newest one, bumped if it
   changed since. In a repo with none, each starts at its `package.json`
