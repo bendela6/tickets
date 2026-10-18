@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { createKindRegistry, type FieldFormat, type FieldMeta, type KindSpec } from '@bh/resource';
+import { baseKinds, type FieldFormat, type FieldMeta, type KindSpec } from '@bh/resource';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   resolvePart,
@@ -39,7 +39,7 @@ const RENDERERS: Record<string, string> = {
 
 const defaults: PartDefaults = {
   renderer: (kind) => RENDERERS[kind],
-  kinds: createKindRegistry([color]),
+  kinds: baseKinds.register({ color }),
 };
 
 /** A field's metadata, as much of it as a part takes defaults from. */

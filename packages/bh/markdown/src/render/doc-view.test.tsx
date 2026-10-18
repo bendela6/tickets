@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Renderer } from '../registry/types';
 import { MarkdownDoc } from './doc-view';
 
@@ -22,7 +22,7 @@ const boom: Renderer = {
   },
 };
 
-const registry = createRegistry([note, boom]);
+const registry = noBlocks.register({ note, boom });
 
 describe('MarkdownDoc', () => {
   it('renders a block through its registered renderer', () => {
@@ -54,7 +54,7 @@ describe('MarkdownDoc', () => {
     render(
       <MarkdownDoc
         source={'```probe\n{}\n```'}
-        registry={createRegistry([probe])}
+        registry={noBlocks.register({ probe })}
         ctx={{ who: 'host' }}
       />,
     );
@@ -84,7 +84,7 @@ describe('MarkdownDoc', () => {
         return <span data-testid="flaky">recovered</span>;
       },
     };
-    const flakyRegistry = createRegistry([flaky]);
+    const flakyRegistry = noBlocks.register({ flaky });
 
     const { rerender } = render(
       <MarkdownDoc source={'```flaky\nbad: true\n```'} registry={flakyRegistry} />,

@@ -1,22 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import {
-  baseDefaultRenderers,
-  baseRendererSpecs,
-  canShow,
-  type AvatarOptions,
-  type BaseRenderers,
-  type IconOptions,
-  type PillOptions,
-  type RendererProps,
-  type Shown,
-} from '@bh/template';
+import * as v from 'valibot';
+import { baseKinds, type BaseKind } from '@bh/resource';
+import { canShow, fits, type RendererProps, type Shown } from '@bh/template';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { AvatarShape, AvatarSize } from '../primitives/components/avatar';
 import type { IconSize } from '../primitives/components/icon';
 import type { PillVariant } from '../primitives/components/pill';
-import { baseRenderers } from './registry';
-import { createLinkRenderer, type LinkAnchor } from './renderers/renderers';
+import { baseDefaultRenderers, baseRenderers, type BaseRenderers } from './base-renderers';
+import type { AvatarOptions } from './renderers/avatar';
+import type { IconOptions } from './renderers/icon';
+import { createLinkRenderer, type LinkAnchor } from './renderers/link';
+import type { PillOptions } from './renderers/pill';
 
 /** Draws one of bh's renderers with these values, and options and part options when given. */
 function draw<K extends keyof BaseRenderers>(
@@ -24,7 +19,7 @@ function draw<K extends keyof BaseRenderers>(
   values: Shown[],
   more: Partial<RendererProps<BaseRenderers[K]>> = {},
 ) {
-  const { Component } = baseRenderers[name] as unknown as {
+  const { Component } = baseRenderers.get(name) as unknown as {
     Component: (props: RendererProps<BaseRenderers[K]>) => ReactNode;
   };
   const props = {
@@ -37,24 +32,82 @@ function draw<K extends keyof BaseRenderers>(
   return render(<Component {...props} />);
 }
 
+/** Whether one of bh's renderers takes these options. */
+function accepts(name: keyof BaseRenderers, options: unknown) {
+  return v.is(baseRenderers.get(name).options ?? v.strictObject({}), options);
+}
+
 describe('baseRenderers', () => {
-  it('draws each of @bh/template’s renderers, with its spec as it is', () => {
-    expect(Object.keys(baseRenderers)).toEqual(Object.keys(baseRendererSpecs));
-    for (const [name, spec] of Object.entries(baseRendererSpecs)) {
-      const { Component, ...own } = baseRenderers[name as keyof BaseRenderers];
-      expect(own, name).toEqual(spec);
-      expect(typeof Component, name).toBe('function');
-    }
+  it('are bh’s thirteen, frozen', () => {
+    expect(baseRenderers.names).toEqual([
+      'text',
+      'link',
+      'pill',
+      'date',
+      'number',
+      'avatar',
+      'user',
+      'icon',
+      'progress',
+      'meter',
+      'trend',
+      'check',
+      'code',
+    ]);
+    expect(Object.isFrozen(baseRenderers)).toBe(true);
+    expect(() => baseRenderers.get('sparkline')).toThrow(
+      'No renderer is registered as "sparkline".',
+    );
   });
 
-  it('has the default renderer of each of bh’s kinds, and text for what has none', () => {
+  it('check their options by their schemas', () => {
+    expectTypeOf<BaseRenderers['trend']>().toEqualTypeOf<{ good?: 'up' | 'down' }>();
+    expect(accepts('pill', { variant: 'solid' })).toBe(true);
+    expect(accepts('pill', { variant: 'loud' })).toBe(false);
+    expect(accepts('avatar', { size: 'lg', shape: 'square' })).toBe(true);
+    expect(accepts('avatar', { size: 'huge' })).toBe(false);
+    expect(accepts('progress', { max: 8 })).toBe(true);
+    expect(accepts('progress', { max: 0 })).toBe(false);
+    expect(accepts('meter', {})).toBe(true);
+    expect(accepts('trend', { good: 'down' })).toBe(true);
+    // A misspelt option is refused.
+    expect(accepts('pill', { varient: 'solid' })).toBe(false);
+    // One taking no options takes {} alone.
+    expect(accepts('text', {})).toBe(true);
+    expect(accepts('text', { mono: true })).toBe(false);
+  });
+
+  it('link to a route: braces in pairs, starting as an address does', () => {
+    expectTypeOf<BaseRenderers['link']>().toEqualTypeOf<{ to?: string }>();
+    expect(accepts('link', {})).toBe(true);
+    expect(accepts('link', { to: '/p/{project}/t/{number}' })).toBe(true);
+    expect(accepts('link', { to: '/p/{project' })).toBe(false);
+    expect(accepts('link', { to: 7 })).toBe(false);
+    expect(accepts('link', { href: '/p' })).toBe(false);
+  });
+
+  it('say which kinds each shows, and the room the bars need', () => {
+    expect(canShow(baseRenderers.get('text'), 'json')).toBe(true);
+    expect(canShow(baseRenderers.get('link'), 'number')).toBe(true);
+    expect(canShow(baseRenderers.get('pill'), 'option')).toBe(true);
+    expect(canShow(baseRenderers.get('pill'), 'number')).toBe(false);
+    expect(canShow(baseRenderers.get('user'), 'ref')).toBe(true);
+    expect(fits(baseRenderers.get('text'), 0)).toBe(true);
+    expect(fits(baseRenderers.get('progress'), 48)).toBe(false);
+    expect(fits(baseRenderers.get('progress'), 64)).toBe(true);
+  });
+
+  it('have the default renderer of each of bh’s kinds, one that shows it', () => {
+    expect(Object.keys(baseDefaultRenderers).sort()).toEqual([...baseKinds.names].sort());
     for (const [kind, name] of Object.entries(baseDefaultRenderers)) {
-      expect(canShow(baseRenderers[name], kind), `${kind} → ${name}`).toBe(true);
+      expect(canShow(baseRenderers.get(name), kind), `${kind} → ${name}`).toBe(true);
     }
-    expect(baseRenderers.text.kinds).toBe('any');
+    expectTypeOf(baseDefaultRenderers).toEqualTypeOf<
+      Readonly<Record<BaseKind, keyof BaseRenderers>>
+    >();
   });
 
-  it('takes no option its component doesn’t', () => {
+  it('take no option their components don’t', () => {
     expectTypeOf<NonNullable<PillOptions['variant']>>().toExtend<PillVariant>();
     expectTypeOf<NonNullable<AvatarOptions['size']>>().toExtend<AvatarSize>();
     expectTypeOf<NonNullable<AvatarOptions['shape']>>().toExtend<AvatarShape>();
@@ -187,8 +240,6 @@ describe('the renderers', () => {
           key: 'cover',
           label: 'Cover',
           type: { kind: 'url' },
-          query: { filter: [], sort: false, group: false, search: false },
-          write: { create: false, update: false, required: false },
         },
       },
     );
@@ -219,8 +270,6 @@ describe('the renderers', () => {
         key: 'steps',
         label: 'Steps',
         type: { kind: 'number' },
-        query: { filter: [], sort: false, group: false, search: false },
-        write: { create: false, update: false, required: false },
       },
     });
     const bar = screen.getByRole('progressbar', { name: 'Steps' });

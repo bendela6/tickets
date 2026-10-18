@@ -213,9 +213,9 @@ form can be written without the builder, stored, or generated:
 
 ```tsx
 import type { FormConfig } from '@bh/form';
-import type { baseInputs, baseLayouts } from '@bh/ui';
+import type { BaseFormLayouts, BaseInputs } from '@bh/ui';
 
-export const form: FormConfig<typeof baseInputs, typeof baseLayouts> = {
+export const form: FormConfig<BaseInputs, BaseFormLayouts> = {
   nodes: [
     {
       kind: 'card',

@@ -1,7 +1,7 @@
 import type * as v from 'valibot';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
-  createOperatorRegistry,
+  baseOperators,
   createRegistry,
   type FieldPath,
   type Filter as ResourceFilter,
@@ -11,7 +11,7 @@ import {
   type Scalar,
   type Sort,
 } from '@bh/resource';
-import type { BaseLayouts, Host, HostSpec, TemplateNode } from '@bh/template';
+import type { AnyLayouts, Host, HostSpec, TemplateNode } from '@bh/template';
 import {
   type Column,
   columnHost,
@@ -150,7 +150,8 @@ describe('the types', () => {
   });
 
   it('take an app’s own layouts in a column’s cell', () => {
-    interface AppLayouts extends BaseLayouts {
+    interface AppLayouts {
+      row: { gap?: number };
       overlay: { anchor: 'top-end' | 'bottom-end' };
     }
     const avatar: Column<AppLayouts> = {
@@ -164,14 +165,14 @@ describe('the types', () => {
     expectTypeOf(columnOf<AppLayouts>()).toEqualTypeOf<
       v.GenericSchema<unknown, Column<AppLayouts>>
     >();
-    // @ts-expect-error bh's layouts alone know no overlay
-    const plain: Column = avatar;
+    // An untyped column takes any layout.
+    const plain: Column = { fixed: avatar.fixed, template: avatar.template };
     expect(plain.fixed.key).toBe('owner');
   });
 
   it('check against any registry that names its operators', () => {
     expectTypeOf(createRegistry()).toExtend<ColumnRegistry>();
-    expectTypeOf(createOperatorRegistry()).toExtend<ColumnRegistry>();
+    expectTypeOf({ operators: baseOperators }).toExtend<ColumnRegistry>();
   });
 });
 
@@ -236,7 +237,8 @@ describe('a view’s types', () => {
   });
 
   it('take an app’s own layouts in its templates', () => {
-    interface AppLayouts extends BaseLayouts {
+    interface AppLayouts {
+      row: { gap?: number };
       overlay: { anchor: 'top-end' | 'bottom-end' };
     }
     const cards: View<AppLayouts> = {
@@ -254,8 +256,8 @@ describe('a view’s types', () => {
       },
     };
     expectTypeOf(viewOf<AppLayouts>()).toEqualTypeOf<v.GenericSchema<unknown, View<AppLayouts>>>();
-    // @ts-expect-error bh's layouts alone know no overlay
-    const plain: View = cards;
+    // An untyped view takes any layout.
+    const plain: View = { ...cards, item: { fixed: {}, template: cards.item.template } };
     expect(plain.key).toBe('people');
   });
 });
@@ -283,8 +285,8 @@ describe('a view’s state’s types', () => {
   });
 
   it('lay a state over any view, and a table’s columns over a table alone', () => {
-    expectTypeOf(resolveState<BaseLayouts>).parameters.toEqualTypeOf<[View, ViewState?]>();
-    expectTypeOf(columnsOf<BaseLayouts>).returns.toEqualTypeOf<Column[]>();
+    expectTypeOf(resolveState<AnyLayouts>).parameters.toEqualTypeOf<[View, ViewState?]>();
+    expectTypeOf(columnsOf<AnyLayouts>).returns.toEqualTypeOf<Column[]>();
     const cards: ItemView = {
       key: 'b',
       label: 'B',

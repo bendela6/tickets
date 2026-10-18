@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+
 import type { AnyRenderer } from '../registry/types';
 import { pageSchema } from './page-schema';
+import { blocksOf } from '../registry/blocks.fixture';
 
 const component = () => null;
 const base = { description: 'What it is.', examples: ['x'], component };
 
-const registry = createRegistry([
+const registry = blocksOf([
   {
     ...base,
     name: 'code',

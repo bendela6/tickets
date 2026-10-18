@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import { useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -11,6 +12,7 @@ import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
 import type { FormConfig } from '../types/form-config';
 import type { Commit } from '../types/commit';
+import { noInputs, noLayouts } from '../builder/registries';
 
 // The form's two outputs: `onCommit` as each field commits, `onSubmit` on Save.
 // The input here is the smallest one that holds a draft the way @bh/ui's text
@@ -62,8 +64,8 @@ function Wrapper({ name, error, saving, children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: { text: { Component: DraftInput, defaultValue: '' } },
-  layouts: {},
+  inputs: noInputs.register({ text: { Component: DraftInput, defaultValue: '' } }),
+  layouts: noLayouts,
   field: { Component: Wrapper },
 });
 
@@ -71,7 +73,7 @@ function textField(name: string, extra: Record<string, unknown> = {}) {
   return { kind: 'field' as const, name, label: name, type: 'text' as const, config: {}, ...extra };
 }
 
-const twoFields: FormConfig<typeof registry.inputs> = {
+const twoFields: FormConfig<EntriesOf<typeof registry.inputs>> = {
   nodes: [textField('title', { defaultValue: 'Draft' }), textField('owner')],
 };
 
@@ -85,7 +87,7 @@ const leave = (name: string) => {
 
 /** A page holding the form outside `<Form>`, showing what the reader would see. */
 function Page(props: {
-  form?: FormConfig<typeof registry.inputs>;
+  form?: FormConfig<EntriesOf<typeof registry.inputs>>;
   onCommit?: Parameters<typeof useStandaloneForm>[0]['onCommit'];
   onSubmit?: (values: Record<string, unknown>) => void | Promise<void>;
   commit?: Commit;
@@ -183,7 +185,7 @@ describe('onCommit', () => {
 
   test("a value the field's own check rejects isn't handed over", () => {
     const onCommit = vi.fn();
-    const form: FormConfig<typeof registry.inputs> = {
+    const form: FormConfig<EntriesOf<typeof registry.inputs>> = {
       nodes: [textField('title', { validate: v.pipe(v.string(), v.minLength(3, 'Too short')) })],
     };
     render(<Page form={form} onCommit={onCommit} />);
@@ -393,7 +395,7 @@ describe('commit', () => {
 
   test("a field's config overrides it", () => {
     const onCommit = vi.fn();
-    const form: FormConfig<typeof registry.inputs> = {
+    const form: FormConfig<EntriesOf<typeof registry.inputs>> = {
       nodes: [textField('title', { config: { commit: 'change' } }), textField('owner')],
     };
     render(<Page form={form} onCommit={onCommit} commit="leave" />);

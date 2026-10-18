@@ -1,0 +1,97 @@
+title: Formats
+summary: A format writes a value as text. bh registers eleven; an app registers its own.
+order: 4
+related: [Overview, Renderers, The resource contract]
+body:
+  - |
+    A format writes a value as text: `12.4 MiB`, `43%`, `Jul 13, 2026`. A
+    field names its format. A part may name another.
+  - demo: examples/every-format.tsx
+    mode: split
+  - h2: The registry
+  - |
+    `noFormats` is the empty registry. It checks each format's name, kinds,
+    options schema and function.
+  - source: noFormats
+  - h2: The formats
+  - |
+    | Format     | Writes                              | Kinds                                   | Options                         |
+    | ---------- | ----------------------------------- | --------------------------------------- | ------------------------------- |
+    | `number`   | `1,234.5`, compact `12.4K`          | number                                  | `digits`, `notation: 'compact'` |
+    | `percent`  | 0.427 as `43%`                      | number                                  | `digits`                        |
+    | `bytes`    | `12.4 MiB`, a rate `12.4 MiB/s`     | number                                  | `units`, `digits`, `per`        |
+    | `duration` | `2h 5m`, `840ms`                    | number                                  | `unit`, `days`                  |
+    | `money`    | `€12.50`                            | number                                  | `currency` (required)           |
+    | `date`     | `Jul 13, 2026`                      | date                                    |                                 |
+    | `datetime` | `Jul 13, 2026, 09:05`               | datetime                                | `timeZone`                      |
+    | `relative` | `5 minutes ago`, `in 2 hours`       | date, datetime                          | `smallestUnit`                  |
+    | `plain`    | the text as it is                   | text, markdown, url, email, phone, time |                                 |
+    | `markdown` | markdown without its marks          | markdown, text                          |                                 |
+    | `rich`     | a rich text's words                 | richtext                                |                                 |
+
+    A field names a format alone, `'bytes'`, or with options,
+    `{ "name": "bytes", "options": { "per": "s" } }`. Options its schema
+    refuses fail the field's metadata.
+
+    Each format is a file of its own, and an export: `numberFormat`,
+    `bytesFormat`, and so on.
+  - h3: number
+  - source: numberFormat
+  - h3: percent
+  - source: percentFormat
+  - h3: bytes
+  - source: bytesFormat
+  - h3: duration
+  - source: durationFormat
+  - h3: money
+  - source: moneyFormat
+  - h3: date
+  - source: dateFormat
+  - h3: datetime
+  - source: datetimeFormat
+  - h3: relative
+  - source: relativeFormat
+  - h3: plain
+  - source: plainFormat
+  - h3: markdown
+  - source: markdownFormat
+  - h3: rich
+  - source: richFormat
+  - h2: Registering them
+  - |
+    `baseFormats` registers all eleven on `noFormats`.
+  - source: baseFormats
+  - h2: Your own format
+  - |
+    Define a format on `baseFormats`, then register it. `register` returns a
+    new registry; `baseFormats` is unchanged.
+
+    A format returns pieces. A piece with `unit: true` can be drawn smaller.
+    `formatText` joins the pieces. The function gets the value, its checked
+    options, and the app's `locale`, `timeZone` and `now`.
+  - code: |
+      import * as v from 'valibot';
+      import { createRegistry } from '@bh/resource';
+      import { baseFormats, checkFormats } from '@bh/template';
+
+      const rate = baseFormats.define({
+        name: 'rate',
+        kinds: ['number'],
+        options: v.optional(v.strictObject({ per: v.optional(v.picklist(['page', 'visit'])) }), {}),
+        format: (value, { per = 'page' }, { locale }) => {
+          return typeof value === 'number'
+            ? [{ text: value.toLocaleString(locale) }, { text: ` per ${per}`, unit: true }]
+            : [{ text: String(value) }];
+        },
+      });
+
+      export const formats = baseFormats.register({ rate });
+
+      // Throws when a kind's default format is missing.
+      checkFormats(formats);
+
+      // Checks each field's format against these.
+      export const registry = createRegistry({ formats });
+    lang: ts
+  - ref: Formatter
+  - ref: formatValue

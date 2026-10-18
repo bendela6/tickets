@@ -40,7 +40,7 @@ name, a status and a due date:
       "sort": ["project", "number"]
     },
     "template": {
-      "layout": "flex",
+      "layout": "row",
       "options": { "gap": 2 },
       "nodes": [{ "text": "{project}-{number}", "options": { "mono": true } }, { "field": "title" }]
     }
@@ -312,7 +312,7 @@ export declare function columnOf(registry?: ColumnRegistry): v.GenericSchema<unk
 
 /** The operators an app runs with, by name: createRegistry's, for one. */
 export interface ColumnRegistry {
-  readonly operators: readonly { readonly name: string }[];
+  readonly operators: { has(name: string): boolean };
 }
 
 /** A column, a kind of host: its label, its filter's control, then its cell. */
@@ -344,7 +344,7 @@ export interface HostSpec<F> {
 /** A template: a layout node holding nodes, or a part, a thing a record shows. */
 export type TemplateNode = LayoutNode | Part;
 
-/** Nodes laid out by a registered layout: 'flex', 'grid', 'repeat', an app's. */
+/** Nodes laid out by a registered layout: 'row', 'stack', 'grid', 'repeat', an app's. */
 export interface LayoutNode {
   layout: string;
   options?: Record<string, Json>;

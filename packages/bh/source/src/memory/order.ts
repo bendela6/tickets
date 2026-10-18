@@ -22,7 +22,7 @@ export interface Orderer {
 
 /** The option field's settings, as its kind's schema takes them. */
 function optionsOf(field: FieldMeta, registry: Registry) {
-  const kind = registry.kinds.find((spec) => spec.name === 'option');
+  const kind = registry.kinds.has('option') ? registry.kinds.get('option') : undefined;
   const parsed = kind?.settings ? v.safeParse(kind.settings, field.type.settings) : undefined;
   return parsed?.success
     ? (parsed.output as {
@@ -48,7 +48,7 @@ export function ordererOf(
     return undefined;
   }
   const kindNamed = (kind: string): KindSpec | undefined => {
-    return registry.kinds.find((spec) => spec.name === kind);
+    return registry.kinds.has(kind) ? registry.kinds.get(kind) : undefined;
   };
   if (name === undefined) {
     const kind = kindNamed(field.type.kind);

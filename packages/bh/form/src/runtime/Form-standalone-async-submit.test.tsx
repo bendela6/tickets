@@ -4,6 +4,7 @@ import { Form } from './Form';
 import { useStandaloneForm } from './use-standalone-form';
 import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const SelectInput = (p: InputProps<{ options?: string[] }, string>) => {
   return (
@@ -24,10 +25,10 @@ function FieldStub({ children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     select: { Component: SelectInput, defaultValue: '' },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: FieldStub },
 });
 

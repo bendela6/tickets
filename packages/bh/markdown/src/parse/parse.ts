@@ -77,9 +77,10 @@ export function parseDocument(source: string, registry: RendererLookup): ParsedD
     }
   };
 
+  const names = new Set(registry.names);
   const build = (text: string, base: number, top: boolean): Node[] => {
     const out: Node[] = [];
-    for (const segment of scanBlocks(text, registry.names())) {
+    for (const segment of scanBlocks(text, names)) {
       const line = base + segment.line;
       if (segment.kind === 'markdown') {
         const nodes = markdownNodes(segment.text);
@@ -90,7 +91,7 @@ export function parseDocument(source: string, registry: RendererLookup): ParsedD
         out.push(...nodes);
         continue;
       }
-      const renderer = registry.get(segment.name);
+      const renderer = registry.has(segment.name) ? registry.get(segment.name) : undefined;
       const node: BlockNode = { type: 'block', name: segment.name, attrs: segment.attrs, line };
       // Recorded before its body is read, so a parent always precedes the
       // blocks nested in it in the flat index.

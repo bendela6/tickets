@@ -7,4 +7,7 @@ markdown copy: its prose, its examples’ code, and its props tables from the ty
 
 ## Templates
 
-- [Overview](../docs/overview.md): Say what a record shows as JSON, parts in layouts, for a table's cell, a list item, a tile or a card's body.
+- [Overview](../docs/overview.md): A template says what a record shows, as JSON. A table cell, a list item, a tile and a card body are templates.
+- [Layouts](../docs/layouts.md): A layout places a template's nodes. bh registers four; an app registers its own.
+- [Renderers](../docs/renderers.md): A renderer draws a part's value. bh registers thirteen; an app registers its own.
+- [Formats](../docs/formats.md): A format writes a value as text. bh registers eleven; an app registers its own.

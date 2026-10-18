@@ -1,9 +1,10 @@
+import * as v from 'valibot';
 import type { Json } from '@bh/resource';
 
-// What every registry of a template's (its renderers, its formats, its
-// layouts) is looked up by. A registry is a plain object an app spreads bh's
-// entries into and adds its own to, as a form's inputs are; a template names
-// its entries by string.
+// What a template's registries share: how a template names an entry, and
+// the schemas their entries' options and functions are checked by. Each is a
+// @bh/registry registry, its entries by the string a template names them by;
+// entryOf reads a plain record of names, as the kinds' default renderers.
 
 /**
  * A registry's entry by its name, or undefined when none is registered by it.
@@ -23,4 +24,22 @@ export function named(ref: string | { name: string; options: Record<string, Json
   options: Record<string, Json>;
 } {
   return typeof ref === 'string' ? { name: ref, options: {} } : ref;
+}
+
+/** Whether a value is a valibot schema: what an entry's `options` must be. */
+function isSchema(value: unknown): value is v.GenericSchema {
+  return (
+    typeof value === 'object' && value !== null && (value as { kind?: unknown }).kind === 'schema'
+  );
+}
+
+/** An entry's options' schema, as a registry's schema checks it: a valibot schema. */
+export const optionsSchema = v.custom<v.GenericSchema>(
+  isSchema,
+  'its options are a valibot schema',
+);
+
+/** One of an entry's functions, as a registry's schema checks it: `what` names it in the message. */
+export function functionSchema<F>(what: string) {
+  return v.custom<F>((value) => typeof value === 'function', `${what} is a function`);
 }

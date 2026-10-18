@@ -89,7 +89,9 @@ function operandsOf(
 ): Operand[] {
   const values = valuesOf(rows, field.key);
   const [first, second] = values;
-  const kind = registry.kinds.find((spec) => spec.name === field.type.kind);
+  const kind = registry.kinds.has(field.type.kind)
+    ? registry.kinds.get(field.type.kind)
+    : undefined;
   switch (op) {
     case 'empty':
     case 'notEmpty':

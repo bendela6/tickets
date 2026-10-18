@@ -11,6 +11,7 @@ import { useSelector } from '@tanstack/react-form';
 import { formStore } from '../utils/form-store';
 import type {
   ActionDefinition,
+  AnyLayouts,
   FormRegistry,
   InputRegistry,
   LayoutComponentRegistry,
@@ -117,7 +118,9 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
 ): ReactNode {
   const { resolved, loading, error: configError, depValues } = useResolvedConfig(props.field);
   const fieldState = useFormFieldState(props.field.name);
-  const empty = props.registry.inputs[props.field.type as string]?.defaultValue;
+  const { inputs } = props.registry;
+  const kind = props.field.type as string;
+  const empty = inputs.has(kind) ? inputs.get(kind).defaultValue : undefined;
   useClearOnDepsChange(props.field.name, depValues, empty);
   const form = useContext(FormContext);
   if (!form) {
@@ -127,10 +130,10 @@ function FieldRenderer<I extends InputRegistry, L extends LayoutComponentRegistr
     formStore<{ isSubmitting: boolean }>(form.store),
     (s: { isSubmitting: boolean }) => s.isSubmitting,
   );
-  const def = props.registry.inputs[props.field.type as string];
-  if (!def) {
+  if (!inputs.has(kind)) {
     throw new Error(`<Form>: registry has no entry for type "${String(props.field.type)}"`);
   }
+  const def = inputs.get(kind);
   const Component = def.Component;
   const { name, readOnly } = props.field;
   const wrapper = useContext(FieldWrapperContext);
@@ -258,7 +261,7 @@ type LayoutOf = Exclude<
 
 function LayoutWrapper(props: {
   node: LayoutOf;
-  layouts: LayoutComponentRegistry;
+  layouts: AnyLayouts;
   children: ReactNode;
 }): ReactNode {
   return <Fragment>{renderForKind(props.layouts, props.node, props.children)}</Fragment>;
@@ -269,15 +272,11 @@ function LayoutWrapper(props: {
 // layout is a custom layout registered in the layouts map. Missing entries
 // fall through to `children` so a flat config still renders without a
 // layouts map.
-function renderForKind(
-  layouts: LayoutComponentRegistry,
-  node: LayoutOf,
-  children: ReactNode,
-): ReactNode {
-  const def = layouts[node.kind];
-  if (!def) {
+function renderForKind(layouts: AnyLayouts, node: LayoutOf, children: ReactNode): ReactNode {
+  if (!layouts.has(node.kind)) {
     return children;
   }
+  const def = layouts.get(node.kind);
   const Layout = def.Component;
   const drawn = <Layout props={(node as { props: unknown }).props}>{children}</Layout>;
   // Its fields, at any depth, get the wrapper it names, until another names its own.

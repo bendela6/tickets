@@ -1,10 +1,9 @@
-import { createKindRegistry, createOperatorRegistry } from '@bh/resource';
+import { baseKinds, baseOperators } from '@bh/resource';
 import { describe, expect, it } from 'vitest';
 import { conditionWords, dayLabel, entryWords, groupParts } from './describe';
 import { FIELDS } from './rules.fixture';
 
-const operators = createOperatorRegistry();
-const meta = { fields: FIELDS, operators, kinds: createKindRegistry([], operators) };
+const meta = { fields: FIELDS, operators: baseOperators, kinds: baseKinds };
 
 describe('a rule in words', () => {
   it('reads a day as day and month, and its year when it isn’t this one', () => {

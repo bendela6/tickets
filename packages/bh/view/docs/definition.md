@@ -126,8 +126,8 @@ too:
   "item": {
     "fixed": { "icon": "square" },
     "template": {
-      "layout": "flex",
-      "options": { "direction": "column", "gap": 4 },
+      "layout": "stack",
+      "options": { "gap": 4 },
       "nodes": [{ "field": "title" }, { "field": "assignee", "renderer": "user" }]
     }
   },
@@ -289,7 +289,7 @@ export declare function viewOf(registry?: ColumnRegistry): v.GenericSchema<unkno
 
 /** The operators an app runs with, by name: createRegistry's, for one. */
 export interface ColumnRegistry {
-  readonly operators: readonly { readonly name: string }[];
+  readonly operators: { has(name: string): boolean };
 }
 ```
 
@@ -324,7 +324,7 @@ export interface Host<F> {
 /** A template: a layout node holding nodes, or a part, a thing a record shows. */
 export type TemplateNode = LayoutNode | Part;
 
-/** Nodes laid out by a registered layout: 'flex', 'grid', 'repeat', an app's. */
+/** Nodes laid out by a registered layout: 'row', 'stack', 'grid', 'repeat', an app's. */
 export interface LayoutNode {
   layout: string;
   options?: Record<string, Json>;

@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Doc } from '../registry/types';
 import { DocView, MarkdownDoc } from './doc-view';
 
-const registry = createRegistry([]);
+const registry = noBlocks;
 
 describe('image and reference nodes', () => {
   it('renders an image with its alt text, instead of dropping it', () => {

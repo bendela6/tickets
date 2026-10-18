@@ -19,7 +19,7 @@ interface BlockSlotProps {
 export function BlockSlot({ node, renderChildren }: BlockSlotProps) {
   const { registry, doc, ctx, elements } = useDocContext();
   const ErrorCard = elements.errorCard ?? DefaultErrorCard;
-  const renderer = registry.get(node.name);
+  const renderer = registry.has(node.name) ? registry.get(node.name) : undefined;
 
   // A block whose data fails its own schema shows the card in place, so a
   // failure that slipped past validation is visible, not a normal-looking

@@ -38,7 +38,7 @@ export function countGroups(rows: readonly Row[], by: GroupBy, meta: ResourceMet
 function everyKey(path: string, meta: ResourceMeta, registry: Registry): Scalar[] {
   const [key = '', name] = path.split('.');
   const field = meta.fields.find((each) => each.key === key);
-  const option = registry.kinds.find((spec) => spec.name === 'option');
+  const option = registry.kinds.has('option') ? registry.kinds.get('option') : undefined;
   const parsed =
     field?.type.kind === 'option' && option?.settings
       ? v.safeParse(option.settings, field.type.settings)

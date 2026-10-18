@@ -6,7 +6,7 @@ import type { OperatorSpec } from './types';
 import type { Scalar } from './values';
 
 function operator(name: string): OperatorSpec {
-  const spec = baseOperators.find((each) => each.name === name);
+  const spec = baseOperators.get(name);
   if (!spec) {
     throw new Error(`bh registers no operator "${name}"`);
   }
@@ -20,7 +20,7 @@ function passes(name: string, value: Scalar | Scalar[] | null, operand?: Scalar 
 
 /** The operand's schema `name` makes for a field of this kind. */
 function operandOf(name: string, kind: string) {
-  const spec = baseKinds.find((each) => each.name === kind);
+  const spec = baseKinds.get(kind);
   const make = operator(name).operand;
   if (!spec || !make) {
     throw new Error(`no operand for "${name}" on ${kind}`);
@@ -30,7 +30,7 @@ function operandOf(name: string, kind: string) {
 
 describe('bh’s operators', () => {
   it('are fifteen entries, each once, each with its label', () => {
-    expect(baseOperators.map((spec) => [spec.name, spec.label])).toEqual([
+    expect(baseOperators.values().map((spec) => [spec.name, spec.label])).toEqual([
       ['equals', 'is'],
       ['notEquals', 'is not'],
       ['in', 'is any of'],
@@ -50,7 +50,8 @@ describe('bh’s operators', () => {
   });
 
   it('are frozen: an app adds its own beside them, never changes them', () => {
-    expect(() => (baseOperators as OperatorSpec[]).push(operator('in'))).toThrow(TypeError);
+    expect(Object.isFrozen(baseOperators)).toBe(true);
+    expect(() => (baseOperators.names as string[]).push('odd')).toThrow(TypeError);
     expect(() => {
       operator('in').label = 'is one of';
     }).toThrow(TypeError);
@@ -61,6 +62,7 @@ describe('bh’s operators', () => {
 
   it('have words of their own for dates and times, and for lists', () => {
     const words = baseOperators
+      .values()
       .filter((spec) => spec.labels)
       .map((spec) => [spec.name, spec.labels]);
     const onDates = (said: string) => ({ kinds: { date: said, time: said, datetime: said } });
@@ -127,7 +129,7 @@ describe('each operator’s operand', () => {
   });
 
   it('is an option field’s own options for in', () => {
-    const kind = baseKinds.find((each) => each.name === 'option');
+    const kind = baseKinds.get('option');
     const settings = { options: [{ value: 'todo', label: 'To do', order: 0 }] };
     const schema = operator('in').operand?.(kind?.value(settings) ?? v.never()) ?? v.never();
     expect(v.is(schema, ['todo'])).toBe(true);

@@ -2,7 +2,7 @@ import { defineForm, defineRegistry, Form, type FieldNode } from '@bh/form';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { FieldWrapper } from '../components/field-wrapper';
-import { baseInputs, baseLayouts, type InputKind } from '../registry';
+import { baseInputs, baseLayouts, type BaseInputs, type InputKind } from '../registry';
 
 // In an `inline` row, the pickers draw their field's label inside the
 // trigger, muted, and an empty one reads its placeholder: "Type: any".
@@ -35,7 +35,7 @@ function renderRow(type: InputKind, config: object, value?: unknown, inline = tr
     type,
     label: 'Type',
     config: { ...config, placeholder: 'any' },
-  } as FieldNode<typeof baseInputs>;
+  } as FieldNode<BaseInputs>;
   const form = defineForm(registry).build(() => {
     return inline ? [{ kind: 'inline', props: {}, children: [field] }] : [field];
   });

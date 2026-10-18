@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Renderer } from '../registry/types';
 import { validateDocument } from '../validate';
 import { scanBlocks } from './scanner';
@@ -49,7 +49,7 @@ describe('validateDocument — warns about the directive cases above', () => {
     examples: [':::warning\nx\n:::'],
     component: () => null,
   };
-  const registry = createRegistry([warning]);
+  const registry = noBlocks.register({ warning });
 
   it('warns on the directive indented inside a list item', () => {
     const src = ['- item', '  :::warning', '  body', '  :::'].join('\n');

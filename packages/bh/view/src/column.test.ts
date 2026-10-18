@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { createRegistry, issuesOf, type OperatorSpec } from '@bh/resource';
+import { baseOperators, createRegistry, issuesOf, type OperatorSpec } from '@bh/resource';
 import {
   Column,
   ColumnFixed,
@@ -28,7 +28,7 @@ const name = {
     filter: { field: 'title', op: 'contains', control: 'text' },
   },
   template: {
-    layout: 'flex',
+    layout: 'row',
     options: { gap: 2 },
     nodes: [{ text: '{project}-{number}', options: { mono: true } }, { field: 'title' }],
   },
@@ -371,7 +371,7 @@ describe('a wrong column is refused, at its path', () => {
     ],
     [
       'a layout holding no nodes',
-      { ...status, template: { layout: 'flex' } },
+      { ...status, template: { layout: 'row' } },
       ['template'],
       /a layout node holding nodes/,
     ],
@@ -428,8 +428,13 @@ describe('columnOf', () => {
 
   it('takes an app’s own operator from its registry', () => {
     const condition = withFilter({ op: 'between' });
-    expect(refusals(condition, columnOf(createRegistry({ operators: [between] })))).toEqual([]);
-    const operators: ColumnRegistry = { operators: [{ name: 'in' }] };
+    expect(
+      refusals(
+        condition,
+        columnOf(createRegistry({ operators: baseOperators.register({ between }) })),
+      ),
+    ).toEqual([]);
+    const operators: ColumnRegistry = { operators: { has: (name) => name === 'in' } };
     expect(refusals(status, columnOf(operators))).toEqual([]);
     expect(refusals(withFilter({ op: 'notIn' }), columnOf(operators))).toEqual([
       { path: ['fixed', 'filter', 'op'], message: 'no operator "notIn"' },

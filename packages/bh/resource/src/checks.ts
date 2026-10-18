@@ -55,15 +55,15 @@ function reportRefusals(
 }
 
 function kindOf(registry: Registry, name: string): KindSpec | undefined {
-  return registry.kinds.find((spec) => spec.name === name);
+  return registry.kinds.has(name) ? registry.kinds.get(name) : undefined;
 }
 
 function operatorOf(registry: Registry, name: string): OperatorSpec | undefined {
-  return registry.operators.find((spec) => spec.name === name);
+  return registry.operators.has(name) ? registry.operators.get(name) : undefined;
 }
 
 function formatOf(registry: Registry, name: string): FormatSpec | undefined {
-  return registry.formats.find((spec) => spec.name === name);
+  return registry.formats.has(name) ? registry.formats.get(name) : undefined;
 }
 
 /** The attributes an option field's options carry; [] for any other field. */

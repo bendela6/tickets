@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { defineRegistry } from '../builder/define-registry';
 import { Form } from '../runtime/Form';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 function TextInput(p: InputProps<{ options?: string[] }, string>) {
   return (
@@ -21,8 +22,8 @@ function Field({ children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: { text: { Component: TextInput, defaultValue: '' } },
-  layouts: {},
+  inputs: noInputs.register({ text: { Component: TextInput, defaultValue: '' } }),
+  layouts: noLayouts,
   field: { Component: Field },
 });
 

@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { Sort } from './query';
-import { createKindRegistry } from './registry';
+import { baseKinds } from './kinds';
 import type { ResourceMeta } from './meta';
 import type { OptionMeta } from './schemas';
 import type { BaseKind, FieldMeta, KindValue, Operator, OperatorSpec } from './types';
@@ -120,7 +120,7 @@ describe('the metadata’s shapes', () => {
   });
 
   it('check a field’s settings, operators and default by its kind', () => {
-    const kinds = createKindRegistry();
+    const kinds = baseKinds;
     for (const field of items.fields) {
       const kind = kinds.get(field.type.kind);
       expect(kind, field.key).toBeDefined();

@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { Scalar, Sort } from '@bh/resource';
-import type { BaseLayouts, Layouts } from '@bh/template';
+import type { AnyLayouts, Layouts } from '@bh/template';
 import type { Column } from './column';
 import { nameOf, namedOnce, pixels, recordOf } from './schemas';
 import { FilterValue, type TableView, type View } from './view';
@@ -117,7 +117,7 @@ function columnsIn<L extends Layouts<L>>(view: View<L>): Column<L>[] {
  * const opened = resolveState(view, v.parse(ViewState, stored));
  * ```
  */
-export function resolveState<L extends Layouts<L> = BaseLayouts>(
+export function resolveState<L extends Layouts<L> = AnyLayouts>(
   view: View<L>,
   state: ViewState = {},
 ): ResolvedState {
@@ -152,7 +152,7 @@ export function resolveState<L extends Layouts<L> = BaseLayouts>(
  * A table view's columns as its reader left them: in their order, each one's
  * `hidden` the reader's, or the view's when the reader didn't say.
  */
-export function columnsOf<L extends Layouts<L> = BaseLayouts>(
+export function columnsOf<L extends Layouts<L> = AnyLayouts>(
   view: TableView<L>,
   state?: ViewState,
 ): Column<L>[] {

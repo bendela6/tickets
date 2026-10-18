@@ -18,6 +18,7 @@ import type { CommitChange } from '../types/commit';
 import type { FormConfig } from '../types/form-config';
 import type {
   ActionProps,
+  AnyInputs,
   FormRegistry,
   InputRegistry,
   LayoutComponentRegistry,
@@ -111,9 +112,9 @@ const LOCKED = '@locked';
 function withLocked<I extends InputRegistry, L extends LayoutComponentRegistry>(
   form: FormConfig<I, L>,
   locked: readonly Filter[],
-  inputs: InputRegistry,
+  inputs: AnyInputs,
 ): FormConfig<I, L> {
-  if (locked.length === 0 || !('rules' in inputs)) {
+  if (locked.length === 0 || !inputs.has('rules')) {
     return form;
   }
   const field = {
@@ -248,9 +249,14 @@ const WHOLE: Part = { drawsLocked: true, hidden: [], scoped: false, countsLabel:
 const NONE: readonly Filter[] = [];
 
 /** The options folding and spreading take: the operators, and each field's empty value. */
-function useFilterOptions(inputs: InputRegistry, operators: OperatorRegistry): FilterOptions {
+function useFilterOptions(inputs: AnyInputs, operators: OperatorRegistry): FilterOptions {
   return useMemo<FilterOptions>(() => {
-    return { operators, emptyOf: (field) => inputs[field.type]?.defaultValue };
+    return {
+      operators,
+      emptyOf: (field) => {
+        return inputs.has(field.type) ? inputs.get(field.type).defaultValue : undefined;
+      },
+    };
   }, [inputs, operators]);
 }
 
@@ -350,8 +356,9 @@ function NarrowForm<I extends InputRegistry, L extends LayoutComponentRegistry>(
     const nodes = split.sheet.nodes as unknown as AnyNodes;
     const fields = nodes.filter((node) => node.kind !== 'action');
     const actions = nodes.filter((node) => node.kind === 'action');
-    const row =
-      'actions' in registry.layouts ? [{ kind: 'actions', props: {}, children: actions }] : actions;
+    const row = registry.layouts.has('actions')
+      ? [{ kind: 'actions', props: {}, children: actions }]
+      : actions;
     return { ...split.sheet, nodes: [...fields, ...row] };
   }, [split, registry]);
 
@@ -660,7 +667,7 @@ function FilterBody<I extends InputRegistry, L extends LayoutComponentRegistry>(
         }
       : undefined;
     const config = fillFilterForm(
-      withLocked(form, drawn, registry.inputs as InputRegistry),
+      withLocked(form, drawn, registry.inputs),
       { meta, operators, kinds, ...(optionsFor ? { optionsFor } : {}) },
       { counts, values: spread.values },
     );

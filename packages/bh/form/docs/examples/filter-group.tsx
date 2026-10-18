@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -144,9 +142,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 

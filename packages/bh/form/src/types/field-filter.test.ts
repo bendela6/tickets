@@ -1,17 +1,19 @@
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 import { defineRegistry } from '../builder/define-registry';
 import { defineForm } from '../builder/define-form';
 import type { FieldFilter, Preset } from './field-filter';
 import type { FieldNode } from './field-node';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const Stub = () => null;
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: Stub as never, defaultValue: '' },
     select: { Component: Stub as never, defaultValue: null },
     chips: { Component: Stub as never, defaultValue: [] as string[] },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: Stub as never },
 });
 
@@ -48,7 +50,7 @@ describe('FieldFilter', () => {
   });
 
   test('is a key of every field, and the builder passes it through', () => {
-    expectTypeOf<FieldNode<typeof registry.inputs>['filter']>().toEqualTypeOf<
+    expectTypeOf<FieldNode<EntriesOf<typeof registry.inputs>>['filter']>().toEqualTypeOf<
       FieldFilter | undefined
     >();
     const form = defineForm(registry).build((b) => {

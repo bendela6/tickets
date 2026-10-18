@@ -35,8 +35,6 @@ joined by `all`. The demo's rows are filtered in the browser, by
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -178,9 +176,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 
@@ -307,8 +304,6 @@ without calling `onChange`.
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -450,9 +445,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 
@@ -522,8 +516,6 @@ there, and in no other field.
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -665,9 +657,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 
@@ -745,8 +736,6 @@ change, until Clear.
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -888,9 +877,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 
@@ -979,8 +967,6 @@ a pause after each change. Its Clear empties its own fields only.
 import { useState } from 'react';
 import { defineForm, defineRegistry, FilterForm, type FilterQuery, FormProvider } from '@bh/form';
 import {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
   type FieldMeta,
   matchesFilter,
@@ -1122,9 +1108,8 @@ const ROWS: Row[] = [
   },
 ];
 
-const operators = createOperatorRegistry();
-const kinds = createKindRegistry([], operators);
 const contract = createRegistry();
+const { operators, kinds } = contract;
 // The reader, as `isMe` knows them.
 const ME = 'u1';
 
@@ -1470,6 +1455,8 @@ What folding and spreading a filter take besides the nodes and the value.
 From [`@bh/resource`](../../../shared/resource/docs/contract.md):
 
 ```ts
+import type { RegistryOf } from '@bh/registry';
+
 /** A registered operator's name: one of bh's fifteen or an app's own. */
 export type Operator = string;
 
@@ -1520,17 +1507,11 @@ export interface KindSpec {
   // …its value's schema, its settings, sort and group
 }
 
-/** The operators an app runs with, bh's and its own, by name. */
-export interface OperatorRegistry {
-  readonly operators: readonly OperatorSpec[];
-  get(name: Operator): OperatorSpec | undefined;
-}
+/** The operators an app runs with, bh's and its own, by name: baseOperators, for one. */
+export type OperatorRegistry = RegistryOf<OperatorSpec>;
 
-/** The kinds an app runs with, bh's and its own, by name. */
-export interface KindRegistry {
-  readonly kinds: readonly KindSpec[];
-  get(name: string): KindSpec | undefined;
-}
+/** The kinds an app runs with, bh's and its own, by name: baseKinds, for one. */
+export type KindRegistry = RegistryOf<KindSpec>;
 ```
 
 The whole of each is on [`@bh/resource`'s page](../../../shared/resource/docs/contract.md).

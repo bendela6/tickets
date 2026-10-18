@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import * as v from 'valibot';
@@ -8,6 +9,7 @@ import type { FormConfig } from '../types/form-config';
 import type { FieldWrapperProps, InputProps, InputRegistry } from '../types/registry';
 import { schemaToFormConfig } from '../valibot/schema-to-form-config';
 import { defaultValuesOf, NestedFields, useFormRegistry } from './nested-fields';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const TextInput = (p: InputProps<object, string>) => {
   return (
@@ -60,11 +62,11 @@ function FieldStub({ name, label, error, children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
     list: { Component: ListInput, defaultValue: [] as Item[] },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: FieldStub },
 });
 
@@ -83,7 +85,7 @@ describe('<NestedFields>', () => {
     render(
       <Form
         registry={registry}
-        form={schemaToFormConfig<typeof registry.inputs>(SCHEMA)}
+        form={schemaToFormConfig<EntriesOf<typeof registry.inputs>>(SCHEMA)}
         defaultValues={{ shortcuts: [{ keys: 'Ctrl+K', action: 'Search' }] }}
         onSubmit={onSubmit}
       >
@@ -112,7 +114,7 @@ describe('<NestedFields>', () => {
     render(
       <Form
         registry={registry}
-        form={schemaToFormConfig<typeof registry.inputs>(SCHEMA)}
+        form={schemaToFormConfig<EntriesOf<typeof registry.inputs>>(SCHEMA)}
         defaultValues={{ shortcuts: [{ keys: '', action: '' }] }}
       />,
     );

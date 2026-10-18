@@ -1,4 +1,3 @@
-import { createRegistry } from '../../registry';
 import { MarkdownDoc } from '../../render';
 import { pageMarkdown, parsePage } from '../../page';
 import { validateDocument } from '../../validate';
@@ -7,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { markdownBlocks } from '..';
 import { chordOf } from './schema';
 
-const registry = createRegistry(markdownBlocks);
+const registry = markdownBlocks;
 
 const page = [
   'body:',

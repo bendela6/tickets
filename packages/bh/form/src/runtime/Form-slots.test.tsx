@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import type { ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -9,6 +10,7 @@ import { defineRegistry } from '../builder/define-registry';
 import { defineForm } from '../builder/define-form';
 import type { FieldWrapperProps, InputProps, LayoutComponentProps } from '../types/registry';
 import type { FormConfig } from '../types/form-config';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const TextInput = (p: InputProps<object, string>) => {
   return (
@@ -29,11 +31,11 @@ function Box({ children }: LayoutComponentProps<Record<string, never>>) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
     list: { Component: ListInput, defaultValue: [] as Record<string, unknown>[] },
-  },
-  layouts: { box: { Component: Box } },
+  }),
+  layouts: noLayouts.register({ box: { Component: Box } }),
   field: { Component: FieldStub },
 });
 
@@ -112,7 +114,10 @@ describe('slot nodes', () => {
   });
 
   test('a slot in plain data is drawn as the builder’s is', () => {
-    const data: FormConfig<typeof registry.inputs, typeof registry.layouts> = {
+    const data: FormConfig<
+      EntriesOf<typeof registry.inputs>,
+      EntriesOf<typeof registry.layouts>
+    > = {
       nodes: [
         { kind: 'slot', name: 'count' },
         { kind: 'field', name: 'first', type: 'text', config: {} },
@@ -129,15 +134,15 @@ describe('defineRegistry', () => {
   test('refuses a layout, or an input, named slot', () => {
     expect(() => {
       return defineRegistry({
-        inputs: {},
-        layouts: { slot: { Component: Box } },
+        inputs: noInputs,
+        layouts: noLayouts.register({ slot: { Component: Box } }),
         field: { Component: FieldStub },
       });
     }).toThrow('"slot"');
     expect(() => {
       return defineRegistry({
-        inputs: { slot: { Component: TextInput } },
-        layouts: {},
+        inputs: noInputs.register({ slot: { Component: TextInput } }),
+        layouts: noLayouts,
         field: { Component: FieldStub },
       });
     }).toThrow('"slot"');

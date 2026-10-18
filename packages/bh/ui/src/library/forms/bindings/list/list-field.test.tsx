@@ -4,7 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import * as v from 'valibot';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldWrapper } from '../../components/field-wrapper';
-import { baseInputs, baseLayouts } from '../../registry';
+import { baseInputs, baseLayouts, type BaseInputs } from '../../registry';
 
 const registry = defineRegistry({
   inputs: baseInputs,
@@ -24,7 +24,7 @@ const SCHEMA = v.object({
 
 function renderForm(defaultValues: Record<string, unknown>) {
   const onSubmit = vi.fn();
-  const config = schemaToFormConfig<typeof baseInputs>(SCHEMA, {
+  const config = schemaToFormConfig<BaseInputs>(SCHEMA, {
     shortcuts: { config: { itemLabel: 'Shortcut' } },
   });
   render(

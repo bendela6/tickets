@@ -1,6 +1,8 @@
 import * as v from 'valibot';
+import { defineRegistry } from '@bh/registry';
 import type { FieldType, OperatorSpec } from './types';
 import type { Scalar } from './values';
+import { functionSchema, labelSchema, nameSchema } from './words';
 
 // bh's fifteen operators: entries of the operator registry like an app's own,
 // with no type or table of their names beside them. Each kind names the ones
@@ -146,6 +148,26 @@ function onDates(words: string): NonNullable<OperatorSpec['labels']> {
   return { kinds: { date: words, time: words, datetime: words } };
 }
 
+/**
+ * What the operator registry checks of each operator: a word for its name,
+ * a label and labels that say something, its operand's schema from a
+ * function, and its `matches`.
+ */
+export const operatorData = v.object({
+  name: nameSchema,
+  label: labelSchema,
+  labels: v.optional(
+    v.object({
+      many: v.optional(labelSchema),
+      kinds: v.optional(v.record(v.string(), labelSchema)),
+    }),
+  ),
+  operand: v.optional(functionSchema<OperatorSpec['operand']>('its operand')),
+  matches: functionSchema<OperatorSpec['matches']>('its matches'),
+});
+
+const operators = defineRegistry<OperatorSpec>({ name: 'operator', schema: operatorData });
+
 /** One of bh's operators, frozen, its words too: an app adds its own beside them, never changes them. */
 function operator(spec: OperatorSpec): OperatorSpec {
   if (spec.labels) {
@@ -158,8 +180,8 @@ function operator(spec: OperatorSpec): OperatorSpec {
 /**
  * The fifteen operators bh registers, in this order: equals, notEquals, in,
  * notIn, contains, startsWith, lt, lte, gt, gte, inLast, notInLast, empty,
- * notEmpty and isMe. An app's own go beside them through
- * createOperatorRegistry. Their rules hold for `matches` and for each
+ * notEmpty and isMe, a registry (@bh/registry). An app registers its own
+ * beside them: `baseOperators.register({ near: { … } })`. Their rules hold for `matches` and for each
  * adapter's SQL alike:
  *
  * - On a many field, `in` holds when the row holds any of the values, `notIn`
@@ -184,84 +206,93 @@ function operator(spec: OperatorSpec): OperatorSpec {
  *   field's, when it holds them), so a saved view's "Mine" means whoever opens
  *   it; with no one signed in, it holds for no row.
  */
-export const baseOperators: readonly OperatorSpec[] = Object.freeze([
-  operator({ name: 'equals', label: 'is', operand: one, matches: (a, b) => a === b }),
-  operator({ name: 'notEquals', label: 'is not', operand: one, matches: (a, b) => a !== b }),
-  operator({
+export const baseOperators = operators.register({
+  equals: operator({ name: 'equals', label: 'is', operand: one, matches: (a, b) => a === b }),
+  notEquals: operator({
+    name: 'notEquals',
+    label: 'is not',
+    operand: one,
+    matches: (a, b) => a !== b,
+  }),
+  in: operator({
     name: 'in',
     label: 'is any of',
     labels: { many: 'has any of' },
     operand: some,
     matches: holdsAny,
   }),
-  operator({
+  notIn: operator({
     name: 'notIn',
     label: 'is none of',
     labels: { many: 'has none of' },
     operand: some,
     matches: (a, b) => !holdsAny(a, b),
   }),
-  operator({
+  contains: operator({
     name: 'contains',
     label: 'contains',
     operand: term,
     matches: (a, b) => text(a, b, (value, looked) => value.includes(looked)),
   }),
-  operator({
+  startsWith: operator({
     name: 'startsWith',
     label: 'starts with',
     operand: term,
     matches: (a, b) => text(a, b, (value, looked) => value.startsWith(looked)),
   }),
-  operator({
+  lt: operator({
     name: 'lt',
     label: 'is less than',
     labels: onDates('is before'),
     operand: one,
     matches: (a, b) => sits(a, b, (at) => at < 0),
   }),
-  operator({
+  lte: operator({
     name: 'lte',
     label: 'is at most',
     labels: onDates('is on or before'),
     operand: one,
     matches: (a, b) => sits(a, b, (at) => at <= 0),
   }),
-  operator({
+  gt: operator({
     name: 'gt',
     label: 'is more than',
     labels: onDates('is after'),
     operand: one,
     matches: (a, b) => sits(a, b, (at) => at > 0),
   }),
-  operator({
+  gte: operator({
     name: 'gte',
     label: 'is at least',
     labels: onDates('is on or after'),
     operand: one,
     matches: (a, b) => sits(a, b, (at) => at >= 0),
   }),
-  operator({
+  inLast: operator({
     name: 'inLast',
     label: 'is in the last',
     operand: days,
     matches: (a, b) => listOf(a).some((each) => within(each, b) === true),
   }),
-  operator({
+  notInLast: operator({
     name: 'notInLast',
     label: 'is not in the last',
     operand: days,
     // No value, or none in the last days: [] and null pass as `every` of none.
     matches: (a, b) => listOf(a).every((each) => within(each, b) === false),
   }),
-  operator({ name: 'empty', label: 'is empty', matches: (a) => listOf(a).length === 0 }),
-  operator({ name: 'notEmpty', label: 'is not empty', matches: (a) => listOf(a).length > 0 }),
-  operator({
+  empty: operator({ name: 'empty', label: 'is empty', matches: (a) => listOf(a).length === 0 }),
+  notEmpty: operator({
+    name: 'notEmpty',
+    label: 'is not empty',
+    matches: (a) => listOf(a).length > 0,
+  }),
+  isMe: operator({
     name: 'isMe',
     label: 'is me',
     matches: (a, _, viewer) => viewer !== undefined && listOf(a).includes(viewer),
   }),
-]);
+});
 
 /**
  * How a filter reads an operator on a field of this type: its words for the

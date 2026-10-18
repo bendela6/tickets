@@ -1,6 +1,5 @@
 import {
   BlockErrorCard,
-  createRegistry,
   markdownBlocks,
   MarkdownDoc,
   type MarkdownElements,
@@ -24,7 +23,7 @@ const priceBlock: Renderer<string> = {
   },
 };
 
-const registry = createRegistry([...markdownBlocks, priceBlock]);
+const registry = markdownBlocks.register({ price: priceBlock });
 
 const elements: MarkdownElements = {
   h2: (p) => <h2 {...p} className="text-15 font-600 text-gray-12" />,

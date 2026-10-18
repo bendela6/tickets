@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import * as v from 'valibot';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldWrapper } from './components/field-wrapper';
-import { baseInputs, baseLayouts, type InputKind } from './registry';
+import { baseInputs, baseLayouts, type BaseInputs, type InputKind } from './registry';
 
 const registry = defineRegistry({
   inputs: baseInputs,
@@ -13,14 +13,12 @@ const registry = defineRegistry({
 });
 
 // A list and an object draw fields of their own, each described by its own help.
-const KINDS = (Object.keys(baseInputs) as InputKind[]).filter(
-  (kind) => kind !== 'list' && kind !== 'object',
-);
+const KINDS = [...baseInputs.names].filter((kind) => kind !== 'list' && kind !== 'object');
 
 function renderField(type: InputKind, extra: Record<string, unknown> = {}) {
   // One kind at a time, so its node cannot be typed as any one kind's.
   const field = { kind: 'field', name: 'pick', type, label: 'Pick', config: {}, ...extra };
-  const node = field as FieldNode<typeof baseInputs>;
+  const node = field as FieldNode<BaseInputs>;
   return render(
     <Form registry={registry} form={{ nodes: [node] }} onSubmit={vi.fn()}>
       <button type="submit">Save</button>
@@ -50,7 +48,7 @@ describe('a form field', () => {
   });
 
   it('inside an object is described by its own help', () => {
-    const config = schemaToFormConfig<typeof baseInputs>(
+    const config = schemaToFormConfig<BaseInputs>(
       v.object({
         size: v.object({
           width: v.pipe(v.number(), v.title('Width'), v.description('In pixels.')),
@@ -97,7 +95,7 @@ describe('a form field whose options fail to load', () => {
     render(
       <Form
         registry={registry}
-        form={{ nodes: [field as FieldNode<typeof baseInputs>] }}
+        form={{ nodes: [field as FieldNode<BaseInputs>] }}
         onSubmit={vi.fn()}
       />,
     );

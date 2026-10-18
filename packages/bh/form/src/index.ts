@@ -3,7 +3,13 @@ export type { WhenClause } from './types/when';
 export type { AsyncResolver, MaybeAsync, AuthorConfig } from './types/async-config';
 export { isAsyncResolver } from './types/async-config';
 export { defineRegistry } from './builder/define-registry';
+export { noInputs, noLayouts } from './builder/registries';
 export type {
+  AnyFormRegistry,
+  AnyInputs,
+  AnyLayouts,
+  FormInputs,
+  FormLayouts,
   InputDefinition,
   InputProps,
   InputRegistry,

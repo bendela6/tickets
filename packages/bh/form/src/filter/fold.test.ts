@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { createOperatorRegistry } from '@bh/resource';
+import { baseOperators } from '@bh/resource';
 import type { FieldFilter } from '../types/field-filter';
 import type { LayoutNode } from '../types/layout-node';
 import type { InputRegistry, LayoutComponentRegistry } from '../types/registry';
@@ -91,9 +91,9 @@ describe('foldFilter', () => {
     });
 
     test('reads which operators take no operand from the registry it’s given', () => {
-      const operators = createOperatorRegistry([
-        { name: 'flagged', label: 'is flagged', matches: () => true },
-      ]);
+      const operators = baseOperators.register({
+        flagged: { name: 'flagged', label: 'is flagged', matches: () => true },
+      });
       const nodes = [field('flag', { op: 'flagged' })];
       expect(foldFilter(nodes, { flag: true }, { operators }).filter).toEqual({
         all: [{ field: 'flag', op: 'flagged' }],

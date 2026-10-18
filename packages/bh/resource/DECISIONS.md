@@ -5,9 +5,11 @@ a source serves it.
 
 ## Made (in the working tree, tests green)
 
-- **Markdown and rich text are kinds, not text formats.** A format only
+- **Markdown and rich text are kinds, not only text formats.** A format only
   changes how a value shows; these need their own input, their own checks
-  and their own search. A rich text's value is its Tiptap JSON, as text.
+  and their own search. A rich text's value is its Tiptap JSON, as text. Each
+  kind's default format is the text format of its own name, `markdown` and
+  `rich` (@bh/template, TK-79.4), which write the words of the text.
 - **Six new kinds**: markdown, richtext, email, phone (E.164), time
   (`HH:mm`, no zone), file (`{ url, name, size, type }`). bh registers
   fifteen.
@@ -99,6 +101,5 @@ a source serves it.
 - `serve` doesn't fill a templated field yet: a source reads it as none.
 - Postgres: a keyset cursor; a sort by a ref, by the title it points at (a
   join); an attribute of a field holding many options.
-- TK-79.4 (tickets) still lists `markdown` and `rich` as text formats, and
-  the contract's docs (contract.doc.yaml, the resource README) still say
+- The contract's docs (contract.doc.yaml, the resource README) still say
   nine kinds.

@@ -55,11 +55,13 @@ whether it sorts, groups and is searched.
 | ref      | yes  | yes  | yes   | -      | -        |
 | json     | -    | -    | -     | -      | -        |
 
-An app registers its own beside them, and looks every kind up by name there:
+They are a registry (`@bh/registry`): an app registers its own beside them,
+which gives a new registry and leaves bh's as they are, and looks every kind
+up by name there:
 
 ```ts
 import * as v from 'valibot';
-import { createKindRegistry, type KindSpec } from '@bh/resource';
+import { baseKinds, type KindSpec } from '@bh/resource';
 
 const color: KindSpec = {
   name: 'color',
@@ -71,14 +73,17 @@ const color: KindSpec = {
   search: false,
 };
 
-export const kinds = createKindRegistry([color]);
+export const kinds = baseKinds.register({ color });
 
-kinds.get('option')?.value({ options: [{ value: 'todo', label: 'To do', order: 0 }] });
+kinds.get('option').value({ options: [{ value: 'todo', label: 'To do', order: 0 }] });
 ```
 
-A kind named as one of bh's, or two of the app's named alike, throw: no kind
-is replaced unseen. So does a kind allowing an operator nothing registered,
-so a misspelt name fails at start, not in a query. bh's own are frozen.
+`get` throws for a kind nothing registered; `has` asks first. A kind named as
+one taken already throws, so none is replaced unseen, and so does one without
+a word for its name, a value schema, or with an operator named twice
+(`kindData`). A kind allowing an operator nothing registered throws when the
+registry is built (`createRegistry`), so a misspelt name fails at start, not
+in a query. bh's own are frozen.
 
 ## Operators
 
@@ -126,12 +131,12 @@ A ref to anything but people leaves `isMe` out of its field's `query.filter`.
 words first (`lt` on a date is "is before"), then a list's (`in` on a many
 field is "has any of"), then its label.
 
-An app registers its own operators, and builds its kinds against them (`color`
+An app registers its own operators beside bh's, as it does its kinds (`color`
 as above):
 
 ```ts
 import * as v from 'valibot';
-import { createKindRegistry, createOperatorRegistry, type OperatorSpec } from '@bh/resource';
+import { baseKinds, baseOperators, type OperatorSpec } from '@bh/resource';
 
 const between: OperatorSpec = {
   name: 'between',
@@ -142,11 +147,13 @@ const between: OperatorSpec = {
     Array.isArray(b) && typeof a === 'number' && Number(b[0]) <= a && a <= Number(b[1]),
 };
 
-export const operators = createOperatorRegistry([between]);
-export const kinds = createKindRegistry([color], operators);
+export const operators = baseOperators.register({ between });
+export const kinds = baseKinds.register({ color });
 ```
 
-An operator named as one of bh's, or two of the app's named alike, throw.
+An operator named as one taken already throws, and so does one without a
+word for its name, a label that says something, or its `matches`
+(`operatorData`).
 
 ## The query
 
@@ -283,19 +290,20 @@ if (!result.success) {
 
 ## Checked against a resource
 
-An app builds one `Registry` at start: bh's kinds and operators, its own
-beside them, and the formats. `createRegistry` checks it as it builds it, so a
+An app builds one `Registry` at start: the kinds, the operators and the
+formats, each a registry, bh's kinds and operators when it leaves them out.
+`createRegistry` checks them against each other as it builds it, so a
 misspelt operator or a format for a kind nothing registered fails at start,
-not in a query. bh's formats come with `@bh/template` (TK-79.4), which builds
-on this package, so this one registers none: an app passes them in, its own
-beside them, and gets them back typed as it gave them
-(`Registry<Format extends FormatSpec>`).
+not in a query. bh's formats come with `@bh/template` (`baseFormats`), which
+builds on this package, so this one registers none: an app passes them in
+(`baseFormats.register({ rate })`), its own beside them, and gets them back
+typed as it gave them (`Registry<Format extends FormatSpec>`).
 
 ```ts
 import * as v from 'valibot';
 import { createRegistry, metaOf, queryOf } from '@bh/resource';
 
-export const registry = createRegistry({ kinds: [color], operators: [between], formats });
+export const registry = createRegistry({ kinds, operators, formats });
 
 v.parse(metaOf(registry), items); // at start: throws on metadata the registry can't serve
 const query = v.safeParse(queryOf(items, registry), body); // on each request

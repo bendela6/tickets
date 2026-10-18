@@ -11,8 +11,8 @@ body:
     `toPrompt(renderers, options)` writes every block a model may use, as
     markdown, in name order: its name, its description, how it is written,
     its data as JSON Schema when you pass a converter, and its examples.
-    `registry.toPrompt(options)` is the same over a registry's blocks. It
-    comes in two forms, for the two ways a page writes a block:
+    Over a registry's blocks, it is `toPrompt(registry.values(), options)`.
+    It comes in two forms, for the two ways a page writes a block:
 
     - **`markdown`**, the default, for a [markdown document](/markdown/markdown-documents).
       Each block says what its body is: `YAML`, `markdown`,

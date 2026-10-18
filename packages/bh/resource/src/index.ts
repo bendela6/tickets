@@ -42,12 +42,11 @@ export {
 export { Create, Patch } from './writes';
 export { ActionInput, ActionMeta, ActionResult, Job, type JobStatus } from './actions';
 export { ErrorBody, Issue, issuesOf, type ErrorCode } from './errors';
-export { baseOperators, operatorLabel } from './operators';
-export { baseKinds } from './kinds';
+export { baseOperators, operatorData, operatorLabel } from './operators';
+export { baseKinds, kindData } from './kinds';
 export {
-  createKindRegistry,
-  createOperatorRegistry,
   createRegistry,
+  formatData,
   type KindRegistry,
   type OperatorRegistry,
   type Registry,

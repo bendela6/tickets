@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Renderer } from '../registry/types';
 import { MarkdownDoc } from './doc-view';
 
@@ -17,7 +17,7 @@ const numbered: Renderer<{ n: number }> = {
   component: ({ data }) => <span data-testid="numbered">{data.n}</span>,
 };
 
-const registry = createRegistry([numbered]);
+const registry = noBlocks.register({ numbered });
 
 describe('BlockSlot — page-level schema validation', () => {
   it('renders a valid block normally', () => {
@@ -52,7 +52,7 @@ describe('BlockSlot — page-level schema validation', () => {
       examples: ['```counted\nn: 1\n```'],
       component: ({ data }) => <span data-testid="counted">{data.n}</span>,
     };
-    const countedRegistry = createRegistry([counted]);
+    const countedRegistry = noBlocks.register({ counted });
     const source = '```counted\nn: 1\n```';
     const { rerender } = render(<MarkdownDoc source={source} registry={countedRegistry} />);
     rerender(<MarkdownDoc source={source} registry={countedRegistry} />);
@@ -75,7 +75,7 @@ describe('BlockSlot — page-level schema validation', () => {
       examples: ['```slow\nn: 1\n```'],
       component: ({ data }) => <span data-testid="slow">{data.n}</span>,
     };
-    const slowRegistry = createRegistry([slow]);
+    const slowRegistry = noBlocks.register({ slow });
     render(<MarkdownDoc source={'```slow\nn: 1\n```'} registry={slowRegistry} />);
     expect(screen.getByTestId('slow')).toBeInTheDocument();
   });

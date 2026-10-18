@@ -63,7 +63,7 @@ function declared<R, Request, Answer>(
   // metaOf doesn't report it again.
   const filter = Object.keys(query.filter?.fields[key] ?? {}).filter((op) => {
     const at = `query.filter.fields.${key}.${op}`;
-    if (!registry.operators.some((spec) => spec.name === op)) {
+    if (!registry.operators.has(op)) {
       report(`${at}: no operator "${op}"`);
     } else if (!kind.operators.includes(op)) {
       report(`${at}: the kind "${kind.name}" can't be filtered by "${op}"`);
@@ -225,7 +225,9 @@ export function metaFrom<R, Request, Answer, Body>(
   }
 
   const metaFields: FieldMeta[] = fields.map((field) => {
-    const kind = registry.kinds.find((spec) => spec.name === field.type.kind);
+    const kind = registry.kinds.has(field.type.kind)
+      ? registry.kinds.get(field.type.kind)
+      : undefined;
     const none: FieldQuery = { filter: [], sort: false, group: false, search: false };
     const fieldQuery =
       !kind || !query

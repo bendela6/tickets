@@ -2,7 +2,7 @@ import { defineRegistry, Form, type FieldNode } from '@bh/form';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldWrapper } from './components/field-wrapper';
-import { baseInputs, baseLayouts, type InputKind } from './registry';
+import { baseInputs, baseLayouts, type BaseInputs, type InputKind } from './registry';
 
 const registry = defineRegistry({
   inputs: baseInputs,
@@ -34,7 +34,7 @@ const CASES: [InputKind, string, object][] = [
 
 function renderField(type: InputKind, config: object) {
   const field = { kind: 'field', name: 'plan', type, label: 'Plan', config };
-  const node = field as FieldNode<typeof baseInputs>;
+  const node = field as FieldNode<BaseInputs>;
   render(<Form registry={registry} form={{ nodes: [node] }} onSubmit={vi.fn()} />);
 }
 

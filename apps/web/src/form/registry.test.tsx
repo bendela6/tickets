@@ -5,7 +5,7 @@ import { formRegistry } from './registry';
 
 describe('formRegistry', () => {
   it('registers every base input', () => {
-    expect(Object.keys(formRegistry.inputs).sort()).toEqual([
+    expect(formRegistry.inputs.entries().map(([name]) => name).sort()).toEqual([
       'avatars', 'checkbox', 'checkbox-group', 'color', 'date', 'date-range',
       'duration', 'email', 'file', 'icon', 'json', 'list', 'multi-select', 'number',
       'object', 'password', 'pin', 'radio', 'range', 'rating', 'rules', 'search',
@@ -15,7 +15,7 @@ describe('formRegistry', () => {
   });
 
   it('registers the six base layouts', () => {
-    expect(Object.keys(formRegistry.layouts).sort()).toEqual([
+    expect(formRegistry.layouts.entries().map(([name]) => name).sort()).toEqual([
       'actions',
       'card',
       'column',
@@ -26,8 +26,7 @@ describe('formRegistry', () => {
   });
 
   it('the text widget renders a control wired to onChange', async () => {
-    const { text } = formRegistry.inputs;
-    const Comp = text.Component;
+    const Comp = formRegistry.inputs.get('text').Component;
     render(<Comp name="name" value="" onChange={() => {}} onBlur={() => {}} config={{ placeholder: 'tickets' }} loading={false} />);
     expect(screen.getByPlaceholderText('tickets')).toBeInTheDocument();
   });

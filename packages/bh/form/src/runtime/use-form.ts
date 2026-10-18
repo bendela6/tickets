@@ -111,7 +111,9 @@ export function useForm<R extends InputRegistry, L extends LayoutComponentRegist
   const initialValues = useMemo(() => {
     const out: Record<string, unknown> = {};
     for (const [name, node] of fields) {
-      out[name] = node.defaultValue ?? inputs?.[node.type]?.defaultValue;
+      out[name] =
+        node.defaultValue ??
+        (inputs?.has(String(node.type)) ? inputs.get(String(node.type)).defaultValue : undefined);
     }
     return { ...out, ...formDefaults, ...options.defaultValues };
   }, [fields, inputs, formDefaults, options.defaultValues]);

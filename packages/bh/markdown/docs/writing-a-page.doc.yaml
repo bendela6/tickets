@@ -81,7 +81,7 @@ body:
       YAML under it, a mapping or, for `keyboard`, a list.
     - **One attribute given by value**, for a block whose body the page
       doesn't write: `- props: Button`, `- demo: examples/loading.tsx`,
-      `- ref: parsePage`.
+      `- ref: parsePage`, `- source: baseFormats.bytes`.
     - **Markdown**: `- name: |` with markdown under it, or a list of prose
       and blocks, as `body` is.
 
@@ -136,7 +136,8 @@ body:
     the title as `# Title`, then each item in order. Prose and headings are
     written as they are; each block is written as its renderer says. A
     `code` block is a fence, a callout a GitHub alert, an example its file's
-    code under its title, a `props` or `ref` block its table from the types.
+    code under its title, a `props` or `ref` block its table from the types,
+    a `source` block the code it names, after its file and line.
 
     Commit the copy with the page. It is what GitHub, an editor's preview,
     Page as .md and a Claude session in an app read, so a page's change
@@ -151,8 +152,9 @@ body:
 
     1. **It reads cleanly**: the YAML, the frontmatter, each item's shape,
        each attribute, each block's data against its schema.
-    2. **References resolve**: every `props`, `ref` and `variants` names
-       something a bh package exports, and `variants` crosses props it can.
+    2. **References resolve**: every `props`, `ref`, `source` and `variants`
+       names something a bh package exports (a `source` may go on into an
+       exported object's keys), and `variants` crosses props it can.
     3. **Code works**: every `code` block in `ts` or `tsx` type-checks
        against the packages, with unused imports allowed. Every example
        compiles, runs, exports one component, renders, passes axe, and
@@ -187,10 +189,10 @@ body:
     its line, for the host to check, since only the host knows its pages. A
     host with pages of its own reads them the way the site does:
   - code: |
-      import { createRegistry, markdownBlocks, pageLinks, pageMarkdown, parsePage } from '@bh/markdown';
+      import { markdownBlocks, pageLinks, pageMarkdown, parsePage } from '@bh/markdown';
       import * as v from 'valibot';
 
-      const registry = createRegistry(markdownBlocks);
+      const registry = markdownBlocks;
       const meta = v.strictObject({ title: v.string(), summary: v.string() });
 
       /** A page's markdown copy, or the problems that stop it, each on its line. */

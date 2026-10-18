@@ -53,7 +53,7 @@ body:
       declare function SlugField(props: InputProps<{ prefix?: string }, string>): ReactNode;
 
       export const registry = defineRegistry({
-        inputs: { ...baseInputs, slug: { Component: SlugField, defaultValue: '' } },
+        inputs: baseInputs.register({ slug: { Component: SlugField, defaultValue: '' } }),
         layouts: baseLayouts,
         field: { Component: FieldWrapper },
         root: { Component: RootWrapper },

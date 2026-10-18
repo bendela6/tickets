@@ -1,5 +1,5 @@
 import {
-  createOperatorRegistry,
+  baseOperators,
   type Condition,
   type Filter,
   type OperatorRegistry,
@@ -30,16 +30,9 @@ export interface FilterOptions {
 /** A field of a filter form: one with a `filter` key. */
 export type FilterField = FieldNode<InputRegistry> & { filter: FieldFilter };
 
-/** bh's fifteen operators, which a fold reads when it's given none. */
-let base: OperatorRegistry | undefined;
-
-/** The operators given, else bh's own. */
+/** The operators given, else bh's fifteen, which a fold reads when it's given none. */
 export function operatorsOr(operators: OperatorRegistry | undefined): OperatorRegistry {
-  if (operators) {
-    return operators;
-  }
-  base ??= createOperatorRegistry();
-  return base;
+  return operators ?? baseOperators;
 }
 
 /**
@@ -48,7 +41,7 @@ export function operatorsOr(operators: OperatorRegistry | undefined): OperatorRe
  * one.
  */
 export function takesNoOperand(op: string, operators: OperatorRegistry): boolean {
-  const spec = operators.get(op);
+  const spec = operators.has(op) ? operators.get(op) : undefined;
   return spec !== undefined && spec.operand === undefined;
 }
 

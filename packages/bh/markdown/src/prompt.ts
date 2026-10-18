@@ -26,7 +26,17 @@ function fenceFor(example: string): string {
 /** A lookup of the renderers given, for reading their examples. */
 export function lookupOf(renderers: readonly AnyRenderer[]): RendererLookup {
   const byName = new Map(renderers.map((renderer) => [renderer.name, renderer]));
-  return { get: (name) => byName.get(name), names: () => new Set(byName.keys()) };
+  return {
+    names: [...byName.keys()],
+    has: (name) => byName.has(name),
+    get: (name) => {
+      const renderer = byName.get(name);
+      if (renderer === undefined) {
+        throw new Error(`No block is registered as "${name}".`);
+      }
+      return renderer;
+    },
+  };
 }
 
 /** An example's heading line and note, as both forms write them. */

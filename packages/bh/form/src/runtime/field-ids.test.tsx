@@ -6,6 +6,7 @@ import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
 import { fieldIds } from './field-ids';
 import { Form } from './Form';
+import { noInputs, noLayouts } from '../builder/registries';
 
 function TextInput(p: InputProps<object, string>) {
   return (
@@ -30,8 +31,8 @@ function Field({ description, error, descriptionId, errorId, children }: FieldWr
 }
 
 const registry = defineRegistry({
-  inputs: { text: { Component: TextInput, defaultValue: '' } },
-  layouts: {},
+  inputs: noInputs.register({ text: { Component: TextInput, defaultValue: '' } }),
+  layouts: noLayouts,
   field: { Component: Field },
 });
 

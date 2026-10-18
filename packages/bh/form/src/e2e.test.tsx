@@ -1,9 +1,11 @@
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import * as v from 'valibot';
 import { defineRegistry, defineForm, Form } from './index';
 import { schemaToFormConfig } from './valibot';
 import type { FieldWrapperProps, InputProps, LayoutComponentProps } from './index';
+import { noInputs, noLayouts } from './builder/registries';
 
 const TextInput = (p: InputProps<{ placeholder?: string }, string>) => {
   return (
@@ -51,13 +53,13 @@ function FieldStub({ label, children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
     select: { Component: SelectInput, defaultValue: '' },
-  },
-  layouts: {
+  }),
+  layouts: noLayouts.register({
     group: { Component: GroupLayout },
-  },
+  }),
   field: { Component: FieldStub },
 });
 
@@ -111,7 +113,7 @@ describe('@bh/form end-to-end', () => {
 
   test('valibot helper produces a tree the runtime can render', () => {
     const schema = v.object({ name: v.string(), accept: v.boolean() });
-    const config = schemaToFormConfig<typeof registry.inputs>(schema, {
+    const config = schemaToFormConfig<EntriesOf<typeof registry.inputs>>(schema, {
       accept: {
         type: 'select',
         config: {

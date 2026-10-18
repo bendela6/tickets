@@ -15,14 +15,14 @@ export function defineRegistry<I extends InputRegistry, L extends LayoutComponen
   registry: FormRegistry<I, L>,
 ): FormRegistry<I, L> {
   for (const name of RESERVED_INPUTS) {
-    if (name in registry.inputs) {
+    if (registry.inputs.has(name)) {
       throw new Error(
         `defineRegistry: "${name}" is the builder's own node; name the input another way`,
       );
     }
   }
   for (const name of RESERVED_LAYOUTS) {
-    if (name in registry.layouts) {
+    if (registry.layouts.has(name)) {
       throw new Error(
         `defineRegistry: "${name}" is taken by the form's own nodes; name the layout another way`,
       );

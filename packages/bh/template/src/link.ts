@@ -2,7 +2,7 @@ import type { FieldPath, Row, Template } from '@bh/resource';
 import { fillText, textPaths } from './text';
 
 // Where a link goes: a url's own address, or a route filled from the record,
-// '/p/{project}/t/{number}'. A link renderer's `to` (BaseRenderers.link)
+// '/p/{project}/t/{number}'. A link renderer's `to`
 // names the route, so a title or a key links to its row; how an app's router
 // follows the address it gives is the app's.
 

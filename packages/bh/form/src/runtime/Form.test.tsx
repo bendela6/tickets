@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Form } from './Form';
 import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps, LayoutComponentProps } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 const TextInput = (p: InputProps<{ placeholder?: string }, string>) => {
   return (
@@ -42,12 +43,12 @@ function FieldStub({ name, label, required, children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: TextInput, defaultValue: '' },
-  },
-  layouts: {
+  }),
+  layouts: noLayouts.register({
     group: { Component: GroupLayout },
-  },
+  }),
   field: { Component: FieldStub },
 });
 

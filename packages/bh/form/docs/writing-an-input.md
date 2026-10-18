@@ -53,7 +53,7 @@ function SlugField(p: InputProps<SlugConfig, string>) {
 }
 
 const registry = defineRegistry({
-  inputs: { ...baseInputs, slug: { Component: SlugField, defaultValue: '' } },
+  inputs: baseInputs.register({ slug: { Component: SlugField, defaultValue: '' } }),
   layouts: baseLayouts,
   field: { Component: FieldWrapper },
   root: { Component: RootWrapper },
@@ -128,7 +128,7 @@ import { baseInputs, baseLayouts, FieldWrapper, RootWrapper } from '@bh/ui';
 declare function SlugField(props: InputProps<{ prefix?: string }, string>): ReactNode;
 
 export const registry = defineRegistry({
-  inputs: { ...baseInputs, slug: { Component: SlugField, defaultValue: '' } },
+  inputs: baseInputs.register({ slug: { Component: SlugField, defaultValue: '' } }),
   layouts: baseLayouts,
   field: { Component: FieldWrapper },
   root: { Component: RootWrapper },
@@ -234,12 +234,12 @@ An input kind in a registry: the component that draws it, and the value it start
 | `readOnly`            | `boolean`                                                       |         | Makes every input read-only, as its field is: shown, never changed.                  |
 
 ```ts
-useFormRegistry(): FormRegistry<InputRegistry, LayoutComponentRegistry>
+useFormRegistry(): AnyFormRegistry
 ```
 
 The registry of the `<Form>` around an input, or of the `FormProvider`; throws outside both.
 
-Returns `FormRegistry<InputRegistry, LayoutComponentRegistry>`.
+Returns `AnyFormRegistry`.
 
 ```ts
 defaultValuesOf(nodes, registry): Record<string, unknown>
@@ -251,6 +251,6 @@ What a list adds when asked for one more item.
 | Parameter             | Type                                                            | Default | Description |
 | --------------------- | --------------------------------------------------------------- | ------- | ----------- |
 | `nodes` (required)    | `readonly LayoutNode<InputRegistry, LayoutComponentRegistry>[]` |         |             |
-| `registry` (required) | `FormRegistry<InputRegistry, LayoutComponentRegistry>`          |         |             |
+| `registry` (required) | `AnyFormRegistry`                                               |         |             |
 
 Returns `Record<string, unknown>`.

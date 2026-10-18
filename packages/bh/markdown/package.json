@@ -1,6 +1,6 @@
 {
   "name": "@bh/markdown",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bh/registry": "workspace:*",
     "@bh/code": "workspace:*",
     "@bh/hooks": "workspace:*",
     "@bh/richtext": "workspace:*",

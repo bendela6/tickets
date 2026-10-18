@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Renderer } from '../registry/types';
 import { MarkdownDoc } from './doc-view';
 
@@ -19,7 +19,7 @@ const badge: Renderer<string> = {
   },
 };
 
-const registry = createRegistry([badge]);
+const registry = noBlocks.register({ badge });
 
 describe('inline marks', () => {
   it('renders a mark inside a paragraph, keeping the surrounding text', () => {
@@ -57,7 +57,7 @@ describe('inline marks', () => {
         return <span data-testid="flaky-ok">ok</span>;
       },
     };
-    const flakyRegistry = createRegistry([flaky]);
+    const flakyRegistry = noBlocks.register({ flaky });
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { rerender } = render(

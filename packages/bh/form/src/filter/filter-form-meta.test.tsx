@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineForm } from '../builder/define-form';
@@ -9,6 +10,7 @@ import { FilterForm, type FilterFormProps, type FilterValue } from './filter-for
 import type { FilterQuery } from './fold';
 import { kinds, operators, tasks } from './meta.fixture';
 import type { FilterOption } from './meta';
+import { noInputs, noLayouts } from '../builder/registries';
 
 /** A list of choices, a checkbox each, its count after its label. */
 const Pick = (p: InputProps<{ options?: FilterOption[]; counts?: boolean }, string[]>) => {
@@ -46,8 +48,8 @@ function Labelled({ label, children }: FieldWrapperProps) {
 }
 
 const registry = defineRegistry({
-  inputs: { pick: { Component: Pick, defaultValue: [] as string[] } },
-  layouts: {},
+  inputs: noInputs.register({ pick: { Component: Pick, defaultValue: [] as string[] } }),
+  layouts: noLayouts,
   field: { Component: Labelled },
 });
 
@@ -72,7 +74,7 @@ const form = defineForm(registry).build((b) => {
   ];
 });
 
-type Props = FilterFormProps<typeof registry.inputs>;
+type Props = FilterFormProps<EntriesOf<typeof registry.inputs>>;
 
 function draw(value: FilterValue, more: Partial<Props> = {}) {
   return (

@@ -1,4 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Form } from './Form';
@@ -7,6 +8,7 @@ import { useStandaloneForm } from './use-standalone-form';
 import { defineRegistry } from '../builder/define-registry';
 import type { FieldWrapperProps, InputProps } from '../types/registry';
 import type { FormConfig } from '../types/form-config';
+import { noInputs, noLayouts } from '../builder/registries';
 
 function inputOf(mark: string) {
   return function TextInput(p: InputProps<Record<string, never>, string>) {
@@ -26,8 +28,8 @@ function FieldStub({ children }: FieldWrapperProps) {
 
 const registryOf = (mark: string) => {
   return defineRegistry({
-    inputs: { text: { Component: inputOf(mark), defaultValue: '' } },
-    layouts: {},
+    inputs: noInputs.register({ text: { Component: inputOf(mark), defaultValue: '' } }),
+    layouts: noLayouts,
     field: { Component: FieldStub },
   });
 };
@@ -35,7 +37,7 @@ const registryOf = (mark: string) => {
 const provided = registryOf('provided');
 const own = registryOf('own');
 
-const config: FormConfig<typeof provided.inputs> = {
+const config: FormConfig<EntriesOf<typeof provided.inputs>> = {
   nodes: [{ kind: 'field', name: 'title', type: 'text', defaultValue: '', config: {} }],
 };
 

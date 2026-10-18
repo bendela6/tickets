@@ -1,8 +1,10 @@
+import type { EntriesOf } from '@bh/registry';
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForm } from './use-form';
 import type { FormConfig } from '../types/form-config';
 import type { InputRegistry } from '../types/registry';
+import { noInputs, noLayouts } from '../builder/registries';
 
 type R = InputRegistry;
 
@@ -26,14 +28,14 @@ describe('useForm', () => {
 
   test("a field with no default of its own starts at its input's, from the registry", () => {
     const registry = {
-      inputs: {
+      inputs: noInputs.register({
         text: { Component: () => null, defaultValue: '' },
         tags: { Component: () => null, defaultValue: [] as string[] },
-      },
-      layouts: {},
+      }),
+      layouts: noLayouts,
       field: { Component: () => null },
     };
-    const bare: FormConfig<typeof registry.inputs> = {
+    const bare: FormConfig<EntriesOf<typeof registry.inputs>> = {
       nodes: [
         { kind: 'field', name: 'name', type: 'text', config: {} },
         { kind: 'field', name: 'labels', type: 'tags', config: {} },

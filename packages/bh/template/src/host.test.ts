@@ -1,7 +1,6 @@
 import * as v from 'valibot';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { defineHost, type Host, type HostSpec } from './host';
-import type { BaseLayouts } from './layouts';
 import type { TemplateNode } from './template';
 
 // Two hosts, as their own features will define them (TK-76, TK-16.2): a card,
@@ -31,7 +30,7 @@ describe('a host', () => {
     const hosts: Host<v.InferOutput<typeof card.fixed>> = {
       fixed: { icon: 'server', title: 'Hosts', actions: ['restart'] },
       template: {
-        layout: 'flex',
+        layout: 'row',
         options: { justify: 'between' },
         nodes: [{ field: 'name' }, { field: 'state' }],
       },
@@ -76,7 +75,7 @@ describe('a host', () => {
   });
 
   it('takes an app’s own layouts in its template', () => {
-    interface AppLayouts extends BaseLayouts {
+    interface AppLayouts {
       overlay: { anchor: 'top-end' | 'bottom-end' };
     }
     const tile: Host<{ title: string }, AppLayouts> = {

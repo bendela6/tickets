@@ -117,7 +117,9 @@ export function RuleEditor({ meta, options, rule, name, onDone, onCancel }: Rule
     const was = rule?.field === on.key ? rule : undefined;
     const drawn = operandInput(meta, on, next, options.of(on) ?? []);
     // A rule being changed keeps its value while the new operator draws the same input.
-    const before = was ? operandInput(meta, on, meta.operators.get(was.op) ?? next) : null;
+    const before = was
+      ? operandInput(meta, on, meta.operators.has(was.op) ? meta.operators.get(was.op) : next)
+      : null;
     setDraft(
       drawn && before?.type === drawn.type ? drawn.toInput(was?.value) : drawn?.toInput(undefined),
     );

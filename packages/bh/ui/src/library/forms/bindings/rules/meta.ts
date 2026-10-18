@@ -74,7 +74,7 @@ export function pathLabel(at: PathField): string {
  * list never `equals` or `notEquals`, which a list doesn't offer.
  */
 export function operatorsFor(meta: RulesMeta, field: FieldMeta): OperatorSpec[] {
-  const kind = meta.kinds.get(field.type.kind);
+  const kind = meta.kinds.has(field.type.kind) ? meta.kinds.get(field.type.kind) : undefined;
   if (!kind) {
     return [];
   }
@@ -82,8 +82,8 @@ export function operatorsFor(meta: RulesMeta, field: FieldMeta): OperatorSpec[] 
   return kind.operators
     .filter((name) => allowed.has(name))
     .filter((name) => !(field.type.many && (name === 'equals' || name === 'notEquals')))
-    .map((name) => meta.operators.get(name))
-    .filter((spec): spec is OperatorSpec => spec !== undefined);
+    .filter((name) => meta.operators.has(name))
+    .map((name) => meta.operators.get(name));
 }
 
 /** The fields a rule may name: those with an operator to offer. */

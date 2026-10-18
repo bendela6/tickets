@@ -8,19 +8,35 @@ body:
     the page of each block there is.
   - h2: A registry
   - |
-    `createRegistry` takes renderers and holds them by name. `get` finds
-    one, `names` lists them, `all` gives them in the order registered,
-    `register` adds one more, and `toPrompt` writes the
-    [block reference](/markdown/to-prompt) over all of them. It throws on a
-    name already taken, and on a renderer with no description or no example,
-    since the block reference teaches a model from exactly those.
-
-    The package's own blocks are `markdownBlocks`, drawn with `@bh/ui`, to
-    spread into a registry. A page is read and drawn with the same one:
+    A registry holds blocks by name, a `@bh/registry` registry. The
+    package's own blocks are `markdownBlocks`, drawn with `@bh/ui`; an app
+    registers its own beside them with `register`, which gives a new
+    registry and leaves `markdownBlocks` as it is, and `noBlocks` holds none.
+    `get` finds a block and throws for a name nothing registered, `has` asks
+    first, `names` lists them and `values()` gives them in the order
+    registered, which [`toPrompt`](/markdown/to-prompt) writes the block
+    reference over. Registering throws on a name already taken, on a block
+    registered by a name other than its own, and on one with no description
+    or no example, since the block reference teaches a model from exactly
+    those. A page is read and drawn with the same registry:
   - code: |
-      import { createRegistry, markdownBlocks } from '@bh/markdown';
+      import * as v from 'valibot';
+      import { markdownBlocks, toPrompt } from '@bh/markdown';
 
-      export const registry = createRegistry(markdownBlocks);
+      // Checked as it is defined; `component` is given what `schema` gives.
+      const plant = markdownBlocks.define({
+        name: 'plant',
+        body: 'data',
+        description: 'A plant, by its `name`.',
+        schema: v.object({ name: v.string() }),
+        examples: ['- plant:\n    name: Fern'],
+        component: ({ data }) => data.name,
+      });
+
+      // markdown's blocks and plant; markdownBlocks stays as it is.
+      export const registry = markdownBlocks.register({ plant });
+
+      export const prompt = toPrompt(registry.values());
     lang: ts
   - h2: A block
   - |
@@ -172,7 +188,7 @@ body:
       accepts it; data the schema refuses draws the error card instead.
     - An inline mark is never an item of its own.
   - h2: Reference
-  - ref: createRegistry
+  - ref: noBlocks
   - ref: Registry
   - ref: RendererLookup
   - ref: AnyRenderer

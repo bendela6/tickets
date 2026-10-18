@@ -10,6 +10,7 @@ import type { FilterChangesProps, InputProps } from '../types/registry';
 import { FilterForm, type FilterValue } from './filter-form';
 import type { FilterQuery } from './fold';
 import { kinds, operators, tasks } from './meta.fixture';
+import { noInputs, noLayouts } from '../builder/registries';
 
 // Plain inputs, each named by its field: a filter form draws whatever the
 // registry gives it.
@@ -57,12 +58,12 @@ function Changes({ count }: FilterChangesProps) {
 }
 
 const registry = defineRegistry({
-  inputs: {
+  inputs: noInputs.register({
     text: { Component: Text, defaultValue: '' },
     check: { Component: Check, defaultValue: false },
     chips: { Component: Chips, defaultValue: [] as string[] },
-  },
-  layouts: {},
+  }),
+  layouts: noLayouts,
   field: { Component: ({ children }) => <>{children}</> },
   filter: {
     count: () => null,

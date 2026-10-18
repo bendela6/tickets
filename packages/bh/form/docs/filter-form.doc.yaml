@@ -129,6 +129,8 @@ body:
   - |
     From [`@bh/resource`](/resources/contract):
   - code: |
+      import type { RegistryOf } from '@bh/registry';
+
       /** A registered operator's name: one of bh's fifteen or an app's own. */
       export type Operator = string;
 
@@ -179,17 +181,11 @@ body:
         // …its value's schema, its settings, sort and group
       }
 
-      /** The operators an app runs with, bh's and its own, by name. */
-      export interface OperatorRegistry {
-        readonly operators: readonly OperatorSpec[];
-        get(name: Operator): OperatorSpec | undefined;
-      }
+      /** The operators an app runs with, bh's and its own, by name: baseOperators, for one. */
+      export type OperatorRegistry = RegistryOf<OperatorSpec>;
 
-      /** The kinds an app runs with, bh's and its own, by name. */
-      export interface KindRegistry {
-        readonly kinds: readonly KindSpec[];
-        get(name: string): KindSpec | undefined;
-      }
+      /** The kinds an app runs with, bh's and its own, by name: baseKinds, for one. */
+      export type KindRegistry = RegistryOf<KindSpec>;
     lang: ts
   - |
     The whole of each is on [`@bh/resource`'s page](/resources/contract).

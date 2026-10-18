@@ -1,7 +1,9 @@
 import * as v from 'valibot';
+import { defineRegistry } from '@bh/registry';
 import { describe, expect, it } from 'vitest';
 import { actionInputOf, createOf, metaOf, patchOf, placeholdersOf, queryOf, rowOf } from './checks';
 import { issuesOf } from './errors';
+import { baseKinds } from './kinds';
 import type { ResourceMeta } from './meta';
 import { createRegistry } from './registry';
 import type { FieldMeta, FormatSpec, KindSpec } from './types';
@@ -164,7 +166,12 @@ describe('metaOf', () => {
       group: true,
       search: false,
     };
-    expect(refusals(metaOf(createRegistry({ kinds: [kind] })), withField(color))).toEqual([]);
+    expect(
+      refusals(
+        metaOf(createRegistry({ kinds: baseKinds.register({ color: kind }) })),
+        withField(color),
+      ),
+    ).toEqual([]);
   });
 
   it('checks a field’s settings by its kind’s schema, at their own path', () => {
@@ -219,9 +226,9 @@ describe('metaOf', () => {
       search: false,
     };
     const colors = field('colors', 'color', { type: { kind: 'color', many: true } });
-    expect(refusals(metaOf(createRegistry({ kinds: [color] })), withField(colors))).toEqual([
-      'fields.10.type.many: the kind "color" holds one value, never a list',
-    ]);
+    expect(
+      refusals(metaOf(createRegistry({ kinds: baseKinds.register({ color }) })), withField(colors)),
+    ).toEqual(['fields.10.type.many: the kind "color" holds one value, never a list']);
   });
 
   it('checks a default by the field’s settings: a number’s range, a text’s length and pattern', () => {
@@ -295,7 +302,11 @@ describe('metaOf', () => {
     };
     const size = field('size', 'number', { format: 'bytes' });
     expect(refusals(meta, withField(size))).toEqual(['fields.10.format: no format "bytes"']);
-    const formatted = metaOf(createRegistry({ formats: [bytes, money] }));
+    const formatted = metaOf(
+      createRegistry({
+        formats: defineRegistry<FormatSpec>({ name: 'format' }).register({ bytes, money }),
+      }),
+    );
     expect(refusals(formatted, withField(size))).toEqual([]);
     const price = field('price', 'number', {
       format: { name: 'money', options: { currency: 'EUR' } },

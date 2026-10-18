@@ -1,6 +1,6 @@
 import * as v from 'valibot';
-import { createOperatorRegistry, FieldPath, Scalar } from '@bh/resource';
-import { defineHost, type BaseLayouts, type Host, type HostSpec, type Layouts } from '@bh/template';
+import { baseOperators, FieldPath, Scalar } from '@bh/resource';
+import { defineHost, type AnyLayouts, type Host, type HostSpec, type Layouts } from '@bh/template';
 import { holding, jsonObject, nameOf, once, pathTo, pixels, recordOf, templateOf } from './schemas';
 
 // A table's column, as a view stores it: a host (@bh/template's), its fixed
@@ -252,7 +252,7 @@ export const columnHost: HostSpec<ColumnFixed> = defineHost({
  * }
  * ```
  */
-export type Column<L extends Layouts<L> = BaseLayouts> = Host<ColumnFixed, L>;
+export type Column<L extends Layouts<L> = AnyLayouts> = Host<ColumnFixed, L>;
 
 /**
  * A column's schema, given what checks an operator's name; its cell is JSON
@@ -272,20 +272,22 @@ export const Column: v.GenericSchema<unknown, Column> = columnSchema(anyOperator
 
 /**
  * What columnOf and viewOf check against: the operators an app runs with,
- * each by its name. @bh/resource's createRegistry and createOperatorRegistry
- * give them, bh's fifteen and the app's own.
+ * each by its name. @bh/resource's createRegistry gives them, bh's fifteen
+ * (baseOperators) and the app's own.
  */
 export interface ColumnRegistry {
-  readonly operators: readonly { readonly name: string }[];
+  readonly operators: { has(name: string): boolean };
 }
+
+/** bh's fifteen operators, what a column is checked against when no registry is given. */
+export const baseColumnRegistry: ColumnRegistry = { operators: baseOperators };
 
 /** An operator's name, one `registry` holds. */
 export function registeredOperator(registry: ColumnRegistry): v.GenericSchema<string> {
-  const names = new Set(registry.operators.map((operator) => operator.name));
   return v.pipe(
     anyOperator,
     v.check(
-      (name) => names.has(name),
+      (name) => registry.operators.has(name),
       (issue) => `no operator "${String(issue.input)}"`,
     ),
   );
@@ -300,8 +302,8 @@ export function registeredOperator(registry: ColumnRegistry): v.GenericSchema<st
  * const column = v.parse(columnOf(registry), json);
  * ```
  */
-export function columnOf<L extends Layouts<L> = BaseLayouts>(
-  registry: ColumnRegistry = createOperatorRegistry(),
+export function columnOf<L extends Layouts<L> = AnyLayouts>(
+  registry: ColumnRegistry = baseColumnRegistry,
 ): v.GenericSchema<unknown, Column<L>> {
   return columnSchema<L>(registeredOperator(registry));
 }

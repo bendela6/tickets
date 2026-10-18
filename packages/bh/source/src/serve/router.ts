@@ -1,3 +1,4 @@
+import { defineRegistry, type Registry } from '@bh/registry';
 import type { Id } from '@bh/resource';
 import { ResourceError } from '../adapter/errors';
 import type { ServedResource } from './serve';
@@ -46,14 +47,23 @@ function idOf(resource: ServedResource, segment: string): Id {
   return decodeURIComponent(segment);
 }
 
-/** The routes of these resources: one function a server hands each request. */
+/** No resources: what a router's are registered on, each by its name. */
+const noResources = defineRegistry<ServedResource>({ name: 'resource' });
+
+/**
+ * The routes of these resources: one function a server hands each request.
+ * Throws on two resources of one name, so neither hides the other.
+ */
 export function router(
   resources: readonly ServedResource[],
 ): (request: RouteRequest) => Promise<RouteAnswer> {
-  const byName = new Map(resources.map((resource) => [resource.meta.resource, resource]));
+  // One at a time, so a name given twice throws rather than one replacing the other.
+  const byName = resources.reduce<
+    Registry<ServedResource, unknown, Record<string, ServedResource>>
+  >((registry, resource) => registry.register({ [resource.meta.resource]: resource }), noResources);
   return async (request) => {
     const [name = '', rest, ...beyond] = request.path.replace(/^\/+|\/+$/g, '').split('/');
-    const resource = byName.get(name);
+    const resource = byName.has(name) ? byName.get(name) : undefined;
     const method = request.method.toUpperCase();
     const { ctx = {} } = request;
     try {

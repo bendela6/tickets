@@ -1,6 +1,6 @@
 {
   "name": "@bh/config",
-  "version": "0.6.0",
+  "version": "0.8.1",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,12 +13,17 @@
     "./tsconfig/react": "./tsconfig/react.json",
     "./tsconfig/package": "./tsconfig/package.json",
     "./madge": "./madge/madge.config.cjs",
-    "./vitest/coverage": "./vitest/coverage.ts"
+    "./vitest/coverage": "./vitest/coverage.ts",
+    "./release/changelog": "./release/changelog.mjs",
+    "./release/workspace": "./release/workspace.mjs"
   },
   "bin": {
+    "bh-commit-check": "./bin/commit-check.mjs",
     "bh-format": "./bin/format.mjs",
+    "bh-hooks": "./bin/hooks.mjs",
     "bh-lint": "./bin/lint.mjs",
-    "bh-madge": "./bin/madge.mjs"
+    "bh-madge": "./bin/madge.mjs",
+    "bh-release": "./bin/release.mjs"
   },
   "scripts": {
     "build": "echo '(no build) ok'",

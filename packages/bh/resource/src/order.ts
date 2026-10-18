@@ -43,7 +43,7 @@ function sign<T>(a: T, b: T): number {
 }
 
 function kindNamed(registry: Registry, name: string): KindSpec | undefined {
-  return registry.kinds.find((spec) => spec.name === name);
+  return registry.kinds.has(name) ? registry.kinds.get(name) : undefined;
 }
 
 const everywhere = () => true;

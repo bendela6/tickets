@@ -3,7 +3,6 @@ import * as v from 'valibot';
 import {
   BlockErrorCard,
   CodeBlock,
-  createRegistry,
   DocView,
   markdownBlocks,
   type MarkdownElements,
@@ -53,7 +52,7 @@ const plantBlock: Renderer<Plant> = {
   },
 };
 
-const registry = createRegistry([...markdownBlocks, plantBlock]);
+const registry = markdownBlocks.register({ plant: plantBlock });
 
 const elements: MarkdownElements = {
   p: (p) => <p {...p} className="text-13/20 text-gray-11" />,

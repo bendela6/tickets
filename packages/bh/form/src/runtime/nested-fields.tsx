@@ -4,8 +4,8 @@ import type { FieldNode } from '../types/field-node';
 import type { LayoutNode } from '../types/layout-node';
 import type { SlotNode } from '../types/slot-node';
 import type {
+  AnyFormRegistry,
   FieldWrapperDefinition,
-  FormRegistry,
   InputRegistry,
   LayoutComponentRegistry,
 } from '../types/registry';
@@ -19,13 +19,11 @@ import { SlotsContext } from './slots-context';
 // object is the field's value, held by the field: these fields are controlled
 // by it, with no form state of their own, so a list input can hold any number.
 
-type AnyRegistry = FormRegistry<InputRegistry, LayoutComponentRegistry>;
-
 /** The registry of the `<Form>` being drawn (or the `FormProvider` around it), for an input that draws fields of its own. */
-export const RegistryContext = createContext<AnyRegistry | null>(null);
+export const RegistryContext = createContext<AnyFormRegistry | null>(null);
 
 /** The registry of the `<Form>` around an input, or of the `FormProvider`; throws outside both. */
-export function useFormRegistry(): FormRegistry<InputRegistry, LayoutComponentRegistry> {
+export function useFormRegistry(): AnyFormRegistry {
   const registry = useContext(RegistryContext);
   if (!registry) {
     throw new Error('useFormRegistry must be inside <Form> or <FormProvider>');
@@ -44,12 +42,14 @@ const isField = (node: AnyNode): node is AnyField => node.kind === 'field';
  */
 export function defaultValuesOf(
   nodes: readonly LayoutNode<InputRegistry, LayoutComponentRegistry>[],
-  registry: FormRegistry<InputRegistry, LayoutComponentRegistry>,
+  registry: AnyFormRegistry,
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const node of nodes) {
     if (isField(node)) {
-      values[node.name] = node.defaultValue ?? registry.inputs[node.type]?.defaultValue;
+      values[node.name] =
+        node.defaultValue ??
+        (registry.inputs.has(node.type) ? registry.inputs.get(node.type).defaultValue : undefined);
     } else if ('children' in node) {
       Object.assign(values, defaultValuesOf(node.children, registry));
     }
@@ -113,7 +113,9 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
         return <Keyed key={`s:${name}:${index}`}>{slots[name] ?? null}</Keyed>;
       }
       if (!isField(node)) {
-        const layout = registry.layouts[node.kind];
+        const layout = registry.layouts.has(node.kind)
+          ? registry.layouts.get(node.kind)
+          : undefined;
         const children = 'children' in node ? draw(node.children, layout?.field ?? wrapper) : null;
         if (!layout) {
           return <Keyed key={`${node.kind}:${index}`}>{children}</Keyed>;
@@ -125,10 +127,10 @@ export function NestedFields(props: NestedFieldsProps): ReactNode {
           </Layout>
         );
       }
-      const input = registry.inputs[node.type];
-      if (!input) {
+      if (!registry.inputs.has(node.type)) {
         throw new Error(`<NestedFields>: registry has no entry for type "${String(node.type)}"`);
       }
+      const input = registry.inputs.get(node.type);
       const Input = input.Component;
       const Wrapper = wrapper.Component;
       const name = `${props.name}.${node.name}`;

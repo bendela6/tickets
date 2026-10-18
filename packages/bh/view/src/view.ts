@@ -1,9 +1,10 @@
 import * as v from 'valibot';
-import { createOperatorRegistry, GroupBy, Json, Query, ResourceMeta, Sort } from '@bh/resource';
-import type { BaseLayouts, Host, Layouts } from '@bh/template';
+import { GroupBy, Json, Query, ResourceMeta, Sort } from '@bh/resource';
+import type { AnyLayouts, Host, Layouts } from '@bh/template';
 import {
   anyOperator,
   columnSchema,
+  baseColumnRegistry,
   registeredOperator,
   type Column,
   type ColumnRegistry,
@@ -75,7 +76,7 @@ export type ItemHost = v.InferOutput<typeof ItemHost>;
  * template. Its fixed parts are checked as JSON here, until those kinds are
  * defined.
  */
-export type ViewItem<L extends Layouts<L> = BaseLayouts> = Host<Record<string, Json>, L>;
+export type ViewItem<L extends Layouts<L> = AnyLayouts> = Host<Record<string, Json>, L>;
 
 /** What every view holds, whatever its host. */
 export interface ViewBase {
@@ -98,14 +99,14 @@ export interface ViewBase {
 }
 
 /** A view shown in a table: its columns, in their order. */
-export interface TableView<L extends Layouts<L> = BaseLayouts> extends ViewBase {
+export interface TableView<L extends Layouts<L> = AnyLayouts> extends ViewBase {
   host: 'table';
   /** Its columns, each named once by its key, in the order it shows them. */
   columns: Column<L>[];
 }
 
 /** A view shown as a list, tiles or cards: each row an item. */
-export interface ItemView<L extends Layouts<L> = BaseLayouts> extends ViewBase {
+export interface ItemView<L extends Layouts<L> = AnyLayouts> extends ViewBase {
   host: ItemHost;
   /** Each row's item: its kind's fixed parts, and its template. */
   item: ViewItem<L>;
@@ -116,7 +117,7 @@ export interface ItemView<L extends Layouts<L> = BaseLayouts> extends ViewBase {
  * cards of items, told apart by `host`. `L` names the layouts its templates
  * may use: bh's three unless an app adds its own.
  */
-export type View<L extends Layouts<L> = BaseLayouts> = TableView<L> | ItemView<L>;
+export type View<L extends Layouts<L> = AnyLayouts> = TableView<L> | ItemView<L>;
 
 /** The rows a page takes: 1 to 500, as a query's `take`. */
 const pageSize = v.pipe(
@@ -177,8 +178,8 @@ export const View: v.GenericSchema<unknown, View> = viewSchema(anyOperator);
  * const view = v.parse(viewOf(registry), json);
  * ```
  */
-export function viewOf<L extends Layouts<L> = BaseLayouts>(
-  registry: ColumnRegistry = createOperatorRegistry(),
+export function viewOf<L extends Layouts<L> = AnyLayouts>(
+  registry: ColumnRegistry = baseColumnRegistry,
 ): v.GenericSchema<unknown, View<L>> {
   return viewSchema<L>(registeredOperator(registry));
 }

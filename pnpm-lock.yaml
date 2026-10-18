@@ -330,6 +330,9 @@ importers:
 
   packages/bh/form:
     dependencies:
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@bh/resource':
         specifier: workspace:*
         version: link:../resource
@@ -424,6 +427,9 @@ importers:
       '@bh/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@bh/richtext':
         specifier: workspace:*
         version: link:../richtext
@@ -489,8 +495,29 @@ importers:
         specifier: ^5.0.1
         version: 5.0.3(@types/node@26.6.5)(@vitest/coverage-v8@5.0.3)(jsdom@29.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0)(yaml@2.9.1))
 
+  packages/bh/registry:
+    devDependencies:
+      '@bh/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^26.6.1
+        version: 26.6.5
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      valibot:
+        specifier: ^1.5.0
+        version: 1.5.0(typescript@6.0.3)
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.3(@types/node@26.6.5)(@vitest/coverage-v8@5.0.3)(jsdom@29.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0)(yaml@2.9.1))
+
   packages/bh/resource:
     dependencies:
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@valibot/to-json-schema':
         specifier: ^1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@6.0.3))
@@ -656,6 +683,9 @@ importers:
 
   packages/bh/shell:
     dependencies:
+      '@bh/config':
+        specifier: workspace:*
+        version: link:../config
       '@bh/hooks':
         specifier: workspace:*
         version: link:../hooks
@@ -663,9 +693,6 @@ importers:
         specifier: workspace:*
         version: link:../ui
     devDependencies:
-      '@bh/config':
-        specifier: workspace:*
-        version: link:../config
       '@tanstack/react-router':
         specifier: ^1.170.38
         version: 1.170.44(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -714,6 +741,9 @@ importers:
 
   packages/bh/source:
     dependencies:
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@bh/resource':
         specifier: workspace:*
         version: link:../resource
@@ -779,6 +809,9 @@ importers:
 
   packages/bh/template:
     dependencies:
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@bh/resource':
         specifier: workspace:*
         version: link:../resource
@@ -807,6 +840,9 @@ importers:
       '@bh/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@bh/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@bh/resource':
         specifier: workspace:*
         version: link:../resource
@@ -1763,9 +1799,6 @@ packages:
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
-
-  '@jridgewell/sourcemap-codec@1.5.5':
-    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
   '@jridgewell/sourcemap-codec@1.6.0':
     resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
@@ -7085,7 +7118,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
@@ -7095,14 +7128,12 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
-  '@jridgewell/sourcemap-codec@1.5.5': {}
-
   '@jridgewell/sourcemap-codec@1.6.0': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@keyv/bigmap@1.3.1(keyv@5.6.0)':
     dependencies:

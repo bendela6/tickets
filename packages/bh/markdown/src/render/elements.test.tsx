@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from '../parse/parse';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import { MarkdownDoc } from './doc-view';
 import type { MarkdownElements } from './elements';
 
 // The package draws plain HTML; the host swaps in its own components, the
 // error card included, and each one is handed what it needs.
 
-const registry = createRegistry([]);
+const registry = noBlocks;
 
 const elements: MarkdownElements = {
   p: (props) => <p data-testid="host-p" {...props} />,

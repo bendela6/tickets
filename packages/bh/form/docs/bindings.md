@@ -623,7 +623,7 @@ shows its problem beside it.
 ## Reference
 
 ```ts
-type InputKind = keyof typeof baseInputs;
+type InputKind = keyof BaseInputs;
 ```
 
 The kinds a FormConfig may name — the vocabulary anything GENERATING one has

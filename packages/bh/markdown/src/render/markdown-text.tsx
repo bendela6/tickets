@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { markdownNodes } from '../parse/markdown';
-import { createRegistry } from '../registry/registry';
+import { noBlocks } from '../registry/registry';
 import type { Doc } from '../registry/types';
 import { DocView } from './doc-view';
 import type { MarkdownElements } from './elements';
 
 /** No blocks: a mark with no renderer stays as written. */
-const NO_BLOCKS = createRegistry();
+const NO_BLOCKS = noBlocks;
 
 /** What `MarkdownText` draws, and with what. */
 export interface MarkdownTextProps {

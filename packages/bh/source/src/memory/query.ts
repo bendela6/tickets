@@ -32,7 +32,9 @@ function holdsTerm(row: Row, term: string, meta: ResourceMeta, registry: Registr
     if (!field.query.search) {
       return false;
     }
-    const kind = registry.kinds.find((spec) => spec.name === field.type.kind);
+    const kind = registry.kinds.has(field.type.kind)
+      ? registry.kinds.get(field.type.kind)
+      : undefined;
     return entriesOf(row[field.key]).some((each) => {
       if (typeof each === 'object' || each === null) {
         return false;

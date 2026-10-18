@@ -1135,6 +1135,7 @@ export type AttributeMeta =
 
 ```ts
 import type * as v from 'valibot';
+import type { RegistryOf } from '@bh/registry';
 import type { FieldKind, FieldType, Id, Json, Operator, Scalar } from '@bh/resource';
 
 /** A registered kind. */
@@ -1198,18 +1199,24 @@ export interface KindValue {
 /** bh's nine kinds' names. */
 export type BaseKind = keyof KindValue;
 
-/** What an app runs with: bh's kinds and operators, its own, and the formats it passes in. */
+/** The kinds an app runs with, by name: bh's, or a registry of them and its own. */
+export type KindRegistry = RegistryOf<KindSpec>;
+
+/** The operators an app runs with, by name: bh's, or a registry of them and its own. */
+export type OperatorRegistry = RegistryOf<OperatorSpec>;
+
+/** What an app runs with: the kinds, the operators and the formats, each a registry. */
 export interface Registry<Format extends FormatSpec = FormatSpec> {
-  readonly kinds: readonly KindSpec[];
-  readonly formats: readonly Format[];
-  readonly operators: readonly OperatorSpec[];
+  readonly kinds: KindRegistry;
+  readonly formats: RegistryOf<Format>;
+  readonly operators: OperatorRegistry;
 }
 
-/** What createRegistry takes: an app's own, each beside bh's. */
+/** What createRegistry takes: each registry, bh's kinds and operators when left out. */
 export interface RegistryEntries<Format extends FormatSpec = FormatSpec> {
-  kinds?: readonly KindSpec[];
-  formats?: readonly Format[];
-  operators?: readonly OperatorSpec[];
+  kinds?: KindRegistry;
+  formats?: RegistryOf<Format>;
+  operators?: OperatorRegistry;
 }
 
 /** How a filter reads an operator on a field of this type. */
@@ -1392,6 +1399,7 @@ export declare function issuesOf(issues: readonly v.BaseIssue<unknown>[]): Issue
 
 ```ts
 import type * as v from 'valibot';
+import type { Registry as ByName } from '@bh/registry';
 import type {
   ActionInput,
   ActionMeta,
@@ -1411,9 +1419,9 @@ import type {
   Scalar,
 } from '@bh/resource';
 
-/** bh's nine kinds and fifteen operators, in their order. */
-export declare const baseKinds: readonly KindSpec[];
-export declare const baseOperators: readonly OperatorSpec[];
+/** bh's kinds and fifteen operators, each a registry: `baseKinds.register({ color })`. */
+export declare const baseKinds: ByName<KindSpec>;
+export declare const baseOperators: ByName<OperatorSpec>;
 
 /** The registry an app runs with, checked as it is built. */
 export declare function createRegistry<Format extends FormatSpec = FormatSpec>(

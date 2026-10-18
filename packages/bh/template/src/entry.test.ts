@@ -35,10 +35,10 @@ function graphOf(entry: string): { files: string[]; packages: Set<string> } {
 describe('the package’s main entry', () => {
   const { files, packages } = graphOf(resolve(SRC, 'index.ts'));
 
-  // Servers and browsers both import it, so it takes @bh/resource and valibot
-  // alone: no React, nothing drawn with it, and nothing of Node's.
-  it('imports @bh/resource and valibot, and nothing else', () => {
-    expect([...packages].sort()).toEqual(['@bh/resource', 'valibot']);
+  // Servers and browsers both import it, so it takes @bh/registry, @bh/resource
+  // and valibot alone: no React, nothing drawn with it, and nothing of Node's.
+  it('imports @bh/registry, @bh/resource and valibot, and nothing else', () => {
+    expect([...packages].sort()).toEqual(['@bh/registry', '@bh/resource', 'valibot']);
   });
 
   it('touches nothing of the DOM', () => {
