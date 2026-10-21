@@ -18,6 +18,9 @@ WORKDIR /app
 # .npmrc carries the tslib public-hoist needed by radix-ui transitives at build time
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY --from=manifests /manifests/ ./
+# the root's prepare script (bh-hooks) writes git hooks with @bh/config's bin, which isn't here yet: only
+# the manifests are, and there's no git to hook
+RUN npm pkg delete scripts.prepare
 RUN pnpm install --frozen-lockfile
 COPY . .
 
