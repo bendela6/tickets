@@ -12,7 +12,7 @@ pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (
 
 ## Running
 
-`docker compose up -d` → single `app` container on :4610 (nginx serves web + reverse-proxies `/api` to an internal node api). Dev loop: `pnpm dev` (mprocs: api :4600, web :4620, studio, watchers). Publish to 4610 at phase boundaries: `docker compose up -d --build`. Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`. The live app (tickets.bendelhome.cc) runs on the gateway, and **a push to `main` deploys it** within a minute.
+`docker compose up -d` → single `app` container on :4610 (nginx serves web + reverse-proxies `/api` to an internal node api). Dev loop: `pnpm dev` (mprocs: api :4600, web :4620, watchers). Publish to 4610 at phase boundaries: `docker compose up -d --build`. Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`. The live app (tickets.bendelhome.cc) runs on the gateway, and **a push to `main` deploys it** within a minute.
 
 ## Conventions
 

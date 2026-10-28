@@ -8,7 +8,5 @@ procs:
     shell: pnpm --filter @tickets/web dev
     env:
       WEB_DEV_PORT: "4620"
-  studio:
-    shell: pnpm db:studio
   watchers:
     shell: turbo watch typecheck

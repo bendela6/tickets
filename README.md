@@ -19,7 +19,7 @@ link types are all data.
 cp .env.example .env          # postgres on 127.0.0.1:5532, db "tickets_dev"
 pnpm install
 pnpm db:migrate               # apply schema
-pnpm dev                      # mprocs: api on 4600 + web on 4620 + studio + watchers
+pnpm dev                      # mprocs: api on 4600 + web on 4620 + watchers
 ```
 
 New empty project: `pnpm db:seed <key> <name> <PREFIX> [software|plan]` (the scheme, `software` by default) or `POST /api/projects`.
