@@ -28,7 +28,3 @@ export function defineCommand<S extends v.GenericSchema, TResult>(
   registry.set(def.kind, def as unknown as CommandDef);
   return def;
 }
-
-export function commandKind(kind: string): CommandDef | undefined {
-  return registry.get(kind);
-}

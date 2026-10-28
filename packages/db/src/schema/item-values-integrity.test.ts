@@ -14,8 +14,7 @@ import { projects } from './projects';
 import { schemes } from './schemes';
 import { users } from './users';
 
-// Unique key per run — sibling to how verify-scheme.ts avoids collisions —
-// so a stray failed run never blocks the next one on schemes_key_unique /
+// Unique key per run, so a stray failed run never blocks the next one on schemes_key_unique /
 // users_name_unique, even without the afterAll cleanup below.
 const RUN_ID = Date.now();
 

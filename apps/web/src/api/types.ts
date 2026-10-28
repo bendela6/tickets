@@ -87,9 +87,6 @@ export interface ActivityEntry {
   actorId: number; at: string; correlationId: string; summary: Record<string, unknown>;
 }
 
-// The envelope every mutation body carries.
-export interface CommandEnvelope { commandId: string; actorId: number; }
-
 export interface CreateItemInput { projectKey: string; actorId: number; typeKey: string; parentId?: number | null; values: Record<string, unknown>; }
 export interface PatchItemInput { itemId: number; actorId: number; expectedUpdatedAt: string; parentId?: number | null; archived?: boolean; values?: Record<string, unknown>; }
 export interface CreatedItem { id: number; number: number; key: string; typeId: number; parentId: number | null; createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string; }
@@ -100,6 +97,4 @@ export interface DeleteLinkInput { linkId: number; actorId: number; }
 export interface CreateUserInput { actorId: number; name: string; kind?: UserKind; }
 export interface CreateProjectInput { actorId: number; key: string; name: string; itemPrefix: string; }
 
-export interface ListMeta { total?: number }
 export interface UsersResponse { data: User[] }
-export interface ProjectsResponse { data: Project[] }

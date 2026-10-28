@@ -1,8 +1,6 @@
 import type { ComponentProps } from 'react';
 import type { Avatar } from '@bh/ui';
-
-/** Who or what performed an action. A ticket-domain distinction. */
-export type ActorKind = 'human' | 'agent';
+import type { UserKind } from '../api/types';
 
 // The app's ONE actor-presentation mapping, alongside KIND_ICON/KIND_TONE for
 // statuses. `Avatar` deliberately knows nothing about humans and agents — it
@@ -17,8 +15,8 @@ export type ActorKind = 'human' | 'agent';
 export const AVATAR_BY_KIND = {
   human: { shape: 'round', font: 'sans', tone: 'cyan' },
   agent: { shape: 'square', font: 'mono', tone: 'primary' },
-} as const satisfies Record<ActorKind, Partial<ComponentProps<typeof Avatar>>>;
+} as const satisfies Record<UserKind, Partial<ComponentProps<typeof Avatar>>>;
 
-export function avatarFor(kind: ActorKind) {
+export function avatarFor(kind: UserKind) {
   return AVATAR_BY_KIND[kind];
 }
