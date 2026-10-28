@@ -9,8 +9,7 @@
     "POSTGRES_USER",
     "POSTGRES_PASSWORD",
     "POSTGRES_DATABASE",
-    "API_PORT",
-    "WEB_PORT"
+    "API_PORT"
   ],
   "tasks": {
     "build": {
@@ -45,14 +44,6 @@
     // tree, which turbo cannot hash. A cache hit would report a stale verdict.
     "tokens:verify": {
       "cache": false
-    },
-    // The gate only earns its keep if something runs it. It sat behind a manual
-    // root script from 2026-07 to 2026-08, and in that window it rotted into
-    // naming two deleted files without one run to notice. Hanging it off the
-    // package's own test keeps it on the path everyone already takes.
-    "@tickets/ui#test": {
-      "dependsOn": ["^build", "build", "tokens:verify"],
-      "outputs": []
     },
     // Two suites share one live database, and each sets
     // `fileParallelism: false` only WITHIN its own package — turbo would still

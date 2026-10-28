@@ -1,9 +1,5 @@
 {
   "inks": {
-    "field": {
-      "light": "#1b1830",
-      "dark": "#1b1830"
-    },
     "top": {
       "light": "#7167ff",
       "dark": "#347aea"
@@ -21,7 +17,6 @@
     {
       "id": "top",
       "ink": "top",
-      "spin": true,
       "type": "stick",
       "angle": 0,
       "reach": 18,
@@ -30,7 +25,6 @@
     {
       "id": "mid",
       "ink": "mid",
-      "spin": true,
       "type": "stick",
       "angle": 49,
       "reach": 18,
@@ -39,7 +33,6 @@
     {
       "id": "low",
       "ink": "low",
-      "spin": true,
       "type": "stick",
       "angle": 100,
       "reach": 18,
@@ -48,34 +41,7 @@
   ],
   "variants": {
     "favicon": {
-      "inks": "theme",
       "scale": 1
-    },
-    "mono": {
-      "inks": "black",
-      "scale": 1
-    },
-    "chip": {
-      "inks": "dark",
-      "scale": 1,
-      "field": {
-        "ink": "field",
-        "radius": 11
-      }
-    },
-    "apple": {
-      "inks": "dark",
-      "scale": 1,
-      "field": {
-        "ink": "field",
-        "radius": 0
-      }
     }
-  },
-  "motion": {
-    "speed": 120,
-    "restSpread": 8,
-    "ramp": 0.2,
-    "restPose": "logo"
   }
 }
