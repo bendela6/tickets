@@ -1,7 +1,11 @@
 import type { Db } from '@tickets/db';
 import { itemActivity } from '@tickets/db';
-import { docToText, parseDoc } from '@tickets/richtext';
+import { createRichText, parseDoc } from '@tilewise/richtext';
 import type { StoredEvent } from '../automation/registry';
+
+// The api only reads documents, so its ticket ref needs no editor: docToText
+// gives the chip's label, as the web's does.
+const { docToText } = createRichText({ nodes: [{ name: 'ticketRef', extensions: () => [] }] });
 
 // Compute a self-contained, display-ready summary from a value-only item event.
 function summarize(event: StoredEvent): Record<string, unknown> {

@@ -10,9 +10,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@tilewise/resource": "^0.1.2",
     "@tickets/db": "workspace:*",
-    "@tickets/richtext": "workspace:*",
+    "@tilewise/resource": "^0.1.2",
+    "@tilewise/richtext": "^0.1.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.5",
     "uuid": "^14.0.1",

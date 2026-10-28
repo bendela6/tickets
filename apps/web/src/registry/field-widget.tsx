@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Feature } from '@tickets/richtext';
+import type { Feature } from '@tilewise/richtext';
 import type { Board, Field, Item } from '../api/types';
 import { RichTextEditor } from '../components/rich-text/rich-text-editor';
 import { Checkbox, Combobox, type Option, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@tilewise/ui';

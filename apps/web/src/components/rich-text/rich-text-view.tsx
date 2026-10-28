@@ -1,7 +1,8 @@
-import { buildExtensions, PRESETS, toDisplayDoc } from '@tickets/richtext';
+import { PRESETS } from '@tilewise/richtext';
 import { EditorContent, useEditor } from '@tiptap/react';
 import type { MouseEvent } from 'react';
 import { cn } from '@tilewise/ui';
+import { buildExtensions, toDisplayDoc } from './rich-text';
 
 type RichTextViewProps = {
   value: string;
@@ -20,7 +21,7 @@ export function RichTextView({ value, className, onOpenTicket }: RichTextViewPro
     immediatelyRender: true,
   });
 
-  // Ticket-ref chips (rendered by @tickets/richtext as
+  // Ticket-ref chips (rendered by ./rich-text.ts's ticketRef as
   // `<span data-ticket-ref="TIX-42">`) aren't interactive elements — walk up
   // from whatever the click actually landed on (e.g. a text node's parent)
   // to find the chip.

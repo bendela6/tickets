@@ -1,15 +1,11 @@
 import {
-  buildExtensions,
   DOC_SENTINEL,
-  docToText,
-  isDocEmpty,
   parseDoc,
   PRESETS,
-  toDisplayDoc,
   toolbarControls,
   type DocNode,
   type Feature,
-} from '@tickets/richtext';
+} from '@tilewise/richtext';
 import { getSchema } from '@tiptap/core';
 import type { Schema } from '@tiptap/pm/model';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
@@ -17,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, cn, Kbd } from '@tilewise/ui';
 import { uploadImage } from './image-upload';
 import { LinkEditPopover } from './link-popover';
+import { buildExtensions, docToText, isDocEmpty, toDisplayDoc } from './rich-text';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
 import { Toolbar, type ToolbarVariant } from './toolbar';
 import {

@@ -1,4 +1,4 @@
-import { buildExtensions } from '@tickets/richtext';
+import { buildExtensions } from './rich-text';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Editor } from '@tiptap/react';

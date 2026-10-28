@@ -1,8 +1,9 @@
-import { docToText, parseDoc } from '@tickets/richtext';
+import { parseDoc } from '@tilewise/richtext';
 import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
 import { Avatar, RelativeDate, ScreenState } from '@tilewise/ui';
+import { docToText } from './rich-text/rich-text';
 import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 

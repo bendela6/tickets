@@ -1,4 +1,4 @@
-import type { SuggestionHooks } from '@tickets/richtext';
+import type { SuggestionHooks } from '@tilewise/richtext';
 import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
@@ -8,7 +8,7 @@ import { Avatar, cn, Kbd, TONE_HUE } from '@tilewise/ui';
 import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
-// and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source
+// and ticket-ref (#) nodes (tilewise's mention and ./rich-text.ts's ticketRef). Either source
 // is optional — when absent, that trigger character simply never opens a
 // popover (Suggestion's `items`/`render` hooks are never attached for it).
 // `kind`/`statusKind` are optional too — board-suggestions.ts fills them in

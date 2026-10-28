@@ -1,5 +1,5 @@
 import type { Editor } from '@tiptap/react';
-import type { ToolbarControl } from '@tickets/richtext';
+import type { ToolbarControl } from '@tilewise/richtext';
 import { useRef, type ReactNode } from 'react';
 import {
   Button,
@@ -48,7 +48,7 @@ const BTN =
   'text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40';
 const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
-// One glyph + one action per toolbar control id (see @tickets/richtext
+// One glyph + one action per toolbar control id (see @tilewise/richtext's
 // REGISTRY for the full id list). Text glyph treatments match the DEF table
 // in RteToolbar.dc.html; icon glyphs stand in for lucide via @tilewise/ui's
 // Icon registry (list/quote/link/plus/chevron-down/chevron-right/
