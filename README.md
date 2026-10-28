@@ -9,7 +9,7 @@ link types are all data.
 
 | Package       | What                                                              |
 | ------------- | ----------------------------------------------------------------- |
-| `packages/db` | drizzle schema, migrations, seed factory, items-core importer     |
+| `packages/db` | drizzle schema, migrations, seed factory, project export/delete   |
 | `apps/api`    | Fastify HTTP API (port 4600) — the only thing that touches the DB |
 | `apps/web`    | React dashboard (port 4610) — views, table, drawer, dialog        |
 
@@ -19,7 +19,6 @@ link types are all data.
 cp .env.example .env          # postgres on 127.0.0.1:5532, db "tickets_dev"
 pnpm install
 pnpm db:migrate               # apply schema
-pnpm db:import                # one-shot import of ../items-core/tasks (optional)
 pnpm dev                      # mprocs: api on 4600 + web on 4620 + studio + watchers
 ```
 

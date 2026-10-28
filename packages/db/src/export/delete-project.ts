@@ -25,7 +25,6 @@
 // be left at the end, or the whole transaction rolls back.
 import postgres, { type Sql, type TransactionSql } from 'postgres';
 import { connectionUrl } from '../environment';
-import { PRODUCTION_DATABASE } from '../import/guard-not-production';
 import {
   PROJECT_TABLES,
   resolveProjects,
@@ -39,6 +38,10 @@ import { EXPORT_TYPES } from './read-only-client';
 
 type Tx = TransactionSql;
 type Key = number | string;
+
+// The local server's production database and the live one on the gateway are
+// both named this.
+const PRODUCTION_DATABASE = 'tickets';
 
 // A writing session that reads rows exactly as an export does (EXPORT_TYPES),
 // so they compare equal to the rows in a backup file.

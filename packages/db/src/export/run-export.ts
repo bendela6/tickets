@@ -8,8 +8,8 @@
 // {key} is the project's item prefix and {date} the snapshot's date.
 //
 // The database is the usual POSTGRES_* (environment.ts), which defaults to the
-// production `tickets` database. Unlike db:import, that is allowed here: the
-// exporter only reads, through a read-only session (read-only-client.ts).
+// production `tickets` database. That is allowed here: the exporter only
+// reads, through a read-only session (read-only-client.ts).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';

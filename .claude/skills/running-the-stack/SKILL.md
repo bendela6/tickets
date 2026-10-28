@@ -22,7 +22,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 - Full stack: `docker compose up -d` → postgres (`127.0.0.1:5532`, prod+dev dbs) + app on `:4610` serving everything by path: `/` (web), `/api`, `/studio`
 - Deploy current source to 4610: `sh scripts/deploy-web.sh` (`docker compose up -d --build app`) — at phase boundaries, not every commit
 - Dev loop: `pnpm dev` — mprocs dashboard with panes for api (`:4600`), web (`:4620`), studio, watchers, all against `tickets_dev` (`POSTGRES_DATABASE` in root `.env`)
-- DB: `pnpm db:migrate` / `db:seed`, `pnpm --filter @tickets/db db:import` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
+- DB: `pnpm db:migrate` / `db:seed` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
 - Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`
 
 ## Live deploy (gateway)

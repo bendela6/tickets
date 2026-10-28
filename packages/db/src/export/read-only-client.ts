@@ -1,9 +1,7 @@
 // packages/db/src/export/read-only-client.ts
-// The import's guard (guard-not-production.ts) in reverse. The importer
-// writes, so it refuses the production database outright. The exporter is
-// meant to read production (backing up the live projects before they leave
-// the database), so instead it makes writing impossible on every connection
-// it opens:
+// The exporter is meant to read production (backing up the live projects
+// before they leave the database), so rather than refusing it, it makes
+// writing impossible on every connection it opens:
 //
 //   1. the session starts with default_transaction_read_only=on (a startup
 //      parameter, so it holds before the first statement runs), and
@@ -15,8 +13,9 @@
 //
 // It also owns the type parsing, so an export holds exactly what the
 // database holds:
-//   - timestamps stay the raw wire strings (microseconds; see legacy-client.ts
-//     on why a JS Date would truncate them),
+//   - timestamps stay the raw wire strings (Postgres keeps microseconds, and
+//     a JS Date, which postgres.js parses into by default, holds only
+//     milliseconds),
 //   - int8 (events.id and friends) becomes a JS number, refusing any value a
 //     number can't hold exactly, so the JSON needs no BigInt,
 //   - numeric stays a string (postgres.js's default; it is exact).
