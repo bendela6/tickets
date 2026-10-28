@@ -179,7 +179,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   );
 }
 
-// Table renderer per docs/design/03-project-board.html lines 127–152: CSS grid
+// Table renderer: CSS grid
 // columns driven by the view config, sticky uppercase header with click-to-sort,
 // inline status edits, subtask rollup, hover actions. The view config IS the
 // column model — sort/show-hide mutate it and persist via useViewConfig.

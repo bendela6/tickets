@@ -149,7 +149,7 @@ export function defaultColumns(shared: SharedField[]): string[] {
   return ['type', ...wanted.map((field) => field.key), 'subs'];
 }
 
-/** Grid column widths per docs/design/02-all-tickets.html line 126. */
+/** Grid column widths. */
 export function columnWidthFor(id: string, sharedByKey: Map<string, SharedField>): string {
   if (id === 'type') {
     return '92px';

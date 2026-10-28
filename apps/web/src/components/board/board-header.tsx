@@ -60,8 +60,8 @@ function ColumnChecklist({
   );
 }
 
-// Board screen header per docs/design/03-project-board.html lines 82–97
-// (table mode) and 207–218 (board-mode variant with Columns:/Cards:
+// Board screen header
+// (table mode, and a board-mode variant with Columns:/Cards:
 // dropdowns). Density/mode/columns all persist into the view config. The
 // project's name, its progress and its repository are the page header's
 // (routes/project-route.tsx); this is the view's own row of controls.

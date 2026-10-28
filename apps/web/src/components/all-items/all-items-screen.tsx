@@ -231,7 +231,7 @@ function SaveViewDialog({
   );
 }
 
-// The ALL ITEMS screen per docs/design/02-all-tickets.html lines 35–184:
+// The ALL ITEMS screen:
 // header (title · mono meta · title search · Columns · density), global view
 // tabs with an unsaved dot + Group menu, shared-field filter chips, the KPI
 // strip, and a table grouped by project (or status kind) whose rows resolve

@@ -17,7 +17,7 @@ import type { EnumDecl, FkAction, Generated, Identity, IndexColumn } from '../ty
 import { renderSql } from '../render-sql';
 
 // ---- wire types --------------------------------------------------------
-// Spec of record: docs/superpowers/specs/2026-07-14-eer-drizzle-roundtrip-design.md
+// Spec of record: the 2026-07-14 eer-drizzle round-trip design, in git history
 // (## Types, "wire format: Node-side reader → pure transforms").
 
 export interface SchemaGroupDescription {

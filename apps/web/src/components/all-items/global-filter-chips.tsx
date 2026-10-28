@@ -217,7 +217,7 @@ function AddFilter({
   );
 }
 
-// Filter row per docs/design/02-all-tickets.html lines 101–109: rule chips +
+// Filter row: rule chips +
 // dashed "＋ Filter" like the project board's, with the unsaved-dot, "Save to
 // view" and "Reset" cluster at the right when the working state has drifted
 // from the active global view.

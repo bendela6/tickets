@@ -9,7 +9,7 @@ const BUILT_IN_ROWS = [
   { id: 'subs', label: 'Subtasks', typeLabel: 'rollup' },
 ];
 
-// The 280px columns popover per docs/design/02-all-tickets.html lines 152–176:
+// The 280px columns popover:
 // search header, checkbox list of fields shared across every project (field
 // type in mono at right), a dimmed "not shared" list with coverage counts, and
 // the shared-key explainer footer. The trigger goes accent when the column set

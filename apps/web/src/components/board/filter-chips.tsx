@@ -240,7 +240,7 @@ function AddFilter({
   );
 }
 
-// Filter row per docs/design/03-project-board.html lines 108–114: each rule is
+// Filter row: each rule is
 // a raised chip (field · op · value pills · ×), "＋ Filter" is a dashed chip,
 // count sits right. Ad-hoc edits live in the URL until saved into the view.
 export function FilterChips({

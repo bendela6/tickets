@@ -3,7 +3,7 @@
 Multi-project ticket tracker with fully dynamic fields. Everything user-visible
 on a ticket (title, status, severity, epic, …) is a field definition + typed
 value in Postgres; ticket types, statuses (with a workflow graph), views, and
-link types are all data. See `DESIGN.md` for the full design.
+link types are all data.
 
 ## Layout
 
@@ -52,73 +52,8 @@ with `TICKETS_API_URL=http://127.0.0.1:4600` (the default).
 
 ## HTTP API
 
-Per-endpoint reference — request/response types, error codes, DB tables
-touched — lives in [`docs/api/`](docs/api/README.md).
-
-Conventions:
-
-- Every **mutation** carries `actorId` (a user id) and writes a `ticket_events`
-  row in the same transaction — full audit trail, humans and agents alike.
-- **Ticket PATCH** carries `expectedUpdatedAt` (the exact `updatedAt` string you
-  read); a mismatch returns **409** — refetch and retry. Ticket **type is
-  immutable** after creation.
-- Status changes are validated against the **transition graph** (`422` names the
-  illegal move); with zero edges defined, every move is allowed.
-- List endpoints use the `{ data, meta: { skip, take, total, sort } }` envelope.
-- Errors are `{ "error": "message" }` with a meaningful status code.
-
-### Projects & board
-
-| Method | Path                        | Body / notes                                                                                                                                                  |
-| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`  | `/api/projects`             | list projects                                                                                                                                                 |
-| `POST` | `/api/projects`             | `{ key, name, ticketPrefix }` — creates + seeds types/statuses/fields                                                                                         |
-| `GET`  | `/api/projects/:key/board`  | one payload: project, users, types, typeFields, statuses, transitions, fields (with options), linkTypes, views, assembled tickets (values + comments + links) |
-| `GET`  | `/api/projects/:key/export` | board + every ticket event — canonical JSON dump for backup/diff                                                                                              |
-
-### Tickets
-
-| Method  | Path                         | Body / notes                                                                                                  |
-| ------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `POST`  | `/api/projects/:key/tickets` | `{ actorId, typeKey, parentId?, values }` — required fields gate creation; status defaults to the initial one |
-| `PATCH` | `/api/tickets/:id`           | `{ actorId, expectedUpdatedAt, values?, parentId?, archived? }` — values map field key → value, `null` clears |
-| `GET`   | `/api/tickets/:id/events`    | `?skip&take` — activity feed, newest first                                                                    |
-| `POST`  | `/api/tickets/:id/comments`  | `{ authorId, body }`                                                                                          |
-
-### Links
-
-| Method   | Path                       | Body / notes                                                                                                                                   |
-| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST`   | `/api/links`               | `{ actorId, linkTypeKey, sourceTicketId, targetTicketId }` — reads "source _label_ target"; duplicate → 409, cycle in a directional type → 422 |
-| `DELETE` | `/api/links/:id?actorId=N` |                                                                                                                                                |
-
-### Users
-
-| Method | Path         | Body / notes                                          |
-| ------ | ------------ | ----------------------------------------------------- |
-| `GET`  | `/api/users` |                                                       |
-| `POST` | `/api/users` | `{ name, kind? }` — kind `human` (default) or `agent` |
-
-### Views
-
-| Method  | Path                       | Body / notes                                                                                                             |
-| ------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `POST`  | `/api/projects/:key/views` | `{ name, config? }`                                                                                                      |
-| `PATCH` | `/api/views/:id`           | `{ name?, config?, archived? }` — config `{ columns, sort, filters }` must reference fields by **id**; unknown ids → 400 |
-
-### Vocabulary (no UI yet — the API is the editor)
-
-| Method   | Path                                    | Body / notes                                                                                                                                |
-| -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST`   | `/api/projects/:key/fields`             | `{ key, label, type, config?, attach?: [{ typeKey, required? }] }` — types: `text · number · date · boolean · json · select · multi_select` |
-| `PATCH`  | `/api/fields/:id`                       | `{ label?, config?, archived? }` — system fields can't be archived                                                                          |
-| `POST`   | `/api/fields/:id/options`               | `{ value, label, config? }` — select/multi_select fields only                                                                               |
-| `PATCH`  | `/api/options/:id`                      | `{ label?, config?, archived? }`                                                                                                            |
-| `POST`   | `/api/projects/:key/statuses`           | `{ key, label, kind, config? }` — kind: `todo · active · blocked · done · dropped`                                                          |
-| `PATCH`  | `/api/statuses/:id`                     | `{ label?, config?, archived? }`                                                                                                            |
-| `POST`   | `/api/projects/:key/status-transitions` | `{ fromStatusKey (null = entry edge), toStatusKey, ticketTypeKey? }`                                                                        |
-| `DELETE` | `/api/status-transitions/:id`           |                                                                                                                                             |
-| `POST`   | `/api/projects/:key/link-types`         | `{ key, label, inverseLabel, directional }`                                                                                                 |
+Fastify on `:4600`, the only process that touches Postgres. Its routes are in
+`apps/api/src/routes/`, one file per area.
 
 ## MCP server
 

@@ -1,5 +1,5 @@
 // Pure transform: Model -> drizzle TypeScript source. The other half of the
-// round-trip contract (docs/superpowers/specs/2026-07-14-eer-drizzle-roundtrip-design.md):
+// round-trip contract (the 2026-07-14 eer-drizzle round-trip design):
 // import-drizzle turns a drizzle schema into a Model; this turns a Model back
 // into one. No DOM, no filesystem, no drizzle-orm import — this module never
 // touches drizzle at runtime, it only emits TEXT that, once written to disk
