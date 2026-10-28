@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Card, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@bh/ui';
+import { Button, Card, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@tilewise/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 

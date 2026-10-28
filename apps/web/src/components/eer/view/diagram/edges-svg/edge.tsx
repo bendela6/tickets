@@ -9,7 +9,7 @@ import {
   useDiagramView,
 } from '../../../state/diagram-context';
 import type { Relationship } from '../../../engine/model/types';
-import { cn } from '@bh/ui';
+import { cn } from '@tilewise/ui';
 import { mix } from '../../../ui/color-mix';
 
 interface EdgeProps {

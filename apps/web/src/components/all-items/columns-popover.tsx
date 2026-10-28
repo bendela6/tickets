@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger, SearchInput } from '@bh/ui';
+import { Button, Checkbox, cn, Popover, PopoverContent, PopoverTrigger, SearchInput } from '@tilewise/ui';
 import type { SharedField, UnsharedField } from './shared-fields';
 import { canonicalColumns } from './shared-fields';
 import { KPI_STRIP_DESCRIPTION } from '../board/kpi-strip';

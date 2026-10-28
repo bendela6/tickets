@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '@bh/ui';
+import { cn } from '@tilewise/ui';
 
 // The sidebar rail's small mono section caption ("PROJECTS", "SCHEMA").
 export function RailLabel({ children, className }: { children: ReactNode; className?: string }) {

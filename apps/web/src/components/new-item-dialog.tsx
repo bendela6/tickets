@@ -16,7 +16,7 @@ import { statusChoices } from '../domain/status-choices';
 import { FieldWidget } from '../registry/field-widget';
 import type { OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Card, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Kbd, Pill } from '@bh/ui';
+import { Button, Card, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Kbd, Pill } from '@tilewise/ui';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { nextKey } from '../utils/next-key';

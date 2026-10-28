@@ -6,7 +6,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Card, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, TextLink, useCopy } from '@bh/ui';
+import { Button, Card, cn, Combobox, DrawerControls, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, TextLink, useCopy } from '@tilewise/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry, metaOf, type FieldMeta, type ResourceMeta } from '@bh/resource';
+import { createRegistry, metaOf, type FieldMeta, type ResourceMeta } from '@tilewise/resource';
 import { planScheme, softwareScheme, type SchemeDef } from '@tickets/db';
 import { buildItemsMeta, type ItemsScheme } from './items-meta';
 

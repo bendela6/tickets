@@ -9,7 +9,7 @@
 
 import { useCallback, useId, useMemo, useState } from 'react';
 
-import { ScreenState, SearchInput, Tree, useTreeView } from '@bh/ui';
+import { ScreenState, SearchInput, Tree, useTreeView } from '@tilewise/ui';
 import type { Selection } from '../../engine/model/types';
 import {
   useDiagramActionsOrNull,

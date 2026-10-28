@@ -62,7 +62,7 @@ function formatFileSize(bytes: number): string {
 
 // Hand-copied lucide path data — this plugin paints into real DOM nodes
 // (ProseMirror widget decorations), not React, so it can't render the
-// @bh/ui icon registry's <Icon> component here the way the rest of the
+// @tilewise/ui icon registry's <Icon> component here the way the rest of the
 // toolbar does. circle-alert for the failed slot, rotate-ccw for the Retry
 // button, both at design§06's sizes (18px / 12px).
 const CIRCLE_ALERT_PATHS =

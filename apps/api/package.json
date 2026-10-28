@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bh/resource": "workspace:*",
+    "@tilewise/resource": "^0.1.2",
     "@tickets/db": "workspace:*",
     "@tickets/richtext": "workspace:*",
     "drizzle-orm": "^0.45.2",

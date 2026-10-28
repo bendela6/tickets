@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Tooltip } from '@bh/ui';
+import { Tooltip } from '@tilewise/ui';
 
 // A control and, while there is a reason it can't be used, a tooltip saying
 // it. A disabled button hears no pointer (bh's Button lets it through), so the

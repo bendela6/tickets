@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { TooltipProvider } from '@bh/ui';
+import { TooltipProvider } from '@tilewise/ui';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DiagramProvider } from '../../state/diagram-provider';

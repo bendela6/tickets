@@ -2,7 +2,7 @@ import { docToText, parseDoc } from '@tickets/richtext';
 import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
-import { Avatar, RelativeDate, ScreenState } from '@bh/ui';
+import { Avatar, RelativeDate, ScreenState } from '@tilewise/ui';
 import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 

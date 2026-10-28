@@ -14,11 +14,11 @@
     "format:check": "prettier --check .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "prepare": "bh-hooks",
-    "release": "bh-release"
+    "prepare": "tilewise-hooks",
+    "release": "tilewise-release"
   },
   "devDependencies": {
-    "@bh/config": "workspace:*",
+    "@tilewise/config": "^0.2.0",
     "mprocs": "^0.9.6",
     "prettier": "^3.6.2",
     "turbo": "~2.9.6"
@@ -31,12 +31,6 @@
     "services": [
       "apps/api",
       "apps/web"
-    ],
-    "vendored": [
-      "packages/bh/*"
-    ],
-    "copies": {
-      "bh": "0.11.0"
-    }
+    ]
   }
 }

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, RelativeDate, ScreenState } from '@bh/ui';
+import { Avatar, RelativeDate, ScreenState } from '@tilewise/ui';
 import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 import { boardSuggestions } from './rich-text/board-suggestions';

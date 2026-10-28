@@ -1,4 +1,4 @@
-import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs, Tooltip } from '@bh/ui';
+import { Button, Checkbox, Icon, Popover, PopoverContent, PopoverTrigger, SearchInput, Tabs, Tooltip } from '@tilewise/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 import { KPI_STRIP_DESCRIPTION } from './kpi-strip';

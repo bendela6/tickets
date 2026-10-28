@@ -1,6 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { AppShell, BuildLine, readBuildInfo, ThemeFooter } from '@bh/shell';
-import { TooltipProvider } from '@bh/ui';
+import { AppShell, BuildLine, readBuildInfo, ThemeFooter } from '@tilewise/shell';
+import { TooltipProvider } from '@tilewise/ui';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
 import { BrandMark } from './brand-mark';
 import { NewProjectDialog } from './new-project-dialog';
@@ -16,7 +16,7 @@ const BRAND = {
 };
 
 /**
- * The frame every page mounts inside: @bh/shell's AppShell (a docked sidebar,
+ * The frame every page mounts inside: @tilewise/shell's AppShell (a docked sidebar,
  * a rail when collapsed, a top bar and a drawer on a phone) with tickets' nav,
  * the version line under its name, and in its footer who is acting and the
  * theme. It is mounted once, in the root route, around the routed page. The

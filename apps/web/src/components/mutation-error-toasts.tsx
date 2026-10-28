@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@bh/ui';
+import { useToast } from '@tilewise/ui';
 import '../api/mutation-meta';
 
 // A failed save used to vanish: the board refetched and the edit quietly

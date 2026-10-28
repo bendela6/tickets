@@ -3,7 +3,7 @@ import { OWN_ERROR } from '../../api/mutation-meta';
 import { fieldIssues } from '../../api/field-issues';
 import { useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, Card, FieldError, FieldLabel, Input } from '@bh/ui';
+import { Button, Card, FieldError, FieldLabel, Input } from '@tilewise/ui';
 import { DisabledReason } from '../disabled-reason';
 import type { SettingsTabProps } from './types-tab';
 

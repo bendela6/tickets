@@ -6,7 +6,7 @@ import { DEFAULT_OPTION_COLOR } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Card, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
+import { Button, Card, cn, ColorPicker, Dot, FieldLabel, HUES, Input, Pill, ScreenState, SectionHeader } from '@tilewise/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type SettingsTabProps = {

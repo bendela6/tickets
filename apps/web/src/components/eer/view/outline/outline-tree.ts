@@ -1,8 +1,8 @@
 // Maps the outline's own tree (OutlineNode[], from build-outline.ts) onto the
-// shape @bh/ui's useTreeView walks. Pure data mapping — no React — so the
+// shape @tilewise/ui's useTreeView walks. Pure data mapping — no React — so the
 // row renderer and outline.tsx can both read it without re-walking the model.
 
-import type { TreeNode } from '@bh/ui';
+import type { TreeNode } from '@tilewise/ui';
 import type { Entity } from '../../engine/model/types';
 import { outlineCount, type OutlineNode } from './build-outline';
 

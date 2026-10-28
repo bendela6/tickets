@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { Database, FolderKanban, House, Plus, Rows3, Settings } from 'lucide-react';
-import type { NavItem, NavSection } from '@bh/shell';
-import { readStored } from '@bh/hooks';
+import type { NavItem, NavSection } from '@tilewise/shell';
+import { readStored } from '@tilewise/hooks';
 import { useProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
 import type { Project } from '../../api/types';

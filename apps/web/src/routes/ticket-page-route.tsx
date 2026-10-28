@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Navigate, createRoute } from '@tanstack/react-router';
-import { ScreenState } from '@bh/ui';
+import { ScreenState } from '@tilewise/ui';
 import { useBoard } from '../api/use-board';
 import { ItemDetail } from '../components/item-detail';
 import { indexBoard } from '../utils/index-board';

@@ -1,5 +1,5 @@
 import type { Model } from '../../engine/model/types';
-import { Kbd, Pill } from '@bh/ui';
+import { Kbd, Pill } from '@tilewise/ui';
 import { Section } from './section';
 import { Stat } from './stat';
 

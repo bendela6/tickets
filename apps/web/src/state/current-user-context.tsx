@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { usePersistedState } from '@bh/hooks';
+import { usePersistedState } from '@tilewise/hooks';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 type CurrentUserValue = {

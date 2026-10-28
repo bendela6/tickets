@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { OWN_ERROR } from '../../api/mutation-meta';
 import { useCreateProject } from '../../api/use-create-project';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, Input } from '@bh/ui';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, Input } from '@tilewise/ui';
 
 export function NewProjectDialog({
   open,

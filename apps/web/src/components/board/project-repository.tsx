@@ -1,6 +1,6 @@
 import type { Project } from '../../api/types';
 import { repositoryLink } from '../../utils/repository-link';
-import { Button, cn, Icon, TextLink, Tooltip, useCopy } from '@bh/ui';
+import { Button, cn, Icon, TextLink, Tooltip, useCopy } from '@tilewise/ui';
 
 // The project's repository on its page, under its name: a web link (GitHub's,
 // say) opens in a new tab; an ssh or git@host:path link shows as text with a

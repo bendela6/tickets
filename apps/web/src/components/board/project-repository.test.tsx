@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { TooltipProvider } from '@bh/ui';
+import { TooltipProvider } from '@tilewise/ui';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Project } from '../../api/types';

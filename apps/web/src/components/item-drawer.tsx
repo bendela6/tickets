@@ -1,4 +1,4 @@
-import { Drawer } from '@bh/ui';
+import { Drawer } from '@tilewise/ui';
 import type { Board, Item } from '../api/types';
 import type { BoardIndexes } from '../utils/index-board';
 import { ItemDetail } from './item-detail';

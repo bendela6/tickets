@@ -6,7 +6,7 @@ import { typePill } from '../../domain/status';
 import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Combobox, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState, Tooltip } from '@bh/ui';
+import { Button, cn, Combobox, Icon, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState, Tooltip } from '@tilewise/ui';
 import { ItemKey } from '../item-key';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';

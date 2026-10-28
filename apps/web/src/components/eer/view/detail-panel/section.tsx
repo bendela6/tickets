@@ -1,4 +1,4 @@
-import { cn } from '@bh/ui';
+import { cn } from '@tilewise/ui';
 
 export function Section({ title, count }: { title: string; count?: number }) {
   return (

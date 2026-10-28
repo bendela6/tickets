@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader, TextLink } from '@bh/ui';
+import { Button, Combobox, type Option, Icon, Input, Pill, ScreenState, SectionHeader, TextLink } from '@tilewise/ui';
 import { ItemKey } from './item-key';
 import type { BoardIndexes } from '../utils/index-board';
 

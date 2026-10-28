@@ -1,4 +1,4 @@
-import { HUES, type Hue } from '@bh/ui';
+import { HUES, type Hue } from '@tilewise/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 

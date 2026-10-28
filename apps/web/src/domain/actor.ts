@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import type { Avatar } from '@bh/ui';
+import type { Avatar } from '@tilewise/ui';
 import type { UserKind } from '../api/types';
 
 // The app's ONE actor-presentation mapping, alongside KIND_ICON/KIND_TONE for

@@ -30,7 +30,7 @@ import {
   ScreenState,
   SegmentedControl,
   Tabs,
-} from '@bh/ui';
+} from '@tilewise/ui';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];

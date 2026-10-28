@@ -14,7 +14,7 @@ import { getSchema } from '@tiptap/core';
 import type { Schema } from '@tiptap/pm/model';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, cn, Kbd } from '@bh/ui';
+import { Button, cn, Kbd } from '@tilewise/ui';
 import { uploadImage } from './image-upload';
 import { LinkEditPopover } from './link-popover';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
@@ -59,7 +59,7 @@ type RichTextEditorProps = {
 // server in markdown) is no document to this editor's schema, and Tiptap would
 // load it empty, so the next save would write the empty text over every word
 // of it. It loads as its plain text instead, a paragraph a line, as bh's
-// editor does (@bh/richtext's `loadable`): the words are kept, and a save
+// editor does (@tilewise/richtext's `loadable`): the words are kept, and a save
 // only happens once it is edited.
 function loadableDoc(schema: Schema, value: string): DocNode {
   const doc = toDisplayDoc(value);

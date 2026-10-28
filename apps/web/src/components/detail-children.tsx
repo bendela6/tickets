@@ -7,7 +7,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { statusChoices } from '../domain/status-choices';
 import { useCurrentUser } from '../state/current-user-context';
-import { Card, cn, Combobox, Icon, Kbd, Progress, SectionHeader } from '@bh/ui';
+import { Card, cn, Combobox, Icon, Kbd, Progress, SectionHeader } from '@tilewise/ui';
 import { ItemKey } from './item-key';
 import { childProgress } from '../utils/child-progress';
 import { nextKey } from '../utils/next-key';

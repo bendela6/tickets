@@ -1,4 +1,4 @@
-import { Dot } from '@bh/ui';
+import { Dot } from '@tilewise/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model, Relationship } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';

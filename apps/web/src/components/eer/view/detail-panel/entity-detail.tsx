@@ -2,7 +2,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { columnRoles } from '../../engine/model/column-roles';
 import type { Entity, Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn, Pill, ScreenState } from '@bh/ui';
+import { cn, Pill, ScreenState } from '@tilewise/ui';
 import { Header } from './header';
 import { RelRow } from './rel-row';
 import { Section } from './section';

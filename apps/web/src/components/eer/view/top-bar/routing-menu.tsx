@@ -3,7 +3,7 @@
 // see what the others were without landing on them.
 
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { Button, Dropdown, Tooltip, cn } from '@bh/ui';
+import { Button, Dropdown, Tooltip, cn } from '@tilewise/ui';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramView } from '../../state/diagram-context';
 

@@ -1,7 +1,7 @@
 import { buildExtensions, PRESETS, toDisplayDoc } from '@tickets/richtext';
 import { EditorContent, useEditor } from '@tiptap/react';
 import type { MouseEvent } from 'react';
-import { cn } from '@bh/ui';
+import { cn } from '@tilewise/ui';
 
 type RichTextViewProps = {
   value: string;

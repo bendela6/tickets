@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { TabNav } from '@bh/shell/layout';
+import { TabNav } from '@tilewise/shell/layout';
 import type { Board } from '../api/types';
 import { useCreateView } from '../api/use-create-view';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Icon, Input } from '@bh/ui';
+import { Button, Icon, Input } from '@tilewise/ui';
 
 // A project's views as the tabs of its page header, each a route
 // (/p/$projectKey/v/$viewId), with "New view" after the last one, which names

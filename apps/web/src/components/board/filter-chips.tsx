@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Combobox, Icon, type Option as ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@bh/ui';
+import { Button, Combobox, Icon, type Option as ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tilewise/ui';
 import type { Board, Field, Option } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { kindColor } from '../../registry/option-color';

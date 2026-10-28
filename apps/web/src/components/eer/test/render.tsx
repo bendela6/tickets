@@ -1,7 +1,7 @@
 // Render helpers for component tests: a loaded DiagramProvider around arbitrary UI.
 
 import { act, render, type RenderResult } from '@testing-library/react';
-import { TooltipProvider } from '@bh/ui';
+import { TooltipProvider } from '@tilewise/ui';
 import type { ReactNode } from 'react';
 
 import { useDiagramActions } from '../state/diagram-context';

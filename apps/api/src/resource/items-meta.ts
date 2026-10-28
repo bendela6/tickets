@@ -9,7 +9,7 @@ import {
   type OptionMeta,
   type ResourceMeta,
   type Serves,
-} from '@bh/resource';
+} from '@tilewise/resource';
 import type { fields, itemTypeFields, itemTypes, options } from '@tickets/db';
 
 // The items resource's metadata (bh's ResourceMeta, `GET /api/items/meta`),

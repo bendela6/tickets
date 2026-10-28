@@ -1,4 +1,4 @@
-import { Dot } from '@bh/ui';
+import { Dot } from '@tilewise/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model } from '../../engine/model/types';
 import { Card } from './card';

@@ -1,8 +1,8 @@
 import { createRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ListTree } from 'lucide-react';
-import { Page, PageHeader } from '@bh/shell/layout';
-import { Button, ScreenState, SidePanel, useIsNarrow, usePersistedFlag } from '@bh/ui';
+import { Page, PageHeader } from '@tilewise/shell/layout';
+import { Button, ScreenState, SidePanel, useIsNarrow, usePersistedFlag } from '@tilewise/ui';
 import { useSchemaGraph } from '../api/use-schema';
 import { EerCanvas, EerDiagramProvider, schemaGraphToModel } from '../components/eer';
 import { SchemaOutline } from '../components/schema/schema-outline';

@@ -1,4 +1,4 @@
-import type { Option as Choice, OptionGroup } from '@bh/ui';
+import type { Option as Choice, OptionGroup } from '@tilewise/ui';
 import type { Option, StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE } from './status';
 

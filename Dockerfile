@@ -2,9 +2,8 @@
 # nginx (front) + node API + pgweb (self-hosted DB browser), under supervisord.
 
 # every workspace package's manifest at its own path, found rather than listed: a package missing from the
-# install is left unlinked and the web build can't resolve it, and the gateway's bh page adds packages under
-# packages/bh/ as bh grows. This stage reruns on any change; its output, and so the install below, only on
-# a manifest's.
+# install is left unlinked and the web build can't resolve it. This stage reruns on any change; its output,
+# and so the install below, only on a manifest's.
 FROM node:22-alpine AS manifests
 WORKDIR /src
 COPY . .
@@ -18,7 +17,7 @@ WORKDIR /app
 # .npmrc carries the tslib public-hoist needed by radix-ui transitives at build time
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY --from=manifests /manifests/ ./
-# the root's prepare script (bh-hooks) writes git hooks with @bh/config's bin, which isn't here yet: only
+# the root's prepare script (tilewise-hooks) writes git hooks with @tilewise/config's bin, which isn't here yet: only
 # the manifests are, and there's no git to hook
 RUN npm pkg delete scripts.prepare
 RUN pnpm install --frozen-lockfile

@@ -1,4 +1,4 @@
-import { cn, Dot, ScreenState } from '@bh/ui';
+import { cn, Dot, ScreenState } from '@tilewise/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';

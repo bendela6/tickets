@@ -1,6 +1,6 @@
 import { getMarkRange, posToDOMRect, type Editor } from '@tiptap/react';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Button, Icon } from '@bh/ui';
+import { Button, Icon } from '@tilewise/ui';
 
 // Forces a re-render whenever the given Tiptap editor fires a transaction or
 // selection-update event. RichTextEditor already re-renders on every

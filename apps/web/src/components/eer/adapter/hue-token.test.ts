@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +8,7 @@ import { HUE_TOKEN, hueToken } from './hue-token';
 
 // This test exists because the hue -> token path spans three packages and no
 // single one of them can see the whole chain: @tickets/db names the hues,
-// @bh/ui declares the tokens, and apps/web is the only place that has to
+// @tilewise/ui declares the tokens, and apps/web is the only place that has to
 // turn one into the other. Everything in between compiles and every unit test
 // passes with a hue whose token is never emitted — the failure is a custom
 // property that resolves to nothing at paint time, which took a whole-branch
@@ -23,9 +24,11 @@ const read = (p: string) => readFileSync(join(repoRoot, p), 'utf8');
 
 const schemaGroupsSrc = read('packages/db/src/schema/schema-groups.ts');
 const groupTablesSrc = read('packages/db/src/schema/introspect/group-tables.ts');
-// The generated stylesheets are split one per token type; colours.css is the
-// only one that declares the `--color-*` bridge this test reads.
-const tokensCss = read('packages/bh/ui/styles/generated/colors.css');
+// The generated stylesheets are split one per token type, beside the entry
+// @tilewise/ui exports as tokens.css; colours.css is the only one that
+// declares the `--color-*` bridge this test reads.
+const tokensEntry = createRequire(import.meta.url).resolve('@tilewise/ui/tokens.css');
+const tokensCss = readFileSync(join(dirname(tokensEntry), 'generated/colors.css'), 'utf8');
 
 // Curated hues: every `color: '<hue>'` in SCHEMA_GROUPS.
 const curatedHues = [...schemaGroupsSrc.matchAll(/^\s*color: '([a-z]+)',$/gm)].map((m) => m[1]!);
@@ -63,7 +66,7 @@ describe('every hue the schema data can produce has a reachable token', () => {
   });
 
   it('resolves each mapped hue to a token tokens.css declares', () => {
-    // A token string that names a variable @bh/ui never declares is
+    // A token string that names a variable @tilewise/ui never declares is
     // exactly as broken as no mapping at all: `stroke: var(--edge-c)` with an
     // undefined property is an invalid declaration, so the edge paints
     // `stroke: none` rather than falling back to anything.

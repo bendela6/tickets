@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board, Field, ItemType, Option } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
-import { ToastProvider, TooltipProvider } from '@bh/ui';
+import { ToastProvider, TooltipProvider } from '@tilewise/ui';
 import { AllItemsScreen } from './all-items-screen';
 
 const createdAt = '2026-01-01T00:00:00.000Z';

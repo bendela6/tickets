@@ -5,7 +5,7 @@ import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Avatar, Button, Card, cn, Icon, Pill, RelativeDate, Tooltip } from '@bh/ui';
+import { Avatar, Button, Card, cn, Icon, Pill, RelativeDate, Tooltip } from '@tilewise/ui';
 import { ItemKey } from './item-key';
 import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';

@@ -5,7 +5,7 @@ import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../a
 import { useCurrentUser } from '../../state/current-user-context';
 import { ArchChip } from '../arch-chip';
 import { slugify } from '../../utils/slugify';
-import { Button, Card, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, ScreenState, SectionHeader } from '@bh/ui';
+import { Button, Card, Checkbox, cn, Combobox, type Option as ComboOption, FieldLabel, Input, Pill, ScreenState, SectionHeader } from '@tilewise/ui';
 import type { SettingsTabProps } from './types-tab';
 
 // Same folded-direction chip text as detail-links: outgoing "label →",

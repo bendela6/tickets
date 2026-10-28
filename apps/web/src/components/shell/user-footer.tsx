@@ -1,4 +1,4 @@
-import { cn } from '@bh/ui';
+import { cn } from '@tilewise/ui';
 import { ActorMenu } from './actor-menu';
 
 /**

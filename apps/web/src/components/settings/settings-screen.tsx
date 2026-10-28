@@ -1,10 +1,10 @@
 import { OWN_ERROR } from '../../api/mutation-meta';
 import { useMemo } from 'react';
-import { Page, PageBody, PageHeader } from '@bh/shell/layout';
+import { Page, PageBody, PageHeader } from '@tilewise/shell/layout';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, ScreenState, useConfirm, useToast } from '@bh/ui';
+import { Button, ScreenState, useConfirm, useToast } from '@tilewise/ui';
 import { DisabledReason } from '../disabled-reason';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';

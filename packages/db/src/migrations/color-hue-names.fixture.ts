@@ -1,4 +1,4 @@
-// bh's eleven hues (@bh/ui's HUES), which this package doesn't depend on.
+// tilewise's eleven hues (@tilewise/ui's HUES), which this package doesn't depend on.
 export const HUES = [
   'red',
   'orange',

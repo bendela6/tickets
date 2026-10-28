@@ -1,6 +1,6 @@
 import { Link, Navigate, createRoute } from '@tanstack/react-router';
-import { Page, PageBody, PageHeader } from '@bh/shell/layout';
-import { ScreenState } from '@bh/ui';
+import { Page, PageBody, PageHeader } from '@tilewise/shell/layout';
+import { ScreenState } from '@tilewise/ui';
 import { useItemByKey } from '../api/use-item-by-key';
 import { rootRoute } from './root-route';
 

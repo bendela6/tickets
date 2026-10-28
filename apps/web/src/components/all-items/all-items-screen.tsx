@@ -8,9 +8,9 @@ import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { statusChoices } from '../../domain/status-choices';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Page, PageBody, PageHeader } from '@bh/shell/layout';
-import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@bh/table';
-import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, SearchInput, tableRender, Tabs, TONE_HUE, Tooltip } from '@bh/ui';
+import { Page, PageBody, PageHeader } from '@tilewise/shell/layout';
+import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@tilewise/table';
+import { Avatar, Button, cn, Combobox, DialogContent, DialogRoot, DialogTitle, Icon, Input, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, SearchInput, tableRender, Tabs, TONE_HUE, Tooltip } from '@tilewise/ui';
 import { ItemKey } from '../item-key';
 import { avatarFor } from '../../domain/actor';
 import { childProgress } from '../../utils/child-progress';
@@ -400,7 +400,7 @@ export function AllItemsScreen() {
 
   // Every column sorts, matching the project board's table where every header
   // is clickable. Column RESIZING stays off: it is a new, persisted capability
-  // the old hand-rolled table never had — the migration onto @bh/table
+  // the old hand-rolled table never had — the migration onto @tilewise/table
   // introduced it silently — and nobody has yet seen it run in a browser.
   const columns: Column<Row>[] = [
     {

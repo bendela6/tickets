@@ -6,7 +6,7 @@
 // "what am I looking at" lives in the side panel, "how is it drawn" lives
 // here.
 
-import { Button, cn, Tooltip } from '@bh/ui';
+import { Button, cn, Tooltip } from '@tilewise/ui';
 import { useDiagramActions } from '../../state/diagram-context';
 import { RoutingMenu } from './routing-menu';
 

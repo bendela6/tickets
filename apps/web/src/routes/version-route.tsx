@@ -1,10 +1,10 @@
 import { createRoute } from '@tanstack/react-router';
-import { readBuildInfo, VersionPage } from '@bh/shell';
+import { readBuildInfo, VersionPage } from '@tilewise/shell';
 import { rootRoute } from './root-route';
 
 const BUILD = readBuildInfo();
 
-/** The Version page, which the version line opens; nothing in a build made without @bh/shell/vite, as the tests are. */
+/** The Version page, which the version line opens; nothing in a build made without @tilewise/shell/vite, as the tests are. */
 function VersionScreen() {
   return BUILD ? <VersionPage info={BUILD} /> : null;
 }

@@ -6,7 +6,7 @@
 // graph declares no kinds (schemaGraphToModel passes none), so this renders
 // nothing on /schema — it exists for models that do.
 
-import { Dot, Pill } from '@bh/ui';
+import { Dot, Pill } from '@tilewise/ui';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
 
 export function KindFilters() {

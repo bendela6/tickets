@@ -3,7 +3,7 @@ import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Column, Entity, Side } from '../../../engine/model/types';
-import { cn, Pill } from '@bh/ui';
+import { cn, Pill } from '@tilewise/ui';
 
 function Port({
   e,

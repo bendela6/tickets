@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { TooltipProvider } from '@bh/ui';
+import { TooltipProvider } from '@tilewise/ui';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildModel, twoZoneRaw } from '../../test/models';

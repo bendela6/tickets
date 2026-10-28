@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { formatExact, Pill } from '@bh/ui';
+import { formatExact, Pill } from '@tilewise/ui';
 import type { Field } from '../api/types';
 import { statusPill } from '../domain/status';
 import type { BoardIndexes } from '../utils/index-board';

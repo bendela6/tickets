@@ -1,4 +1,4 @@
-import type { Hue } from '@bh/ui';
+import type { Hue } from '@tilewise/ui';
 
 export interface Project {
   id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string;

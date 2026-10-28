@@ -1,12 +1,12 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { buildInfo } from '@bh/shell/vite';
+import { buildInfo } from '@tilewise/config/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), buildInfo()],
-  // One React and one router, whichever package imports them: bh's copies are
-  // workspace packages, and two copies make hooks and every Link in @bh/shell
+  // One React and one router, whichever package imports them: tilewise's
+  // packages bring their own, and two copies make hooks and every Link in @tilewise/shell
   // fail at run time.
   resolve: { dedupe: ['react', 'react-dom', '@tanstack/react-router'] },
   server: {

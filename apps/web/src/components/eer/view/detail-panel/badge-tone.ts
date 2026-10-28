@@ -1,11 +1,11 @@
-import type { Tone } from '@bh/ui';
+import type { Tone } from '@tilewise/ui';
 
 /**
  * What a panel badge is labelling. This vocabulary stays in apps/web —
  * `packages/web/ui/src/library/domain-free.test.ts` fails the build if a
  * library component names a domain concept, and these four are exactly that.
  *
- * Named `BadgeTone`, not `Tone`, because @bh/ui exports a `Tone` of its
+ * Named `BadgeTone`, not `Tone`, because @tilewise/ui exports a `Tone` of its
  * own and this folder previously had both under one name.
  */
 export type BadgeTone = 'entity' | 'group' | 'subgroup' | 'edge';

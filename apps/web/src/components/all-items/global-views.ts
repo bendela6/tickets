@@ -1,4 +1,4 @@
-import { readStored, writeStored } from '@bh/hooks';
+import { readStored, writeStored } from '@tilewise/hooks';
 import type { BoardIndexes } from '../../utils/index-board';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { FilterRule } from '../../utils/view-config';

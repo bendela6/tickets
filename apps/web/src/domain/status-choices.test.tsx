@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { expect, test, vi } from 'vitest';
-import { Combobox } from '@bh/ui';
+import { Combobox } from '@tilewise/ui';
 import type { Option, StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE } from './status';
 import { statusChoices } from './status-choices';

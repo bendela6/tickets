@@ -15,7 +15,7 @@ import {
   MenuSubContent,
   MenuSubTrigger,
   MenuTrigger,
-} from '@bh/ui';
+} from '@tilewise/ui';
 
 export type ToolbarVariant = 'full' | 'compact';
 
@@ -50,7 +50,7 @@ const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
 // One glyph + one action per toolbar control id (see @tickets/richtext
 // REGISTRY for the full id list). Text glyph treatments match the DEF table
-// in RteToolbar.dc.html; icon glyphs stand in for lucide via @bh/ui's
+// in RteToolbar.dc.html; icon glyphs stand in for lucide via @tilewise/ui's
 // Icon registry (list/quote/link/plus/chevron-down/chevron-right/
 // circle-info/minus/check).
 const CONTROLS: Record<string, ControlDef> = {
