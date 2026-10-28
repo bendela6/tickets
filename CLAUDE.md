@@ -12,15 +12,10 @@ pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (
 
 ## Project skills (in `.claude/skills/` — use them)
 
-Generic design→code method — stack specifics live in `design-system-adapter.md`:
-- `tokenizing-the-design` — before adding/changing design tokens, or when a value would be hardcoded
-- `mapping-component-states` — before implementing or verifying a component; enumerate the state matrix
-- `implementing-a-component` — before building or changing a UI component
-- `verifying-a-component` — before claiming a component matches its design and works
-
-Project-specific ops:
 - `running-the-stack` — ports, URLs, deploy, startup gotchas
-- `syncing-design` — pushing/pulling the claude.ai/design project
+- `building-the-plan` and `keeping-the-plan` — the builder and planner sessions (see Tasks)
+
+The design→code skills (tokens, component states, implementing, verifying, syncing the design) are bh's job, since the components are bh's.
 
 ## Running (details in running-the-stack)
 

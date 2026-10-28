@@ -63,7 +63,7 @@ Run `node scripts/tasks-agents.mjs list` first. If it shows `builder` listening 
 
 Give each worker the whole brief, since it knows nothing else:
 - **Its name and items:** a name like `worker-tk-7`, named after the feature, and every ready item of the feature, in order: their text, their `blockedBy`, their notes (the user's and the planner's replies), and the feature's `chosen`.
-- **Where:** the repo's checkout and the branch, and the repo's CLAUDE.md and skills. In tickets those are `implementing-a-component`, `verifying-a-component` and `running-the-stack`.
+- **Where:** the repo's checkout and the branch, and the repo's CLAUDE.md and skills. In tickets that is `running-the-stack`.
 - **Checks:** typecheck, tests and build. A "Check in the browser" ticket is done in the browser, with screenshots.
 - **Commits:** one per ticket, on its branch, a conventional commit scoped to the app, written as `~/.claude/CLAUDE.md` says: no ticket id.
 - **Last, merge and push:** once its items are built and checked, it merges its branch into main and pushes, as "Merging and releasing" says.
