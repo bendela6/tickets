@@ -45,7 +45,7 @@ export function reposFile(env = process.env) {
   return env.TICKETS_REPOS_FILE || path.join(homedir(), '.config', 'tickets', 'repos.json');
 }
 
-/** tickets' API: `TICKETS_API_URL` when set (as the MCP server reads it), else 127.0.0.1:4600. */
+/** tickets' API: `TICKETS_API_URL` when set, else 127.0.0.1:4600. */
 export function apiUrl(env = process.env) {
   return (env.TICKETS_API_URL || DEFAULT_API).replace(/\/+$/, '');
 }

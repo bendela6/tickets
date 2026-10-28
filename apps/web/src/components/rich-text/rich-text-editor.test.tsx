@@ -28,7 +28,7 @@ describe('RichTextEditor', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Legacy');
   });
 
-  // A comment written through the API or the MCP server can hold a heading,
+  // A comment written through the API can hold a heading,
   // which a comment's features leave out: Tiptap would load it empty, and the
   // next save would write the empty text over the comment.
   it('loads a comment holding a heading as its plain text, rather than empty, and saves nothing unedited', () => {

@@ -1,6 +1,6 @@
 # tickets
 
-pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `apps/mcp` (MCP server) · `packages/` incl. `@tickets/db`.
+pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `packages/` incl. `@tickets/db`.
 
 ## Design system — Instrument
 

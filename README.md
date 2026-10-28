@@ -12,7 +12,6 @@ link types are all data.
 | `packages/db` | drizzle schema, migrations, seed factory, items-core importer     |
 | `apps/api`    | Fastify HTTP API (port 4600) — the only thing that touches the DB |
 | `apps/web`    | React dashboard (port 4610) — views, table, drawer, dialog        |
-| `apps/mcp`    | stdio MCP server over the HTTP API                                |
 
 ## Quick start
 
@@ -47,56 +46,10 @@ postgres, so dev and the deployed container can run side by side.
 - Logs: `docker compose logs -f app`
 - Stop: `docker compose down` (add `-v` to also drop the data volume)
 
-The MCP server stays on the host (stdio) — point it at the containerized API
-with `TICKETS_API_URL=http://127.0.0.1:4600` (the default).
-
 ## HTTP API
 
 Fastify on `:4600`, the only process that touches Postgres. Its routes are in
 `apps/api/src/routes/`, one file per area.
-
-## MCP server
-
-Per-tool reference — input/output shapes and the HTTP calls behind each
-tool — lives in [`docs/mcp/`](docs/mcp/README.md).
-
-Lets any Claude session read and write the tracker with attributed actions.
-It talks to the HTTP API only (start the API first) and resolves
-`TICKETS_ACTOR` to a user at startup — every mutation lands in the ticket's
-activity feed under that name. Tools address tickets by **project key +
-number**, never internal ids.
-
-Register in Claude Code (user scope):
-
-```sh
-claude mcp add tickets --scope user -- node <repo>/apps/mcp/node_modules/tsx/dist/cli.mjs <repo>/apps/mcp/src/server.ts
-```
-
-Environment: `TICKETS_API_URL` (default `http://127.0.0.1:4600`),
-`TICKETS_ACTOR` (default `claude`).
-
-### Read tools
-
-| Tool                 | Input                                                                            | Returns                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `list_projects`      | —                                                                                | project keys, names, prefixes                                                                                                      |
-| `get_board`          | `projectKey`                                                                     | vocabulary (types, statuses+kinds, fields, epics, link types) + one summary row per ticket (no descriptions/comments — token-lean) |
-| `get_ticket`         | `projectKey, ticketNumber`                                                       | everything: values incl. markdown description, comments with authors, links with direction labels, children, 10 recent events      |
-| `search_tickets`     | `projectKey, query?, statusKinds?, statuses?, epic?, typeKey?, includeArchived?` | matching summary rows                                                                                                              |
-| `list_ticket_events` | `projectKey, ticketNumber, take?`                                                | audit trail, newest first                                                                                                          |
-
-### Write tools (all attributed to the configured actor)
-
-| Tool            | Input                                                         | Notes                                                                                                                                         |
-| --------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `create_ticket` | `projectKey, typeKey, values, parentNumber?`                  | required fields depend on the type; status defaults to the initial one                                                                        |
-| `update_ticket` | `projectKey, ticketNumber, values?, parentNumber?, archived?` | fetches fresh `updatedAt` itself and retries once on 409 — no lock plumbing for callers; illegal transitions surface the server's 422 message |
-| `add_comment`   | `projectKey, ticketNumber, body`                              | markdown                                                                                                                                      |
-| `link_tickets`  | `projectKey, linkTypeKey, sourceNumber, targetNumber`         | "source _linkType_ target"; cycles in directional types are rejected                                                                          |
-| `remove_link`   | `projectKey, linkTypeKey, sourceNumber, targetNumber`         |                                                                                                                                               |
-
-Tool failures come back as readable `isError` text results (e.g. the server's
-validation message), not protocol errors.
 
 ## Where your checkouts are (`repos.json`)
 
@@ -136,7 +89,7 @@ node scripts/tickets-repos.mjs remove TK           # forget TK's folder
   ```
 
 - **Environment:** `TICKETS_API_URL` is tickets' API, which has the git links
-  (default `http://127.0.0.1:4600`, as for the MCP server);
+  (default `http://127.0.0.1:4600`);
   `TICKETS_REPOS_FILE` moves the file.
 - **Tests:** `node --test scripts/tickets-repos.test.mjs` (a temporary file,
   git repositories and a stub API; never your real file).

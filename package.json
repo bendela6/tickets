@@ -34,7 +34,6 @@
   "release": {
     "services": [
       "apps/api",
-      "apps/mcp",
       "apps/web"
     ],
     "vendored": [
