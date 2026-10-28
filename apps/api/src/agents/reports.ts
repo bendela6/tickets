@@ -23,8 +23,7 @@ export const KEPT_FOR_MS = 7 * 24 * 60 * 60_000;
 // speak here: worker-tk-7, planner, builder.
 const NAME = /^[a-z0-9][a-z0-9.-]{0,47}$/;
 // An item's key in any project (TIX-90, TK/E14, TK-80.3, TK-11.2.1), which is
-// also how the plans write their ids (TK-7.2, TK/E4) while they live in
-// tasks/*.json.
+// also how the plans wrote their ids (TK-7.2, TK/E4) in the old task files.
 const ITEM = /^[^\s/]+(?:-\d+(?:\.\d+)*|\/E\d+)$/;
 
 // The body the task viewer's `POST /agents` takes today: `{name, state, role?,

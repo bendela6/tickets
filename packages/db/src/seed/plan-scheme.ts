@@ -1,6 +1,6 @@
 import type { SchemeDef } from './scheme-types';
 
-// The plans' shape (`tasks/tasks.schema.json`) as a scheme: an epic holds
+// The plans' shape (as the old task files had it) as a scheme: an epic holds
 // features, a feature tickets, a ticket subtickets, and a subticket
 // subtickets of its own.
 
@@ -26,7 +26,7 @@ const FEATURE_STATUSES =['not-planned', 'planning', 'planned', 'designed', 'in-p
 const TICKET_STATUSES = ['todo', 'done', 'cancelled'];
 
 // The repositories a plan's `where` may name: the `repo` enum of
-// `tasks/tasks.schema.json`, each option's value the repo's name as `where`
+// the old task files' schema, each option's value the repo's name as `where`
 // writes it, so `repos` follows `where` without a mapping.
 export const PLAN_REPOS = [
   'tickets', 'bh', 'gateway', 'live gateway', 'items-core', 'items-infrastructure', 'medialib',

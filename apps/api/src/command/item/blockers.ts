@@ -5,8 +5,8 @@ import { HttpError } from '../../errors';
 
 // A plan's blockers: a `blocks` link from B to X says X waits on B (B must be
 // done first), as the software scheme's `blocks` does, and as the plans'
-// `X.blockedBy: [{ id: B, why }]` did. These are the checks of
-// `scripts/tasks-check.mjs` (blockedBy, lines 178-219), made on the write so
+// `X.blockedBy: [{ id: B, why }]` did. These are the checks the old task
+// files' checker made on blockedBy, made here on the write so
 // nothing is left for it to find. An item waits on its blockers, on its
 // children (to be done) and on its parents' blockers; every plan item, in any
 // plan project, is one graph.
@@ -40,7 +40,7 @@ async function loadPlanGraph(tx: DbExecutor) {
   const blockers = new Map<number, number[]>(); // item → what it waits on
   for (const l of blockerLinks) blockers.set(l.target, [...(blockers.get(l.target) ?? []), l.source]);
 
-  // root first, as tasks-check lists them
+  // root first
   const ancestors = (id: number): number[] => {
     const up: number[] = [];
     for (let p = byId.get(id)?.parentId ?? null; p !== null; p = byId.get(p)?.parentId ?? null) {

@@ -13,8 +13,8 @@ export const AGENT_STATES = ['listening', 'working', 'done', 'failed', 'abandone
 //
 // `item` is the item as the agent named it. It names a tickets item when it is
 // one's key (records.items.key, unique and never changed), which the api looks
-// up as it reads; a plans id that is no item's key (`TK-7.2` while the plans
-// live in tasks/*.json) is kept all the same, linked to nothing.
+// up as it reads; a plans id that is no item's key (`TK-7.2`, from the old
+// task files) is kept all the same, linked to nothing.
 export const agentReports = coreSchema.table(
   'agent_reports',
   {

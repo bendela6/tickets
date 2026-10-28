@@ -11,6 +11,3 @@ backups/
 
 # Superpowers scratch (brainstorm mockups, SDD ledger)
 .superpowers/
-
-# what the task agents last said (scripts/tasks-view.mjs)
-tasks/.runtime/

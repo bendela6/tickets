@@ -1,7 +1,7 @@
 import type { AgentRole, AgentState } from './reports';
 
 // What the screens show for an agent's last word now (TK-84.2): the task
-// viewer's rules (tasks/viewer.html, agentView), worked out once, here.
+// viewer's rules (the old task viewer's agentView), worked out once, here.
 
 const MINUTE = 60_000;
 // The planner and the builder beat while they listen: listening while their
