@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    globalSetup: ['./src/test/global-setup.ts'],
     setupFiles: ['./src/test/setup-env.ts'],
     // Several test files share a live Postgres database and a fixed key
     // (schemes.key = 'software': seed-scheme.test.ts, import/import-legacy.test.ts

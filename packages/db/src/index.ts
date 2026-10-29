@@ -7,6 +7,7 @@ export {
   type DbTransaction,
 } from './client';
 export { environment, connectionUrl } from './environment';
+export { migrateDatabase } from './migrate-database';
 export { seedProject } from './seed/seed-project';
 export { ensurePlanScheme, ensureScheme, ensureSoftwareScheme } from './seed/ensure-scheme';
 export { planScheme } from './seed/plan-scheme';

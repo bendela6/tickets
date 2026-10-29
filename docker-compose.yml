@@ -12,6 +12,7 @@ services:
       - '127.0.0.1:5532:5432'
     volumes:
       - tickets-pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d tickets']
       interval: 2s

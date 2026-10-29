@@ -16,7 +16,7 @@ A pnpm + turbo monorepo on Node 20+.
 ## Getting started
 
 ```sh
-docker compose up -d postgres   # Postgres on 127.0.0.1:5532
+docker compose up -d postgres   # Postgres on 127.0.0.1:5532, with tickets_dev and tickets_test
 cp .env.example .env            # points at the tickets_dev database
 pnpm install
 pnpm db:migrate
