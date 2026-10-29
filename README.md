@@ -1,51 +1,35 @@
 # tickets
 
-Multi-project ticket tracker with fully dynamic fields. Everything user-visible
-on a ticket (title, status, severity, epic, …) is a field definition + typed
-value in Postgres; ticket types, statuses (with a workflow graph), views, and
-link types are all data.
+A ticket tracker for several projects. Nothing on a ticket is hard-coded: its fields, types,
+statuses (with their workflow), views and link types are all data in Postgres.
 
-## Layout
+## Stack
 
-| Package       | What                                                              |
-| ------------- | ----------------------------------------------------------------- |
-| `packages/db` | drizzle schema, migrations, seed factory, project export/delete   |
-| `apps/api`    | Fastify HTTP API (port 4600) — the only thing that touches the DB |
-| `apps/web`    | React dashboard (port 4610) — views, table, drawer, dialog        |
+A pnpm + turbo monorepo on Node 20+.
 
-## Quick start
+| Package       | What                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------ |
+| `apps/api`    | Fastify API on `:4600`, the only thing that touches Postgres. Routes are in `src/routes`, one file per area. |
+| `apps/web`    | React 19, TanStack Router and Query, Tailwind v4, UI from `@tilewise/*`. Runs on `:4620` in dev.             |
+| `packages/db` | Drizzle schema, migrations, seed, project export and delete.                                                 |
+
+## Getting started
 
 ```sh
-cp .env.example .env          # postgres on 127.0.0.1:5532, db "tickets_dev"
+docker compose up -d postgres   # Postgres on 127.0.0.1:5532
+cp .env.example .env            # points at the tickets_dev database
 pnpm install
-pnpm db:migrate               # apply schema
-pnpm dev                      # mprocs: api on 4600 + web on 4620 + watchers
+pnpm db:migrate
+pnpm dev                        # api, web and a typecheck watcher, in mprocs
 ```
 
-New empty project: `pnpm db:seed <key> <name> <PREFIX> [software|plan]` (the scheme, `software` by default) or `POST /api/projects`.
+To add an empty project: `pnpm db:seed <key> <name> <PREFIX> [software|plan]`.
 
-## Run in Docker
+## Commands
 
-```sh
-docker compose up -d --build
-```
-
-Two services: `postgres` (17-alpine, own named volume `tickets-pgdata`,
-published loopback-only on `127.0.0.1:5532`, holding both the `tickets`
-(prod) and `tickets_dev` (dev) databases) and `app` — a single container
-running nginx on [http://127.0.0.1:4610](http://127.0.0.1:4610) that serves
-the built web SPA and reverse-proxies `/api` to an internal node API
-(`127.0.0.1:4600`, not published to the host), plus a self-hosted DB browser
-(pgweb) at [http://localhost:4610/studio](http://localhost:4610/studio) (same
-port; baked into the image, works offline). `pnpm dev` (mprocs) uses its
-own ports (api `:4600`, web `:4620`) against `tickets_dev` on the same
-postgres, so dev and the deployed container can run side by side.
-
-- Inspect the DB: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`)
-- Logs: `docker compose logs -f app`
-- Stop: `docker compose down` (add `-v` to also drop the data volume)
-
-## HTTP API
-
-Fastify on `:4600`, the only process that touches Postgres. Its routes are in
-`apps/api/src/routes/`, one file per area.
+| Command          | Does                            |
+| ---------------- | ------------------------------- |
+| `pnpm typecheck` | Type-checks every package.      |
+| `pnpm test`      | Runs every package's tests.     |
+| `pnpm build`     | Builds the web app.             |
+| `pnpm format`    | Formats the repo with Prettier. |
