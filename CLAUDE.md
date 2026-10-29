@@ -2,13 +2,16 @@
 
 @README.md
 
-## UI comes from tilewise
+Each package has its own README.md and CLAUDE.md: read the ones for the folder you are changing.
 
-- Components and tokens are tilewise's `@tilewise/*` packages from npm. To change one, change it in
-  tilewise and bump the version here.
-- Components that only tickets uses, like `ItemKey` and `RailLabel`, live in `apps/web`.
+## Commands
 
-## Before committing
+- One package: `pnpm --filter @tickets/api test` (or `@tickets/web`, `@tickets/db`).
+- One test file: `pnpm --filter @tickets/api test src/command/item/link.test.ts`.
+- Before committing, run `pnpm typecheck` and `pnpm test`.
 
-- Run the typecheck and test commands from the README.
-- Scope each commit by the apps it touches (`api`, `web`, `db`), one commit per task.
+## Rules
+
+- Spell new names and text the American way: `color`, not `colour`. Leave existing names as they
+  are.
+- Scope each commit by the packages it touches (`api`, `web`, `db`), one commit per task.
