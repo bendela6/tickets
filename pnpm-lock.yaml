@@ -26,9 +26,6 @@ importers:
       '@tickets/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@tilewise/resource':
-        specifier: ^0.1.2
-        version: 0.1.2(@typescript/typescript6@6.0.2)
       '@tilewise/richtext':
         specifier: ^0.1.2
         version: 0.1.2(@floating-ui/dom@1.8.0)(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))(@types/react-dom@19.2.3(@types/react@19.3.0))(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tailwindcss@4.3.3)

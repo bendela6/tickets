@@ -29,7 +29,7 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     key: 'ws',
     label: 'Workspace',
     color: 'blue',
-    tables: ['users', 'projects', 'views', 'agent_reports'],
+    tables: ['users', 'projects', 'views'],
   },
   {
     key: 'st',

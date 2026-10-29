@@ -141,7 +141,6 @@ describe('describeSchema schemas', () => {
     const SCHEMA_BY_TABLE: Record<string, string> = {
       users: 'core',
       projects: 'core',
-      agent_reports: 'core',
       schemes: 'structure',
       item_types: 'structure',
       item_type_child_types: 'structure',
