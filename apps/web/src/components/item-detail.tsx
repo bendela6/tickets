@@ -18,10 +18,10 @@ import { DetailLinks } from './detail-links';
 import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
 
-// Click-to-edit title: static heading until clicked, then bh's Input holding
+// Click-to-edit title: static heading until clicked, then tilewise's Input holding
 // the draft (`commit="leave"`): leaving the field or Enter saves it, Escape
 // drops it (and in the drawer closes the drawer too, in the same press, with
-// nothing saved: bh's Input drops the draft before the drawer hears the key).
+// nothing saved: tilewise's Input drops the draft before the drawer hears the key).
 // Either way the heading returns.
 function InlineTitle({
   value,

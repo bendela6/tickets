@@ -5,7 +5,7 @@ import { RichTextEditor } from './rich-text-editor';
 import { RichTextView } from './rich-text-view';
 import { FakeXHR } from './test-fake-xhr';
 
-// The submit hint is bh's Kbd for mod+Enter, which names the reader's keys:
+// The submit hint is tilewise's Kbd for mod+Enter, which names the reader's keys:
 // Ctrl+Enter in jsdom, which is no Mac.
 function isSubmitHint(_content: string, element: Element | null): boolean {
   return element?.tagName === 'KBD' && element.textContent === 'Ctrl+Enter';

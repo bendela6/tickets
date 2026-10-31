@@ -4,7 +4,7 @@ import { Section } from './section';
 import { Stat } from './stat';
 
 export function EmptyState({ model }: { model: Model | null }) {
-  // A gesture is named in a Pill; a key is drawn as one, with bh's Kbd.
+  // A gesture is named in a Pill; a key is drawn as one, with tilewise's Kbd.
   const rows: [string | { keys: string }, string][] = [
     ['wheel', 'zoom toward the cursor'],
     ['middle-drag', 'pan the canvas'],

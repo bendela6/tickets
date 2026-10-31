@@ -18,7 +18,7 @@ export interface StatusChoices {
 }
 
 /**
- * What a status picker offers, for bh's `Combobox` with `searchable={false}`
+ * What a status picker offers, for tilewise's `Combobox` with `searchable={false}`
  * (spread it in): each of a type's statuses under its kind, with its kind's
  * icon and color, and each one the workflow doesn't allow shown but disabled,
  * saying why.

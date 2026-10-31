@@ -23,7 +23,7 @@ describe('suggestion popovers', () => {
     await user.keyboard('@be');
     expect(await screen.findByText('beka')).toBeInTheDocument();
     expect(screen.getByText('PEOPLE')).toBeInTheDocument();
-    // Row 0 ('beka') is selected by default. The hint is bh's Kbd, which names
+    // Row 0 ('beka') is selected by default. The hint is tilewise's Kbd, which names
     // the reader's keys: Enter in jsdom, which is no Mac.
     expect(screen.getByText('Enter')).toBeInTheDocument();
     await user.keyboard('{Enter}');

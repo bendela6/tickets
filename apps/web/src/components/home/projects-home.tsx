@@ -16,7 +16,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
   const peak = Math.max(1, ...activity);
   const events = activity.reduce((sum, count) => sum + count, 0);
   return (
-    // The card is the link itself: bh's Card draws its look and its focus
+    // The card is the link itself: tilewise's Card draws its look and its focus
     // ring on the router's link.
     <Card asChild interactive padding={4} className="flex flex-col gap-13">
       <Link to="/p/$projectKey" params={{ projectKey: project.key }}>

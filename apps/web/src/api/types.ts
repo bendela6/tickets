@@ -13,7 +13,7 @@ export interface User { id: number; name: string; email: string | null; kind: Us
 
 export interface ItemType {
   id: number; schemeId: number; key: string; label: string; position: number;
-  /** color is one of bh's hue names ("purple"), as stored since TK-5.21.1. */
+  /** color is one of tilewise's hue names ("purple"), as stored since TK-5.21.1. */
   config: { color?: Hue } & Record<string, unknown>;
   archivedAt: string | null;
 }
@@ -36,7 +36,7 @@ export type StatusKind = 'todo' | 'active' | 'blocked' | 'done' | 'dropped';
 export interface Option {
   id: number; optionSetId: number; value: string; label: string; position: number;
   kind: StatusKind | null;                       // null for non-workflow options
-  /** color is one of bh's hue names ("purple"), as stored since TK-5.21.1. */
+  /** color is one of tilewise's hue names ("purple"), as stored since TK-5.21.1. */
   config: { color?: Hue; icon?: string } & Record<string, unknown>;
   archivedAt: string | null;
 }

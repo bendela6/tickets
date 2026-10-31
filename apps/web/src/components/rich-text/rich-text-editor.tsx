@@ -55,7 +55,7 @@ type RichTextEditorProps = {
 // leave out (a heading in a comment, written through the API or the MCP
 // server in markdown) is no document to this editor's schema, and Tiptap would
 // load it empty, so the next save would write the empty text over every word
-// of it. It loads as its plain text instead, a paragraph a line, as bh's
+// of it. It loads as its plain text instead, a paragraph a line, as tilewise's
 // editor does (@tilewise/richtext's `loadable`): the words are kept, and a save
 // only happens once it is edited.
 function loadableDoc(schema: Schema, value: string): DocNode {

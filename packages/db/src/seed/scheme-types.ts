@@ -4,7 +4,7 @@ export type OptionDef = {
   value: string;
   label: string;
   kind?: StatusKind;          // workflow options only
-  config?: Record<string, unknown>; // color (one of bh's hue names: "purple"), icon
+  config?: Record<string, unknown>; // color (one of tilewise's hue names: "purple"), icon
 };
 
 export type OptionSetDef = {
@@ -42,7 +42,7 @@ export type TypeLinkDef = { key: string; targetTypeKeys: string[] };
 export type TypeDef = {
   key: string;
   label: string;
-  config?: Record<string, unknown>; // color (one of bh's hue names: "purple"), icon
+  config?: Record<string, unknown>; // color (one of tilewise's hue names: "purple"), icon
   placements: PlacementDef[];
   allowedChildTypes?: string[];
   linkKeys?: TypeLinkDef[];

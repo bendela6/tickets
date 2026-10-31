@@ -7,7 +7,7 @@ import { CurrentUserProvider } from '../state/current-user-context';
 import { indexBoard } from '../utils/index-board';
 import { DetailComments } from './detail-comments';
 
-// The submit hint is bh's Kbd for mod+Enter, which names the reader's keys:
+// The submit hint is tilewise's Kbd for mod+Enter, which names the reader's keys:
 // Ctrl+Enter in jsdom, which is no Mac.
 function isSubmitHint(_content: string, element: Element | null): boolean {
   return element?.tagName === 'KBD' && element.textContent === 'Ctrl+Enter';

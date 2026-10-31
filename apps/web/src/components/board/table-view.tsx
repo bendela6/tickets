@@ -132,7 +132,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
       className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex"
       onClick={(event) => event.stopPropagation()}
     >
-      {/* A link, which bh's Button can't be yet (TK-105), drawn as the outline
+      {/* A link, which tilewise's Button can't be yet (TK-105), drawn as the outline
           icon-only Button beside it: same box, border and glyph size. */}
       <Tooltip content="Open item page">
         <Link

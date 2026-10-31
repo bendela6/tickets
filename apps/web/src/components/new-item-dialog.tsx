@@ -90,7 +90,7 @@ function ProjectChip({ project }: { project: Project }) {
 function CloseButton() {
   return (
     <DialogClose asChild>
-      {/* As bh's Drawer draws its own Close. */}
+      {/* As tilewise's Drawer draws its own Close. */}
       <Button variant="ghost" tone="neutral" size="sm" icon="x" label="Close" />
     </DialogClose>
   );

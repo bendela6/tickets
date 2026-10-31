@@ -54,7 +54,7 @@ function EntryPill() {
   );
 }
 
-// One of the five kinds, as bh's segmented control: a choice of one among a
+// One of the five kinds, as tilewise's segmented control: a choice of one among a
 // few short words, read without opening anything, each with its kind's icon
 // in its kind's color.
 function KindPicker({

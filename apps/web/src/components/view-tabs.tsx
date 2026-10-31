@@ -52,7 +52,7 @@ export function ViewTabs({
     );
   };
 
-  // bh's Input holds the name as a draft (`commit="leave"`): Enter or leaving
+  // tilewise's Input holds the name as a draft (`commit="leave"`): Enter or leaving
   // the field creates the view, Escape drops the name, and leaving closes the
   // field either way.
   const newView = adding ? (

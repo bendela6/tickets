@@ -444,13 +444,13 @@ function applyTextColor(editor: Editor, value: string | null) {
   }
 }
 
-// Text color row: a small inline swatch row appears in bh's submenu
+// Text color row: a small inline swatch row appears in tilewise's submenu
 // rather than a separate dedicated color picker — accent / danger /
 // warning / success / default, matching the app's status-kind palette.
 // Each swatch is a menu item, so the arrow keys reach it and Enter picks it;
 // its colour is its fill, so the highlighted one rings instead (Radix focuses
-// whichever item is highlighted, by pointer or by key). The submenu is bh's,
-// not Radix's own: inside bh's Menu, a Radix Sub from the app's install can't
+// whichever item is highlighted, by pointer or by key). The submenu is tilewise's,
+// not Radix's own: inside tilewise's Menu, a Radix Sub from the app's install can't
 // find the menu it sits in once the two installs differ.
 function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
